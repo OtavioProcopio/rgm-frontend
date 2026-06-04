@@ -19,8 +19,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       title={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className={cn(
-        'inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-100',
-        'dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800',
+        'inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100',
+        'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800',
         className,
       )}
     >

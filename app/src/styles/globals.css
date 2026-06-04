@@ -11,7 +11,11 @@
     'Segoe UI',
     sans-serif;
   color: #111827;
-  background: #f9fafb;
+  background: #f8fafc;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 * {
@@ -22,6 +26,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #f8fafc;
+}
+
+.dark body {
+  background: #0f172a;
 }
 
 a {

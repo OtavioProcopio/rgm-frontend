@@ -3,17 +3,20 @@ import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/app/layouts/AdminLayout';
 import { AppLayout } from '@/app/layouts/AppLayout';
 import { PublicLayout } from '@/app/layouts/PublicLayout';
+import { AdminRoute } from '@/app/routes/AdminRoute';
 import { ProtectedRoute } from '@/app/routes/ProtectedRoute';
 import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
-import { AdminPage } from '@/features/admin/pages/AdminPage';
+import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
+import { AdminMaquinasPage } from '@/features/admin/pages/AdminMaquinasPage';
+import { AdminModelosPage } from '@/features/admin/pages/AdminModelosPage';
+import { AdminUsuariosPage } from '@/features/admin/pages/AdminUsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/app" replace />,
+    element: <Navigate to="/app/admin" replace />,
   },
   {
     element: <PublicLayout />,
@@ -38,26 +41,34 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/app/solicitacoes" replace />,
+            element: <Navigate to="/app/admin" replace />,
           },
           {
             path: 'solicitacoes',
             element: <SolicitacoesPage />,
           },
           {
-            path: 'modelos',
-            element: <ModelosPage />,
-          },
-          {
             path: 'admin',
-            element: <ProtectedRoute allowedProfiles={['ADMINISTRADOR']} />,
+            element: <AdminRoute />,
             children: [
               {
                 element: <AdminLayout />,
                 children: [
                   {
                     index: true,
-                    element: <AdminPage />,
+                    element: <AdminDashboardPage />,
+                  },
+                  {
+                    path: 'usuarios',
+                    element: <AdminUsuariosPage />,
+                  },
+                  {
+                    path: 'maquinas',
+                    element: <AdminMaquinasPage />,
+                  },
+                  {
+                    path: 'modelos',
+                    element: <AdminModelosPage />,
                   },
                 ],
               },

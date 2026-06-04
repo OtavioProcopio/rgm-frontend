@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 
 export function PublicLayout() {
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-6 text-gray-950 dark:bg-gray-950 dark:text-gray-50">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 dark:bg-slate-950 dark:text-white">
       <div className="mx-auto flex w-full max-w-6xl justify-end">
         <ThemeToggle />
       </div>

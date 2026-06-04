@@ -18,7 +18,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     authToken.setTokens(response.token, response.refreshToken);
     authToken.setUser(authenticatedUser);
     setUser(authenticatedUser);
-    window.location.assign('/app');
+    window.location.assign('/app/admin');
   }, []);
 
   const logout = useCallback(() => {

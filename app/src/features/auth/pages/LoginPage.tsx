@@ -39,16 +39,14 @@ export function LoginPage() {
   }
 
   return (
-    <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950 sm:p-8">
-      <div className="mb-8">
-        <p className="text-sm font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-          RGM
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-gray-950 dark:text-gray-50">
-          Acesse sua conta
+    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+      <div className="mb-8 text-center">
+        <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
+        <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-white">
+          Acesso ao RGM
         </h1>
-        <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-          Acesse sua conta para gerenciar solicitações, modelos e evidências.
+        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+          Entre para gerenciar usuários, máquinas, modelos e solicitações.
         </p>
       </div>
 
