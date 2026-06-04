@@ -19,10 +19,10 @@ export function AppLayout() {
   const navigation = canAccessAdmin(user?.perfil) ? adminNavigation : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:flex lg:min-h-screen lg:flex-col">
-        <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
-          <div className="inline-flex rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700">
+    <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-900 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
+      <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 lg:flex lg:min-h-screen lg:flex-col">
+        <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+          <div className="inline-flex rounded-md border border-slate-200 bg-slate-100 px-3 py-2 shadow-sm dark:border-slate-500 dark:bg-slate-300">
             <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
           </div>
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
@@ -50,8 +50,8 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-200 p-4 dark:border-slate-800">
-          <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-900">
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
+          <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-700/70">
             <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
             <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
               {user?.perfil}
@@ -61,10 +61,10 @@ export function AppLayout() {
       </aside>
 
       <div className="min-w-0">
-        <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="inline-flex rounded-md border border-slate-200 bg-white px-2 py-1.5 shadow-sm dark:border-slate-700 lg:hidden">
+              <div className="inline-flex rounded-md border border-slate-200 bg-slate-100 px-2 py-1.5 shadow-sm dark:border-slate-500 dark:bg-slate-300 lg:hidden">
                 <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-9 w-auto" />
               </div>
               <div className="hidden min-w-0 lg:block">
@@ -93,7 +93,7 @@ export function AppLayout() {
           </div>
 
           {navigation.length > 0 ? (
-            <nav className="flex gap-2 overflow-x-auto border-t border-slate-200 px-4 py-3 dark:border-slate-800 sm:px-6 lg:hidden">
+            <nav className="flex gap-2 overflow-x-auto border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-6 lg:hidden">
               {navigation.map((item) => (
                 <NavLink
                   key={item.to}
@@ -116,7 +116,7 @@ export function AppLayout() {
         </header>
 
         <div className="px-4 py-5 sm:px-6 lg:px-8">
-          <main className="min-w-0 rounded-md border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+          <main className="min-w-0 rounded-md border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
             <Outlet />
           </main>
         </div>
