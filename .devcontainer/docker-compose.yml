@@ -1,0 +1,16 @@
+services:
+  devcontainer:
+    container_name: rgm-frontend-devcontainer
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspaces/rgm-frontend:cached
+      - ${HOME}/.ssh:/home/node/.ssh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    privileged: true
+    environment:
+      - TZ=America/Sao_Paulo
+      - DISPLAY=${DISPLAY}
+    command: sleep infinity

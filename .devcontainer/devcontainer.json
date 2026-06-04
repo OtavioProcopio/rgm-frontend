@@ -1,0 +1,37 @@
+{
+  "name": "RGM Frontend Dev Container",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/rgm-frontend",
+  "remoteUser": "node",
+
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Frontend",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/onstart.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "vitest.explorer",
+        "christian-kohler.path-intellisense",
+        "mhutchie.git-graph",
+        "bierner.markdown-mermaid"
+      ]
+    }
+  }
+}

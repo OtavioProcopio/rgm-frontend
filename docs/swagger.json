@@ -1,0 +1,1892 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/solicitacoes/{id}": {
+      "get": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "buscarPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "editar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarSolicitacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modelos/{id}": {
+      "get": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "buscarPorId_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "editar_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarModeloRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/usuarios/{id}": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "buscarUsuarioPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "editarUsuario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarUsuarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/maquinas/{id}": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "buscarMaquinaPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "editarMaquina",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarMaquinaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "excluirMaquina",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/solicitacoes": {
+      "get": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "listar",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modeloId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseSolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "abrir",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbrirSolicitacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{solicitacaoId}/evidencias": {
+      "get": {
+        "tags": [
+          "evidencia-controller"
+        ],
+        "operationId": "listar_1",
+        "parameters": [
+          {
+            "name": "solicitacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvidenciaResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "evidencia-controller"
+        ],
+        "operationId": "anexar",
+        "parameters": [
+          {
+            "name": "solicitacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenciaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/comentarios": {
+      "post": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "comentar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComentarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/modelos": {
+      "get": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "listar_2",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "ativo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "codigo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "criar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarModeloRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modelos/{id}/foto-capa": {
+      "post": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "uploadFotoCapa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "usarEvidenciaComoFotoCapa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FotoCapaUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/usuarios": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "listarUsuarios",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "perfil",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ativo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseUsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "criarUsuario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarUsuarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/maquinas": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "listarMaquinas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseMaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "criarMaquina",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarMaquinaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/triar": {
+      "patch": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "triar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriarSolicitacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/enviar-validacao": {
+      "patch": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "enviarParaValidacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/encerrar": {
+      "patch": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "encerrar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EncerrarSolicitacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/devolver": {
+      "patch": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "devolver",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevolverSolicitacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modelos/{id}/desativar": {
+      "patch": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "desativar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/usuarios/{id}/desativar": {
+      "patch": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "desativarUsuario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/usuarios/{id}/ativar": {
+      "patch": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "ativarUsuario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/maquinas/{id}/desativar": {
+      "patch": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "desativarMaquina",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitacoes/{id}/atividades": {
+      "get": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "listarAtividades",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AtividadeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modelos/{id}/eventos": {
+      "get": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "listarEventos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoModeloResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/registros": {
+      "delete": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "excluirRegistro",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcluirRegistroRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EditarSolicitacaoRequest": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "SolicitacaoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "prioridade": {
+            "type": "string"
+          },
+          "modeloId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "abertaPorUsuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "comentarioFinal": {
+            "type": "string"
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "concluidaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canceladaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EditarModeloRequest": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observacoes": {
+            "type": "string"
+          }
+        }
+      },
+      "ModeloResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "versao": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "observacoes": {
+            "type": "string"
+          },
+          "fotoUrl": {
+            "type": "string"
+          },
+          "ativo": {
+            "type": "boolean"
+          },
+          "maquinaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "temPendenciaAberta": {
+            "type": "boolean"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EditarUsuarioRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "UsuarioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "perfil": {
+            "type": "string"
+          },
+          "ativo": {
+            "type": "boolean"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EditarMaquinaRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 1
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string"
+          }
+        }
+      },
+      "MaquinaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "ativa": {
+            "type": "boolean"
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AbrirSolicitacaoRequest": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tipo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "modeloId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modeloId"
+        ]
+      },
+      "EvidenciaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicUrl": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "nomeArquivo": {
+            "type": "string"
+          },
+          "tamanhoBytes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "enviadaPorUsuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ComentarioRequest": {
+        "type": "object",
+        "properties": {
+          "comentario": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "CriarModeloRequest": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observacoes": {
+            "type": "string"
+          },
+          "maquinaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "maquinaId"
+        ]
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 1
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "CriarUsuarioRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          },
+          "perfil": {
+            "type": "string"
+          },
+          "ativo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "perfil"
+        ]
+      },
+      "CriarMaquinaRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 1
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descricao": {
+            "type": "string"
+          }
+        }
+      },
+      "TriarSolicitacaoRequest": {
+        "type": "object",
+        "properties": {
+          "prioridade": {
+            "type": "string"
+          },
+          "responsavelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "prioridade"
+        ]
+      },
+      "EncerrarSolicitacaoRequest": {
+        "type": "object",
+        "properties": {
+          "concluir": {
+            "type": "boolean"
+          },
+          "comentario": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "concluir"
+        ]
+      },
+      "DevolverSolicitacaoRequest": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prioridade": {
+            "type": "string"
+          }
+        }
+      },
+      "FotoCapaUploadRequest": {
+        "type": "object",
+        "properties": {
+          "evidenciaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PageResponseSolicitacaoResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolicitacaoResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AtividadeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "solicitacaoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "deStatus": {
+            "type": "string"
+          },
+          "paraStatus": {
+            "type": "string"
+          },
+          "comentario": {
+            "type": "string"
+          },
+          "autorUsuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageResponseModeloResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModeloResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "EventoModeloResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeloId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "estadoModeloDescricao": {
+            "type": "string"
+          },
+          "defineFotoCapa": {
+            "type": "boolean"
+          },
+          "executadoPorUsuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "solicitacaoRelacionadaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageResponseUsuarioResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UsuarioResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageResponseMaquinaResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaquinaResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ExcluirRegistroRequest": {
+        "type": "object",
+        "properties": {
+          "tipoRecurso": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recursoId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "recursoId"
+        ]
+      }
+    }
+  }
+}
