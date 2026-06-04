@@ -6,9 +6,14 @@ import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { AdminRoute } from '@/app/routes/AdminRoute';
 import { ProtectedRoute } from '@/app/routes/ProtectedRoute';
 import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
+import { EditarMaquinaPage } from '@/features/admin/maquinas/pages/EditarMaquinaPage';
+import { MaquinasPage } from '@/features/admin/maquinas/pages/MaquinasPage';
+import { NovaMaquinaPage } from '@/features/admin/maquinas/pages/NovaMaquinaPage';
+import { EditarModeloPage } from '@/features/admin/modelos/pages/EditarModeloPage';
+import { ModeloDetalhePage } from '@/features/admin/modelos/pages/ModeloDetalhePage';
+import { ModelosPage } from '@/features/admin/modelos/pages/ModelosPage';
+import { NovoModeloPage } from '@/features/admin/modelos/pages/NovoModeloPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
-import { AdminMaquinasPage } from '@/features/admin/pages/AdminMaquinasPage';
-import { AdminModelosPage } from '@/features/admin/pages/AdminModelosPage';
 import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
@@ -74,11 +79,31 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'maquinas',
-                    element: <AdminMaquinasPage />,
+                    element: <MaquinasPage />,
+                  },
+                  {
+                    path: 'maquinas/novo',
+                    element: <NovaMaquinaPage />,
+                  },
+                  {
+                    path: 'maquinas/:id/editar',
+                    element: <EditarMaquinaPage />,
                   },
                   {
                     path: 'modelos',
-                    element: <AdminModelosPage />,
+                    element: <ModelosPage />,
+                  },
+                  {
+                    path: 'modelos/novo',
+                    element: <NovoModeloPage />,
+                  },
+                  {
+                    path: 'modelos/:id',
+                    element: <ModeloDetalhePage />,
+                  },
+                  {
+                    path: 'modelos/:id/editar',
+                    element: <EditarModeloPage />,
                   },
                 ],
               },
