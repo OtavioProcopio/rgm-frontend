@@ -39,15 +39,13 @@ export function LoginPage() {
   }
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-8">
+    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-600 dark:bg-slate-300 sm:p-8">
       <div className="mb-8 text-center">
-        <div className="mx-auto inline-flex rounded-md border border-slate-200 bg-slate-100 px-5 py-3 shadow-sm dark:border-slate-500 dark:bg-slate-300">
-          <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-16 w-auto" />
-        </div>
-        <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-white">
+        <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
+        <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-slate-950">
           Acesso ao RGM
         </h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-700">
           Entre para gerenciar usuários, máquinas, modelos e solicitações.
         </p>
       </div>
@@ -60,6 +58,8 @@ export function LoginPage() {
           placeholder="admin@rgm.com"
           error={errors.email?.message}
           disabled={isSubmitting}
+          labelClassName="dark:text-slate-900"
+          className="dark:border-slate-400 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-500 dark:focus:border-sky-600 dark:focus:ring-sky-600/10"
           {...register('email')}
         />
 
@@ -70,6 +70,8 @@ export function LoginPage() {
           placeholder="Digite sua senha"
           error={errors.senha?.message}
           disabled={isSubmitting}
+          labelClassName="dark:text-slate-900"
+          className="dark:border-slate-400 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-500 dark:focus:border-sky-600 dark:focus:ring-sky-600/10"
           {...register('senha')}
         />
 

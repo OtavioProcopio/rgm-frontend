@@ -5,9 +5,10 @@ import { cn } from '@/shared/lib/cn';
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
+  labelClassName?: string;
 };
 
-export function Input({ className, error, id, label, ...props }: InputProps) {
+export function Input({ className, error, id, label, labelClassName, ...props }: InputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
@@ -15,7 +16,10 @@ export function Input({ className, error, id, label, ...props }: InputProps) {
     <div className="space-y-2">
       <label
         htmlFor={inputId}
-        className="block text-sm font-medium text-slate-800 dark:text-slate-100"
+        className={cn(
+          'block text-sm font-medium text-slate-800 dark:text-slate-100',
+          labelClassName,
+        )}
       >
         {label}
       </label>

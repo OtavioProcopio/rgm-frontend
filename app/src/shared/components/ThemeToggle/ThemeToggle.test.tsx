@@ -17,12 +17,13 @@ describe('ThemeToggle', () => {
     render(<ThemeToggle />);
 
     expect(localStorage.getItem('rgm.theme')).toBe('dark');
-    expect(localStorage.getItem('rgm.theme.defaulted')).toBe('true');
+    expect(localStorage.getItem('rgm.theme.defaulted')).toBe('2');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
   it('migrates old light preference to the dark default once', () => {
     localStorage.setItem('rgm.theme', 'light');
+    localStorage.setItem('rgm.theme.defaulted', 'true');
 
     render(<ThemeToggle />);
 
