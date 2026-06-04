@@ -1,20 +1,28 @@
 # Dependencies
 node_modules/
+app/node_modules/
 
 # Build output
 dist/
 dist-ssr/
+app/dist/
+app/dist-ssr/
 
 # Test and coverage output
 coverage/
+app/coverage/
 playwright-report/
+app/playwright-report/
 test-results/
+app/test-results/
 
 # Local env files
 .env
 .env.*
 !.env.example
-*.local
+app/.env
+app/.env.*
+!app/.env.example
 
 # Logs
 logs/
@@ -30,14 +38,18 @@ lerna-debug.log*
 .vite/
 .vitest/
 .eslintcache
+app/.cache/
+app/.vite/
+app/.vitest/
+app/.eslintcache
 *.tsbuildinfo
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea/
+# OS and editor files
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
 *.suo
 *.ntvs*
 *.njsproj
