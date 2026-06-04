@@ -9,7 +9,9 @@ import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { AdminMaquinasPage } from '@/features/admin/pages/AdminMaquinasPage';
 import { AdminModelosPage } from '@/features/admin/pages/AdminModelosPage';
-import { AdminUsuariosPage } from '@/features/admin/pages/AdminUsuariosPage';
+import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
+import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
+import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
 
@@ -60,7 +62,15 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'usuarios',
-                    element: <AdminUsuariosPage />,
+                    element: <UsuariosPage />,
+                  },
+                  {
+                    path: 'usuarios/novo',
+                    element: <NovoUsuarioPage />,
+                  },
+                  {
+                    path: 'usuarios/:id/editar',
+                    element: <EditarUsuarioPage />,
                   },
                   {
                     path: 'maquinas',
