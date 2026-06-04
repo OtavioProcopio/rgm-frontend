@@ -43,11 +43,8 @@ export function LoginPage() {
       <div className="mb-8 text-center">
         <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
         <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-slate-950">
-          Acesso ao RGM
+          Rei Auto Parts Gestão de Modelos
         </h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-700">
-          Entre para gerenciar usuários, máquinas, modelos e solicitações.
-        </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
