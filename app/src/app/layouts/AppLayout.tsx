@@ -22,7 +22,9 @@ export function AppLayout() {
     <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:flex lg:min-h-screen lg:flex-col">
         <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
-          <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
+          <div className="inline-flex rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700">
+            <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
+          </div>
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
             Painel administrativo
           </p>
@@ -62,11 +64,9 @@ export function AppLayout() {
         <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
-              <img
-                src="/logo-rgm-autoparts.png"
-                alt="RGM Auto Parts"
-                className="h-10 w-auto lg:hidden"
-              />
+              <div className="inline-flex rounded-md border border-slate-200 bg-white px-2 py-1.5 shadow-sm dark:border-slate-700 lg:hidden">
+                <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-9 w-auto" />
+              </div>
               <div className="hidden min-w-0 lg:block">
                 <p className="text-sm font-semibold text-slate-950 dark:text-white">
                   Administração RGM

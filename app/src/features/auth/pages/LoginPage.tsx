@@ -39,9 +39,11 @@ export function LoginPage() {
   }
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/95 sm:p-8">
       <div className="mb-8 text-center">
-        <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
+        <div className="mx-auto inline-flex rounded-md border border-slate-200 bg-white px-5 py-3 shadow-sm dark:border-slate-700">
+          <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-16 w-auto" />
+        </div>
         <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-white">
           Acesso ao RGM
         </h1>
