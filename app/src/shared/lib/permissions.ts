@@ -11,3 +11,18 @@ export function canManageModelos(perfil?: PerfilUsuario | null) {
 export function canOperateSolicitacoes(perfil?: PerfilUsuario | null) {
   return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || perfil === 'OPERADOR';
 }
+
+export function canManageSolicitacoes(perfil?: PerfilUsuario | null) {
+  return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR';
+}
+
+export function canViewModelos(perfil?: PerfilUsuario | null) {
+  return (
+    perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || perfil === 'OPERADOR'
+  );
+}
+
+export function getDefaultRoute(perfil?: PerfilUsuario | null): string {
+  if (perfil === 'ADMINISTRADOR') return '/app/admin';
+  return '/app/solicitacoes';
+}
