@@ -18,8 +18,6 @@ import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuario
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
-import { ModeloDetalhePage as ModeloDetalheGestorPage } from '@/features/modelos/pages/ModeloDetalhePage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
 import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
@@ -58,7 +56,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'dashboard',
-            element: <DashboardPage />,
+            element: <SolicitacoesPage />,
           },
           {
             path: 'solicitacoes',
@@ -82,7 +80,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'modelos/:id',
-            element: <ModeloDetalheGestorPage />,
+            element: <ModeloDetalhePage />,
           },
           {
             path: 'admin',

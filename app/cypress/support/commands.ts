@@ -67,6 +67,7 @@ Cypress.Commands.add(
 // ── Declarações de tipos para TypeScript ─────────────────────────────────────
 
 declare global {
+  /* eslint-disable-next-line @typescript-eslint/no-namespace */
   namespace Cypress {
     interface Chainable {
       loginAdmin(visitUrl?: string): Chainable<void>;

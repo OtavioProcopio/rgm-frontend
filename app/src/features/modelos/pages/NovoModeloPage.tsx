@@ -6,7 +6,6 @@ import { ModeloForm } from '@/features/admin/modelos/components/ModeloForm';
 import { useCriarModelo } from '@/features/admin/modelos/hooks/useCriarModelo';
 import { getModeloErrorMessage } from '@/features/admin/modelos/lib/modeloMessages';
 import type { CriarModeloRequest } from '@/features/admin/modelos/types/modeloTypes';
-import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
