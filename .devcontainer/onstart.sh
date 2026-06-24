@@ -1,3 +1,4 @@
 #!/bin/bash
 
-echo "Iniciando devcontainer do Area Verde Frontend"
+echo "Iniciando devcontainer do RGM Frontend"
+cd app && npm install --prefer-offline
