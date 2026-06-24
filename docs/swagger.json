@@ -1273,6 +1273,49 @@
           }
         }
       }
+    },
+    "/api/maquinas": {
+      "get": {
+        "tags": [
+          "maquina-controller"
+        ],
+        "summary": "Listar maquinas (qualquer perfil autenticado)",
+        "operationId": "listarMaquinasPublico",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseMaquinaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

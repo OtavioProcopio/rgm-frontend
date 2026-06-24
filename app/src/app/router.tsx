@@ -11,19 +11,23 @@ import { MaquinasPage } from '@/features/admin/maquinas/pages/MaquinasPage';
 import { NovaMaquinaPage } from '@/features/admin/maquinas/pages/NovaMaquinaPage';
 import { EditarModeloPage } from '@/features/admin/modelos/pages/EditarModeloPage';
 import { ModeloDetalhePage } from '@/features/admin/modelos/pages/ModeloDetalhePage';
-import { ModelosPage } from '@/features/admin/modelos/pages/ModelosPage';
+import { ModelosPage as AdminModelosPage } from '@/features/admin/modelos/pages/ModelosPage';
 import { NovoModeloPage } from '@/features/admin/modelos/pages/NovoModeloPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
+import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
+import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
+import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/app/admin" replace />,
+    element: <Navigate to="/app/solicitacoes" replace />,
   },
   {
     element: <PublicLayout />,
@@ -48,11 +52,35 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/app/admin" replace />,
+            element: <Navigate to="/app/solicitacoes" replace />,
+          },
+          {
+            path: 'dashboard',
+            element: <SolicitacoesPage />,
           },
           {
             path: 'solicitacoes',
             element: <SolicitacoesPage />,
+          },
+          {
+            path: 'solicitacoes/nova',
+            element: <NovaSolicitacaoPage />,
+          },
+          {
+            path: 'solicitacoes/:id',
+            element: <SolicitacaoDetalhePage />,
+          },
+          {
+            path: 'modelos',
+            element: <ModelosPage />,
+          },
+          {
+            path: 'modelos/novo',
+            element: <NovoModeloGestorPage />,
+          },
+          {
+            path: 'modelos/:id',
+            element: <ModeloDetalhePage />,
           },
           {
             path: 'admin',
@@ -91,7 +119,7 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'modelos',
-                    element: <ModelosPage />,
+                    element: <AdminModelosPage />,
                   },
                   {
                     path: 'modelos/novo',

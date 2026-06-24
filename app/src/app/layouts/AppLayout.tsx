@@ -1,11 +1,11 @@
-import { Cpu, LayoutDashboard, LogOut, PackageSearch, Users } from 'lucide-react';
+import { Cpu, LayoutDashboard, LogOut, PackageSearch, Ticket, Users } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
-import { canAccessAdmin } from '@/shared/lib/permissions';
+import { canAccessAdmin, canViewModelos } from '@/shared/lib/permissions';
 
 const adminNavigation = [
   { to: '/app/admin', label: 'Painel', icon: LayoutDashboard, end: true },
@@ -16,7 +16,15 @@ const adminNavigation = [
 
 export function AppLayout() {
   const { logout, user } = useAuth();
-  const navigation = canAccessAdmin(user?.perfil) ? adminNavigation : [];
+
+  const navigation = canAccessAdmin(user?.perfil)
+    ? adminNavigation
+    : [
+        { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
+        ...(canViewModelos(user?.perfil)
+          ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]
+          : []),
+      ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-900 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
@@ -69,10 +77,12 @@ export function AppLayout() {
               />
               <div className="hidden min-w-0 lg:block">
                 <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                  Administração RGM
+                  {canAccessAdmin(user?.perfil) ? 'Administração RGM' : 'RGM Auto Parts'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Usuários, máquinas e modelos
+                  {canAccessAdmin(user?.perfil)
+                    ? 'Usuários, máquinas e modelos'
+                    : 'Solicitações de manutenção'}
                 </p>
               </div>
             </div>

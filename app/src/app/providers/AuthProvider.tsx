@@ -4,6 +4,7 @@ import { AuthContext, type AuthContextValue } from '@/app/providers/authContext'
 import { authApi } from '@/features/auth/api/authApi';
 import type { AuthUser, LoginRequest } from '@/features/auth/types/authTypes';
 import { authToken } from '@/shared/api/authToken';
+import { getDefaultRoute } from '@/shared/lib/permissions';
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<AuthUser | null>(() => authToken.getUser<AuthUser>());
@@ -18,7 +19,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     authToken.setTokens(response.token, response.refreshToken);
     authToken.setUser(authenticatedUser);
     setUser(authenticatedUser);
-    window.location.assign('/app/admin');
+    window.location.assign(getDefaultRoute(authenticatedUser.perfil));
   }, []);
 
   const logout = useCallback(() => {

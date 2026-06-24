@@ -11,6 +11,8 @@ import type {
 export const maquinasApi = {
   listar: (filters: MaquinasFilters) =>
     httpClient.get<PageResponse<Maquina>>('/admin/maquinas', { params: filters }),
+  listarPublico: (filters: MaquinasFilters) =>
+    httpClient.get<PageResponse<Maquina>>('/maquinas', { params: filters }),
   buscarPorId: (id: string) => httpClient.get<Maquina>(`/admin/maquinas/${id}`),
   criar: (payload: CriarMaquinaRequest) => httpClient.post<Maquina>('/admin/maquinas', payload),
   editar: (id: string, payload: EditarMaquinaRequest) =>
