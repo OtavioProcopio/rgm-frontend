@@ -13,7 +13,14 @@ module.exports = defineConfig({
     responseTimeout: 15000,
     video: false,
     screenshotOnRunFailure: true,
-    setupNodeEvents() {},
+    setupNodeEvents(on, config) {
+      on('task', {
+        log(message) {
+          console.log(message);
+          return null;
+        },
+      });
+    },
   },
   env: {
     apiUrl: 'http://localhost:8080/api',

@@ -68,7 +68,7 @@ describe('Admin — Modelos', () => {
 
     cy.contains('button', 'Salvar modelo').click();
     cy.url().should('include', '/app/admin/modelos');
-    cy.contains(codigo).should('be.visible');
+    cy.contains('td', codigo).should('be.visible');
   });
 });
 

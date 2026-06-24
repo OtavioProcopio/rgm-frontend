@@ -98,14 +98,22 @@ async function request<T>(
   const { params, headers, skipAuthRefresh, ...requestOptions } = options;
   const isFormData = requestOptions.body instanceof FormData;
 
-  const response = await fetch(buildUrl(path, params), {
-    ...requestOptions,
-    headers: {
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
+  let response: Response;
+  try {
+    const requestUrl = buildUrl(path, params);
+    console.error('[API REQUEST]', requestOptions.method || 'GET', requestUrl);
+    response = await fetch(requestUrl, {
+      ...requestOptions,
+      headers: {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    });
+  } catch (err) {
+    console.error('[FETCH NETWORK ERROR]', err);
+    throw err;
+  }
 
   if (response.status === 401 && !hasRetried && !shouldSkipRefresh(path, skipAuthRefresh)) {
     try {
@@ -125,11 +133,13 @@ async function request<T>(
         ? String(body.message)
         : 'Erro inesperado na comunicação com a API.';
 
-    throw new ApiError({
+    const apiError = new ApiError({
       status: response.status,
       message,
       body,
     });
+    console.error('[API ERROR]', { status: apiError.status, message: apiError.message, body: apiError.body });
+    throw apiError;
   }
 
   if (response.status === 204) {
