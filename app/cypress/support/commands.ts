@@ -2,40 +2,53 @@
 
 const API = () => Cypress.env('apiUrl') as string;
 
+// Token cache — evita múltiplos logins por spec (rate limiter: 10/60s)
+let _apiToken: string | null = null;
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 Cypress.Commands.add('loginAdmin', (visitUrl = '/app/solicitacoes') => {
-  cy.request({
-    method: 'POST',
-    url: `${API()}/auth/login`,
-    body: {
-      email: Cypress.env('adminEmail'),
-      senha: Cypress.env('adminPassword'),
+  cy.session(
+    'admin',
+    () => {
+      cy.request({
+        method: 'POST',
+        url: `${API()}/auth/login`,
+        body: { email: Cypress.env('adminEmail'), senha: Cypress.env('adminPassword') },
+      }).then(({ body }) => {
+        cy.visit('/', {
+          onBeforeLoad: (win) => {
+            win.localStorage.setItem('rgm.accessToken', body.token);
+            win.localStorage.setItem('rgm.refreshToken', body.refreshToken);
+            win.localStorage.setItem(
+              'rgm.user',
+              JSON.stringify({ nome: body.nome, perfil: body.perfil }),
+            );
+          },
+        });
+      });
     },
-  }).then(({ body }) => {
-    cy.visit(visitUrl, {
-      onBeforeLoad: (win) => {
-        win.localStorage.setItem('rgm.accessToken', body.token);
-        win.localStorage.setItem('rgm.refreshToken', body.refreshToken);
-        win.localStorage.setItem('rgm.user', JSON.stringify(body.usuario));
-      },
-    });
-  });
+    { cacheAcrossSpecs: false },
+  );
+  cy.visit(visitUrl);
 });
 
 // ── API helpers (setup de dados de teste) ────────────────────────────────────
 
 Cypress.Commands.add('apiLogin', () => {
+  if (_apiToken) {
+    return cy.wrap(_apiToken);
+  }
   return cy
     .request({
       method: 'POST',
       url: `${API()}/auth/login`,
-      body: {
-        email: Cypress.env('adminEmail'),
-        senha: Cypress.env('adminPassword'),
-      },
+      body: { email: Cypress.env('adminEmail'), senha: Cypress.env('adminPassword') },
     })
-    .its('body.token');
+    .then(({ body }) => {
+      _apiToken = body.token as string;
+      return _apiToken;
+    });
 });
 
 Cypress.Commands.add(

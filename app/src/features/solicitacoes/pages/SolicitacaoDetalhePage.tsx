@@ -32,6 +32,9 @@ import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
+import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
+import { useQuery } from '@tanstack/react-query';
+import { canAccessAdmin } from '@/shared/lib/permissions';
 
 type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
 
@@ -54,6 +57,16 @@ export function SolicitacaoDetalhePage() {
   const uploadEvidencia = useUploadEvidencia(id!);
 
   const canManage = canManageSolicitacoes(user?.perfil);
+
+  const { data: usuariosPage } = useQuery({
+    queryKey: ['admin', 'usuarios', 'triagem'],
+    queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
+    enabled: canAccessAdmin(user?.perfil),
+    staleTime: 5 * 60 * 1000,
+  });
+  const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
+    (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
+  );
 
   async function handleTriar(data: TriarSolicitacaoRequest) {
     setActionError(null);
@@ -226,6 +239,7 @@ export function SolicitacaoDetalhePage() {
           {activeModal === 'triagem' ? (
             <TriagemModal
               isPending={triar.isPending}
+              usuarios={responsaveisOpcoes}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleTriar}
             />
@@ -233,6 +247,7 @@ export function SolicitacaoDetalhePage() {
           {activeModal === 'encerramento' ? (
             <EncerramentoModal
               isPending={encerrar.isPending}
+              podeConcluir={solicitacao.status === 'EM_VALIDACAO'}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleEncerrar}
             />

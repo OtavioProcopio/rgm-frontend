@@ -12,11 +12,25 @@ const ts = () => Date.now();
 describe('Fluxo Kanban — Solicitações', () => {
   let token: string;
   let modeloId: string;
+  let responsavelId: string;
 
-  // Setup: cria máquina e modelo via API antes de todos os testes
+  // Setup: cria máquina, modelo e obtém ID de um responsável válido (OPERADOR/GESTOR)
   before(() => {
     cy.apiLogin().then((t) => {
       token = t;
+
+      // Busca um usuário OPERADOR ou GESTOR para usar como responsável na triagem
+      cy.request({
+        method: 'GET',
+        url: `${Cypress.env('apiUrl')}/admin/usuarios?size=20`,
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((res) => {
+        const body = res.body as { content: Array<{ id: string; perfil: string }> };
+        const responsavel = body.content.find(
+          (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
+        );
+        responsavelId = responsavel?.id ?? '';
+      });
 
       cy.apiPost(
         '/admin/maquinas',
@@ -63,6 +77,14 @@ describe('Fluxo Kanban — Solicitações', () => {
       .then((res) => (res.body as { id: string }).id);
   }
 
+  function triarViaApi(id: string) {
+    return cy.apiPatch(
+      `/solicitacoes/${id}/triar`,
+      { prioridade: 'MEDIA', responsavelIds: [responsavelId] },
+      token,
+    );
+  }
+
   // ── Testes ───────────────────────────────────────────────────────────────
 
   it('abre solicitação via UI e exibe status A fazer', () => {
@@ -87,6 +109,7 @@ describe('Fluxo Kanban — Solicitações', () => {
       cy.contains('Triar solicitação').should('be.visible');
 
       cy.get('select[name="prioridade"]').select('ALTA');
+      cy.get('input[name="responsavelIds"]').first().check();
       cy.contains('button', 'Confirmar triagem').click();
 
       cy.contains('Em andamento').should('be.visible');
@@ -96,7 +119,7 @@ describe('Fluxo Kanban — Solicitações', () => {
 
   it('envio para validação: EM_ANDAMENTO → EM_VALIDACAO', () => {
     abrirSolicitacaoViaApi(`Validação ${ts()}`).then((id) => {
-      cy.apiPatch(`/solicitacoes/${id}/triar`, { prioridade: 'MEDIA' }, token);
+      triarViaApi(id);
 
       cy.loginAdmin(`/app/solicitacoes/${id}`);
       cy.contains('Em andamento').should('be.visible');
@@ -108,7 +131,7 @@ describe('Fluxo Kanban — Solicitações', () => {
 
   it('devolver: EM_VALIDACAO → EM_ANDAMENTO', () => {
     abrirSolicitacaoViaApi(`Devolver ${ts()}`).then((id) => {
-      cy.apiPatch(`/solicitacoes/${id}/triar`, { prioridade: 'BAIXA' }, token);
+      triarViaApi(id);
       cy.apiPatch(`/solicitacoes/${id}/enviar-validacao`, null, token);
 
       cy.loginAdmin(`/app/solicitacoes/${id}`);
@@ -122,17 +145,18 @@ describe('Fluxo Kanban — Solicitações', () => {
     });
   });
 
-  it('concluir: EM_ANDAMENTO → CONCLUIDA', () => {
+  it('concluir: EM_ANDAMENTO → EM_VALIDACAO → CONCLUIDA', () => {
     abrirSolicitacaoViaApi(`Concluir ${ts()}`).then((id) => {
-      cy.apiPatch(`/solicitacoes/${id}/triar`, { prioridade: 'ALTA' }, token);
+      triarViaApi(id);
+      cy.apiPatch(`/solicitacoes/${id}/enviar-validacao`, null, token);
 
       cy.loginAdmin(`/app/solicitacoes/${id}`);
-      cy.contains('Em andamento').should('be.visible');
+      cy.contains('Em validação').should('be.visible');
 
       cy.contains('button', 'Encerrar').click();
       cy.contains('Encerrar solicitação').should('be.visible');
 
-      cy.get('textarea[name="comentario"]').type('Concluído com sucesso pelo Cypress');
+      cy.get('textarea[name="comentario"]').first().type('Concluído com sucesso pelo Cypress');
       cy.contains('button', 'Concluir').click();
 
       cy.contains('Concluída').should('be.visible');
@@ -143,7 +167,7 @@ describe('Fluxo Kanban — Solicitações', () => {
 
   it('cancelar: EM_ANDAMENTO → CANCELADA', () => {
     abrirSolicitacaoViaApi(`Cancelar ${ts()}`).then((id) => {
-      cy.apiPatch(`/solicitacoes/${id}/triar`, { prioridade: 'URGENTE' }, token);
+      triarViaApi(id);
 
       cy.loginAdmin(`/app/solicitacoes/${id}`);
       cy.contains('Em andamento').should('be.visible');
@@ -151,7 +175,7 @@ describe('Fluxo Kanban — Solicitações', () => {
       cy.contains('button', 'Encerrar').click();
 
       cy.contains('label', 'Cancelar').click();
-      cy.get('textarea[name="comentario"]').type('Cancelado pelo Cypress');
+      cy.get('textarea[name="comentario"]').first().type('Cancelado pelo Cypress');
       cy.contains('button', 'Cancelar solicitação').click();
 
       cy.contains('Cancelada').should('be.visible');
@@ -174,6 +198,7 @@ describe('Fluxo Kanban — Solicitações', () => {
     // Triagem
     cy.contains('button', 'Triar').click();
     cy.get('select[name="prioridade"]').select('URGENTE');
+    cy.get('input[name="responsavelIds"]').first().check();
     cy.contains('button', 'Confirmar triagem').click();
     cy.contains('Em andamento').should('be.visible');
 
@@ -183,6 +208,7 @@ describe('Fluxo Kanban — Solicitações', () => {
 
     // Concluir
     cy.contains('button', 'Encerrar').click();
+    cy.get('textarea[name="comentario"]').first().type('Fluxo completo concluído');
     cy.contains('button', 'Concluir').click();
     cy.contains('Concluída').should('be.visible');
 

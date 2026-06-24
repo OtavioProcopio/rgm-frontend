@@ -1,4 +1,4 @@
-import { Cpu, LayoutDashboard, LogOut, PackageSearch, Ticket, Users } from 'lucide-react';
+import { BarChart2, Cpu, LayoutDashboard, LogOut, PackageSearch, Ticket, Users } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
@@ -20,6 +20,7 @@ export function AppLayout() {
   const navigation = canAccessAdmin(user?.perfil)
     ? adminNavigation
     : [
+        { to: '/app/dashboard', label: 'Dashboard', icon: BarChart2, end: false },
         { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
         ...(canViewModelos(user?.perfil)
           ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]

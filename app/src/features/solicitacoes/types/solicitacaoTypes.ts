@@ -56,12 +56,12 @@ export type EditarSolicitacaoRequest = {
 
 export type TriarSolicitacaoRequest = {
   prioridade: PrioridadeSolicitacao;
-  responsavelIds?: string[];
+  responsavelIds: string[];
 };
 
 export type EncerrarSolicitacaoRequest = {
   concluir: boolean;
-  comentario?: string;
+  comentario: string;
 };
 
 export type DevolverSolicitacaoRequest = {

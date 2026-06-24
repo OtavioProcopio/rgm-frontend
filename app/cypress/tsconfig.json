@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "isolatedModules": false
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["./**/*.ts", "../cypress.config.ts"]
+  "include": ["./**/*.ts"]
 }
