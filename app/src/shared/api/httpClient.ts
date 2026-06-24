@@ -101,7 +101,6 @@ async function request<T>(
   let response: Response;
   try {
     const requestUrl = buildUrl(path, params);
-    console.error('[API REQUEST]', requestOptions.method || 'GET', requestUrl);
     response = await fetch(requestUrl, {
       ...requestOptions,
       headers: {
