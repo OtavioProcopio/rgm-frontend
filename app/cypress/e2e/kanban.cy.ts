@@ -96,7 +96,7 @@ describe('Fluxo Kanban — Solicitações', () => {
     const titulo = `Listagem CY ${ts()}`;
     abrirSolicitacaoViaApi(titulo).then(() => {
       cy.loginAdmin('/app/solicitacoes');
-      cy.contains(titulo).should('be.visible');
+      cy.get('.lg\\:flex').contains(titulo).should('be.visible');
     });
   });
 
