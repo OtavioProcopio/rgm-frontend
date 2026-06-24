@@ -1,0 +1,285 @@
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+
+import { useAuth } from '@/app/providers/authContext';
+import { Button } from '@/shared/components/Button/Button';
+import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
+import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
+import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { canManageSolicitacoes } from '@/shared/lib/permissions';
+
+import { ComentarioForm } from '../components/ComentarioForm';
+import { DevolucaoModal } from '../components/DevolucaoModal';
+import { EncerramentoModal } from '../components/EncerramentoModal';
+import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeBadge';
+import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
+import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
+import { TriagemModal } from '../components/TriagemModal';
+import { useAtividades } from '../hooks/useAtividades';
+import { useDevolverSolicitacao } from '../hooks/useDevolverSolicitacao';
+import { useEncerrarSolicitacao } from '../hooks/useEncerrarSolicitacao';
+import { useEnviarParaValidacao } from '../hooks/useEnviarParaValidacao';
+import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
+import { useSolicitacao } from '../hooks/useSolicitacao';
+import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
+import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
+import type {
+  DevolverSolicitacaoRequest,
+  EncerrarSolicitacaoRequest,
+  TriarSolicitacaoRequest,
+} from '../types/solicitacaoTypes';
+import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
+import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
+import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
+import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
+
+type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
+
+export function SolicitacaoDetalhePage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
+  const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
+  const { data: evidencias = [], isLoading: isLoadingEvidencias } = useEvidencias(id!);
+
+  const triar = useTriarSolicitacao(id!);
+  const enviarValidacao = useEnviarParaValidacao(id!);
+  const encerrar = useEncerrarSolicitacao(id!);
+  const devolver = useDevolverSolicitacao(id!);
+  const comentar = useRegistrarComentario(id!);
+  const uploadEvidencia = useUploadEvidencia(id!);
+
+  const canManage = canManageSolicitacoes(user?.perfil);
+
+  async function handleTriar(data: TriarSolicitacaoRequest) {
+    setActionError(null);
+    try {
+      await triar.mutateAsync(data);
+      setActiveModal(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleEnviarValidacao() {
+    setActionError(null);
+    try {
+      await enviarValidacao.mutateAsync();
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleEncerrar(data: EncerrarSolicitacaoRequest) {
+    setActionError(null);
+    try {
+      await encerrar.mutateAsync(data);
+      setActiveModal(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleDevolver(data: DevolverSolicitacaoRequest) {
+    setActionError(null);
+    try {
+      await devolver.mutateAsync(data);
+      setActiveModal(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleComentario(data: { comentario: string }) {
+    setActionError(null);
+    try {
+      await comentar.mutateAsync(data);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleUpload(file: File) {
+    setActionError(null);
+    try {
+      await uploadEvidencia.mutateAsync(file);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  if (isLoading) return <LoadingState title="Carregando solicitação..." />;
+  if (error || !solicitacao) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar a solicitação."
+        description={getSolicitacaoErrorMessage(error)}
+      />
+    );
+  }
+
+  const isTerminal = solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA';
+  const criadaEm = new Date(solicitacao.criadaEm).toLocaleString('pt-BR');
+
+  return (
+    <section className="space-y-6">
+      <PageHeader
+        title={solicitacao.titulo}
+        description={`Aberta em ${criadaEm}`}
+        actions={
+          <Button type="button" variant="secondary" onClick={() => navigate('/app/solicitacoes')}>
+            Voltar
+          </Button>
+        }
+      />
+
+      {actionError ? (
+        <ErrorState title="Operação não concluída" description={actionError} />
+      ) : null}
+
+      {/* Info */}
+      <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Status
+          </p>
+          <div className="mt-1">
+            <SolicitacaoStatusBadge status={solicitacao.status} />
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Prioridade
+          </p>
+          <div className="mt-1">
+            <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
+            {!solicitacao.prioridade && (
+              <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Tipo
+          </p>
+          <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+            {tipoLabel[solicitacao.tipo]}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Descrição
+          </p>
+          <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
+        </div>
+        {solicitacao.comentarioFinal ? (
+          <div className="sm:col-span-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Comentário final
+            </p>
+            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+              {solicitacao.comentarioFinal}
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Ações */}
+      {!isTerminal && canManage ? (
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
+          <div className="flex flex-wrap gap-2">
+            {solicitacao.status === 'A_FAZER' ? (
+              <Button type="button" onClick={() => setActiveModal('triagem')}>
+                Triar
+              </Button>
+            ) : null}
+            {solicitacao.status === 'EM_ANDAMENTO' ? (
+              <Button
+                type="button"
+                disabled={enviarValidacao.isPending}
+                onClick={handleEnviarValidacao}
+              >
+                {enviarValidacao.isPending ? 'Enviando...' : 'Enviar para validação'}
+              </Button>
+            ) : null}
+            {solicitacao.status === 'EM_VALIDACAO' ? (
+              <Button type="button" onClick={() => setActiveModal('devolucao')}>
+                Devolver
+              </Button>
+            ) : null}
+            {(solicitacao.status === 'EM_ANDAMENTO' || solicitacao.status === 'EM_VALIDACAO') ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setActiveModal('encerramento')}
+              >
+                Encerrar
+              </Button>
+            ) : null}
+          </div>
+
+          {activeModal === 'triagem' ? (
+            <TriagemModal
+              isPending={triar.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleTriar}
+            />
+          ) : null}
+          {activeModal === 'encerramento' ? (
+            <EncerramentoModal
+              isPending={encerrar.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleEncerrar}
+            />
+          ) : null}
+          {activeModal === 'devolucao' ? (
+            <DevolucaoModal
+              isPending={devolver.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleDevolver}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Evidências */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Evidências
+        </h2>
+        {!isTerminal ? (
+          <div className="mb-4">
+            <EvidenciaUploader
+              isPending={uploadEvidencia.isPending}
+              onUpload={handleUpload}
+            />
+          </div>
+        ) : null}
+        <EvidenciaList evidencias={evidencias} isLoading={isLoadingEvidencias} />
+      </div>
+
+      {/* Histórico */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Histórico de atividades
+        </h2>
+        <SolicitacaoTimeline atividades={atividades} isLoading={isLoadingAtividades} />
+      </div>
+
+      {/* Comentário */}
+      {!isTerminal ? (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Adicionar comentário
+          </h2>
+          <ComentarioForm isPending={comentar.isPending} onSubmit={handleComentario} />
+        </div>
+      ) : null}
+    </section>
+  );
+}
