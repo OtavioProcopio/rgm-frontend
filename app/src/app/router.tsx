@@ -18,7 +18,10 @@ import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuario
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
+import { ModeloDetalhePage as ModeloDetalheGestorPage } from '@/features/modelos/pages/ModeloDetalhePage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
+import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
@@ -54,6 +57,10 @@ export const router = createBrowserRouter([
             element: <Navigate to="/app/solicitacoes" replace />,
           },
           {
+            path: 'dashboard',
+            element: <DashboardPage />,
+          },
+          {
             path: 'solicitacoes',
             element: <SolicitacoesPage />,
           },
@@ -68,6 +75,14 @@ export const router = createBrowserRouter([
           {
             path: 'modelos',
             element: <ModelosPage />,
+          },
+          {
+            path: 'modelos/novo',
+            element: <NovoModeloGestorPage />,
+          },
+          {
+            path: 'modelos/:id',
+            element: <ModeloDetalheGestorPage />,
           },
           {
             path: 'admin',

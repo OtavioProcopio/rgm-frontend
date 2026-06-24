@@ -2,20 +2,34 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
+import { ModelosFilters } from '@/features/admin/modelos/components/ModelosFilters';
+import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canManageModelos } from '@/shared/lib/permissions';
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 
 const PAGE_SIZE = 20;
 
 export function ModelosPage() {
   const { user } = useAuth();
-  const [filters, setFilters] = useState({ page: 0, size: PAGE_SIZE });
+  const [filters, setFilters] = useState<{
+    page: number;
+    size: number;
+    ativo?: boolean;
+    codigo?: string;
+  }>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
+
+  function handleCodigoChange(codigo?: string) {
+    setFilters((f) => ({ ...f, page: 0, codigo }));
+  }
+
+  function handleAtivoChange(ativo?: boolean) {
+    setFilters((f) => ({ ...f, page: 0, ativo }));
+  }
 
   const pageInfo = useMemo(
     () =>
@@ -34,11 +48,18 @@ export function ModelosPage() {
         description="Visualize os modelos de máquinas disponíveis."
         actions={
           canManage ? (
-            <Link to="/app/admin/modelos/novo">
+            <Link to="/app/modelos/novo">
               <Button>Novo modelo</Button>
             </Link>
           ) : undefined
         }
+      />
+
+      <ModelosFilters
+        codigo={filters.codigo}
+        ativo={filters.ativo}
+        onCodigoChange={handleCodigoChange}
+        onAtivoChange={handleAtivoChange}
       />
 
       {isLoading ? <LoadingState title="Carregando modelos..." /> : null}
@@ -85,14 +106,12 @@ export function ModelosPage() {
                     </span>
                   ) : null}
                 </div>
-                {canManage ? (
-                  <Link
-                    to={`/app/admin/modelos/${modelo.id}`}
-                    className="mt-3 block text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
-                  >
-                    Ver detalhes →
-                  </Link>
-                ) : null}
+                <Link
+                  to={`/app/modelos/${modelo.id}`}
+                  className="mt-3 block text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
+                >
+                  Ver detalhes →
+                </Link>
               </div>
             ))}
           </div>
