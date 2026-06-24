@@ -9,15 +9,16 @@ import { encerrarSolicitacaoSchema, type EncerrarSolicitacaoFormData } from '../
 
 type Props = {
   isPending?: boolean;
+  podeConcluir?: boolean;
   onCancel: () => void;
   onConfirm: (data: EncerrarSolicitacaoFormData) => void;
 };
 
-export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
-  const [concluir, setConcluir] = useState(true);
-  const { register, handleSubmit, setValue } = useForm<EncerrarSolicitacaoFormData>({
+export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, onConfirm }: Props) {
+  const [concluir, setConcluir] = useState(podeConcluir);
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<EncerrarSolicitacaoFormData>({
     resolver: zodResolver(encerrarSolicitacaoSchema),
-    defaultValues: { concluir: true },
+    defaultValues: { concluir: podeConcluir },
   });
 
   function handleRadioChange(value: boolean) {
@@ -36,15 +37,17 @@ export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
       <h3 className="font-semibold text-slate-900 dark:text-white">Encerrar solicitação</h3>
       <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
         <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="concluir-option"
-              checked={concluir}
-              onChange={() => handleRadioChange(true)}
-            />
-            Concluir
-          </label>
+          {podeConcluir ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="concluir-option"
+                checked={concluir}
+                onChange={() => handleRadioChange(true)}
+              />
+              Concluir
+            </label>
+          ) : null}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="radio"
@@ -56,8 +59,9 @@ export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
           </label>
         </div>
         <Textarea
-          label="Comentário final (opcional)"
+          label="Comentário final"
           placeholder="Descreva o resultado..."
+          error={errors.comentario?.message}
           {...register('comentario')}
         />
         <div className="flex flex-wrap gap-2">

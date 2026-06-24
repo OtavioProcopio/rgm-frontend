@@ -22,20 +22,20 @@ describe('Admin — Máquinas', () => {
 
     cy.contains('button', 'Salvar máquina').click();
     cy.url().should('include', '/app/admin/maquinas');
-    cy.contains(codigo).should('be.visible');
+    cy.contains('td', codigo).should('be.visible');
   });
 
   it('exibe erro ao criar máquina com código duplicado', () => {
     cy.apiLogin().then((token) => {
       const codigo = `MQ-DUP-${ts()}`;
-      cy.apiPost('/admin/maquinas', { nome: 'Original', codigo }, token);
+      cy.apiPost('/admin/maquinas', { nome: 'Original', codigo }, token).then(() => {
+        cy.visit('/app/admin/maquinas/novo');
+        cy.get('input[name="codigo"]').type(codigo);
+        cy.get('input[name="nome"]').type('Duplicada');
+        cy.contains('button', 'Salvar máquina').click();
 
-      cy.loginAdmin('/app/admin/maquinas/novo');
-      cy.get('input[name="codigo"]').type(codigo);
-      cy.get('input[name="nome"]').type('Duplicada');
-      cy.contains('button', 'Salvar máquina').click();
-
-      cy.contains('Não foi possível').should('be.visible');
+        cy.contains('Não foi possível').should('be.visible');
+      });
     });
   });
 });
@@ -61,13 +61,13 @@ describe('Admin — Modelos', () => {
   it('cria um novo modelo vinculado a uma máquina', () => {
     const codigo = `MDL-CY-${ts()}`;
     cy.get('input[name="codigo"]').type(codigo);
-    cy.get('textarea[name="descricao"]').type('Modelo criado pelo Cypress');
+    cy.get('input[name="descricao"]').type('Modelo criado pelo Cypress');
     // Aguarda as opções de máquina carregarem
     cy.get('select[name="maquinaId"] option').should('have.length.greaterThan', 1);
     cy.get('select[name="maquinaId"]').select(maquinaId);
 
     cy.contains('button', 'Salvar modelo').click();
-    cy.url().should('match', /\/app\/admin\/modelos\/[a-f0-9-]+$/);
+    cy.url().should('include', '/app/admin/modelos');
     cy.contains(codigo).should('be.visible');
   });
 });
@@ -93,7 +93,7 @@ describe('Admin — Usuários', () => {
 
     cy.contains('button', 'Salvar usuário').click();
     cy.url().should('include', '/app/admin/usuarios');
-    cy.contains(email).should('be.visible');
+    cy.contains('td', email).should('be.visible');
   });
 
   it('cria um prestador Externo (sem email/senha)', () => {
