@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [develop, main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   checks: write
@@ -39,7 +43,22 @@ jobs:
         run: npm run typecheck
 
       - name: Test
-        run: npm run test:run
+        run: npx vitest run --reporter=verbose --reporter=junit --outputFile=../test-results/junit.xml
+
+      - name: Publish test results
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: test-results/junit.xml
+          check_name: Test Results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
 
       - name: Build
         run: npm run build
