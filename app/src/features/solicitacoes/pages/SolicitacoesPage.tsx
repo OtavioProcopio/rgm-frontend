@@ -15,6 +15,7 @@ import { SolicitacaoCard } from '../components/SolicitacaoCard';
 import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { solicitacoesApi } from '../api/solicitacoesApi';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 const PAGE_SIZE = 20;
@@ -25,6 +26,7 @@ export function SolicitacoesPage() {
   const [view, setView] = useState<View>('kanban');
   const [filters, setFilters] = useState<SolicitacoesFilters>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
+  const [isExporting, setIsExporting] = useState(false);
 
   const pageInfo = useMemo(
     () => (data ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}` : 'Página 1 de 1'),
@@ -32,6 +34,25 @@ export function SolicitacoesPage() {
   );
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
+
+  async function handleExportar() {
+    setIsExporting(true);
+    try {
+      const csvText = await solicitacoesApi.exportar(filters);
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_solicitacoes_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao exportar relatório:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   return (
     <section>
@@ -66,6 +87,14 @@ export function SolicitacoesPage() {
                 Lista
               </button>
             </div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isExporting}
+              onClick={handleExportar}
+            >
+              {isExporting ? 'Exportando...' : 'Exportar CSV'}
+            </Button>
             {canCreate ? (
               <Link to="/app/solicitacoes/nova">
                 <Button>Nova solicitação</Button>

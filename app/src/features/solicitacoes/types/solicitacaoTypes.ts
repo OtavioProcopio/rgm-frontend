@@ -69,6 +69,10 @@ export type EncerrarSolicitacaoRequest = {
   comentario: string;
 };
 
+export type CancelarSolicitacaoRequest = {
+  motivo: string;
+};
+
 export type DevolverSolicitacaoRequest = {
   motivo?: string;
   prioridade?: PrioridadeSolicitacao;
@@ -77,3 +81,16 @@ export type DevolverSolicitacaoRequest = {
 export type ComentarioRequest = {
   comentario: string;
 };
+
+export type MetricasResponse = {
+  totalUsuarios: number;
+  totalMaquinas: number;
+  totalModelos: number;
+  totalSolicitacoes: number;
+  solicitacoesPorStatus: Record<StatusSolicitacao, number>;
+  solicitacoesAbertas: number;
+  solicitacoesPendentes: number;
+  solicitacoesConcluidas: number;
+  tempoMedioResolucaoMinutos: number;
+};
+

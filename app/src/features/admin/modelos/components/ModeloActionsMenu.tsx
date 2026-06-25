@@ -8,9 +8,15 @@ type ModeloActionsMenuProps = {
   modelo: Modelo;
   isMutating?: boolean;
   onDesativar: (modelo: Modelo) => void;
+  onAtivar: (modelo: Modelo) => void;
 };
 
-export function ModeloActionsMenu({ isMutating, modelo, onDesativar }: ModeloActionsMenuProps) {
+export function ModeloActionsMenu({
+  isMutating,
+  modelo,
+  onDesativar,
+  onAtivar,
+}: ModeloActionsMenuProps) {
   return (
     <div className="flex flex-wrap gap-2">
       <Link
@@ -34,7 +40,16 @@ export function ModeloActionsMenu({ isMutating, modelo, onDesativar }: ModeloAct
         >
           Desativar
         </Button>
-      ) : null}
+      ) : (
+        <Button
+          type="button"
+          variant="primary"
+          disabled={isMutating}
+          onClick={() => onAtivar(modelo)}
+        >
+          Ativar
+        </Button>
+      )}
     </div>
   );
 }

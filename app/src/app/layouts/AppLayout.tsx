@@ -1,6 +1,5 @@
 import {
   BarChart2,
-  Cpu,
   LayoutDashboard,
   LogOut,
   PackageSearch,
@@ -19,7 +18,6 @@ import { canAccessAdmin, canViewModelos } from '@/shared/lib/permissions';
 const adminNavigation = [
   { to: '/app/admin', label: 'Painel', icon: LayoutDashboard, end: true },
   { to: '/app/admin/usuarios', label: 'Usuários', icon: Users },
-  { to: '/app/admin/maquinas', label: 'Máquinas', icon: Cpu },
   { to: '/app/admin/modelos', label: 'Modelos', icon: PackageSearch },
 ];
 
@@ -80,12 +78,20 @@ export function AppLayout() {
             <User size={18} />
             Meu Perfil
           </NavLink>
-          <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-700/70">
+          <NavLink
+            to="/app/perfil"
+            className={({ isActive }) =>
+              cn(
+                'block rounded-md bg-slate-50 p-3 dark:bg-slate-700/70 border border-transparent transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99]',
+                isActive && 'ring-2 ring-sky-500/20 border-sky-400 dark:border-sky-500'
+              )
+            }
+          >
             <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
             <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
               {user?.perfil}
             </p>
-          </div>
+          </NavLink>
         </div>
       </aside>
 
@@ -111,12 +117,20 @@ export function AppLayout() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="hidden text-right sm:block lg:hidden">
+              <NavLink
+                to="/app/perfil"
+                className={({ isActive }) =>
+                  cn(
+                    'hidden text-right sm:block lg:hidden transition-colors hover:text-sky-600 dark:hover:text-sky-400',
+                    isActive && 'text-sky-600 dark:text-sky-400'
+                  )
+                }
+              >
                 <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
                 <p className="text-xs uppercase text-slate-500 dark:text-slate-400">
                   {user?.perfil}
                 </p>
-              </div>
+              </NavLink>
               <NavLink
                 to="/app/perfil"
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"

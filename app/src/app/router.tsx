@@ -6,9 +6,7 @@ import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { AdminRoute } from '@/app/routes/AdminRoute';
 import { ProtectedRoute } from '@/app/routes/ProtectedRoute';
 import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
-import { EditarMaquinaPage } from '@/features/admin/maquinas/pages/EditarMaquinaPage';
-import { MaquinasPage } from '@/features/admin/maquinas/pages/MaquinasPage';
-import { NovaMaquinaPage } from '@/features/admin/maquinas/pages/NovaMaquinaPage';
+
 import { EditarModeloPage } from '@/features/admin/modelos/pages/EditarModeloPage';
 import { ModeloDetalhePage } from '@/features/admin/modelos/pages/ModeloDetalhePage';
 import { ModelosPage as AdminModelosPage } from '@/features/admin/modelos/pages/ModelosPage';
@@ -111,18 +109,7 @@ export const router = createBrowserRouter([
                     path: 'usuarios/:id/editar',
                     element: <EditarUsuarioPage />,
                   },
-                  {
-                    path: 'maquinas',
-                    element: <MaquinasPage />,
-                  },
-                  {
-                    path: 'maquinas/novo',
-                    element: <NovaMaquinaPage />,
-                  },
-                  {
-                    path: 'maquinas/:id/editar',
-                    element: <EditarMaquinaPage />,
-                  },
+
                   {
                     path: 'modelos',
                     element: <AdminModelosPage />,

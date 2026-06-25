@@ -6,7 +6,7 @@ export function usePerfil() {
     queryKey: ['perfil', 'me'],
     queryFn: async () => {
       const response = await perfilApi.obterPerfil();
-      return response.data;
+      return response;
     },
   });
 }

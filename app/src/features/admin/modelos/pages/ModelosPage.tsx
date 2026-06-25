@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { useMaquinas } from '@/features/admin/maquinas/hooks/useMaquinas';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -11,6 +10,7 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { ModelosFilters } from '../components/ModelosFilters';
 import { ModelosTable } from '../components/ModelosTable';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
+import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useModelos } from '../hooks/useModelos';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { Modelo, ModelosFilters as ModelosFiltersType } from '../types/modeloTypes';
@@ -21,18 +21,9 @@ export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, error, isLoading } = useModelos(filters);
-  const { data: maquinasData } = useMaquinas({ page: 0, size: 200 });
   const desativarModelo = useDesativarModelo();
-  const maquinasMap = useMemo(
-    () =>
-      new Map(
-        (maquinasData?.content ?? []).map((maquina) => [
-          maquina.id,
-          `${maquina.codigo} - ${maquina.nome}`,
-        ]),
-      ),
-    [maquinasData],
-  );
+  const ativarModelo = useAtivarModelo();
+  const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
   async function handleDesativar(modelo: Modelo) {
     if (
@@ -44,6 +35,18 @@ export function ModelosPage() {
     setActionError(null);
     try {
       await desativarModelo.mutateAsync(modelo.id);
+    } catch (mutationError) {
+      setActionError(getModeloErrorMessage(mutationError));
+    }
+  }
+
+  async function handleAtivar(modelo: Modelo) {
+    if (!window.confirm(`Deseja ativar o modelo ${modelo.codigo}?`)) {
+      return;
+    }
+    setActionError(null);
+    try {
+      await ativarModelo.mutateAsync(modelo.id);
     } catch (mutationError) {
       setActionError(getModeloErrorMessage(mutationError));
     }
@@ -85,9 +88,9 @@ export function ModelosPage() {
         <>
           <ModelosTable
             modelos={data.content}
-            maquinasMap={maquinasMap}
-            isMutating={desativarModelo.isPending}
+            isMutating={isMutating}
             onDesativar={handleDesativar}
+            onAtivar={handleAtivar}
           />
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-300">

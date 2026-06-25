@@ -33,24 +33,16 @@ describe('Fluxo Kanban — Solicitações', () => {
       });
 
       cy.apiPost(
-        '/admin/maquinas',
-        { nome: `Maq Kanban ${ts()}`, codigo: `KBN-${ts()}` },
+        '/modelos',
+        {
+          codigo: `MDL-KBN-${ts()}`,
+          descricao: 'Modelo para testes kanban',
+          maquina: 'Vick',
+        },
         token,
-      ).then((maqRes) => {
-        const maq = maqRes.body as { id: string };
-
-        cy.apiPost(
-          '/modelos',
-          {
-            codigo: `MDL-KBN-${ts()}`,
-            descricao: 'Modelo para testes kanban',
-            maquinaId: maq.id,
-          },
-          token,
-        ).then((mdlRes) => {
-          const mdl = mdlRes.body as { id: string };
-          modeloId = mdl.id;
-        });
+      ).then((mdlRes) => {
+        const mdl = mdlRes.body as { id: string };
+        modeloId = mdl.id;
       });
     });
   });
@@ -61,7 +53,7 @@ describe('Fluxo Kanban — Solicitações', () => {
     cy.loginAdmin('/app/solicitacoes/nova');
     cy.get('input[name="titulo"]').type(titulo);
     cy.get('textarea[name="descricao"]').type('Descrição da solicitação de teste Cypress');
-    cy.get('select[name="tipo"]').select('REPARO');
+    cy.get('select[name="tipo"]').select('REENGENHARIA');
     cy.get('input[name="modeloId"]').type(modeloId);
     cy.contains('button', 'Abrir solicitação').click();
     cy.url().should('match', /\/app\/solicitacoes\/[a-f0-9-]+$/);
@@ -71,7 +63,7 @@ describe('Fluxo Kanban — Solicitações', () => {
     return cy
       .apiPost(
         '/solicitacoes',
-        { titulo, descricao: 'Via API Cypress', tipo: 'REPARO', modeloId },
+        { titulo, descricao: 'Via API Cypress', tipo: 'REENGENHARIA', modeloId },
         token,
       )
       .then((res) => (res.body as { id: string }).id);
@@ -172,9 +164,8 @@ describe('Fluxo Kanban — Solicitações', () => {
       cy.loginAdmin(`/app/solicitacoes/${id}`);
       cy.contains('Em andamento').should('be.visible');
 
-      cy.contains('button', 'Encerrar').click();
+      cy.contains('button', 'Cancelar').click();
 
-      cy.contains('label', 'Cancelar').click();
       cy.get('textarea[name="comentario"]').first().type('Cancelado pelo Cypress');
       cy.contains('button', 'Cancelar solicitação').click();
 
@@ -188,7 +179,7 @@ describe('Fluxo Kanban — Solicitações', () => {
     cy.loginAdmin('/app/solicitacoes/nova');
     cy.get('input[name="titulo"]').type(titulo);
     cy.get('textarea[name="descricao"]').type('Teste do fluxo completo via Cypress');
-    cy.get('select[name="tipo"]').select('INSPECAO');
+    cy.get('select[name="tipo"]').select('REENGENHARIA');
     cy.get('input[name="modeloId"]').type(modeloId);
     cy.contains('button', 'Abrir solicitação').click();
 

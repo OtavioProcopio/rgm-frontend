@@ -1,7 +1,5 @@
-import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import { useMaquinas } from '@/features/admin/maquinas/hooks/useMaquinas';
 import { EventosModeloList } from '@/features/admin/modelos/components/EventosModeloList';
 import { ModeloFotoCapa } from '@/features/admin/modelos/components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '@/features/admin/modelos/components/ModeloStatusBadge';
@@ -33,12 +31,6 @@ export function ModeloDetalhePage() {
   const navigate = useNavigate();
   const { data: modelo, error, isLoading } = useModelo(id);
   const { data: eventosData } = useEventosModelo(id);
-  const { data: maquinasData } = useMaquinas({ page: 0, size: 200 });
-
-  const maquinasMap = useMemo(
-    () => new Map((maquinasData?.content ?? []).map((m) => [m.id, `${m.codigo} - ${m.nome}`])),
-    [maquinasData],
-  );
 
   if (isLoading) return <LoadingState title="Carregando modelo..." />;
   if (error || !modelo)
@@ -48,7 +40,7 @@ export function ModeloDetalhePage() {
     <section>
       <PageHeader
         title={`${modelo.codigo} v${modelo.versao}`}
-        description="Detalhes do modelo de máquina."
+        description="Detalhes do modelo de fundição."
         actions={
           <Button type="button" variant="secondary" onClick={() => navigate('/app/modelos')}>
             Voltar
@@ -68,8 +60,8 @@ export function ModeloDetalhePage() {
             <p className="mt-3 text-slate-700 dark:text-slate-200">{modelo.descricao}</p>
             <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
               <Detail
-                label="Máquina"
-                value={maquinasMap.get(modelo.maquinaId) ?? modelo.maquinaId}
+                label="Máquina / Encaixe"
+                value={modelo.maquina}
               />
               <Detail label="Pendência aberta" value={modelo.temPendenciaAberta ? 'Sim' : 'Não'} />
               <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />

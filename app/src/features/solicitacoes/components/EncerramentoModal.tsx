@@ -42,10 +42,12 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
           : 'border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30'
       }`}
     >
-      <h3 className="font-semibold text-slate-900 dark:text-white">Encerrar solicitação</h3>
+      <h3 className="font-semibold text-slate-900 dark:text-white font-sans">
+        {podeConcluir ? 'Encerrar solicitação' : 'Cancelar solicitação'}
+      </h3>
       <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
-        <div className="flex gap-4">
-          {podeConcluir ? (
+        {podeConcluir && (
+          <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="radio"
@@ -55,20 +57,20 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
               />
               Concluir
             </label>
-          ) : null}
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="concluir-option"
-              checked={!concluir}
-              onChange={() => handleRadioChange(false)}
-            />
-            Cancelar
-          </label>
-        </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="concluir-option"
+                checked={!concluir}
+                onChange={() => handleRadioChange(false)}
+              />
+              Cancelar
+            </label>
+          </div>
+        )}
         <Textarea
-          label="Comentário final"
-          placeholder="Descreva o resultado..."
+          label={concluir ? 'Comentário final' : 'Motivo do cancelamento'}
+          placeholder={concluir ? 'Descreva o resultado...' : 'Descreva o motivo...'}
           error={errors.comentario?.message}
           {...register('comentario')}
         />
@@ -85,7 +87,13 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
                 : undefined
             }
           >
-            {isPending ? 'Encerrando...' : concluir ? 'Concluir' : 'Cancelar solicitação'}
+            {isPending
+              ? podeConcluir
+                ? 'Encerrando...'
+                : 'Cancelando...'
+              : concluir
+                ? 'Concluir'
+                : 'Cancelar solicitação'}
           </Button>
         </div>
       </form>

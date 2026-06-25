@@ -5,12 +5,17 @@ import type { Modelo } from '../types/modeloTypes';
 
 type ModelosTableProps = {
   modelos: Modelo[];
-  maquinasMap: Map<string, string>;
   isMutating?: boolean;
   onDesativar: (modelo: Modelo) => void;
+  onAtivar: (modelo: Modelo) => void;
 };
 
-export function ModelosTable({ isMutating, maquinasMap, modelos, onDesativar }: ModelosTableProps) {
+export function ModelosTable({
+  isMutating,
+  modelos,
+  onDesativar,
+  onAtivar,
+}: ModelosTableProps) {
   return (
     <>
       <div className="grid gap-3 lg:hidden">
@@ -39,13 +44,14 @@ export function ModelosTable({ isMutating, maquinasMap, modelos, onDesativar }: 
               ) : null}
             </div>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              {maquinasMap.get(modelo.maquinaId) ?? modelo.maquinaId}
+              {modelo.maquina}
             </p>
             <div className="mt-4">
               <ModeloActionsMenu
                 modelo={modelo}
                 isMutating={isMutating}
                 onDesativar={onDesativar}
+                onAtivar={onAtivar}
               />
             </div>
           </article>
@@ -77,7 +83,7 @@ export function ModelosTable({ isMutating, maquinasMap, modelos, onDesativar }: 
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{modelo.versao}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{modelo.descricao}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                  {maquinasMap.get(modelo.maquinaId) ?? modelo.maquinaId}
+                  {modelo.maquina}
                 </td>
                 <td className="px-4 py-3">
                   <ModeloStatusBadge ativo={modelo.ativo} />
@@ -90,6 +96,7 @@ export function ModelosTable({ isMutating, maquinasMap, modelos, onDesativar }: 
                     modelo={modelo}
                     isMutating={isMutating}
                     onDesativar={onDesativar}
+                    onAtivar={onAtivar}
                   />
                 </td>
               </tr>

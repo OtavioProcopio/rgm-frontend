@@ -1,4 +1,4 @@
-import { Cpu, PackageSearch, Users } from 'lucide-react';
+import { PackageSearch, Users } from 'lucide-react';
 
 import { AdminCard } from '@/features/admin/components/AdminCard';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -9,12 +9,6 @@ const adminCards = [
     description: 'Cadastre operadores, gestores e administradores do sistema.',
     href: '/app/admin/usuarios',
     icon: Users,
-  },
-  {
-    title: 'Máquinas',
-    description: 'Gerencie as máquinas disponíveis para vincular aos modelos.',
-    href: '/app/admin/maquinas',
-    icon: Cpu,
   },
   {
     title: 'Modelos',

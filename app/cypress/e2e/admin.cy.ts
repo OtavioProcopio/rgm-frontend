@@ -2,73 +2,16 @@
 
 const ts = () => Date.now();
 
-describe('Admin — Máquinas', () => {
-  beforeEach(() => {
-    cy.loginAdmin('/app/admin/maquinas');
-  });
-
-  it('exibe lista de máquinas', () => {
-    cy.contains('Máquinas').should('be.visible');
-  });
-
-  it('cria uma nova máquina', () => {
-    const codigo = `MQ-CY-${ts()}`;
-    cy.contains('a', 'Nova máquina').click();
-    cy.url().should('include', '/maquinas/novo');
-
-    cy.get('input[name="codigo"]').type(codigo);
-    cy.get('input[name="nome"]').type(`Máquina Cypress ${codigo}`);
-    cy.get('textarea[name="descricao"]').type('Criada pelo Cypress');
-
-    cy.contains('button', 'Salvar máquina').click();
-    cy.url().should('include', '/app/admin/maquinas');
-    cy.contains('td', codigo).should('be.visible');
-  });
-
-  it('exibe erro ao criar máquina com código duplicado', () => {
-    cy.apiLogin().then((token) => {
-      const codigo = `MQ-DUP-${ts()}`;
-      cy.apiPost('/admin/maquinas', { nome: 'Original', codigo }, token).then(() => {
-        cy.visit('/app/admin/maquinas/novo');
-        cy.get('input[name="codigo"]').type(codigo);
-        cy.get('input[name="nome"]').type('Duplicada');
-        cy.contains('button', 'Salvar máquina').click();
-
-        cy.contains('Não foi possível').should('be.visible');
-      });
-    });
-  });
-});
-
 describe('Admin — Modelos', () => {
-  let token: string;
-  let maquinaId: string;
-
-  before(() => {
-    cy.apiLogin().then((t) => {
-      token = t;
-      cy.apiPost(
-        '/admin/maquinas',
-        { nome: `Maq Modelo ${ts()}`, codigo: `MQ-MDL-${ts()}` },
-        token,
-      ).then((res) => {
-        const body = res.body as { id: string };
-        maquinaId = body.id;
-      });
-    });
-  });
-
   beforeEach(() => {
     cy.loginAdmin('/app/admin/modelos/novo');
   });
 
-  it('cria um novo modelo vinculado a uma máquina', () => {
+  it('cria um novo modelo com máquina text input', () => {
     const codigo = `MDL-CY-${ts()}`;
     cy.get('input[name="codigo"]').type(codigo);
     cy.get('input[name="descricao"]').type('Modelo criado pelo Cypress');
-    // Aguarda as opções de máquina carregarem
-    cy.get('select[name="maquinaId"] option').should('have.length.greaterThan', 1);
-    cy.get('select[name="maquinaId"]').select(maquinaId);
+    cy.get('input[name="maquina"]').type('Vick');
 
     cy.contains('button', 'Salvar modelo').click();
     cy.url().should('include', '/app/admin/modelos');

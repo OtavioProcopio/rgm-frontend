@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import type {
+  CancelarSolicitacaoRequest,
   DevolverSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
   TriarSolicitacaoRequest,
@@ -29,11 +30,17 @@ export function useKanbanActions() {
     onSuccess: invalidate,
   });
 
+  const cancelar = useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & CancelarSolicitacaoRequest) =>
+      solicitacoesApi.cancelar(id, data),
+    onSuccess: invalidate,
+  });
+
   const devolver = useMutation({
     mutationFn: ({ id, ...data }: { id: string } & DevolverSolicitacaoRequest) =>
       solicitacoesApi.devolver(id, data),
     onSuccess: invalidate,
   });
 
-  return { triar, enviarValidacao, encerrar, devolver };
+  return { triar, enviarValidacao, encerrar, cancelar, devolver };
 }

@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { KeyRound, Shield, User as UserIcon, Calendar, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Shield, User as UserIcon, Calendar, CheckCircle2, AlertCircle, Eye, EyeOff, BarChart2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { useAlterarSenha } from '@/features/auth/hooks/useAlterarSenha';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { useMetricas } from '@/features/solicitacoes/hooks/useMetricas';
 import { alterarSenhaSchema, type AlterarSenhaFormData } from '@/features/auth/schemas/perfilSchema';
 import { ApiError } from '@/shared/api/apiError';
 import { Button } from '@/shared/components/Button/Button';
@@ -13,6 +14,7 @@ import { Input } from '@/shared/components/Input/Input';
 export function PerfilPage() {
   const { data: usuario, isLoading, isError } = usePerfil();
   const { mutateAsync: alterarSenha } = useAlterarSenha();
+  const { data: metricas } = useMetricas();
 
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function PerfilPage() {
       reset();
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.status === 400) {
+        if (error.status === 400 || error.status === 422 || error.message.toLowerCase().includes('senha atual incorreta')) {
           setErro('Senha atual incorreta.');
           return;
         }
@@ -86,7 +88,7 @@ export function PerfilPage() {
     ? usuario.nome
         .split(' ')
         .slice(0, 2)
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join('')
         .toUpperCase()
     : 'U';
@@ -237,6 +239,47 @@ export function PerfilPage() {
           </form>
         </div>
       </div>
+
+      {metricas && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-4 dark:border-slate-700/60">
+            <div className="rounded-lg bg-sky-50 p-2 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400">
+              <BarChart2 size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-950 dark:text-white">Visão Geral do Sistema</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Resumo atualizado das atividades e registros do sistema.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-900/35">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total de Modelos</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{metricas.totalModelos}</p>
+            </div>
+            <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-900/35">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total de Solicitações</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{metricas.totalSolicitacoes}</p>
+            </div>
+            <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-900/35">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Em Aberto / Pendentes</p>
+              <p className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-400">
+                {metricas.solicitacoesAbertas + metricas.solicitacoesPendentes}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-900/35">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tempo Médio de Resolução</p>
+              <p className="mt-2 text-3xl font-bold text-sky-600 dark:text-sky-400">
+                {metricas.tempoMedioResolucaoMinutos > 0
+                  ? `${Math.round(metricas.tempoMedioResolucaoMinutos / 60)}h`
+                  : '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

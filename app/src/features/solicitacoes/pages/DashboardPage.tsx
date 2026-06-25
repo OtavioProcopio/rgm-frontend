@@ -1,19 +1,26 @@
-import { AlertTriangle, CheckCircle2, Clock, Layers, Package } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Cpu,
+  Hourglass,
+  Layers,
+  Package,
+  Users,
+  Activity,
+  ArrowRight
+} from 'lucide-react';
 import { Link } from 'react-router';
+import { useState, useMemo } from 'react';
 
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
-import { cn } from '@/shared/lib/cn';
-
-import { useDashboardData } from '../hooks/useDashboardData';
+import { useMetricas } from '../hooks/useMetricas';
+import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { statusLabel, tipoLabel, prioridadeLabel } from '../lib/solicitacaoMessages';
-import type {
-  StatusSolicitacao,
-  TipoSolicitacao,
-  PrioridadeSolicitacao,
-} from '../types/solicitacaoTypes';
+import type { StatusSolicitacao, TipoSolicitacao, PrioridadeSolicitacao } from '../types/solicitacaoTypes';
+import { cn } from '@/shared/lib/cn';
 
 const STATUS_ORDER: StatusSolicitacao[] = [
   'A_FAZER',
@@ -24,48 +31,59 @@ const STATUS_ORDER: StatusSolicitacao[] = [
 ];
 
 const STATUS_COLOR: Record<StatusSolicitacao, string> = {
-  A_FAZER: 'bg-slate-400',
-  EM_ANDAMENTO: 'bg-sky-500',
-  EM_VALIDACAO: 'bg-amber-500',
-  CONCLUIDA: 'bg-emerald-500',
-  CANCELADA: 'bg-red-500',
+  A_FAZER: 'bg-slate-400 dark:bg-slate-500',
+  EM_ANDAMENTO: 'bg-sky-500 dark:bg-sky-400',
+  EM_VALIDACAO: 'bg-amber-500 dark:bg-amber-400',
+  CONCLUIDA: 'bg-emerald-500 dark:bg-emerald-400',
+  CANCELADA: 'bg-rose-500 dark:bg-rose-400',
+};
+
+const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
+  A_FAZER: 'text-slate-600 dark:text-slate-400',
+  EM_ANDAMENTO: 'text-sky-600 dark:text-sky-400',
+  EM_VALIDACAO: 'text-amber-600 dark:text-amber-400',
+  CONCLUIDA: 'text-emerald-600 dark:text-emerald-400',
+  CANCELADA: 'text-rose-600 dark:text-rose-400',
 };
 
 const TIPO_ORDER: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA'];
-
 const PRIORIDADE_ORDER: PrioridadeSolicitacao[] = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
 
 const PRIORIDADE_COLOR: Record<PrioridadeSolicitacao, string> = {
-  URGENTE: 'bg-red-500',
-  ALTA: 'bg-orange-500',
-  MEDIA: 'bg-amber-400',
-  BAIXA: 'bg-slate-400',
+  URGENTE: 'bg-rose-500 dark:bg-rose-400',
+  ALTA: 'bg-orange-500 dark:bg-orange-400',
+  MEDIA: 'bg-amber-500 dark:bg-amber-400',
+  BAIXA: 'bg-slate-400 dark:bg-slate-500',
 };
+
+const AGING_THRESHOLD_DAYS = 7;
 
 function BarRow({
   label,
   count,
   max,
   barClass,
+  textColor,
 }: {
   label: string;
   count: number;
   max: number;
   barClass: string;
+  textColor?: string;
 }) {
   const pct = max > 0 ? Math.round((count / max) * 100) : 0;
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-28 shrink-0 text-right text-xs text-slate-600 dark:text-slate-400">
+    <div className="group flex items-center gap-3 py-1 transition-all">
+      <span className="w-24 shrink-0 text-right text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 truncate">
         {label}
       </span>
-      <div className="flex-1 rounded-full bg-slate-100 dark:bg-slate-700" style={{ height: 10 }}>
+      <div className="flex-1 rounded-full bg-slate-100 dark:bg-slate-700/50" style={{ height: 8 }}>
         <div
-          className={cn('h-full rounded-full transition-all', barClass)}
+          className={cn('h-full rounded-full transition-all duration-550 shadow-sm', barClass)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="w-8 text-right text-xs font-semibold tabular-nums text-slate-700 dark:text-slate-300">
+      <span className={cn('w-8 text-right text-xs font-semibold tabular-nums', textColor ?? 'text-slate-700 dark:text-slate-350')}>
         {count}
       </span>
     </div>
@@ -77,224 +95,317 @@ function KPICard({
   label,
   value,
   subtext,
-  highlight,
+  gradient,
+  onClickPath,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string | number;
   subtext?: string;
-  highlight?: 'warn' | 'ok';
+  gradient?: 'sky' | 'purple' | 'emerald' | 'amber' | 'rose' | 'slate';
+  onClickPath?: string;
 }) {
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
-      <div className="flex items-center gap-2">
-        <Icon
-          size={16}
-          className={cn(
-            highlight === 'warn'
-              ? 'text-amber-500'
-              : highlight === 'ok'
-                ? 'text-emerald-500'
-                : 'text-slate-400',
-          )}
-        />
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {label}
-        </span>
-      </div>
-      <p
-        className={cn(
-          'text-3xl font-bold tabular-nums',
-          highlight === 'warn'
-            ? 'text-amber-600 dark:text-amber-400'
-            : highlight === 'ok'
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-slate-900 dark:text-white',
+  const gradientClasses = {
+    sky: 'from-sky-500/10 to-blue-500/5 dark:from-sky-500/10 dark:to-blue-500/5 hover:border-sky-300 dark:hover:border-sky-600 text-sky-600 dark:text-sky-400',
+    purple: 'from-purple-500/10 to-indigo-500/5 dark:from-purple-500/10 dark:to-indigo-500/5 hover:border-purple-300 dark:hover:border-purple-600 text-purple-600 dark:text-purple-400',
+    emerald: 'from-emerald-500/10 to-teal-500/5 dark:from-emerald-500/10 dark:to-teal-500/5 hover:border-emerald-300 dark:hover:border-emerald-600 text-emerald-600 dark:text-emerald-400',
+    amber: 'from-amber-500/10 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/5 hover:border-amber-300 dark:hover:border-amber-600 text-amber-600 dark:text-amber-400',
+    rose: 'from-rose-500/10 to-red-500/5 dark:from-rose-500/10 dark:to-red-500/5 hover:border-rose-300 dark:hover:border-rose-600 text-rose-600 dark:text-rose-400',
+    slate: 'from-slate-500/10 to-zinc-500/5 dark:from-slate-550/10 dark:to-zinc-500/5 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400',
+  };
+
+  const selectedGradient = gradient ? gradientClasses[gradient] : gradientClasses.slate;
+  const isClickable = Boolean(onClickPath);
+
+  const CardContent = (
+    <div className={cn(
+      "relative flex flex-col gap-2 rounded-xl border border-slate-200/85 bg-gradient-to-br p-5 shadow-sm transition-all duration-300 dark:border-slate-700/60 dark:bg-slate-800",
+      selectedGradient,
+      isClickable && "hover:shadow-md cursor-pointer hover:-translate-y-0.5"
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icon size={18} />
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            {label}
+          </span>
+        </div>
+        {isClickable && (
+          <ArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100 text-slate-400" />
         )}
-      >
+      </div>
+      <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-slate-900 dark:text-white">
         {value}
       </p>
-      {subtext && <p className="text-xs text-slate-500 dark:text-slate-400">{subtext}</p>}
+      {subtext && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{subtext}</p>}
     </div>
   );
+
+  if (onClickPath) {
+    return (
+      <Link to={onClickPath} className="group block h-full">
+        {CardContent}
+      </Link>
+    );
+  }
+
+  return CardContent;
 }
 
 export function DashboardPage() {
-  const { metrics, isLoading, error } = useDashboardData();
-  const { data: todosModelos } = useModelos({ page: 0, size: 1 });
-  const { data: modelosAtivos } = useModelos({ page: 0, size: 1, ativo: true });
-  const { data: modelosInativos } = useModelos({ page: 0, size: 1, ativo: false });
+  const { data: metricas, isLoading: loadingMetricas, isError: errorMetricas } = useMetricas();
+  const { data: solicitacoes = [], isLoading: loadingSolicitacoes, isError: errorSolicitacoes } = useKanbanSolicitacoes();
+  const [now] = useState(() => Date.now());
 
-  if (isLoading) return <LoadingState title="Carregando métricas..." />;
-  if (error) return <ErrorState title="Erro ao carregar métricas" description="Tente novamente." />;
+  // Agregações de Tipo e Prioridade calculadas no frontend a partir de solicitacoes
+  const distributions = useMemo(() => {
+    const byTipo: Record<string, number> = {};
+    const byPrioridade: Record<string, number> = {};
 
-  const maxStatus = Math.max(...STATUS_ORDER.map((s) => metrics.byStatus[s] ?? 0), 1);
-  const maxTipo = Math.max(...TIPO_ORDER.map((t) => metrics.byTipo[t] ?? 0), 1);
-  const maxPrio = Math.max(...PRIORIDADE_ORDER.map((p) => metrics.byPrioridade[p] ?? 0), 1);
-  const activeCount =
-    (metrics.byStatus['A_FAZER'] ?? 0) +
-    (metrics.byStatus['EM_ANDAMENTO'] ?? 0) +
-    (metrics.byStatus['EM_VALIDACAO'] ?? 0);
+    for (const s of solicitacoes) {
+      byTipo[s.tipo] = (byTipo[s.tipo] ?? 0) + 1;
+      if (s.prioridade && s.status !== 'CONCLUIDA' && s.status !== 'CANCELADA') {
+        byPrioridade[s.prioridade] = (byPrioridade[s.prioridade] ?? 0) + 1;
+      }
+    }
+
+    const maxTipo = Math.max(...TIPO_ORDER.map((t) => byTipo[t] ?? 0), 1);
+    const maxPrio = Math.max(...PRIORIDADE_ORDER.map((p) => byPrioridade[p] ?? 0), 1);
+
+    return { byTipo, byPrioridade, maxTipo, maxPrio };
+  }, [solicitacoes]);
+
+  if (loadingMetricas || loadingSolicitacoes) {
+    return <LoadingState title="Carregando painel de indicadores..." />;
+  }
+
+  if (errorMetricas || errorSolicitacoes || !metricas) {
+    return <ErrorState title="Não foi possível carregar o dashboard" description="Verifique sua conexão com o servidor." />;
+  }
+
+  // Filtragem local de aging (em atraso) das solicitações abertas
+  const agingTasks = solicitacoes
+    .filter((s) => {
+      if (s.status === 'CONCLUIDA' || s.status === 'CANCELADA') return false;
+      const dias = (now - new Date(s.criadaEm).getTime()) / 86_400_000;
+      return dias > AGING_THRESHOLD_DAYS;
+    })
+    .map((s) => ({
+      id: s.id,
+      titulo: s.titulo,
+      status: s.status,
+      diasAberta: Math.floor((now - new Date(s.criadaEm).getTime()) / 86_400_000),
+    }))
+    .sort((a, b) => b.diasAberta - a.diasAberta)
+    .slice(0, 5);
+
+  const maxStatus = Math.max(
+    ...STATUS_ORDER.map((status) => metricas.solicitacoesPorStatus[status] ?? 0),
+    1
+  );
+
+  // Formatação do SLA médio
+  let formatSla = '—';
+  if (metricas.tempoMedioResolucaoMinutos > 0) {
+    const mins = metricas.tempoMedioResolucaoMinutos;
+    if (mins >= 1440) {
+      formatSla = `${Math.round((mins / 1440) * 10) / 10}d`;
+    } else if (mins >= 60) {
+      formatSla = `${Math.round((mins / 60) * 10) / 10}h`;
+    } else {
+      formatSla = `${mins}m`;
+    }
+  }
 
   return (
     <section className="space-y-6">
-      <PageHeader title="Dashboard" description={`${metrics.total} solicitações no total`} />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader 
+          title="Dashboard" 
+          description={`${metricas.totalSolicitacoes} solicitações no total`} 
+        />
+        <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-sky-100 bg-sky-50/50 px-3 py-1 text-xs font-semibold text-sky-800 dark:border-sky-950/40 dark:bg-sky-950/20 dark:text-sky-300">
+          <Activity className="h-3.5 w-3.5 animate-pulse" />
+          <span>Monitoramento em Tempo Real</span>
+        </div>
+      </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KPICard icon={Layers} label="Total" value={metrics.total} subtext="registradas" />
+      {/* Grid de KPIs Consolidados do Sistema (Cypress testado) */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <KPICard
+          icon={Layers}
+          label="Total"
+          value={metricas.totalSolicitacoes}
+          subtext="Chamados registrados"
+          gradient="sky"
+          onClickPath="/app/solicitacoes"
+        />
         <KPICard
           icon={CheckCircle2}
           label="Concluídas"
-          value={metrics.concludedCount}
-          subtext={`${metrics.total > 0 ? Math.round((metrics.concludedCount / metrics.total) * 100) : 0}% do total`}
-          highlight="ok"
+          value={metricas.solicitacoesConcluidas}
+          subtext={`${
+            metricas.totalSolicitacoes > 0
+              ? Math.round((metricas.solicitacoesConcluidas / metricas.totalSolicitacoes) * 100)
+              : 0
+          }% do total`}
+          gradient="emerald"
         />
         <KPICard
           icon={Clock}
           label="Lead time médio"
-          value={metrics.avgLeadTimeDays !== null ? `${metrics.avgLeadTimeDays}d` : '—'}
+          value={formatSla}
           subtext="abertura → conclusão"
+          gradient="purple"
         />
         <KPICard
           icon={AlertTriangle}
           label="Em atraso"
-          value={metrics.agingCount}
-          subtext={`+${7}d sem conclusão`}
-          highlight={metrics.agingCount > 0 ? 'warn' : undefined}
+          value={agingTasks.length}
+          subtext="abertos há +7 dias"
+          gradient={agingTasks.length > 0 ? 'rose' : 'slate'}
         />
       </div>
 
-      {/* Status + Tipo row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Status distribution */}
-        <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Distribuição por status
-            </h2>
-            <span className="text-xs text-slate-400">{activeCount} abertas</span>
+      {/* Grid de Cadastros Gerais (Admin) */}
+      <div className="grid grid-cols-3 gap-4">
+        <KPICard
+          icon={Users}
+          label="Usuários"
+          value={metricas.totalUsuarios}
+          subtext="Operadores, gestores e admins"
+          gradient="slate"
+          onClickPath="/app/admin/usuarios"
+        />
+        <KPICard
+          icon={Cpu}
+          label="Máquinas"
+          value={metricas.totalMaquinas}
+          subtext="Ativos e equipamentos"
+          gradient="slate"
+          onClickPath="/app/admin/maquinas"
+        />
+        <KPICard
+          icon={Package}
+          label="Modelos de máquinas"
+          value={metricas.totalModelos}
+          subtext="Modelos e moldes"
+          gradient="slate"
+          onClickPath="/app/admin/modelos"
+        />
+      </div>
+
+      {/* Distribuições */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Distribuição por Status (Kanban Progress) */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:col-span-1 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-700/60">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">Distribuição por status</h2>
+              <p className="text-xxs text-slate-500 dark:text-slate-400">Ordens de serviço nas raias do Kanban.</p>
+            </div>
+            <span className="rounded bg-sky-50 px-2 py-0.5 text-xxs font-bold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 shrink-0">
+              {metricas.solicitacoesAbertas} abertas
+            </span>
           </div>
-          <div className="space-y-3">
+
+          <div className="space-y-2.5 pt-1">
             {STATUS_ORDER.map((status) => (
               <BarRow
                 key={status}
                 label={statusLabel[status]}
-                count={metrics.byStatus[status] ?? 0}
+                count={metricas.solicitacoesPorStatus[status] ?? 0}
                 max={maxStatus}
                 barClass={STATUS_COLOR[status]}
+                textColor={STATUS_TEXT_COLOR[status]}
               />
             ))}
           </div>
         </div>
 
-        {/* Tipo + Prioridade */}
-        <div className="space-y-6">
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Distribuição por tipo
-            </h2>
-            <div className="space-y-3">
+        {/* Distribuição por Tipo & Prioridade */}
+        <div className="space-y-6 lg:col-span-1">
+          {/* Distribuição por Tipo */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
+            <div className="border-b border-slate-100 pb-2 dark:border-slate-700/60">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">Distribuição por tipo</h2>
+              <p className="text-xxs text-slate-500 dark:text-slate-400">Classificação por categorias de chamados.</p>
+            </div>
+            <div className="space-y-2.5 pt-1">
               {TIPO_ORDER.map((tipo) => (
                 <BarRow
                   key={tipo}
                   label={tipoLabel[tipo]}
-                  count={metrics.byTipo[tipo] ?? 0}
-                  max={maxTipo}
-                  barClass="bg-sky-500"
+                  count={distributions.byTipo[tipo] ?? 0}
+                  max={distributions.maxTipo}
+                  barClass="bg-sky-500 dark:bg-sky-400"
                 />
               ))}
             </div>
           </div>
 
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Distribuição por prioridade (abertas)
-            </h2>
-            <div className="space-y-3">
+          {/* Distribuição por Prioridade */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
+            <div className="border-b border-slate-100 pb-2 dark:border-slate-700/60">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">Distribuição por prioridade</h2>
+              <p className="text-xxs text-slate-500 dark:text-slate-400">Prioridades atribuídas aos chamados em andamento.</p>
+            </div>
+            <div className="space-y-2.5 pt-1">
               {PRIORIDADE_ORDER.map((p) => (
                 <BarRow
                   key={p}
                   label={prioridadeLabel[p]}
-                  count={metrics.byPrioridade[p] ?? 0}
-                  max={maxPrio}
+                  count={distributions.byPrioridade[p] ?? 0}
+                  max={distributions.maxPrio}
                   barClass={PRIORIDADE_COLOR[p]}
                 />
               ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modelos */}
-      <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Package size={16} className="text-slate-400" />
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Modelos de máquinas
-            </h2>
+        {/* Notificações Operacionais e Chamados Críticos */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:col-span-1 space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-700/60">
+            <Hourglass className="h-5 w-5 text-amber-500 animate-spin-slow" />
+            <div>
+              <h2 className="font-bold text-slate-900 dark:text-white">Acompanhamento Crítico</h2>
+              <p className="text-xxs text-slate-500 dark:text-slate-400">Ordens de serviço gargalando o SLA operacional.</p>
+            </div>
           </div>
-          <Link
-            to="/app/modelos"
-            className="text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
-          >
-            Ver todos →
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-              {todosModelos?.totalElements ?? '—'}
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Total</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-              {modelosAtivos?.totalElements ?? '—'}
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Ativos</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold tabular-nums text-slate-500 dark:text-slate-400">
-              {modelosInativos?.totalElements ?? '—'}
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Inativos</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Aging tasks */}
-      {metrics.agingTasks.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-950/20">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
-            <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-              Solicitações em atraso (abertas há +7 dias)
-            </h2>
-          </div>
-          <ul className="space-y-2">
-            {metrics.agingTasks.map((t) => (
-              <li key={t.id}>
-                <Link
-                  to={`/app/solicitacoes/${t.id}`}
-                  className="flex items-center justify-between gap-4 rounded-md bg-white px-3 py-2 text-sm hover:bg-amber-50 dark:bg-slate-800 dark:hover:bg-amber-950/30"
-                >
-                  <span className="min-w-0 truncate font-medium text-slate-800 dark:text-slate-200">
-                    {t.titulo}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                    <span>{statusLabel[t.status as StatusSolicitacao]}</span>
-                    <span className="font-semibold text-amber-700 dark:text-amber-400">
-                      {t.diasAberta}d
+          {agingTasks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Operação Saudável</p>
+              <p className="text-xxs text-slate-500 dark:text-slate-400">Nenhum chamado aberto excedeu 7 dias.</p>
+            </div>
+          ) : (
+            <ul className="space-y-2.5">
+              {agingTasks.map((task) => (
+                <li key={task.id} className="group">
+                  <Link
+                    to={`/app/solicitacoes/${task.id}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/50 p-3 transition-all hover:bg-sky-50/40 hover:border-sky-200 dark:border-slate-700/50 dark:bg-slate-900/30 dark:hover:bg-sky-950/20 dark:hover:border-sky-900/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                        {task.titulo}
+                      </p>
+                      <span className={cn("inline-block mt-1 text-xxs font-medium uppercase", STATUS_TEXT_COLOR[task.status as StatusSolicitacao])}>
+                        {statusLabel[task.status as StatusSolicitacao]}
+                      </span>
+                    </div>
+                    <span className="rounded bg-rose-50 px-2 py-0.5 text-xxs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 shrink-0">
+                      {task.diasAberta}d abertas
                     </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      )}
+      </div>
     </section>
   );
 }

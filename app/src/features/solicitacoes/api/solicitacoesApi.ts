@@ -4,10 +4,12 @@ import type { PageResponse } from '@/shared/types/page';
 import type {
   AbrirSolicitacaoRequest,
   AtividadeSolicitacao,
+  CancelarSolicitacaoRequest,
   ComentarioRequest,
   DevolverSolicitacaoRequest,
   EditarSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
+  MetricasResponse,
   Solicitacao,
   SolicitacoesFilters,
   TriarSolicitacaoRequest,
@@ -34,6 +36,9 @@ export const solicitacoesApi = {
   encerrar: (id: string, payload: EncerrarSolicitacaoRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/encerrar`, payload),
 
+  cancelar: (id: string, payload: CancelarSolicitacaoRequest) =>
+    httpClient.patch<Solicitacao>(`/solicitacoes/${id}/cancelar`, payload),
+
   devolver: (id: string, payload: DevolverSolicitacaoRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/devolver`, payload),
 
@@ -42,4 +47,11 @@ export const solicitacoesApi = {
 
   listarAtividades: (id: string) =>
     httpClient.get<AtividadeSolicitacao[]>(`/solicitacoes/${id}/atividades`),
+
+  obterMetricas: () =>
+    httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
+
+  exportar: (filters: SolicitacoesFilters) =>
+    httpClient.get<string>('/solicitacoes/exportar', { params: filters }),
 };
+

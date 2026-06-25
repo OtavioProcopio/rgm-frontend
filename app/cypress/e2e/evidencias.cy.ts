@@ -11,18 +11,11 @@ describe('Evidências', () => {
       token = t;
 
       cy.apiPost(
-        '/admin/maquinas',
-        { nome: `Maq Evidencia ${ts()}`, codigo: `EV-${ts()}` },
+        '/modelos',
+        { codigo: `MDL-EV-${ts()}`, descricao: 'Modelo evidencia', maquina: 'Vick' },
         token,
-      ).then((maqRes) => {
-        const maq = maqRes.body as { id: string };
-        cy.apiPost(
-          '/modelos',
-          { codigo: `MDL-EV-${ts()}`, descricao: 'Modelo evidencia', maquinaId: maq.id },
-          token,
-        ).then((mdlRes) => {
-          modeloId = (mdlRes.body as { id: string }).id;
-        });
+      ).then((mdlRes) => {
+        modeloId = (mdlRes.body as { id: string }).id;
       });
     });
   });

@@ -45,6 +45,7 @@ export function EditarUsuarioPage() {
 
   useEffect(() => {
     if (usuario) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNovoPerfil(usuario.perfil);
     }
   }, [usuario]);
@@ -206,7 +207,6 @@ export function EditarUsuarioPage() {
                 <div className="flex justify-end">
                   <Button
                     type="submit"
-                    size="sm"
                     disabled={alterarPerfil.isPending || isMe || novoPerfil === usuario.perfil}
                   >
                     {alterarPerfil.isPending ? 'Salvando...' : 'Alterar Perfil'}
@@ -258,7 +258,6 @@ export function EditarUsuarioPage() {
                 <div className="flex justify-end">
                   <Button
                     type="submit"
-                    size="sm"
                     disabled={redefinirSenha.isPending || !novaSenha.trim()}
                   >
                     {redefinirSenha.isPending ? 'Redefinindo...' : 'Confirmar Senha'}

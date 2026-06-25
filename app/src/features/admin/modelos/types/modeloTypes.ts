@@ -6,7 +6,7 @@ export type Modelo = {
   observacoes: string | null;
   fotoUrl: string | null;
   ativo: boolean;
-  maquinaId: string;
+  maquina: string;
   temPendenciaAberta: boolean;
   criadoEm: string;
   atualizadoEm: string;
@@ -36,13 +36,14 @@ export type CriarModeloRequest = {
   codigo: string;
   descricao: string;
   observacoes?: string;
-  maquinaId: string;
+  maquina: string;
 };
 
 export type EditarModeloRequest = {
   codigo: string;
   descricao: string;
   observacoes?: string;
+  maquina: string;
 };
 
 export type FotoCapaUploadRequest = {

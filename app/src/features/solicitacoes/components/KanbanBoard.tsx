@@ -70,8 +70,13 @@ function getMoveType(from: StatusSolicitacao, to: StatusSolicitacao): MoveType {
   if (from === to || from === 'CONCLUIDA' || from === 'CANCELADA') return null;
   if (from === 'A_FAZER' && to === 'EM_ANDAMENTO') return 'triagem';
   if (from === 'EM_ANDAMENTO' && to === 'EM_VALIDACAO') return 'direct';
-  if (from === 'EM_ANDAMENTO' && to === 'CANCELADA') return 'encerramento';
-  if (from === 'EM_VALIDACAO' && (to === 'CONCLUIDA' || to === 'CANCELADA')) return 'encerramento';
+  if (
+    (from === 'A_FAZER' || from === 'EM_ANDAMENTO' || from === 'EM_VALIDACAO') &&
+    to === 'CANCELADA'
+  ) {
+    return 'encerramento';
+  }
+  if (from === 'EM_VALIDACAO' && to === 'CONCLUIDA') return 'encerramento';
   if (from === 'EM_VALIDACAO' && to === 'EM_ANDAMENTO') return 'devolucao';
   return null;
 }
@@ -157,7 +162,11 @@ export function KanbanBoard({ modeloId }: Props) {
     if (!pendingMove) return;
     setActionError(null);
     try {
-      await actions.encerrar.mutateAsync({ id: pendingMove.card.id, ...data });
+      if (data.concluir) {
+        await actions.encerrar.mutateAsync({ id: pendingMove.card.id, ...data });
+      } else {
+        await actions.cancelar.mutateAsync({ id: pendingMove.card.id, motivo: data.comentario });
+      }
       setPendingMove(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));

@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
 
-import type { Maquina } from '../../maquinas/types/maquinaTypes';
 import {
   criarModeloSchema,
   editarModeloSchema,
@@ -16,14 +15,12 @@ import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/m
 type ModeloFormProps =
   | {
       mode: 'create';
-      maquinas: Maquina[];
       isSubmitting?: boolean;
       onSubmit: (data: CriarModeloRequest) => Promise<void>;
     }
   | {
       mode: 'edit';
       modelo: Modelo;
-      maquinaLabel?: string;
       isSubmitting?: boolean;
       onSubmit: (data: EditarModeloRequest) => Promise<void>;
     };
@@ -35,7 +32,6 @@ export function ModeloForm(props: ModeloFormProps) {
 
 function CriarModeloForm({
   isSubmitting,
-  maquinas,
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'create' }>) {
   const {
@@ -44,7 +40,7 @@ function CriarModeloForm({
     register,
   } = useForm<CriarModeloFormData>({
     resolver: zodResolver(criarModeloSchema),
-    defaultValues: { codigo: '', descricao: '', observacoes: '', maquinaId: '' },
+    defaultValues: { codigo: '', descricao: '', observacoes: '', maquina: '' },
   });
 
   return (
@@ -61,25 +57,13 @@ function CriarModeloForm({
           disabled={isSubmitting}
           {...register('codigo')}
         />
-        <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-          <span>Máquina</span>
-          <select
-            disabled={isSubmitting}
-            className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            {...register('maquinaId')}
-          >
-            <option value="">Selecione</option>
-            {maquinas.map((maquina) => (
-              <option key={maquina.id} value={maquina.id}>
-                {maquina.codigo} - {maquina.nome}
-                {maquina.ativa ? '' : ' (inativa)'}
-              </option>
-            ))}
-          </select>
-          {errors.maquinaId ? (
-            <p className="text-sm text-red-600 dark:text-red-400">{errors.maquinaId.message}</p>
-          ) : null}
-        </label>
+        <Input
+          label="Máquina / Encaixe"
+          placeholder="Ex: FBOX, Fast Loop, Vick, Manual"
+          error={errors.maquina?.message}
+          disabled={isSubmitting}
+          {...register('maquina')}
+        />
       </div>
       <Input
         label="Descrição"
@@ -97,7 +81,6 @@ function CriarModeloForm({
 
 function EditarModeloForm({
   isSubmitting,
-  maquinaLabel,
   modelo,
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'edit' }>) {
@@ -111,6 +94,7 @@ function EditarModeloForm({
       codigo: modelo.codigo,
       descricao: modelo.descricao,
       observacoes: modelo.observacoes ?? '',
+      maquina: modelo.maquina,
     },
   });
 
@@ -122,6 +106,7 @@ function EditarModeloForm({
           codigo: data.codigo,
           descricao: data.descricao,
           observacoes: data.observacoes || undefined,
+          maquina: data.maquina,
         }),
       )}
     >
@@ -132,7 +117,13 @@ function EditarModeloForm({
           disabled={isSubmitting}
           {...register('codigo')}
         />
-        <ReadOnlyField label="Máquina" value={maquinaLabel ?? modelo.maquinaId} />
+        <Input
+          label="Máquina / Encaixe"
+          placeholder="Ex: FBOX, Fast Loop, Vick, Manual"
+          error={errors.maquina?.message}
+          disabled={isSubmitting}
+          {...register('maquina')}
+        />
       </div>
       <Input
         label="Descrição"
@@ -167,16 +158,5 @@ function TextArea({
         {...register}
       />
     </label>
-  );
-}
-
-function ReadOnlyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-2">
-      <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
-      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-        {value}
-      </div>
-    </div>
   );
 }
