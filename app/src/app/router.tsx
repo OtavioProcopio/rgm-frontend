@@ -18,6 +18,7 @@ import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuario
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { PerfilPage } from '@/features/auth/pages/PerfilPage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
 import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
 import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
           {
             path: 'dashboard',
             element: <DashboardPage />,
+          },
+          {
+            path: 'perfil',
+            element: <PerfilPage />,
           },
           {
             path: 'solicitacoes',

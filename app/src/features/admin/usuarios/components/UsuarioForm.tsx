@@ -199,12 +199,6 @@ function EditarUsuarioForm({
         </div>
       ) : null}
 
-      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-        <h3 className="font-semibold text-slate-950 dark:text-white">Alteração de senha</h3>
-        <p className="mt-1">A alteração de senha ainda não está disponível na API.</p>
-        {/* TODO: implementar alteração de senha quando o backend expuser endpoint específico. */}
-      </div>
-
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Salvando...' : 'Salvar alterações'}
       </Button>

@@ -5,6 +5,7 @@ import {
   LogOut,
   PackageSearch,
   Ticket,
+  User,
   Users,
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
@@ -65,7 +66,20 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700 space-y-2">
+          <NavLink
+            to="/app/perfil"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+                isActive &&
+                  'bg-sky-600 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-500',
+              )
+            }
+          >
+            <User size={18} />
+            Meu Perfil
+          </NavLink>
           <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-700/70">
             <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
             <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
@@ -103,6 +117,13 @@ export function AppLayout() {
                   {user?.perfil}
                 </p>
               </div>
+              <NavLink
+                to="/app/perfil"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <User size={16} />
+                <span className="hidden sm:inline">Meu Perfil</span>
+              </NavLink>
               <ThemeToggle />
               <Button variant="secondary" onClick={logout} className="gap-2">
                 <LogOut size={16} />
