@@ -108,45 +108,81 @@ export function KanbanBoard({ modeloId }: Props) {
   );
 
   function handleDrop(toStatus: StatusSolicitacao) {
-    if (!dragging || !canManage) { setDragging(null); setDragOverStatus(null); return; }
+    if (!dragging || !canManage) {
+      setDragging(null);
+      setDragOverStatus(null);
+      return;
+    }
     const moveType = getMoveType(dragging.status, toStatus);
-    if (!moveType) { setDragging(null); setDragOverStatus(null); return; }
+    if (!moveType) {
+      setDragging(null);
+      setDragOverStatus(null);
+      return;
+    }
     if (moveType === 'direct') {
       actions.enviarValidacao.mutate(dragging.id);
-      setDragging(null); setDragOverStatus(null);
+      setDragging(null);
+      setDragOverStatus(null);
       return;
     }
     if (moveType === 'triagem') setPendingMove({ type: 'triagem', card: dragging });
-    else if (moveType === 'encerramento') setPendingMove({ type: 'encerramento', card: dragging, podeConcluir: dragging.status === 'EM_VALIDACAO' });
+    else if (moveType === 'encerramento')
+      setPendingMove({
+        type: 'encerramento',
+        card: dragging,
+        podeConcluir: dragging.status === 'EM_VALIDACAO',
+      });
     else if (moveType === 'devolucao') setPendingMove({ type: 'devolucao', card: dragging });
-    setDragging(null); setDragOverStatus(null);
+    setDragging(null);
+    setDragOverStatus(null);
   }
 
-  function clearPendingMove() { setPendingMove(null); setActionError(null); }
+  function clearPendingMove() {
+    setPendingMove(null);
+    setActionError(null);
+  }
 
   async function handleTriar(data: TriarSolicitacaoRequest) {
     if (!pendingMove) return;
     setActionError(null);
-    try { await actions.triar.mutateAsync({ id: pendingMove.card.id, ...data }); setPendingMove(null); }
-    catch (err) { setActionError(getSolicitacaoErrorMessage(err)); }
+    try {
+      await actions.triar.mutateAsync({ id: pendingMove.card.id, ...data });
+      setPendingMove(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
   }
 
   async function handleEncerrar(data: EncerrarSolicitacaoRequest) {
     if (!pendingMove) return;
     setActionError(null);
-    try { await actions.encerrar.mutateAsync({ id: pendingMove.card.id, ...data }); setPendingMove(null); }
-    catch (err) { setActionError(getSolicitacaoErrorMessage(err)); }
+    try {
+      await actions.encerrar.mutateAsync({ id: pendingMove.card.id, ...data });
+      setPendingMove(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
   }
 
   async function handleDevolver(data: DevolverSolicitacaoRequest) {
     if (!pendingMove) return;
     setActionError(null);
-    try { await actions.devolver.mutateAsync({ id: pendingMove.card.id, ...data }); setPendingMove(null); }
-    catch (err) { setActionError(getSolicitacaoErrorMessage(err)); }
+    try {
+      await actions.devolver.mutateAsync({ id: pendingMove.card.id, ...data });
+      setPendingMove(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
   }
 
   if (isLoading) return <LoadingState title="Carregando quadro..." />;
-  if (error) return <ErrorState title="Erro ao carregar solicitações" description={getSolicitacaoErrorMessage(error)} />;
+  if (error)
+    return (
+      <ErrorState
+        title="Erro ao carregar solicitações"
+        description={getSolicitacaoErrorMessage(error)}
+      />
+    );
 
   const cardsByStatus = Object.fromEntries(
     COLUMNS.map((col) => [col.status, solicitacoes.filter((s) => s.status === col.status)]),
@@ -155,7 +191,13 @@ export function KanbanBoard({ modeloId }: Props) {
   const activeColumn = COLUMNS.find((c) => c.status === activeTab)!;
 
   return (
-    <div className="relative" onDragEnd={() => { setDragging(null); setDragOverStatus(null); }}>
+    <div
+      className="relative"
+      onDragEnd={() => {
+        setDragging(null);
+        setDragOverStatus(null);
+      }}
+    >
       {actionError && !pendingMove && (
         <p className="mb-3 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
           {actionError}

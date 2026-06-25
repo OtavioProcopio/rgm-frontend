@@ -36,18 +36,13 @@ export function ModeloDetalhePage() {
   const { data: maquinasData } = useMaquinas({ page: 0, size: 200 });
 
   const maquinasMap = useMemo(
-    () =>
-      new Map(
-        (maquinasData?.content ?? []).map((m) => [m.id, `${m.codigo} - ${m.nome}`]),
-      ),
+    () => new Map((maquinasData?.content ?? []).map((m) => [m.id, `${m.codigo} - ${m.nome}`])),
     [maquinasData],
   );
 
   if (isLoading) return <LoadingState title="Carregando modelo..." />;
   if (error || !modelo)
-    return (
-      <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
-    );
+    return <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />;
 
   return (
     <section>
@@ -81,7 +76,9 @@ export function ModeloDetalhePage() {
               <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
             </dl>
             {modelo.observacoes ? (
-              <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">{modelo.observacoes}</p>
+              <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">
+                {modelo.observacoes}
+              </p>
             ) : null}
           </div>
           <aside>

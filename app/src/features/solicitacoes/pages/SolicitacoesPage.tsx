@@ -27,8 +27,7 @@ export function SolicitacoesPage() {
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
   const pageInfo = useMemo(
-    () =>
-      data ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}` : 'Página 1 de 1',
+    () => (data ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}` : 'Página 1 de 1'),
     [data],
   );
 

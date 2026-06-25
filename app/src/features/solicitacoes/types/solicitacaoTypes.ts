@@ -1,4 +1,9 @@
-export type StatusSolicitacao = 'A_FAZER' | 'EM_ANDAMENTO' | 'EM_VALIDACAO' | 'CONCLUIDA' | 'CANCELADA';
+export type StatusSolicitacao =
+  | 'A_FAZER'
+  | 'EM_ANDAMENTO'
+  | 'EM_VALIDACAO'
+  | 'CONCLUIDA'
+  | 'CANCELADA';
 export type PrioridadeSolicitacao = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
 export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA';
 export type TipoAtividadeSolicitacao =

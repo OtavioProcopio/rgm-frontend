@@ -52,8 +52,7 @@ describe('Evidências', () => {
       );
 
       // Aguarda o upload e a exibição de ao menos um card de evidência
-      cy.get('[data-cy="evidencia-card"], img[alt]', { timeout: 15000 })
-        .should('exist');
+      cy.get('[data-cy="evidencia-card"], img[alt]', { timeout: 15000 }).should('exist');
     });
   });
 

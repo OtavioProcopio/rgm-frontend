@@ -9,7 +9,11 @@ import { cn } from '@/shared/lib/cn';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import { statusLabel, tipoLabel, prioridadeLabel } from '../lib/solicitacaoMessages';
-import type { StatusSolicitacao, TipoSolicitacao, PrioridadeSolicitacao } from '../types/solicitacaoTypes';
+import type {
+  StatusSolicitacao,
+  TipoSolicitacao,
+  PrioridadeSolicitacao,
+} from '../types/solicitacaoTypes';
 
 const STATUS_ORDER: StatusSolicitacao[] = [
   'A_FAZER',
@@ -122,8 +126,7 @@ export function DashboardPage() {
   const { data: modelosInativos } = useModelos({ page: 0, size: 1, ativo: false });
 
   if (isLoading) return <LoadingState title="Carregando métricas..." />;
-  if (error)
-    return <ErrorState title="Erro ao carregar métricas" description="Tente novamente." />;
+  if (error) return <ErrorState title="Erro ao carregar métricas" description="Tente novamente." />;
 
   const maxStatus = Math.max(...STATUS_ORDER.map((s) => metrics.byStatus[s] ?? 0), 1);
   const maxTipo = Math.max(...TIPO_ORDER.map((t) => metrics.byTipo[t] ?? 0), 1);
@@ -135,10 +138,7 @@ export function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description={`${metrics.total} solicitações no total`}
-      />
+      <PageHeader title="Dashboard" description={`${metrics.total} solicitações no total`} />
 
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

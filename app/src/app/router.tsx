@@ -20,6 +20,7 @@ import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
 import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
+import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
@@ -56,7 +57,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'dashboard',
-            element: <SolicitacoesPage />,
+            element: <DashboardPage />,
           },
           {
             path: 'solicitacoes',

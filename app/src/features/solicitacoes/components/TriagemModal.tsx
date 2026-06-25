@@ -4,7 +4,10 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 
-import { triarSolicitacaoSchema, type TriarSolicitacaoFormData } from '../schemas/solicitacaoSchema';
+import {
+  triarSolicitacaoSchema,
+  type TriarSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
 
 type UsuarioOpcao = { id: string; nome: string };
 

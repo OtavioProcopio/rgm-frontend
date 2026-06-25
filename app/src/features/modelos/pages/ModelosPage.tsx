@@ -32,10 +32,7 @@ export function ModelosPage() {
   }
 
   const pageInfo = useMemo(
-    () =>
-      data
-        ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}`
-        : 'Página 1 de 1',
+    () => (data ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}` : 'Página 1 de 1'),
     [data],
   );
 
@@ -70,7 +67,10 @@ export function ModelosPage() {
         />
       ) : null}
       {data && data.content.length === 0 ? (
-        <EmptyState title="Nenhum modelo encontrado" description="Nenhum modelo cadastrado ainda." />
+        <EmptyState
+          title="Nenhum modelo encontrado"
+          description="Nenhum modelo cadastrado ainda."
+        />
       ) : null}
 
       {data && data.content.length > 0 ? (
@@ -89,7 +89,9 @@ export function ModelosPage() {
                   />
                 ) : null}
                 <p className="font-semibold text-slate-900 dark:text-white">{modelo.codigo}</p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{modelo.descricao}</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {modelo.descricao}
+                </p>
                 <div className="mt-2 flex items-center gap-2">
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${

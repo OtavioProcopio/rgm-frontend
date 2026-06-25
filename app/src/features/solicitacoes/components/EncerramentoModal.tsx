@@ -5,7 +5,10 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 
-import { encerrarSolicitacaoSchema, type EncerrarSolicitacaoFormData } from '../schemas/solicitacaoSchema';
+import {
+  encerrarSolicitacaoSchema,
+  type EncerrarSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
 
 type Props = {
   isPending?: boolean;
@@ -16,7 +19,12 @@ type Props = {
 
 export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, onConfirm }: Props) {
   const [concluir, setConcluir] = useState(podeConcluir);
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<EncerrarSolicitacaoFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<EncerrarSolicitacaoFormData>({
     resolver: zodResolver(encerrarSolicitacaoSchema),
     defaultValues: { concluir: podeConcluir },
   });

@@ -47,7 +47,11 @@ describe('Admin — Modelos', () => {
   before(() => {
     cy.apiLogin().then((t) => {
       token = t;
-      cy.apiPost('/admin/maquinas', { nome: `Maq Modelo ${ts()}`, codigo: `MQ-MDL-${ts()}` }, token).then((res) => {
+      cy.apiPost(
+        '/admin/maquinas',
+        { nome: `Maq Modelo ${ts()}`, codigo: `MQ-MDL-${ts()}` },
+        token,
+      ).then((res) => {
         const body = res.body as { id: string };
         maquinaId = body.id;
       });

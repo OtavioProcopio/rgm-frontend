@@ -51,18 +51,15 @@ Cypress.Commands.add('apiLogin', () => {
     });
 });
 
-Cypress.Commands.add(
-  'apiPost',
-  (path: string, body: Record<string, unknown>, token: string) => {
-    return cy.request({
-      method: 'POST',
-      url: `${API()}${path}`,
-      headers: { Authorization: `Bearer ${token}` },
-      body,
-      failOnStatusCode: true,
-    });
-  },
-);
+Cypress.Commands.add('apiPost', (path: string, body: Record<string, unknown>, token: string) => {
+  return cy.request({
+    method: 'POST',
+    url: `${API()}${path}`,
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+    failOnStatusCode: true,
+  });
+});
 
 Cypress.Commands.add(
   'apiPatch',

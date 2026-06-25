@@ -1,4 +1,12 @@
-import { BarChart2, Cpu, LayoutDashboard, LogOut, PackageSearch, Ticket, Users } from 'lucide-react';
+import {
+  BarChart2,
+  Cpu,
+  LayoutDashboard,
+  LogOut,
+  PackageSearch,
+  Ticket,
+  Users,
+} from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';

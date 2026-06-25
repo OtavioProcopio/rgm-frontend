@@ -150,9 +150,7 @@ export function SolicitacaoDetalhePage() {
         }
       />
 
-      {actionError ? (
-        <ErrorState title="Operação não concluída" description={actionError} />
-      ) : null}
+      {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
 
       {/* Info */}
       <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
@@ -225,7 +223,7 @@ export function SolicitacaoDetalhePage() {
                 Devolver
               </Button>
             ) : null}
-            {(solicitacao.status === 'EM_ANDAMENTO' || solicitacao.status === 'EM_VALIDACAO') ? (
+            {solicitacao.status === 'EM_ANDAMENTO' || solicitacao.status === 'EM_VALIDACAO' ? (
               <Button
                 type="button"
                 variant="secondary"
@@ -269,10 +267,7 @@ export function SolicitacaoDetalhePage() {
         </h2>
         {!isTerminal ? (
           <div className="mb-4">
-            <EvidenciaUploader
-              isPending={uploadEvidencia.isPending}
-              onUpload={handleUpload}
-            />
+            <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
           </div>
         ) : null}
         <EvidenciaList evidencias={evidencias} isLoading={isLoadingEvidencias} />

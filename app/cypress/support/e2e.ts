@@ -9,18 +9,20 @@ Cypress.on('window:before:load', (win) => {
 
   const originalError = win.console.error;
   win.console.error = (...args) => {
-    const msg = args.map(a => {
-      if (a && typeof a === 'object') {
-        if (a instanceof Error) {
-          return `${a.name}: ${a.message}\n${a.stack}`;
+    const msg = args
+      .map((a) => {
+        if (a && typeof a === 'object') {
+          if (a instanceof Error) {
+            return `${a.name}: ${a.message}\n${a.stack}`;
+          }
+          if ('message' in a && 'name' in a) {
+            return `${a.name}: ${a.message}`;
+          }
+          return JSON.stringify(a);
         }
-        if ('message' in a && 'name' in a) {
-          return `${a.name}: ${a.message}`;
-        }
-        return JSON.stringify(a);
-      }
-      return String(a);
-    }).join(' ');
+        return String(a);
+      })
+      .join(' ');
     browserErrors.push(`[CONSOLE ERROR] ${msg}`);
     originalError.apply(win.console, args);
   };

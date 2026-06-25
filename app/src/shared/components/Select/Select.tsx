@@ -14,7 +14,15 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   error?: string;
 };
 
-export function Select({ className, error, id, label, options, placeholder, ...props }: SelectProps) {
+export function Select({
+  className,
+  error,
+  id,
+  label,
+  options,
+  placeholder,
+  ...props
+}: SelectProps) {
   const generatedId = useId();
   const selectId = id ?? generatedId;
 

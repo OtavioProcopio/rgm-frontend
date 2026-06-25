@@ -17,9 +17,7 @@ export function canManageSolicitacoes(perfil?: PerfilUsuario | null) {
 }
 
 export function canViewModelos(perfil?: PerfilUsuario | null) {
-  return (
-    perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || perfil === 'OPERADOR'
-  );
+  return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || perfil === 'OPERADOR';
 }
 
 export function getDefaultRoute(perfil?: PerfilUsuario | null): string {

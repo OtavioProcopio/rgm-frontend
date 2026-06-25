@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useKanbanSolicitacoes } from './useKanbanSolicitacoes';
 
@@ -17,12 +17,12 @@ const AGING_THRESHOLD_DAYS = 7;
 
 export function useDashboardData() {
   const { data: solicitacoes = [], isLoading, error } = useKanbanSolicitacoes();
+  const [now] = useState(() => Date.now());
 
   const metrics = useMemo((): DashboardMetrics => {
     const byStatus: Record<string, number> = {};
     const byTipo: Record<string, number> = {};
     const byPrioridade: Record<string, number> = {};
-    const now = Date.now();
     const leadTimes: number[] = [];
 
     for (const s of solicitacoes) {
@@ -68,7 +68,7 @@ export function useDashboardData() {
       agingCount: agingTasks.length,
       agingTasks,
     };
-  }, [solicitacoes]);
+  }, [solicitacoes, now]);
 
   return { metrics, isLoading, error };
 }

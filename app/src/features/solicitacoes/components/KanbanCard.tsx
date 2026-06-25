@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ExternalLink, Eye, Settings2, Wrench } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
@@ -39,7 +40,8 @@ const PRIORITY_BORDER: Record<string, string> = {
 };
 
 function AgeBadge({ criadaEm }: { criadaEm: string }) {
-  const days = Math.floor((Date.now() - new Date(criadaEm).getTime()) / 86_400_000);
+  const [now] = useState(() => Date.now());
+  const days = Math.floor((now - new Date(criadaEm).getTime()) / 86_400_000);
   if (days === 0) return null;
   return (
     <span

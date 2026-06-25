@@ -137,7 +137,11 @@ async function request<T>(
       message,
       body,
     });
-    console.error('[API ERROR]', { status: apiError.status, message: apiError.message, body: apiError.body });
+    console.error('[API ERROR]', {
+      status: apiError.status,
+      message: apiError.message,
+      body: apiError.body,
+    });
     throw apiError;
   }
 
