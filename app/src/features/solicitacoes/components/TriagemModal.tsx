@@ -32,6 +32,9 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
     formState: { errors },
   } = useForm<TriarSolicitacaoFormData>({
     resolver: zodResolver(triarSolicitacaoSchema),
+    defaultValues: {
+      responsavelIds: [],
+    },
   });
 
   return (
