@@ -1,4 +1,4 @@
-.PHONY: help setup install dev build lint format typecheck test test-run check
+.PHONY: help setup install dev build lint format typecheck test test-run coverage check validate
 
 help: ## Mostrar ajuda com todos os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -36,10 +36,16 @@ test: ## Executar testes do Vitest em modo interativo (watch)
 test-run: ## Executar suite de testes do Vitest uma única vez
 	cd app && npm run test:run
 
+coverage: ## Rodar testes com relatório de cobertura V8 (coverage/)
+	cd app && npm run test:coverage
+
 # ── Validação Global ──────────────────────────────────────────
 
-check: ## Validar tudo (Lint + Typecheck + Testes + Build)
+check: ## Lint + Typecheck + Testes sem cobertura + Build
 	cd app && npm run check
+
+validate: ## Pipeline completo XP: lint + typecheck + coverage 85% + build
+	cd app && npm run validate
 
 build: ## Gerar build de produção otimizado na pasta dist
 	cd app && npm run build

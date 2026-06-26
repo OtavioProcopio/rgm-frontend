@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
@@ -39,6 +39,7 @@ import { useQuery } from '@tanstack/react-query';
 import { canAccessAdmin } from '@/shared/lib/permissions';
 import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
 type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
 
@@ -58,6 +59,7 @@ export function SolicitacaoDetalhePage() {
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
   const { data: evidencias = [], isLoading: isLoadingEvidencias } = useEvidencias(id!);
+  const { data: modelo } = useModelo(solicitacao?.modeloId);
 
   const triar = useTriarSolicitacao(id!);
   const enviarValidacao = useEnviarParaValidacao(id!);
@@ -69,6 +71,8 @@ export function SolicitacaoDetalhePage() {
   const editar = useEditarSolicitacao(id!);
 
   const canManage = canManageSolicitacoes(user?.perfil);
+  const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
+  const canEnviarValidacao = canManage || (user?.perfil === 'OPERADOR' && isResponsavel);
 
   const { data: usuariosPage } = useQuery({
     queryKey: ['admin', 'usuarios', 'triagem'],
@@ -149,6 +153,12 @@ export function SolicitacaoDetalhePage() {
     (user?.perfil === 'ADMINISTRADOR' ||
       user?.perfil === 'GESTOR' ||
       (user?.perfil === 'OPERADOR' && solicitacao.abertaPorUsuarioId === profile?.id));
+
+  // OPERADOR pode anexar evidências se é o responsável pela solicitação ou quem a abriu
+  const canAnexarEvidencia =
+    !isTerminal &&
+    (canManage ||
+      (user?.perfil === 'OPERADOR' && (isResponsavel || solicitacao?.abertaPorUsuarioId === profile?.id)));
 
   async function handleSaveEdit() {
     if (!editTitulo.trim() || !editDescricao.trim()) {
@@ -287,6 +297,19 @@ export function SolicitacaoDetalhePage() {
             </p>
             <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
           </div>
+          {modelo ? (
+            <div className="sm:col-span-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Modelo (rastreabilidade)
+              </p>
+              <Link
+                to={`/app/admin/modelos/${modelo.id}`}
+                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {modelo.codigo} — {modelo.descricao}
+              </Link>
+            </div>
+          ) : null}
           {solicitacao.comentarioFinal ? (
             <div className="sm:col-span-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -301,16 +324,16 @@ export function SolicitacaoDetalhePage() {
       )}
 
       {/* Ações */}
-      {!isTerminal && canManage ? (
+      {!isTerminal && (canManage || canEnviarValidacao) ? (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
           <div className="flex flex-wrap gap-2">
-            {solicitacao.status === 'A_FAZER' ? (
+            {canManage && solicitacao.status === 'A_FAZER' ? (
               <Button type="button" onClick={() => setActiveModal('triagem')}>
                 Triar
               </Button>
             ) : null}
-            {solicitacao.status === 'EM_ANDAMENTO' ? (
+            {canEnviarValidacao && solicitacao.status === 'EM_ANDAMENTO' ? (
               <Button
                 type="button"
                 disabled={enviarValidacao.isPending}
@@ -319,14 +342,15 @@ export function SolicitacaoDetalhePage() {
                 {enviarValidacao.isPending ? 'Enviando...' : 'Enviar para validação'}
               </Button>
             ) : null}
-            {solicitacao.status === 'EM_VALIDACAO' ? (
+            {canManage && solicitacao.status === 'EM_VALIDACAO' ? (
               <Button type="button" onClick={() => setActiveModal('devolucao')}>
                 Devolver
               </Button>
             ) : null}
-            {solicitacao.status === 'A_FAZER' ||
-            solicitacao.status === 'EM_ANDAMENTO' ||
-            solicitacao.status === 'EM_VALIDACAO' ? (
+            {canManage &&
+            (solicitacao.status === 'A_FAZER' ||
+              solicitacao.status === 'EM_ANDAMENTO' ||
+              solicitacao.status === 'EM_VALIDACAO') ? (
               <Button
                 type="button"
                 variant="secondary"
@@ -368,7 +392,7 @@ export function SolicitacaoDetalhePage() {
         <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
           Evidências
         </h2>
-        {!isTerminal ? (
+        {canAnexarEvidencia ? (
           <div className="mb-4">
             <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
           </div>

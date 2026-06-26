@@ -272,8 +272,8 @@ export function PerfilPage() {
             <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-900/35">
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tempo Médio de Resolução</p>
               <p className="mt-2 text-3xl font-bold text-sky-600 dark:text-sky-400">
-                {metricas.tempoMedioResolucaoMinutos > 0
-                  ? `${Math.round(metricas.tempoMedioResolucaoMinutos / 60)}h`
+                {metricas.tempoMedioResolucaoSegundos > 0
+                  ? `${Math.round(metricas.tempoMedioResolucaoSegundos / 3600)}h`
                   : '—'}
               </p>
             </div>

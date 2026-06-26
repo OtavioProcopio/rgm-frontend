@@ -4,6 +4,7 @@ import { AdminLayout } from '@/app/layouts/AdminLayout';
 import { AppLayout } from '@/app/layouts/AppLayout';
 import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { AdminRoute } from '@/app/routes/AdminRoute';
+import { ModeloManagementRoute } from '@/app/routes/ModeloManagementRoute';
 import { ProtectedRoute } from '@/app/routes/ProtectedRoute';
 import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
 
@@ -88,43 +89,56 @@ export const router = createBrowserRouter([
           },
           {
             path: 'admin',
-            element: <AdminRoute />,
             children: [
               {
-                element: <AdminLayout />,
+                element: <AdminRoute />,
                 children: [
                   {
-                    index: true,
-                    element: <AdminDashboardPage />,
+                    element: <AdminLayout />,
+                    children: [
+                      {
+                        index: true,
+                        element: <AdminDashboardPage />,
+                      },
+                      {
+                        path: 'usuarios',
+                        element: <UsuariosPage />,
+                      },
+                      {
+                        path: 'usuarios/novo',
+                        element: <NovoUsuarioPage />,
+                      },
+                      {
+                        path: 'usuarios/:id/editar',
+                        element: <EditarUsuarioPage />,
+                      },
+                    ],
                   },
+                ],
+              },
+              {
+                element: <ModeloManagementRoute />,
+                children: [
                   {
-                    path: 'usuarios',
-                    element: <UsuariosPage />,
-                  },
-                  {
-                    path: 'usuarios/novo',
-                    element: <NovoUsuarioPage />,
-                  },
-                  {
-                    path: 'usuarios/:id/editar',
-                    element: <EditarUsuarioPage />,
-                  },
-
-                  {
-                    path: 'modelos',
-                    element: <AdminModelosPage />,
-                  },
-                  {
-                    path: 'modelos/novo',
-                    element: <NovoModeloPage />,
-                  },
-                  {
-                    path: 'modelos/:id',
-                    element: <ModeloDetalhePage />,
-                  },
-                  {
-                    path: 'modelos/:id/editar',
-                    element: <EditarModeloPage />,
+                    element: <AdminLayout />,
+                    children: [
+                      {
+                        path: 'modelos',
+                        element: <AdminModelosPage />,
+                      },
+                      {
+                        path: 'modelos/novo',
+                        element: <NovoModeloPage />,
+                      },
+                      {
+                        path: 'modelos/:id',
+                        element: <ModeloDetalhePage />,
+                      },
+                      {
+                        path: 'modelos/:id/editar',
+                        element: <EditarModeloPage />,
+                      },
+                    ],
                   },
                 ],
               },

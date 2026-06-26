@@ -6,6 +6,7 @@ import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { Pagination } from '@/shared/components/Pagination/Pagination';
 
 import { ModelosFilters } from '../components/ModelosFilters';
 import { ModelosTable } from '../components/ModelosTable';
@@ -92,30 +93,14 @@ export function ModelosPage() {
             onDesativar={handleDesativar}
             onAtivar={handleAtivar}
           />
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Página {data.page + 1} de {Math.max(data.totalPages, 1)} • {data.totalElements}{' '}
-              modelo(s)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={filters.page === 0}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
-              >
-                Anterior
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={filters.page + 1 >= data.totalPages}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
-              >
-                Próxima
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            totalElements={data.totalElements}
+            itemLabel="modelo(s)"
+            onPrev={() => setFilters((c) => ({ ...c, page: c.page - 1 }))}
+            onNext={() => setFilters((c) => ({ ...c, page: c.page + 1 }))}
+          />
         </>
       ) : null}
     </section>

@@ -1,3 +1,4 @@
+import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Select } from '@/shared/components/Select/Select';
 
 import type { SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
@@ -16,13 +17,18 @@ const statusOptions = [
 ];
 
 export function SolicitacaoFilters({ filters, onChange }: Props) {
+  const { data: modelosData } = useModelos({ page: 0, size: 100, ativo: true });
+
+  const modeloOptions =
+    modelosData?.content.map((m) => ({ value: m.id, label: m.codigo })) ?? [];
+
   function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value as StatusSolicitacao | '';
-    onChange({
-      ...filters,
-      page: 0,
-      status: value || undefined,
-    });
+    onChange({ ...filters, page: 0, status: value || undefined });
+  }
+
+  function handleModeloChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    onChange({ ...filters, page: 0, modeloId: e.target.value || undefined });
   }
 
   return (
@@ -31,11 +37,22 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
         <Select
           label="Status"
           options={statusOptions}
-          placeholder="Todos"
+          placeholder="Todos os status"
           value={filters.status ?? ''}
           onChange={handleStatusChange}
         />
       </div>
+      {modeloOptions.length > 0 && (
+        <div className="w-full sm:w-64">
+          <Select
+            label="Modelo"
+            options={modeloOptions}
+            placeholder="Todos os modelos"
+            value={filters.modeloId ?? ''}
+            onChange={handleModeloChange}
+          />
+        </div>
+      )}
     </div>
   );
 }
