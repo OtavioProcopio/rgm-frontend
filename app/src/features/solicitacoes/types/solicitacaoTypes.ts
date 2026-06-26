@@ -27,6 +27,7 @@ export type Solicitacao = {
   atualizadaEm: string;
   concluidaEm: string | null;
   canceladaEm: string | null;
+  responsavelIds: string[];
 };
 
 export type AtividadeSolicitacao = {
@@ -37,6 +38,7 @@ export type AtividadeSolicitacao = {
   paraStatus: StatusSolicitacao | null;
   comentario: string | null;
   autorUsuarioId: string;
+  autorNome: string;
   criadaEm: string;
 };
 
@@ -91,6 +93,6 @@ export type MetricasResponse = {
   solicitacoesAbertas: number;
   solicitacoesPendentes: number;
   solicitacoesConcluidas: number;
-  tempoMedioResolucaoMinutos: number;
+  tempoMedioResolucaoSegundos: number;
 };
 

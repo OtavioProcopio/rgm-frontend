@@ -11,13 +11,14 @@ type Props = {
   isLoading?: boolean;
 };
 
-function relativeTime(dateStr: string): string {
-  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-  if (diff < 60) return 'agora mesmo';
-  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`;
-  if (diff < 604800) return `há ${Math.floor(diff / 86400)}d`;
-  return new Date(dateStr).toLocaleDateString('pt-BR');
+function formatDateTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 const TIPO_CONFIG: Record<
@@ -94,15 +95,18 @@ export function SolicitacaoTimeline({ atividades, isLoading }: Props) {
                     atividade.paraStatus &&
                     `: ${statusLabel[atividade.deStatus]} → ${statusLabel[atividade.paraStatus]}`}
                 </p>
-                <time
-                  className="text-xs text-slate-400 dark:text-slate-500"
-                  title={new Date(atividade.criadaEm).toLocaleString('pt-BR')}
-                >
-                  {relativeTime(atividade.criadaEm)}
+              </div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  {atividade.autorNome}
+                </span>
+                <span className="text-xs text-slate-300 dark:text-slate-600">·</span>
+                <time className="text-xs text-slate-400 dark:text-slate-500">
+                  {formatDateTime(atividade.criadaEm)}
                 </time>
               </div>
               {atividade.comentario ? (
-                <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {atividade.comentario}
                 </p>
               ) : null}

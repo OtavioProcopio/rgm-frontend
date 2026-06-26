@@ -13,7 +13,15 @@ import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
-import { canAccessAdmin, canViewModelos } from '@/shared/lib/permissions';
+import type { PerfilUsuario } from '@/features/auth/types/authTypes';
+import { canAccessAdmin, canManageModelos, canViewModelos } from '@/shared/lib/permissions';
+
+const PERFIL_LABEL: Record<PerfilUsuario, string> = {
+  ADMINISTRADOR: 'Painel administrativo',
+  GESTOR: 'Portal de gestão',
+  OPERADOR: 'Portal operacional',
+  EXTERNO: 'Portal de solicitações',
+};
 
 const adminNavigation = [
   { to: '/app/admin', label: 'Painel', icon: LayoutDashboard, end: true },
@@ -32,6 +40,9 @@ export function AppLayout() {
         ...(canViewModelos(user?.perfil)
           ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]
           : []),
+        ...(canManageModelos(user?.perfil) && !canAccessAdmin(user?.perfil)
+          ? [{ to: '/app/admin/modelos', label: 'Gerenciar Modelos', icon: PackageSearch, end: false }]
+          : []),
       ];
 
   return (
@@ -40,7 +51,7 @@ export function AppLayout() {
         <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
           <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-            Painel administrativo
+            {user?.perfil ? PERFIL_LABEL[user.perfil] : 'RGM Auto Parts'}
           </p>
         </div>
 
@@ -64,33 +75,25 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-200 p-4 dark:border-slate-700 space-y-2">
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
           <NavLink
             to="/app/perfil"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
-                isActive &&
-                  'bg-sky-600 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-500',
+                'flex items-center gap-3 rounded-md bg-slate-50 p-3 dark:bg-slate-700/70 border border-transparent transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99]',
+                isActive && 'ring-2 ring-sky-500/20 border-sky-400 dark:border-sky-500',
               )
             }
           >
-            <User size={18} />
-            Meu Perfil
-          </NavLink>
-          <NavLink
-            to="/app/perfil"
-            className={({ isActive }) =>
-              cn(
-                'block rounded-md bg-slate-50 p-3 dark:bg-slate-700/70 border border-transparent transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99]',
-                isActive && 'ring-2 ring-sky-500/20 border-sky-400 dark:border-sky-500'
-              )
-            }
-          >
-            <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-              {user?.perfil}
-            </p>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/40">
+              <User size={16} className="text-sky-700 dark:text-sky-300" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                {user?.perfil}
+              </p>
+            </div>
           </NavLink>
         </div>
       </aside>
@@ -121,22 +124,18 @@ export function AppLayout() {
                 to="/app/perfil"
                 className={({ isActive }) =>
                   cn(
-                    'hidden text-right sm:block lg:hidden transition-colors hover:text-sky-600 dark:hover:text-sky-400',
-                    isActive && 'text-sky-600 dark:text-sky-400'
+                    'hidden items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 sm:flex lg:hidden',
+                    isActive && 'bg-slate-100 dark:bg-slate-700',
                   )
                 }
               >
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
-                <p className="text-xs uppercase text-slate-500 dark:text-slate-400">
-                  {user?.perfil}
-                </p>
-              </NavLink>
-              <NavLink
-                to="/app/perfil"
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                <User size={16} />
-                <span className="hidden sm:inline">Meu Perfil</span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/40">
+                  <User size={14} className="text-sky-700 dark:text-sky-300" />
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
+                  <p className="text-xs uppercase text-slate-500 dark:text-slate-400">{user?.perfil}</p>
+                </div>
               </NavLink>
               <ThemeToggle />
               <Button variant="secondary" onClick={logout} className="gap-2">

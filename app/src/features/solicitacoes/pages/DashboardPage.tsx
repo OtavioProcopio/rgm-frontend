@@ -13,9 +13,11 @@ import {
 import { Link } from 'react-router';
 import { useState, useMemo } from 'react';
 
+import { useAuth } from '@/app/providers/authContext';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 import { useMetricas } from '../hooks/useMetricas';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { statusLabel, tipoLabel, prioridadeLabel } from '../lib/solicitacaoMessages';
@@ -153,9 +155,12 @@ function KPICard({
 }
 
 export function DashboardPage() {
+  const { user } = useAuth();
   const { data: metricas, isLoading: loadingMetricas, isError: errorMetricas } = useMetricas();
   const { data: solicitacoes = [], isLoading: loadingSolicitacoes, isError: errorSolicitacoes } = useKanbanSolicitacoes();
   const [now] = useState(() => Date.now());
+  const isAdmin = canAccessAdmin(user?.perfil);
+  const isGestor = canManageModelos(user?.perfil) && !isAdmin;
 
   // Agregações de Tipo e Prioridade calculadas no frontend a partir de solicitacoes
   const distributions = useMemo(() => {
@@ -204,16 +209,21 @@ export function DashboardPage() {
     1
   );
 
-  // Formatação do SLA médio
+  // Formatação do lead time médio (recebido em segundos)
   let formatSla = '—';
-  if (metricas.tempoMedioResolucaoMinutos > 0) {
-    const mins = metricas.tempoMedioResolucaoMinutos;
-    if (mins >= 1440) {
-      formatSla = `${Math.round((mins / 1440) * 10) / 10}d`;
-    } else if (mins >= 60) {
-      formatSla = `${Math.round((mins / 60) * 10) / 10}h`;
+  const slaSegundos = metricas.tempoMedioResolucaoSegundos;
+  if (slaSegundos > 0) {
+    const dias = slaSegundos / 86400;
+    const horas = slaSegundos / 3600;
+    const minutos = slaSegundos / 60;
+    if (dias >= 1) {
+      formatSla = `${Math.round(dias * 10) / 10}d`;
+    } else if (horas >= 1) {
+      formatSla = `${Math.round(horas * 10) / 10}h`;
+    } else if (minutos >= 1) {
+      formatSla = `${Math.round(minutos)}m`;
     } else {
-      formatSla = `${mins}m`;
+      formatSla = `${slaSegundos}s`;
     }
   }
 
@@ -267,7 +277,7 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Grid de Cadastros Gerais (Admin) */}
+      {/* Grid de Cadastros — links condicionais por perfil */}
       <div className="grid grid-cols-3 gap-4">
         <KPICard
           icon={Users}
@@ -275,7 +285,7 @@ export function DashboardPage() {
           value={metricas.totalUsuarios}
           subtext="Operadores, gestores e admins"
           gradient="slate"
-          onClickPath="/app/admin/usuarios"
+          onClickPath={isAdmin ? '/app/admin/usuarios' : undefined}
         />
         <KPICard
           icon={Cpu}
@@ -283,15 +293,14 @@ export function DashboardPage() {
           value={metricas.totalMaquinas}
           subtext="Ativos e equipamentos"
           gradient="slate"
-          onClickPath="/app/admin/maquinas"
         />
         <KPICard
           icon={Package}
-          label="Modelos de máquinas"
+          label="Modelos"
           value={metricas.totalModelos}
           subtext="Modelos e moldes"
           gradient="slate"
-          onClickPath="/app/admin/modelos"
+          onClickPath={isAdmin || isGestor ? '/app/admin/modelos' : '/app/modelos'}
         />
       </div>
 

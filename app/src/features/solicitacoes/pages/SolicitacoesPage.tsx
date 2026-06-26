@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
@@ -7,15 +7,16 @@ import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
 import { canOperateSolicitacoes } from '@/shared/lib/permissions';
 
+import { solicitacoesApi } from '../api/solicitacoesApi';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { SolicitacaoCard } from '../components/SolicitacaoCard';
 import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
-import { solicitacoesApi } from '../api/solicitacoesApi';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 const PAGE_SIZE = 20;
@@ -27,11 +28,6 @@ export function SolicitacoesPage() {
   const [filters, setFilters] = useState<SolicitacoesFilters>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
   const [isExporting, setIsExporting] = useState(false);
-
-  const pageInfo = useMemo(
-    () => (data ? `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}` : 'Página 1 de 1'),
-    [data],
-  );
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
 
@@ -121,8 +117,8 @@ export function SolicitacoesPage() {
             <EmptyState
               title="Nenhuma solicitação encontrada"
               description={
-                filters.status
-                  ? 'Não há solicitações com este status.'
+                filters.status || filters.modeloId
+                  ? 'Nenhuma solicitação com os filtros aplicados.'
                   : 'Nenhuma solicitação cadastrada ainda.'
               }
             />
@@ -135,29 +131,14 @@ export function SolicitacoesPage() {
                   <SolicitacaoCard key={s.id} solicitacao={s} />
                 ))}
               </div>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {pageInfo} • {data.totalElements} solicitação(ões)
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={filters.page === 0}
-                    onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={filters.page + 1 >= data.totalPages}
-                    onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
-                  >
-                    Próxima
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                page={data.page}
+                totalPages={data.totalPages}
+                totalElements={data.totalElements}
+                itemLabel="solicitação(ões)"
+                onPrev={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
+                onNext={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
+              />
             </>
           ) : null}
         </>

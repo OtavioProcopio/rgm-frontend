@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { canManageModelos } from '@/shared/lib/permissions';
 
+import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
+import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
@@ -17,10 +21,16 @@ import { getModeloErrorMessage } from '../lib/modeloMessages';
 
 export function ModeloDetalhePage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const { data: modelo, error, isLoading } = useModelo(id);
   const { data: eventosData } = useEventosModelo(id);
+  const { data: solicitacoesPage } = useSolicitacoes(
+    { modeloId: id, page: 0, size: 50 },
+    { enabled: !!id },
+  );
   const uploadFoto = useUploadFotoCapa();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const podeGerenciarFoto = canManageModelos(user?.perfil);
 
   async function handleUpload(file: File) {
     if (!id) return;
@@ -38,7 +48,7 @@ export function ModeloDetalhePage() {
         title="Detalhe do modelo"
         description="Consulte dados, eventos e foto de capa do modelo."
         actions={
-          id ? (
+          id && podeGerenciarFoto ? (
             <Link to={`/app/admin/modelos/${id}/editar`}>
               <Button variant="secondary">Editar</Button>
             </Link>
@@ -85,12 +95,40 @@ export function ModeloDetalhePage() {
             </div>
             <aside className="space-y-4">
               <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
-              <UploadFotoCapaDialog isUploading={uploadFoto.isPending} onUpload={handleUpload} />
+              {podeGerenciarFoto ? (
+                <UploadFotoCapaDialog isUploading={uploadFoto.isPending} onUpload={handleUpload} />
+              ) : null}
             </aside>
           </div>
           <div>
             <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">Eventos</h2>
             <EventosModeloList eventos={eventosData ?? []} />
+          </div>
+          <div>
+            <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">
+              Solicitações ({solicitacoesPage?.totalElements ?? 0})
+            </h2>
+            {solicitacoesPage?.content?.length ? (
+              <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+                {solicitacoesPage.content.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      to={`/app/solicitacoes/${s.id}`}
+                      className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        {s.titulo}
+                      </span>
+                      <SolicitacaoStatusBadge status={s.status} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Nenhuma solicitação registrada para este modelo.
+              </p>
+            )}
           </div>
         </div>
       ) : null}

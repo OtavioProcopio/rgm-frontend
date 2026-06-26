@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '@/shared/components/Button/Button';
@@ -6,6 +6,7 @@ import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { Pagination } from '@/shared/components/Pagination/Pagination';
 
 import { DeleteUsuarioDialog } from '../components/DeleteUsuarioDialog';
 import { UsuariosFilters } from '../components/UsuariosFilters';
@@ -36,14 +37,6 @@ export function UsuariosPage() {
   const excluirUsuario = useExcluirUsuario();
   const isMutating =
     ativarUsuario.isPending || desativarUsuario.isPending || excluirUsuario.isPending;
-
-  const pageInfo = useMemo(() => {
-    if (!data) {
-      return 'Página 1 de 1';
-    }
-
-    return `Página ${data.page + 1} de ${Math.max(data.totalPages, 1)}`;
-  }, [data]);
 
   async function handleAtivar(usuario: Usuario) {
     setActionError(null);
@@ -150,29 +143,14 @@ export function UsuariosPage() {
             onExcluir={setSelectedForDelete}
           />
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {pageInfo} • {data.totalElements} usuário(s)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={filters.page === 0}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
-              >
-                Anterior
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={!data || filters.page + 1 >= data.totalPages}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
-              >
-                Próxima
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            totalElements={data.totalElements}
+            itemLabel="usuário(s)"
+            onPrev={() => setFilters((c) => ({ ...c, page: c.page - 1 }))}
+            onNext={() => setFilters((c) => ({ ...c, page: c.page + 1 }))}
+          />
         </>
       ) : null}
     </section>
