@@ -15,8 +15,26 @@ vi.mock('../api/solicitacoesApi', () => ({
   },
 }));
 
+vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
+  usuariosApi: {
+    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, totalPages: 0 }),
+  },
+}));
+
+vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
+  evidenciasApi: {
+    listar: vi.fn().mockResolvedValue([]),
+    upload: vi.fn().mockResolvedValue({}),
+    deletar: vi.fn().mockResolvedValue({}),
+  },
+}));
+
 vi.mock('../hooks/useAlterarResponsaveis', () => ({
   useAlterarResponsaveis: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/features/evidencias/hooks/useDeleteEvidencia', () => ({
+  useDeleteEvidencia: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('../hooks/useSolicitacao', () => ({
