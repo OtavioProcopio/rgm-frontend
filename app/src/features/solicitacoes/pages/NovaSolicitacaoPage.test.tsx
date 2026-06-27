@@ -11,6 +11,9 @@ import { NovaSolicitacaoPage } from './NovaSolicitacaoPage';
 vi.mock('../hooks/useAbrirSolicitacao', () => ({
   useAbrirSolicitacao: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
+vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
+  useModelos: vi.fn().mockReturnValue({ data: { content: [], totalElements: 0 }, isLoading: false, error: null }),
+}));
 
 afterEach(cleanup);
 

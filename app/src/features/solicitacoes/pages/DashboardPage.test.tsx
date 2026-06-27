@@ -21,6 +21,12 @@ vi.mock('../hooks/useMetricas', () => ({
 vi.mock('../hooks/useKanbanSolicitacoes', () => ({
   useKanbanSolicitacoes: vi.fn().mockReturnValue({ data: [], isLoading: false, error: null }),
 }));
+vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
+  useModelos: vi.fn().mockReturnValue({ data: { content: [], totalElements: 0 }, isLoading: false, error: null }),
+}));
+vi.mock('@/features/auth/hooks/usePerfil', () => ({
+  usePerfil: vi.fn().mockReturnValue({ data: null, isLoading: false }),
+}));
 
 afterEach(cleanup);
 
