@@ -11,6 +11,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     exclude: ['node_modules', 'dist', 'e2e/**'],
+    env: {
+      VITE_API_BASE_URL: 'http://localhost:8080/api',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
