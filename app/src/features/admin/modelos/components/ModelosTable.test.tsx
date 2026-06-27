@@ -24,14 +24,14 @@ afterEach(cleanup);
 describe('ModelosTable', () => {
   it('renders modelo items', () => {
     const { container } = render(
-      <ModelosTable modelos={[modelo]} onDesativar={vi.fn()} onAtivar={vi.fn()} />,
+      <ModelosTable modelos={[modelo]} />,
     );
     expect(within(container).getAllByText('M01').length).toBeGreaterThan(0);
   });
 
   it('renders empty when no modelos', () => {
     const { container } = render(
-      <ModelosTable modelos={[]} onDesativar={vi.fn()} onAtivar={vi.fn()} />,
+      <ModelosTable modelos={[]} />,
     );
     expect(within(container).queryByText('M01')).toBeNull();
   });

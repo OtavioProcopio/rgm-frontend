@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { ImageOff, ZoomIn } from 'lucide-react';
+import { cn } from '@/shared/lib/cn';
 
-export function ModeloFotoCapa({ fotoUrl }: { fotoUrl: string | null }) {
+export function ModeloFotoCapa({ fotoUrl, className }: { fotoUrl: string | null; className?: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   if (!fotoUrl || imgError) {
     return (
-      <div className="flex h-48 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50">
+      <div className={cn("flex w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50", className || "h-48")}>
         <div className="flex flex-col items-center gap-2 text-slate-400 dark:text-slate-500">
           <ImageOff size={32} />
           <span className="text-xs">Sem foto de capa</span>
@@ -27,7 +28,7 @@ export function ModeloFotoCapa({ fotoUrl }: { fotoUrl: string | null }) {
         <img
           src={fotoUrl}
           alt="Foto de capa"
-          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className={cn("w-full object-cover transition-transform duration-300 group-hover:scale-105", className || "h-48")}
           onError={() => setImgError(true)}
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/30">

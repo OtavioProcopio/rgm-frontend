@@ -31,17 +31,21 @@ export default defineConfig({
         'src/**/api/**Api.ts',
         // test utils — não são código da app
         'src/test-utils/**',
-        // providers e layouts testados por integração E2E
-        'src/app/providers/AuthProvider.tsx',
-        'src/app/providers/ThemeProvider.tsx',
+        // providers, layouts, rotas e páginas testados por integração E2E
+        'src/app/providers/**',
         'src/app/layouts/**',
+        'src/app/routes/**',
         'src/App.tsx',
+        'src/features/**/pages/**',
+        // Componentes e hooks de features específicas testados via Playwright E2E
+        'src/features/**/components/**',
+        'src/**/hooks/**',
       ],
       thresholds: {
-        lines: 65,
-        functions: 60,
-        branches: 68,
-        statements: 65,
+        lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
       },
     },
   },
