@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 
 import { Button } from '@/shared/components/Button/Button';
+import { usePerfil } from '@/features/auth/hooks/usePerfil';
 
 import type { Usuario } from '../types/usuarioTypes';
 
@@ -19,7 +20,9 @@ export function UsuarioActionsMenu({
   onExcluir,
   usuario,
 }: UsuarioActionsMenuProps) {
-  // TODO: bloquear autodesativação quando o AuthUser expuser id.
+  const { data: currentUser } = usePerfil();
+  const isMe = usuario.id === currentUser?.id;
+
   return (
     <div className="flex flex-wrap gap-2">
       <Link
@@ -32,8 +35,9 @@ export function UsuarioActionsMenu({
         <Button
           type="button"
           variant="secondary"
-          disabled={isMutating}
+          disabled={isMutating || isMe}
           onClick={() => onDesativar(usuario)}
+          title={isMe ? 'Não é possível desativar a própria conta administrativa' : undefined}
         >
           Desativar
         </Button>
@@ -50,8 +54,9 @@ export function UsuarioActionsMenu({
       <Button
         type="button"
         variant="ghost"
-        disabled={isMutating}
+        disabled={isMutating || isMe}
         onClick={() => onExcluir(usuario)}
+        title={isMe ? 'Não é possível excluir a própria conta administrativa' : undefined}
       >
         Excluir
       </Button>

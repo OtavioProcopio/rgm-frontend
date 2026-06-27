@@ -5,19 +5,28 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 
-import { encerrarSolicitacaoSchema, type EncerrarSolicitacaoFormData } from '../schemas/solicitacaoSchema';
+import {
+  encerrarSolicitacaoSchema,
+  type EncerrarSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
 
 type Props = {
   isPending?: boolean;
+  podeConcluir?: boolean;
   onCancel: () => void;
   onConfirm: (data: EncerrarSolicitacaoFormData) => void;
 };
 
-export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
-  const [concluir, setConcluir] = useState(true);
-  const { register, handleSubmit, setValue } = useForm<EncerrarSolicitacaoFormData>({
+export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, onConfirm }: Props) {
+  const [concluir, setConcluir] = useState(podeConcluir);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<EncerrarSolicitacaoFormData>({
     resolver: zodResolver(encerrarSolicitacaoSchema),
-    defaultValues: { concluir: true },
+    defaultValues: { concluir: podeConcluir },
   });
 
   function handleRadioChange(value: boolean) {
@@ -33,31 +42,36 @@ export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
           : 'border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30'
       }`}
     >
-      <h3 className="font-semibold text-slate-900 dark:text-white">Encerrar solicitação</h3>
+      <h3 className="font-semibold text-slate-900 dark:text-white font-sans">
+        {podeConcluir ? 'Encerrar solicitação' : 'Cancelar solicitação'}
+      </h3>
       <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="concluir-option"
-              checked={concluir}
-              onChange={() => handleRadioChange(true)}
-            />
-            Concluir
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="concluir-option"
-              checked={!concluir}
-              onChange={() => handleRadioChange(false)}
-            />
-            Cancelar
-          </label>
-        </div>
+        {podeConcluir && (
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="concluir-option"
+                checked={concluir}
+                onChange={() => handleRadioChange(true)}
+              />
+              Concluir
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="concluir-option"
+                checked={!concluir}
+                onChange={() => handleRadioChange(false)}
+              />
+              Cancelar
+            </label>
+          </div>
+        )}
         <Textarea
-          label="Comentário final (opcional)"
-          placeholder="Descreva o resultado..."
+          label={concluir ? 'Comentário final' : 'Motivo do cancelamento'}
+          placeholder={concluir ? 'Descreva o resultado...' : 'Descreva o motivo...'}
+          error={errors.comentario?.message}
           {...register('comentario')}
         />
         <div className="flex flex-wrap gap-2">
@@ -73,7 +87,13 @@ export function EncerramentoModal({ isPending, onCancel, onConfirm }: Props) {
                 : undefined
             }
           >
-            {isPending ? 'Encerrando...' : concluir ? 'Concluir' : 'Cancelar solicitação'}
+            {isPending
+              ? podeConcluir
+                ? 'Encerrando...'
+                : 'Cancelando...'
+              : concluir
+                ? 'Concluir'
+                : 'Cancelar solicitação'}
           </Button>
         </div>
       </form>

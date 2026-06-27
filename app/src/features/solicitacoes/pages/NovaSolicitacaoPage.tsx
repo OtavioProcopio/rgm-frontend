@@ -12,7 +12,10 @@ import { Textarea } from '@/shared/components/Textarea/Textarea';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
-import { abrirSolicitacaoSchema, type AbrirSolicitacaoFormData } from '../schemas/solicitacaoSchema';
+import {
+  abrirSolicitacaoSchema,
+  type AbrirSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
 
 const tipoOptions = [
   { value: 'REPARO', label: 'Reparo' },

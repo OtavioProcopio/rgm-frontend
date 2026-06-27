@@ -4,11 +4,10 @@ import { AdminLayout } from '@/app/layouts/AdminLayout';
 import { AppLayout } from '@/app/layouts/AppLayout';
 import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { AdminRoute } from '@/app/routes/AdminRoute';
+import { ModeloManagementRoute } from '@/app/routes/ModeloManagementRoute';
 import { ProtectedRoute } from '@/app/routes/ProtectedRoute';
 import { PublicOnlyRoute } from '@/app/routes/PublicOnlyRoute';
-import { EditarMaquinaPage } from '@/features/admin/maquinas/pages/EditarMaquinaPage';
-import { MaquinasPage } from '@/features/admin/maquinas/pages/MaquinasPage';
-import { NovaMaquinaPage } from '@/features/admin/maquinas/pages/NovaMaquinaPage';
+
 import { EditarModeloPage } from '@/features/admin/modelos/pages/EditarModeloPage';
 import { ModeloDetalhePage } from '@/features/admin/modelos/pages/ModeloDetalhePage';
 import { ModelosPage as AdminModelosPage } from '@/features/admin/modelos/pages/ModelosPage';
@@ -18,9 +17,11 @@ import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuario
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { PerfilPage } from '@/features/auth/pages/PerfilPage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
-import { NovoModeloPage as NovoModeloGestorPage } from '@/features/modelos/pages/NovoModeloPage';
+import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
+import { RelatoriosPage } from '@/features/solicitacoes/pages/RelatoriosPage';
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
 
@@ -56,7 +57,15 @@ export const router = createBrowserRouter([
           },
           {
             path: 'dashboard',
-            element: <SolicitacoesPage />,
+            element: <DashboardPage />,
+          },
+          {
+            path: 'relatorios',
+            element: <RelatoriosPage />,
+          },
+          {
+            path: 'perfil',
+            element: <PerfilPage />,
           },
           {
             path: 'solicitacoes',
@@ -76,7 +85,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'modelos/novo',
-            element: <NovoModeloGestorPage />,
+            element: <NovoModeloPage backPath="/app/modelos" />,
           },
           {
             path: 'modelos/:id',
@@ -84,54 +93,56 @@ export const router = createBrowserRouter([
           },
           {
             path: 'admin',
-            element: <AdminRoute />,
             children: [
               {
-                element: <AdminLayout />,
+                element: <AdminRoute />,
                 children: [
                   {
-                    index: true,
-                    element: <AdminDashboardPage />,
+                    element: <AdminLayout />,
+                    children: [
+                      {
+                        index: true,
+                        element: <AdminDashboardPage />,
+                      },
+                      {
+                        path: 'usuarios',
+                        element: <UsuariosPage />,
+                      },
+                      {
+                        path: 'usuarios/novo',
+                        element: <NovoUsuarioPage />,
+                      },
+                      {
+                        path: 'usuarios/:id/editar',
+                        element: <EditarUsuarioPage />,
+                      },
+                    ],
                   },
+                ],
+              },
+              {
+                element: <ModeloManagementRoute />,
+                children: [
                   {
-                    path: 'usuarios',
-                    element: <UsuariosPage />,
-                  },
-                  {
-                    path: 'usuarios/novo',
-                    element: <NovoUsuarioPage />,
-                  },
-                  {
-                    path: 'usuarios/:id/editar',
-                    element: <EditarUsuarioPage />,
-                  },
-                  {
-                    path: 'maquinas',
-                    element: <MaquinasPage />,
-                  },
-                  {
-                    path: 'maquinas/novo',
-                    element: <NovaMaquinaPage />,
-                  },
-                  {
-                    path: 'maquinas/:id/editar',
-                    element: <EditarMaquinaPage />,
-                  },
-                  {
-                    path: 'modelos',
-                    element: <AdminModelosPage />,
-                  },
-                  {
-                    path: 'modelos/novo',
-                    element: <NovoModeloPage />,
-                  },
-                  {
-                    path: 'modelos/:id',
-                    element: <ModeloDetalhePage />,
-                  },
-                  {
-                    path: 'modelos/:id/editar',
-                    element: <EditarModeloPage />,
+                    element: <AdminLayout />,
+                    children: [
+                      {
+                        path: 'modelos',
+                        element: <AdminModelosPage />,
+                      },
+                      {
+                        path: 'modelos/novo',
+                        element: <NovoModeloPage />,
+                      },
+                      {
+                        path: 'modelos/:id',
+                        element: <ModeloDetalhePage />,
+                      },
+                      {
+                        path: 'modelos/:id/editar',
+                        element: <EditarModeloPage />,
+                      },
+                    ],
                   },
                 ],
               },

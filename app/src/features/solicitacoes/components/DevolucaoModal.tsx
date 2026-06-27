@@ -5,7 +5,10 @@ import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 
-import { devolverSolicitacaoSchema, type DevolverSolicitacaoFormData } from '../schemas/solicitacaoSchema';
+import {
+  devolverSolicitacaoSchema,
+  type DevolverSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
 
 type Props = {
   isPending?: boolean;

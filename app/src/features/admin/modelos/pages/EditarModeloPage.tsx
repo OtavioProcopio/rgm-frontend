@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import { useMaquinas } from '@/features/admin/maquinas/hooks/useMaquinas';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -19,20 +18,9 @@ export function EditarModeloPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: modelo, error, isLoading } = useModelo(id);
-  const { data: maquinasData } = useMaquinas({ page: 0, size: 200 });
   const editarModelo = useEditarModelo();
   const uploadFoto = useUploadFotoCapa();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const maquinasMap = useMemo(
-    () =>
-      new Map(
-        (maquinasData?.content ?? []).map((maquina) => [
-          maquina.id,
-          `${maquina.codigo} - ${maquina.nome}`,
-        ]),
-      ),
-    [maquinasData],
-  );
 
   async function handleSubmit(payload: EditarModeloRequest) {
     if (!id) return;
@@ -59,7 +47,7 @@ export function EditarModeloPage() {
     <section>
       <PageHeader
         title="Editar modelo"
-        description="Atualize dados do modelo. A máquina vinculada não pode ser alterada."
+        description="Atualize os dados e o encaixe de máquina do modelo."
       />
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
@@ -75,7 +63,6 @@ export function EditarModeloPage() {
           <ModeloForm
             mode="edit"
             modelo={modelo}
-            maquinaLabel={maquinasMap.get(modelo.maquinaId)}
             isSubmitting={editarModelo.isPending}
             onSubmit={handleSubmit}
           />

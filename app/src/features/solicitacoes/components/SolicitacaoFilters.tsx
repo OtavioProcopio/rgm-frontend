@@ -1,6 +1,12 @@
+import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Select } from '@/shared/components/Select/Select';
 
-import type { SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
+import type {
+  PrioridadeSolicitacao,
+  SolicitacoesFilters,
+  StatusSolicitacao,
+  TipoSolicitacao,
+} from '../types/solicitacaoTypes';
 
 type Props = {
   filters: SolicitacoesFilters;
@@ -15,14 +21,42 @@ const statusOptions = [
   { value: 'CANCELADA', label: 'Cancelada' },
 ];
 
+const tipoOptions = [
+  { value: 'REPARO', label: 'Reparo' },
+  { value: 'INSPECAO', label: 'Inspeção' },
+  { value: 'REENGENHARIA', label: 'Reengenharia' },
+];
+
+const prioridadeOptions = [
+  { value: 'BAIXA', label: 'Baixa' },
+  { value: 'MEDIA', label: 'Média' },
+  { value: 'ALTA', label: 'Alta' },
+  { value: 'URGENTE', label: 'Urgente' },
+];
+
 export function SolicitacaoFilters({ filters, onChange }: Props) {
+  const { data: modelosData } = useModelos({ page: 0, size: 100, ativo: true });
+
+  const modeloOptions =
+    modelosData?.content.map((m) => ({ value: m.id, label: m.codigo })) ?? [];
+
   function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value as StatusSolicitacao | '';
-    onChange({
-      ...filters,
-      page: 0,
-      status: value || undefined,
-    });
+    onChange({ ...filters, page: 0, status: value || undefined });
+  }
+
+  function handleModeloChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    onChange({ ...filters, page: 0, modeloId: e.target.value || undefined });
+  }
+
+  function handleTipoChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const value = e.target.value as TipoSolicitacao | '';
+    onChange({ ...filters, page: 0, tipo: value || undefined });
+  }
+
+  function handlePrioridadeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const value = e.target.value as PrioridadeSolicitacao | '';
+    onChange({ ...filters, page: 0, prioridade: value || undefined });
   }
 
   return (
@@ -31,11 +65,40 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
         <Select
           label="Status"
           options={statusOptions}
-          placeholder="Todos"
+          placeholder="Todos os status"
           value={filters.status ?? ''}
           onChange={handleStatusChange}
         />
       </div>
+      <div className="w-full sm:w-48">
+        <Select
+          label="Tipo"
+          options={tipoOptions}
+          placeholder="Todos os tipos"
+          value={filters.tipo ?? ''}
+          onChange={handleTipoChange}
+        />
+      </div>
+      <div className="w-full sm:w-48">
+        <Select
+          label="Prioridade"
+          options={prioridadeOptions}
+          placeholder="Todas as prioridades"
+          value={filters.prioridade ?? ''}
+          onChange={handlePrioridadeChange}
+        />
+      </div>
+      {modeloOptions.length > 0 && (
+        <div className="w-full sm:w-64">
+          <Select
+            label="Modelo"
+            options={modeloOptions}
+            placeholder="Todos os modelos"
+            value={filters.modeloId ?? ''}
+            onChange={handleModeloChange}
+          />
+        </div>
+      )}
     </div>
   );
 }

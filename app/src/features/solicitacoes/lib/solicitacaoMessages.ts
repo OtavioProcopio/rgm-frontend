@@ -1,6 +1,10 @@
 import { ApiError } from '@/shared/api/apiError';
 
-import type { PrioridadeSolicitacao, StatusSolicitacao, TipoSolicitacao } from '../types/solicitacaoTypes';
+import type {
+  PrioridadeSolicitacao,
+  StatusSolicitacao,
+  TipoSolicitacao,
+} from '../types/solicitacaoTypes';
 
 export const statusLabel: Record<StatusSolicitacao, string> = {
   A_FAZER: 'A fazer',

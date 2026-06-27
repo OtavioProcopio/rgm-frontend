@@ -29,6 +29,12 @@ export const usuariosApi = {
       tipoRecurso: 'USUARIO',
       recursoId: id,
     }),
+
+  redefinirSenha: (id: string, novaSenha: string) =>
+    httpClient.patch<Usuario>(`/admin/usuarios/${id}/senha`, { novaSenha }),
+
+  alterarPerfil: (id: string, perfil: string) =>
+    httpClient.patch<Usuario>(`/admin/usuarios/${id}/perfil`, { perfil }),
 };
 
 function normalizeCreatePayload(payload: CriarUsuarioRequest): CriarUsuarioRequest {

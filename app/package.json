@@ -12,9 +12,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "cy:run": "cypress run",
-    "cy:open": "cypress open",
-    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
+    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build",
+    "validate": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -39,6 +42,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@playwright/test": "^1.50.0",
     "eslint": "^10.5.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
@@ -48,7 +53,6 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
-    "vitest": "^4.1.8",
-    "cypress": "^13.17.0"
+    "vitest": "^4.1.8"
   }
 }

@@ -19,6 +19,7 @@ export const modelosApi = {
   editar: (id: string, payload: EditarModeloRequest) =>
     httpClient.put<Modelo>(`/modelos/${id}`, payload),
   desativar: (id: string) => httpClient.patch<Modelo>(`/modelos/${id}/desativar`),
+  ativar: (id: string) => httpClient.patch<Modelo>(`/modelos/${id}/ativar`),
   uploadFotoCapa: (id: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);

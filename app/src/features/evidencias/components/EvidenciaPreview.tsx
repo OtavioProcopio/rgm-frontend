@@ -31,7 +31,9 @@ export function EvidenciaPreview({ evidencia }: Props) {
       <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">
         {evidencia.nomeArquivo}
       </p>
-      <p className="text-xs text-slate-400 dark:text-slate-500">{formatBytes(evidencia.tamanhoBytes)}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        {formatBytes(evidencia.tamanhoBytes)}
+      </p>
       <a
         href={evidencia.publicUrl}
         target="_blank"

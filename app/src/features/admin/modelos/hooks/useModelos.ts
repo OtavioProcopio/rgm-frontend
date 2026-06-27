@@ -8,5 +8,6 @@ export function useModelos(filters: ModelosFilters) {
   return useQuery({
     queryKey: modelosKeys.list(filters),
     queryFn: () => modelosApi.listar(filters),
+    staleTime: 1000 * 60 * 5,
   });
 }

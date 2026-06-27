@@ -1,51 +1,48 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { useMaquinas } from '@/features/admin/maquinas/hooks/useMaquinas';
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { Pagination } from '@/shared/components/Pagination/Pagination';
 
 import { ModelosFilters } from '../components/ModelosFilters';
 import { ModelosTable } from '../components/ModelosTable';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
+import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useModelos } from '../hooks/useModelos';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { Modelo, ModelosFilters as ModelosFiltersType } from '../types/modeloTypes';
+
+type PendingAction = { type: 'desativar' | 'ativar'; modelo: Modelo };
 
 const PAGE_SIZE = 20;
 
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, error, isLoading } = useModelos(filters);
-  const { data: maquinasData } = useMaquinas({ page: 0, size: 200 });
   const desativarModelo = useDesativarModelo();
-  const maquinasMap = useMemo(
-    () =>
-      new Map(
-        (maquinasData?.content ?? []).map((maquina) => [
-          maquina.id,
-          `${maquina.codigo} - ${maquina.nome}`,
-        ]),
-      ),
-    [maquinasData],
-  );
+  const ativarModelo = useAtivarModelo();
+  const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
-  async function handleDesativar(modelo: Modelo) {
-    if (
-      !window.confirm(
-        'Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?',
-      )
-    )
-      return;
+  async function handleConfirmAction() {
+    if (!pendingAction) return;
     setActionError(null);
     try {
-      await desativarModelo.mutateAsync(modelo.id);
+      if (pendingAction.type === 'desativar') {
+        await desativarModelo.mutateAsync(pendingAction.modelo.id);
+      } else {
+        await ativarModelo.mutateAsync(pendingAction.modelo.id);
+      }
+      setPendingAction(null);
     } catch (mutationError) {
       setActionError(getModeloErrorMessage(mutationError));
+      setPendingAction(null);
     }
   }
 
@@ -71,6 +68,31 @@ export function ModelosPage() {
           <ErrorState title="Operação não concluída" description={actionError} />
         </div>
       ) : null}
+      {pendingAction ? (
+        <div className="mb-4">
+          {pendingAction.type === 'desativar' ? (
+            <ConfirmDialog
+              title="Desativar modelo"
+              message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+              confirmLabel="Desativar"
+              variant="danger"
+              isPending={isMutating}
+              onCancel={() => setPendingAction(null)}
+              onConfirm={handleConfirmAction}
+            />
+          ) : (
+            <ConfirmDialog
+              title="Ativar modelo"
+              message={`Deseja ativar o modelo ${pendingAction.modelo.codigo}?`}
+              confirmLabel="Ativar"
+              variant="warning"
+              isPending={isMutating}
+              onCancel={() => setPendingAction(null)}
+              onConfirm={handleConfirmAction}
+            />
+          )}
+        </div>
+      ) : null}
       {isLoading ? <LoadingState title="Carregando modelos..." /> : null}
       {error ? (
         <ErrorState
@@ -85,34 +107,18 @@ export function ModelosPage() {
         <>
           <ModelosTable
             modelos={data.content}
-            maquinasMap={maquinasMap}
-            isMutating={desativarModelo.isPending}
-            onDesativar={handleDesativar}
+            isMutating={isMutating}
+            onDesativar={(modelo) => setPendingAction({ type: 'desativar', modelo })}
+            onAtivar={(modelo) => setPendingAction({ type: 'ativar', modelo })}
           />
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Página {data.page + 1} de {Math.max(data.totalPages, 1)} • {data.totalElements}{' '}
-              modelo(s)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={filters.page === 0}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
-              >
-                Anterior
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={filters.page + 1 >= data.totalPages}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
-              >
-                Próxima
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            totalElements={data.totalElements}
+            itemLabel="modelo(s)"
+            onPrev={() => setFilters((c) => ({ ...c, page: c.page - 1 }))}
+            onNext={() => setFilters((c) => ({ ...c, page: c.page + 1 }))}
+          />
         </>
       ) : null}
     </section>

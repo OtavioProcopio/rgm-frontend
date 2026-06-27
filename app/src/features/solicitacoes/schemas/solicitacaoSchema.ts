@@ -9,12 +9,12 @@ export const abrirSolicitacaoSchema = z.object({
 
 export const triarSolicitacaoSchema = z.object({
   prioridade: z.enum(['BAIXA', 'MEDIA', 'ALTA', 'URGENTE']),
-  responsavelIds: z.array(z.string().uuid()).optional(),
+  responsavelIds: z.array(z.string().uuid()).min(1, 'Selecione ao menos um responsável'),
 });
 
 export const encerrarSolicitacaoSchema = z.object({
   concluir: z.boolean(),
-  comentario: z.string().optional(),
+  comentario: z.string().min(1, 'Comentário obrigatório'),
 });
 
 export const devolverSolicitacaoSchema = z.object({

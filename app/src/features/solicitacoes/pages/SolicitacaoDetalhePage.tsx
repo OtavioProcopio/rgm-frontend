@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
@@ -16,12 +16,14 @@ import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
 import { TriagemModal } from '../components/TriagemModal';
 import { useAtividades } from '../hooks/useAtividades';
+import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
 import { useDevolverSolicitacao } from '../hooks/useDevolverSolicitacao';
 import { useEncerrarSolicitacao } from '../hooks/useEncerrarSolicitacao';
 import { useEnviarParaValidacao } from '../hooks/useEnviarParaValidacao';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
 import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
+import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
 import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
 import type {
   DevolverSolicitacaoRequest,
@@ -32,6 +34,12 @@ import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
+import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
+import { useQuery } from '@tanstack/react-query';
+import { canAccessAdmin } from '@/shared/lib/permissions';
+import { Input } from '@/shared/components/Input/Input';
+import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
 type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
 
@@ -39,21 +47,42 @@ export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: profile } = usePerfil();
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // States para Edição
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitulo, setEditTitulo] = useState('');
+  const [editDescricao, setEditDescricao] = useState('');
 
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
   const { data: evidencias = [], isLoading: isLoadingEvidencias } = useEvidencias(id!);
+  const { data: modelo } = useModelo(solicitacao?.modeloId);
 
   const triar = useTriarSolicitacao(id!);
   const enviarValidacao = useEnviarParaValidacao(id!);
   const encerrar = useEncerrarSolicitacao(id!);
+  const cancelar = useCancelarSolicitacao(id!);
   const devolver = useDevolverSolicitacao(id!);
   const comentar = useRegistrarComentario(id!);
   const uploadEvidencia = useUploadEvidencia(id!);
+  const editar = useEditarSolicitacao(id!);
 
   const canManage = canManageSolicitacoes(user?.perfil);
+  const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
+  const canEnviarValidacao = canManage || (user?.perfil === 'OPERADOR' && isResponsavel);
+
+  const { data: usuariosPage } = useQuery({
+    queryKey: ['admin', 'usuarios', 'triagem'],
+    queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
+    enabled: canAccessAdmin(user?.perfil),
+    staleTime: 5 * 60 * 1000,
+  });
+  const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
+    (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
+  );
 
   async function handleTriar(data: TriarSolicitacaoRequest) {
     setActionError(null);
@@ -77,7 +106,11 @@ export function SolicitacaoDetalhePage() {
   async function handleEncerrar(data: EncerrarSolicitacaoRequest) {
     setActionError(null);
     try {
-      await encerrar.mutateAsync(data);
+      if (data.concluir) {
+        await encerrar.mutateAsync(data);
+      } else {
+        await cancelar.mutateAsync({ motivo: data.comentario });
+      }
       setActiveModal(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
@@ -112,6 +145,38 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
+  const isTerminal = solicitacao ? (solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA') : false;
+
+  const canEdit =
+    solicitacao &&
+    !isTerminal &&
+    (user?.perfil === 'ADMINISTRADOR' ||
+      user?.perfil === 'GESTOR' ||
+      (user?.perfil === 'OPERADOR' && solicitacao.abertaPorUsuarioId === profile?.id));
+
+  // OPERADOR pode anexar evidências se é o responsável pela solicitação ou quem a abriu
+  const canAnexarEvidencia =
+    !isTerminal &&
+    (canManage ||
+      (user?.perfil === 'OPERADOR' && (isResponsavel || solicitacao?.abertaPorUsuarioId === profile?.id)));
+
+  async function handleSaveEdit() {
+    if (!editTitulo.trim() || !editDescricao.trim()) {
+      setActionError('Título e descrição são obrigatórios.');
+      return;
+    }
+    setActionError(null);
+    try {
+      await editar.mutateAsync({
+        titulo: editTitulo.trim(),
+        descricao: editDescricao.trim(),
+      });
+      setIsEditing(false);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
   if (isLoading) return <LoadingState title="Carregando solicitação..." />;
   if (error || !solicitacao) {
     return (
@@ -122,83 +187,153 @@ export function SolicitacaoDetalhePage() {
     );
   }
 
-  const isTerminal = solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA';
   const criadaEm = new Date(solicitacao.criadaEm).toLocaleString('pt-BR');
 
   return (
     <section className="space-y-6">
       <PageHeader
-        title={solicitacao.titulo}
-        description={`Aberta em ${criadaEm}`}
+        title={isEditing ? 'Editar solicitação' : solicitacao.titulo}
+        description={isEditing ? 'Atualize o título e a descrição da solicitação.' : `Aberta em ${criadaEm}`}
         actions={
-          <Button type="button" variant="secondary" onClick={() => navigate('/app/solicitacoes')}>
-            Voltar
-          </Button>
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={editar.isPending}
+                >
+                  {editar.isPending ? 'Salvando...' : 'Salvar'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancelar
+                </Button>
+              </>
+            ) : (
+              <>
+                {canEdit && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setEditTitulo(solicitacao.titulo);
+                      setEditDescricao(solicitacao.descricao);
+                      setIsEditing(true);
+                    }}
+                  >
+                    Editar
+                  </Button>
+                )}
+                <Button type="button" variant="secondary" onClick={() => navigate('/app/solicitacoes')}>
+                  Voltar
+                </Button>
+              </>
+            )}
+          </div>
         }
       />
 
-      {actionError ? (
-        <ErrorState title="Operação não concluída" description={actionError} />
-      ) : null}
+      {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
 
       {/* Info */}
-      <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Status
-          </p>
-          <div className="mt-1">
-            <SolicitacaoStatusBadge status={solicitacao.status} />
+      {isEditing ? (
+        <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+          <Input
+            label="Título"
+            value={editTitulo}
+            onChange={(e) => setEditTitulo(e.target.value)}
+            disabled={editar.isPending}
+            required
+          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Descrição
+            </label>
+            <textarea
+              className="flex min-h-[100px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+              value={editDescricao}
+              onChange={(e) => setEditDescricao(e.target.value)}
+              disabled={editar.isPending}
+              required
+              rows={4}
+            />
           </div>
         </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Prioridade
-          </p>
-          <div className="mt-1">
-            <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
-            {!solicitacao.prioridade && (
-              <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
-            )}
-          </div>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Tipo
-          </p>
-          <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
-            {tipoLabel[solicitacao.tipo]}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Descrição
-          </p>
-          <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
-        </div>
-        {solicitacao.comentarioFinal ? (
-          <div className="sm:col-span-2">
+      ) : (
+        <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+          <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Comentário final
+              Status
+            </p>
+            <div className="mt-1">
+              <SolicitacaoStatusBadge status={solicitacao.status} />
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Prioridade
+            </p>
+            <div className="mt-1">
+              <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
+              {!solicitacao.prioridade && (
+                <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Tipo
             </p>
             <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
-              {solicitacao.comentarioFinal}
+              {tipoLabel[solicitacao.tipo]}
             </p>
           </div>
-        ) : null}
-      </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Descrição
+            </p>
+            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
+          </div>
+          {modelo ? (
+            <div className="sm:col-span-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Modelo (rastreabilidade)
+              </p>
+              <Link
+                to={`/app/admin/modelos/${modelo.id}`}
+                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {modelo.codigo} — {modelo.descricao}
+              </Link>
+            </div>
+          ) : null}
+          {solicitacao.comentarioFinal ? (
+            <div className="sm:col-span-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Comentário final
+              </p>
+              <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+                {solicitacao.comentarioFinal}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Ações */}
-      {!isTerminal && canManage ? (
+      {!isTerminal && (canManage || canEnviarValidacao) ? (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
           <div className="flex flex-wrap gap-2">
-            {solicitacao.status === 'A_FAZER' ? (
+            {canManage && solicitacao.status === 'A_FAZER' ? (
               <Button type="button" onClick={() => setActiveModal('triagem')}>
                 Triar
               </Button>
             ) : null}
-            {solicitacao.status === 'EM_ANDAMENTO' ? (
+            {canEnviarValidacao && solicitacao.status === 'EM_ANDAMENTO' ? (
               <Button
                 type="button"
                 disabled={enviarValidacao.isPending}
@@ -207,18 +342,21 @@ export function SolicitacaoDetalhePage() {
                 {enviarValidacao.isPending ? 'Enviando...' : 'Enviar para validação'}
               </Button>
             ) : null}
-            {solicitacao.status === 'EM_VALIDACAO' ? (
+            {canManage && solicitacao.status === 'EM_VALIDACAO' ? (
               <Button type="button" onClick={() => setActiveModal('devolucao')}>
                 Devolver
               </Button>
             ) : null}
-            {(solicitacao.status === 'EM_ANDAMENTO' || solicitacao.status === 'EM_VALIDACAO') ? (
+            {canManage &&
+            (solicitacao.status === 'A_FAZER' ||
+              solicitacao.status === 'EM_ANDAMENTO' ||
+              solicitacao.status === 'EM_VALIDACAO') ? (
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => setActiveModal('encerramento')}
               >
-                Encerrar
+                {solicitacao.status === 'EM_VALIDACAO' ? 'Encerrar' : 'Cancelar'}
               </Button>
             ) : null}
           </div>
@@ -226,6 +364,7 @@ export function SolicitacaoDetalhePage() {
           {activeModal === 'triagem' ? (
             <TriagemModal
               isPending={triar.isPending}
+              usuarios={responsaveisOpcoes}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleTriar}
             />
@@ -233,6 +372,7 @@ export function SolicitacaoDetalhePage() {
           {activeModal === 'encerramento' ? (
             <EncerramentoModal
               isPending={encerrar.isPending}
+              podeConcluir={solicitacao.status === 'EM_VALIDACAO'}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleEncerrar}
             />
@@ -252,12 +392,9 @@ export function SolicitacaoDetalhePage() {
         <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
           Evidências
         </h2>
-        {!isTerminal ? (
+        {canAnexarEvidencia ? (
           <div className="mb-4">
-            <EvidenciaUploader
-              isPending={uploadEvidencia.isPending}
-              onUpload={handleUpload}
-            />
+            <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
           </div>
         ) : null}
         <EvidenciaList evidencias={evidencias} isLoading={isLoadingEvidencias} />

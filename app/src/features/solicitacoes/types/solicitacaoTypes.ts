@@ -1,4 +1,9 @@
-export type StatusSolicitacao = 'A_FAZER' | 'EM_ANDAMENTO' | 'EM_VALIDACAO' | 'CONCLUIDA' | 'CANCELADA';
+export type StatusSolicitacao =
+  | 'A_FAZER'
+  | 'EM_ANDAMENTO'
+  | 'EM_VALIDACAO'
+  | 'CONCLUIDA'
+  | 'CANCELADA';
 export type PrioridadeSolicitacao = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
 export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA';
 export type TipoAtividadeSolicitacao =
@@ -22,6 +27,7 @@ export type Solicitacao = {
   atualizadaEm: string;
   concluidaEm: string | null;
   canceladaEm: string | null;
+  responsavelIds: string[];
 };
 
 export type AtividadeSolicitacao = {
@@ -32,6 +38,7 @@ export type AtividadeSolicitacao = {
   paraStatus: StatusSolicitacao | null;
   comentario: string | null;
   autorUsuarioId: string;
+  autorNome: string;
   criadaEm: string;
 };
 
@@ -40,6 +47,8 @@ export type SolicitacoesFilters = {
   size: number;
   status?: StatusSolicitacao;
   modeloId?: string;
+  tipo?: TipoSolicitacao;
+  prioridade?: PrioridadeSolicitacao;
 };
 
 export type AbrirSolicitacaoRequest = {
@@ -56,12 +65,16 @@ export type EditarSolicitacaoRequest = {
 
 export type TriarSolicitacaoRequest = {
   prioridade: PrioridadeSolicitacao;
-  responsavelIds?: string[];
+  responsavelIds: string[];
 };
 
 export type EncerrarSolicitacaoRequest = {
   concluir: boolean;
-  comentario?: string;
+  comentario: string;
+};
+
+export type CancelarSolicitacaoRequest = {
+  motivo: string;
 };
 
 export type DevolverSolicitacaoRequest = {
@@ -72,3 +85,16 @@ export type DevolverSolicitacaoRequest = {
 export type ComentarioRequest = {
   comentario: string;
 };
+
+export type MetricasResponse = {
+  totalUsuarios: number;
+  totalMaquinas: number;
+  totalModelos: number;
+  totalSolicitacoes: number;
+  solicitacoesPorStatus: Record<StatusSolicitacao, number>;
+  solicitacoesAbertas: number;
+  solicitacoesPendentes: number;
+  solicitacoesConcluidas: number;
+  tempoMedioResolucaoSegundos: number;
+};
+

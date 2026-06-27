@@ -1,16 +1,32 @@
-import { Cpu, LayoutDashboard, LogOut, PackageSearch, Ticket, Users } from 'lucide-react';
+import {
+  BarChart2,
+  FileBarChart2,
+  LayoutDashboard,
+  LogOut,
+  PackageSearch,
+  Ticket,
+  User,
+  Users,
+} from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
-import { canAccessAdmin, canViewModelos } from '@/shared/lib/permissions';
+import type { PerfilUsuario } from '@/features/auth/types/authTypes';
+import { canAccessAdmin, canManageModelos, canViewModelos } from '@/shared/lib/permissions';
+
+const PERFIL_LABEL: Record<PerfilUsuario, string> = {
+  ADMINISTRADOR: 'Painel administrativo',
+  GESTOR: 'Portal de gestão',
+  OPERADOR: 'Portal operacional',
+  EXTERNO: 'Portal de solicitações',
+};
 
 const adminNavigation = [
   { to: '/app/admin', label: 'Painel', icon: LayoutDashboard, end: true },
   { to: '/app/admin/usuarios', label: 'Usuários', icon: Users },
-  { to: '/app/admin/maquinas', label: 'Máquinas', icon: Cpu },
   { to: '/app/admin/modelos', label: 'Modelos', icon: PackageSearch },
 ];
 
@@ -20,9 +36,14 @@ export function AppLayout() {
   const navigation = canAccessAdmin(user?.perfil)
     ? adminNavigation
     : [
+        { to: '/app/dashboard', label: 'Dashboard', icon: BarChart2, end: false },
+        { to: '/app/relatorios', label: 'Relatórios', icon: FileBarChart2, end: false },
         { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
         ...(canViewModelos(user?.perfil)
           ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]
+          : []),
+        ...(canManageModelos(user?.perfil) && !canAccessAdmin(user?.perfil)
+          ? [{ to: '/app/admin/modelos', label: 'Gerenciar Modelos', icon: PackageSearch, end: false }]
           : []),
       ];
 
@@ -32,7 +53,7 @@ export function AppLayout() {
         <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
           <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-            Painel administrativo
+            {user?.perfil ? PERFIL_LABEL[user.perfil] : 'RGM Auto Parts'}
           </p>
         </div>
 
@@ -57,12 +78,25 @@ export function AppLayout() {
         </nav>
 
         <div className="border-t border-slate-200 p-4 dark:border-slate-700">
-          <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-700/70">
-            <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-              {user?.perfil}
-            </p>
-          </div>
+          <NavLink
+            to="/app/perfil"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-md bg-slate-50 p-3 dark:bg-slate-700/70 border border-transparent transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99]',
+                isActive && 'ring-2 ring-sky-500/20 border-sky-400 dark:border-sky-500',
+              )
+            }
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/40">
+              <User size={16} className="text-sky-700 dark:text-sky-300" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                {user?.perfil}
+              </p>
+            </div>
+          </NavLink>
         </div>
       </aside>
 
@@ -88,12 +122,23 @@ export function AppLayout() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="hidden text-right sm:block lg:hidden">
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
-                <p className="text-xs uppercase text-slate-500 dark:text-slate-400">
-                  {user?.perfil}
-                </p>
-              </div>
+              <NavLink
+                to="/app/perfil"
+                className={({ isActive }) =>
+                  cn(
+                    'hidden items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 sm:flex lg:hidden',
+                    isActive && 'bg-slate-100 dark:bg-slate-700',
+                  )
+                }
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/40">
+                  <User size={14} className="text-sky-700 dark:text-sky-300" />
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
+                  <p className="text-xs uppercase text-slate-500 dark:text-slate-400">{user?.perfil}</p>
+                </div>
+              </NavLink>
               <ThemeToggle />
               <Button variant="secondary" onClick={logout} className="gap-2">
                 <LogOut size={16} />
