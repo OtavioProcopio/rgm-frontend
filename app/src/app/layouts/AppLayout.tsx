@@ -1,5 +1,6 @@
 import {
   BarChart2,
+  FileBarChart2,
   LayoutDashboard,
   LogOut,
   PackageSearch,
@@ -36,6 +37,7 @@ export function AppLayout() {
     ? adminNavigation
     : [
         { to: '/app/dashboard', label: 'Dashboard', icon: BarChart2, end: false },
+        { to: '/app/relatorios', label: 'Relatórios', icon: FileBarChart2, end: false },
         { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
         ...(canViewModelos(user?.perfil)
           ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]
