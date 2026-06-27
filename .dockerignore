@@ -1,6 +1,18 @@
-app/node_modules
-app/dist
-.devcontainer
 .git
+.github
+.devcontainer
 .gitignore
 *.md
+# Build artifacts
+app/node_modules/
+app/dist/
+# E2E & test output (not needed in prod image)
+app/e2e/
+app/cypress/
+app/playwright-report/
+app/test-results/
+app/coverage/
+# Config files not needed at runtime
+app/cypress.config.cjs
+app/playwright.config.ts
+app/vitest.config.ts
