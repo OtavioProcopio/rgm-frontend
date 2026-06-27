@@ -33,8 +33,6 @@ vi.mock('../api/usuariosApi', () => {
   };
 });
 
-const mockUsuario = { id: '1', nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR', ativo: true };
-
 afterEach(() => vi.clearAllMocks());
 
 describe('useUsuarios', () => {
