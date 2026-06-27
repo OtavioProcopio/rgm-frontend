@@ -34,12 +34,11 @@ export function SolicitacoesPage() {
   async function handleExportar() {
     setIsExporting(true);
     try {
-      const csvText = await solicitacoesApi.exportar(filters);
-      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const blob = await solicitacoesApi.exportar(filters);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `relatorio_solicitacoes_${Date.now()}.csv`);
+      link.setAttribute('download', `relatorio_solicitacoes_${Date.now()}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -89,7 +88,7 @@ export function SolicitacoesPage() {
               disabled={isExporting}
               onClick={handleExportar}
             >
-              {isExporting ? 'Exportando...' : 'Exportar CSV'}
+              {isExporting ? 'Exportando...' : 'Exportar PDF'}
             </Button>
             {canCreate ? (
               <Link to="/app/solicitacoes/nova">

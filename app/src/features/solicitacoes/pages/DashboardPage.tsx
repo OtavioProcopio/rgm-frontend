@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Cpu,
   Hourglass,
   Layers,
   Package,
@@ -278,7 +277,7 @@ export function DashboardPage() {
       </div>
 
       {/* Grid de Cadastros — links condicionais por perfil */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <KPICard
           icon={Users}
           label="Usuários"
@@ -286,13 +285,6 @@ export function DashboardPage() {
           subtext="Operadores, gestores e admins"
           gradient="slate"
           onClickPath={isAdmin ? '/app/admin/usuarios' : undefined}
-        />
-        <KPICard
-          icon={Cpu}
-          label="Máquinas"
-          value={metricas.totalMaquinas}
-          subtext="Ativos e equipamentos"
-          gradient="slate"
         />
         <KPICard
           icon={Package}

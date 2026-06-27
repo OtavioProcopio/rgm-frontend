@@ -59,8 +59,12 @@ export function ModelosPage() {
       />
       <ModelosFilters
         codigo={filters.codigo}
+        maquina={filters.maquina}
+        descricao={filters.descricao}
         ativo={filters.ativo}
         onCodigoChange={(codigo) => setFilters((current) => ({ ...current, codigo, page: 0 }))}
+        onMaquinaChange={(maquina) => setFilters((current) => ({ ...current, maquina, page: 0 }))}
+        onDescricaoChange={(descricao) => setFilters((current) => ({ ...current, descricao, page: 0 }))}
         onAtivoChange={(ativo) => setFilters((current) => ({ ...current, ativo, page: 0 }))}
       />
       {actionError ? (

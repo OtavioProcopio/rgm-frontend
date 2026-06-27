@@ -1,5 +1,6 @@
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Select } from '@/shared/components/Select/Select';
+import { Input } from '@/shared/components/Input/Input';
 
 import type {
   PrioridadeSolicitacao,
@@ -59,6 +60,24 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
     onChange({ ...filters, page: 0, prioridade: value || undefined });
   }
 
+  function handleInicioChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    onChange({
+      ...filters,
+      page: 0,
+      criadaEmInicio: val ? `${val}T00:00:00Z` : undefined,
+    });
+  }
+
+  function handleFimChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    onChange({
+      ...filters,
+      page: 0,
+      criadaEmFim: val ? `${val}T23:59:59Z` : undefined,
+    });
+  }
+
   return (
     <div className="mb-5 flex flex-wrap gap-4">
       <div className="w-full sm:w-56">
@@ -99,6 +118,22 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           />
         </div>
       )}
+      <div className="w-full sm:w-44">
+        <Input
+          type="date"
+          label="Criada a partir de"
+          value={filters.criadaEmInicio ? filters.criadaEmInicio.split('T')[0] : ''}
+          onChange={handleInicioChange}
+        />
+      </div>
+      <div className="w-full sm:w-44">
+        <Input
+          type="date"
+          label="Criada até"
+          value={filters.criadaEmFim ? filters.criadaEmFim.split('T')[0] : ''}
+          onChange={handleFimChange}
+        />
+      </div>
     </div>
   );
 }

@@ -30,6 +30,8 @@ export type ModelosFilters = {
   size: number;
   ativo?: boolean;
   codigo?: string;
+  maquina?: string;
+  descricao?: string;
 };
 
 export type CriarModeloRequest = {

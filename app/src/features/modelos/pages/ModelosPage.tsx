@@ -23,6 +23,8 @@ export function ModelosPage() {
     size: number;
     ativo?: boolean;
     codigo?: string;
+    maquina?: string;
+    descricao?: string;
   }>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
 
@@ -44,8 +46,12 @@ export function ModelosPage() {
 
       <ModelosFilters
         codigo={filters.codigo}
+        maquina={filters.maquina}
+        descricao={filters.descricao}
         ativo={filters.ativo}
         onCodigoChange={(codigo) => setFilters((f) => ({ ...f, page: 0, codigo }))}
+        onMaquinaChange={(maquina) => setFilters((f) => ({ ...f, page: 0, maquina }))}
+        onDescricaoChange={(descricao) => setFilters((f) => ({ ...f, page: 0, descricao }))}
         onAtivoChange={(ativo) => setFilters((f) => ({ ...f, page: 0, ativo }))}
       />
 

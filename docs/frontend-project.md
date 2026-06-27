@@ -51,7 +51,6 @@ Solicitações
 Evidências
 Modelos
 Administração
-Máquinas
 Usuários
 ```
 
@@ -70,7 +69,6 @@ Fluxos principais:
 11. Upload e listagem de evidências.
 12. Listagem e cadastro de modelos.
 13. Administração de usuários.
-14. Administração de máquinas.
 
 ---
 
@@ -258,23 +256,6 @@ app/
             usuarioSchema.ts
           types/
             usuarioTypes.ts
-
-        maquinas/
-          api/
-            maquinasApi.ts
-          hooks/
-            useMaquinas.ts
-            useCriarMaquina.ts
-            useEditarMaquina.ts
-          pages/
-            MaquinasPage.tsx
-          components/
-            MaquinaForm.tsx
-            MaquinaTable.tsx
-          schemas/
-            maquinaSchema.ts
-          types/
-            maquinaTypes.ts
 
     styles/
       globals.css
@@ -571,7 +552,6 @@ Rotas privadas:
 /app/modelos/novo
 /app/modelos/:id
 /app/admin/usuarios
-/app/admin/maquinas
 ```
 
 Rotas admin devem ser visíveis apenas para usuários com perfil `ADMINISTRADOR`.
@@ -855,7 +835,6 @@ Ordem recomendada:
 6. feature/evidencias
 7. feature/modelos
 8. feature/admin-usuarios
-9. feature/admin-maquinas
 ```
 
 ---

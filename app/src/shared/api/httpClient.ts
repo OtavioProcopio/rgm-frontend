@@ -41,6 +41,10 @@ async function readResponseBody(response: Response) {
     return response.json();
   }
 
+  if (contentType?.includes('application/pdf')) {
+    return response.blob();
+  }
+
   return response.text();
 }
 
