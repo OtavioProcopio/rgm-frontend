@@ -8,6 +8,14 @@ import { createAppWrapper } from '@/test-utils/appWrapper';
 
 import { ModelosPage } from './ModelosPage';
 
+vi.mock('../api/modelosApi', () => ({
+  modelosApi: {
+    listar: vi.fn(),
+    exportarLista: vi.fn().mockResolvedValue(new Blob()),
+    exportarFicha: vi.fn().mockResolvedValue(new Blob()),
+  },
+}));
+
 vi.mock('../hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({ data: undefined, error: null, isLoading: true }),
 }));
