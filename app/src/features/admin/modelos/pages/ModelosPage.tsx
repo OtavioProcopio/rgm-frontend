@@ -8,6 +8,7 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
 
+import { modelosApi } from '../api/modelosApi';
 import { ModelosFilters } from '../components/ModelosFilters';
 import { ModelosTable } from '../components/ModelosTable';
 import { useModelos } from '../hooks/useModelos';
@@ -19,6 +20,30 @@ const PAGE_SIZE = 20;
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
+  const [isExporting, setIsExporting] = useState(false);
+
+  async function handleExportar() {
+    setIsExporting(true);
+    try {
+      const blob = await modelosApi.exportarLista({
+        ativo: filters.ativo,
+        codigo: filters.codigo,
+        maquina: filters.maquina,
+        descricao: filters.descricao,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_modelos_${Date.now()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao exportar relatório:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   return (
     <section>
@@ -26,9 +51,14 @@ export function ModelosPage() {
         title="Modelos"
         description="Gerencie modelos vinculados às máquinas."
         actions={
-          <Link to="/app/admin/modelos/novo">
-            <Button>Novo modelo</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={isExporting} onClick={handleExportar}>
+              {isExporting ? 'Exportando...' : 'Exportar PDF'}
+            </Button>
+            <Link to="/app/admin/modelos/novo">
+              <Button>Novo modelo</Button>
+            </Link>
+          </div>
         }
       />
       <ModelosFilters
