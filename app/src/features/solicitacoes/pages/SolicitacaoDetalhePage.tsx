@@ -8,6 +8,7 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canManageSolicitacoes } from '@/shared/lib/permissions';
 
+import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal';
 import { ComentarioForm } from '../components/ComentarioForm';
 import { DevolucaoModal } from '../components/DevolucaoModal';
 import { EncerramentoModal } from '../components/EncerramentoModal';
@@ -15,6 +16,7 @@ import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeB
 import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
 import { TriagemModal } from '../components/TriagemModal';
+import { useAlterarResponsaveis } from '../hooks/useAlterarResponsaveis';
 import { useAtividades } from '../hooks/useAtividades';
 import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
 import { useDevolverSolicitacao } from '../hooks/useDevolverSolicitacao';
@@ -32,6 +34,7 @@ import type {
 } from '../types/solicitacaoTypes';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
+import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
@@ -40,7 +43,7 @@ import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
-type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
+type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | null;
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -68,6 +71,8 @@ export function SolicitacaoDetalhePage() {
   const comentar = useRegistrarComentario(id!);
   const uploadEvidencia = useUploadEvidencia(id!);
   const editar = useEditarSolicitacao(id!);
+  const alterarResponsaveis = useAlterarResponsaveis(id!);
+  const deleteEvidencia = useDeleteEvidencia(id!);
 
   const canManage = canManageSolicitacoes(user?.perfil);
   const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
@@ -130,6 +135,25 @@ export function SolicitacaoDetalhePage() {
     setActionError(null);
     try {
       await comentar.mutateAsync(data);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleAlterarResponsaveis(responsavelIds: string[]) {
+    setActionError(null);
+    try {
+      await alterarResponsaveis.mutateAsync({ responsavelIds });
+      setActiveModal(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleDeleteEvidencia(evidenciaId: string) {
+    setActionError(null);
+    try {
+      await deleteEvidencia.mutateAsync(evidenciaId);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
@@ -332,6 +356,11 @@ export function SolicitacaoDetalhePage() {
                 Triar
               </Button>
             ) : null}
+            {canManage && solicitacao.status !== 'A_FAZER' ? (
+              <Button type="button" variant="secondary" onClick={() => setActiveModal('responsaveis')}>
+                Alterar responsáveis
+              </Button>
+            ) : null}
             {canEnviarValidacao && solicitacao.status === 'EM_ANDAMENTO' ? (
               <Button
                 type="button"
@@ -383,6 +412,15 @@ export function SolicitacaoDetalhePage() {
               onConfirm={handleDevolver}
             />
           ) : null}
+          {activeModal === 'responsaveis' ? (
+            <AlterarResponsaveisModal
+              responsaveisAtuais={solicitacao.responsavelIds}
+              usuarios={responsaveisOpcoes}
+              isPending={alterarResponsaveis.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleAlterarResponsaveis}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -396,7 +434,12 @@ export function SolicitacaoDetalhePage() {
             <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
           </div>
         ) : null}
-        <EvidenciaList evidencias={evidencias} isLoading={isLoadingEvidencias} />
+        <EvidenciaList
+          evidencias={evidencias}
+          isLoading={isLoadingEvidencias}
+          onDelete={canAnexarEvidencia ? handleDeleteEvidencia : undefined}
+          isDeleting={deleteEvidencia.isPending}
+        />
       </div>
 
       {/* Histórico */}

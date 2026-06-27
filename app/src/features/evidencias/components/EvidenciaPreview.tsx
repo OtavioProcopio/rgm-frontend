@@ -1,7 +1,11 @@
+import { Trash2 } from 'lucide-react';
+
 import type { Evidencia } from '../types/evidenciaTypes';
 
 type Props = {
   evidencia: Evidencia;
+  onDelete?: (evidenciaId: string) => void;
+  isDeleting?: boolean;
 };
 
 function formatBytes(bytes: number) {
@@ -10,11 +14,22 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function EvidenciaPreview({ evidencia }: Props) {
+export function EvidenciaPreview({ evidencia, onDelete, isDeleting }: Props) {
   const isImage = evidencia.mimeType.startsWith('image/');
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+    <div className="relative rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+      {onDelete && (
+        <button
+          type="button"
+          onClick={() => onDelete(evidencia.id)}
+          disabled={isDeleting}
+          aria-label="Excluir evidência"
+          className="absolute right-2 top-2 rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
       {isImage ? (
         <a href={evidencia.publicUrl} target="_blank" rel="noopener noreferrer">
           <img
