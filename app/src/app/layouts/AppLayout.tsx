@@ -15,7 +15,7 @@ import { Button } from '@/shared/components/Button/Button';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
-import { canAccessAdmin, canManageModelos, canViewModelos } from '@/shared/lib/permissions';
+import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 
 const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   ADMINISTRADOR: 'Painel administrativo',
@@ -24,28 +24,25 @@ const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   EXTERNO: 'Portal de solicitações',
 };
 
-const adminNavigation = [
-  { to: '/app/admin', label: 'Painel', icon: LayoutDashboard, end: true },
-  { to: '/app/admin/usuarios', label: 'Usuários', icon: Users },
-  { to: '/app/admin/modelos', label: 'Modelos', icon: PackageSearch },
-];
-
 export function AppLayout() {
   const { logout, user } = useAuth();
 
-  const navigation = canAccessAdmin(user?.perfil)
-    ? adminNavigation
-    : [
-        { to: '/app/dashboard', label: 'Dashboard', icon: BarChart2, end: false },
-        { to: '/app/relatorios', label: 'Relatórios', icon: FileBarChart2, end: false },
-        { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
-        ...(canViewModelos(user?.perfil)
-          ? [{ to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false }]
-          : []),
-        ...(canManageModelos(user?.perfil) && !canAccessAdmin(user?.perfil)
-          ? [{ to: '/app/admin/modelos', label: 'Gerenciar Modelos', icon: PackageSearch, end: false }]
-          : []),
-      ];
+  const navigation = [
+    { to: '/app/dashboard', label: 'Dashboard', icon: BarChart2, end: false },
+    { to: '/app/relatorios', label: 'Relatórios', icon: FileBarChart2, end: false },
+    { to: '/app/solicitacoes', label: 'Solicitações', icon: Ticket, end: false },
+    { to: '/app/modelos', label: 'Modelos', icon: PackageSearch, end: false },
+    ...(canAccessAdmin(user?.perfil)
+      ? [
+          { to: '/app/admin', label: 'Painel Admin', icon: LayoutDashboard, end: true },
+          { to: '/app/admin/usuarios', label: 'Usuários', icon: Users, end: false },
+          { to: '/app/admin/modelos', label: 'Gerenciar Modelos', icon: PackageSearch, end: false },
+        ]
+      : []),
+    ...(canManageModelos(user?.perfil) && !canAccessAdmin(user?.perfil)
+      ? [{ to: '/app/admin/modelos', label: 'Gerenciar Modelos', icon: PackageSearch, end: false }]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-900 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
