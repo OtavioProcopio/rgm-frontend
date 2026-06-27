@@ -34,4 +34,7 @@ export const modelosApi = {
       tipoRecurso: 'MODELO',
       recursoId: id,
     }),
+  exportarLista: (filters: Omit<ModelosFilters, 'page' | 'size'>) =>
+    httpClient.get<Blob>('/modelos/relatorio', { params: filters }),
+  exportarFicha: (id: string) => httpClient.get<Blob>(`/modelos/${id}/relatorio`),
 };
