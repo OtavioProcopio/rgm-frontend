@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
@@ -48,6 +48,14 @@ export function EditarModeloPage() {
       <PageHeader
         title="Editar modelo"
         description="Atualize os dados e o encaixe de máquina do modelo."
+        actions={id ? (
+          <Link
+            to={`/app/admin/modelos/${id}`}
+            className="inline-flex items-center justify-center rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          >
+            Voltar
+          </Link>
+        ) : null}
       />
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
