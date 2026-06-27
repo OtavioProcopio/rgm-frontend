@@ -21,7 +21,6 @@ import { PerfilPage } from '@/features/auth/pages/PerfilPage';
 import { ModelosPage } from '@/features/modelos/pages/ModelosPage';
 import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
-import { RelatoriosPage } from '@/features/solicitacoes/pages/RelatoriosPage';
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { SolicitacoesPage } from '@/features/solicitacoes/pages/SolicitacoesPage';
 
@@ -60,10 +59,6 @@ export const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: 'relatorios',
-            element: <RelatoriosPage />,
-          },
-          {
             path: 'perfil',
             element: <PerfilPage />,
           },
@@ -82,10 +77,6 @@ export const router = createBrowserRouter([
           {
             path: 'modelos',
             element: <ModelosPage />,
-          },
-          {
-            path: 'modelos/novo',
-            element: <NovoModeloPage backPath="/app/modelos" />,
           },
           {
             path: 'modelos/:id',

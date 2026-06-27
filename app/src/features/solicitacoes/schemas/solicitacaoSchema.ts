@@ -4,7 +4,7 @@ export const abrirSolicitacaoSchema = z.object({
   titulo: z.string().min(1, 'Título obrigatório'),
   descricao: z.string().min(1, 'Descrição obrigatória'),
   tipo: z.enum(['REPARO', 'INSPECAO', 'REENGENHARIA']),
-  modeloId: z.string().uuid('Selecione um modelo'),
+  modeloCodigo: z.string().min(1, 'Informe o código do modelo'),
 });
 
 export const triarSolicitacaoSchema = z.object({

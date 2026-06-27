@@ -36,7 +36,6 @@ import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { useQuery } from '@tanstack/react-query';
-import { canAccessAdmin } from '@/shared/lib/permissions';
 import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
@@ -77,7 +76,7 @@ export function SolicitacaoDetalhePage() {
   const { data: usuariosPage } = useQuery({
     queryKey: ['admin', 'usuarios', 'triagem'],
     queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
-    enabled: canAccessAdmin(user?.perfil),
+    enabled: canManageSolicitacoes(user?.perfil),
     staleTime: 5 * 60 * 1000,
   });
   const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
@@ -263,7 +262,7 @@ export function SolicitacaoDetalhePage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Status
@@ -287,7 +286,7 @@ export function SolicitacaoDetalhePage() {
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Tipo
             </p>
-            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+            <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
               {tipoLabel[solicitacao.tipo]}
             </p>
           </div>
@@ -298,7 +297,7 @@ export function SolicitacaoDetalhePage() {
             <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
           </div>
           {modelo ? (
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Modelo (rastreabilidade)
               </p>
@@ -311,7 +310,7 @@ export function SolicitacaoDetalhePage() {
             </div>
           ) : null}
           {solicitacao.comentarioFinal ? (
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Comentário final
               </p>

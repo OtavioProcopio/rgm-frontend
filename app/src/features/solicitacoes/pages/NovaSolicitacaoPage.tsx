@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 
+import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { Input } from '@/shared/components/Input/Input';
@@ -31,15 +32,33 @@ export function NovaSolicitacaoPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<AbrirSolicitacaoFormData>({
     resolver: zodResolver(abrirSolicitacaoSchema),
   });
 
+  const codigo = watch('modeloCodigo')?.trim() ?? '';
+  const { data: modelosPage, isFetching: isLookingUp } = useModelos({
+    page: 0,
+    size: 1,
+    codigo: codigo || undefined,
+  });
+  const modeloEncontrado = codigo ? (modelosPage?.content[0] ?? null) : null;
+
   async function onSubmit(data: AbrirSolicitacaoFormData) {
     setSubmitError(null);
+    if (!modeloEncontrado) {
+      setSubmitError('Modelo não encontrado para o código informado.');
+      return;
+    }
     try {
-      const created = await abrirSolicitacao.mutateAsync(data);
+      const created = await abrirSolicitacao.mutateAsync({
+        titulo: data.titulo,
+        descricao: data.descricao,
+        tipo: data.tipo,
+        modeloId: modeloEncontrado.id,
+      });
       navigate(`/app/solicitacoes/${created.id}`);
     } catch (err) {
       setSubmitError(getSolicitacaoErrorMessage(err));
@@ -79,12 +98,27 @@ export function NovaSolicitacaoPage() {
           error={errors.tipo?.message}
           {...register('tipo')}
         />
-        <Input
-          label="ID do modelo (UUID)"
-          placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-          error={errors.modeloId?.message}
-          {...register('modeloId')}
-        />
+        <div>
+          <Input
+            label="Código do modelo"
+            placeholder="Ex.: MDL-TESTE-001"
+            error={errors.modeloCodigo?.message}
+            {...register('modeloCodigo')}
+          />
+          {codigo ? (
+            <p className="mt-1 text-xs">
+              {isLookingUp ? (
+                <span className="text-slate-500 dark:text-slate-400">Buscando modelo...</span>
+              ) : modeloEncontrado ? (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  Modelo encontrado: {modeloEncontrado.descricao}
+                </span>
+              ) : (
+                <span className="text-rose-600 dark:text-rose-400">Modelo não encontrado</span>
+              )}
+            </p>
+          ) : null}
+        </div>
         <div className="flex gap-3">
           <Button
             type="button"
@@ -94,7 +128,10 @@ export function NovaSolicitacaoPage() {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={abrirSolicitacao.isPending}>
+          <Button
+            type="submit"
+            disabled={abrirSolicitacao.isPending || !modeloEncontrado}
+          >
             {abrirSolicitacao.isPending ? 'Abrindo...' : 'Abrir solicitação'}
           </Button>
         </div>

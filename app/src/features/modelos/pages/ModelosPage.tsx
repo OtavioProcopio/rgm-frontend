@@ -1,23 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
 
 import { ModelosFilters } from '@/features/admin/modelos/components/ModelosFilters';
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
-import { useAuth } from '@/app/providers/authContext';
-import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
-import { canManageModelos } from '@/shared/lib/permissions';
 
 import { ModeloCard } from '../components/ModeloCard';
 
 const PAGE_SIZE = 12;
 
 export function ModelosPage() {
-  const { user } = useAuth();
   const [filters, setFilters] = useState<{
     page: number;
     size: number;
@@ -28,20 +23,11 @@ export function ModelosPage() {
   }>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
 
-  const canManage = canManageModelos(user?.perfil);
-
   return (
     <section>
       <PageHeader
         title="Modelos"
         description="Visualize os modelos de máquinas disponíveis."
-        actions={
-          canManage ? (
-            <Link to="/app/modelos/novo">
-              <Button>Novo modelo</Button>
-            </Link>
-          ) : undefined
-        }
       />
 
       <ModelosFilters

@@ -102,4 +102,36 @@ describe('DashboardPage', () => {
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
     expect(within(container).getByText('Tarefa Velha')).toBeDefined();
   });
+
+  it('renders status distribution table with percentages', async () => {
+    const { useMetricas } = await import('../hooks/useMetricas');
+    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    vi.mocked(useMetricas).mockReturnValue({
+      data: mockMetricas, isLoading: false, isError: false, error: null,
+    } as unknown as ReturnType<typeof useMetricas>);
+    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
+      data: [], isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
+    expect(within(container).getByText('Distribuição detalhada por status')).toBeDefined();
+    expect(within(container).getAllByText(/%/).length).toBeGreaterThan(0);
+  });
+
+  it('renders zero percentage when totalSolicitacoes is zero', async () => {
+    const { useMetricas } = await import('../hooks/useMetricas');
+    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    vi.mocked(useMetricas).mockReturnValue({
+      data: { ...mockMetricas, totalSolicitacoes: 0, solicitacoesPorStatus: { A_FAZER: 0, EM_ANDAMENTO: 0, EM_VALIDACAO: 0, CONCLUIDA: 0, CANCELADA: 0 } },
+      isLoading: false, isError: false, error: null,
+    } as unknown as ReturnType<typeof useMetricas>);
+    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
+      data: [], isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
+    expect(within(container).getAllByText('0.0%').length).toBeGreaterThan(0);
+  });
 });

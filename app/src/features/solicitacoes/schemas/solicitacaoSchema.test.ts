@@ -14,7 +14,7 @@ describe('solicitacaoSchema', () => {
         titulo: 'Vazamento no motor primário',
         descricao: 'Detectado vazamento de óleo na junta do cabeçote',
         tipo: 'REPARO',
-        modeloId: '123e4567-e89b-12d3-a456-426614174000',
+        modeloCodigo: 'MDL-TESTE-001',
       });
       expect(result.success).toBe(true);
     });
@@ -24,17 +24,17 @@ describe('solicitacaoSchema', () => {
         titulo: '',
         descricao: '',
         tipo: 'INSPECAO',
-        modeloId: '123e4567-e89b-12d3-a456-426614174000',
+        modeloCodigo: 'MDL-TESTE-001',
       });
       expect(result.success).toBe(false);
     });
 
-    it('rejects invalid uuid for model', () => {
+    it('rejects empty model code', () => {
       const result = abrirSolicitacaoSchema.safeParse({
         titulo: 'Inspeção semestral',
         descricao: 'Verificar alinhamento da correia',
         tipo: 'INSPECAO',
-        modeloId: 'not-a-uuid',
+        modeloCodigo: '',
       });
       expect(result.success).toBe(false);
     });
