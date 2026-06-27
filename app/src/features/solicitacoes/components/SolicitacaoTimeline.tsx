@@ -78,15 +78,15 @@ export function SolicitacaoTimeline({ atividades, isLoading }: Props) {
             <div className="flex flex-col items-center">
               <div
                 className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
                   config.dotClass,
                 )}
               >
-                <Icon size={14} className={config.iconClass} />
+                <Icon size={12} className={config.iconClass} />
               </div>
               {!isLast && <div className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />}
             </div>
-            <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
+            <div className={cn('min-w-0 pb-3', isLast && 'pb-0')}>
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                   {config.label}

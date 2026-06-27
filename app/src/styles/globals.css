@@ -12,10 +12,23 @@
     sans-serif;
   color: #111827;
   background: #f8fafc;
+
+  /* Accent da marca (azul RGM) — aplicado em ambos os temas */
+  --color-sky-400: #60a5fa;
+  --color-sky-500: #3b82f6;
+  --color-sky-600: #2563eb;
+  --color-sky-700: #1d4ed8;
 }
 
 .dark {
   color-scheme: dark;
+
+  /* Superfícies dark gray baseadas na identidade visual */
+  --color-slate-950: #0f1117; /* sidebar / inputs profundos */
+  --color-slate-900: #1a1d23; /* fundo da aplicação */
+  --color-slate-800: #21252e; /* superfícies / cards */
+  --color-slate-700: #323845; /* bordas */
+  --color-slate-200: #e2e8f0; /* texto claro suave */
 }
 
 * {
@@ -30,7 +43,7 @@ body {
 }
 
 .dark body {
-  background: #111827;
+  background: #1a1d23;
 }
 
 a {

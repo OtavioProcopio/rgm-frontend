@@ -42,7 +42,8 @@ test.describe('Autenticação', () => {
 
   test('navega para perfil e exibe dados do usuário', async ({ page, loginAdmin }) => {
     await loginAdmin('/app/admin');
-    await page.click('text=Meu Perfil');
+    // Perfil agora fica no header — clica no link do nome do usuário
+    await page.goto('/app/perfil');
     await expect(page).toHaveURL(/\/app\/perfil/);
     await expect(page.getByText('ADMINISTRADOR')).toBeVisible();
     await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();

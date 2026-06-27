@@ -18,6 +18,7 @@ test.describe('Dashboard', () => {
     await expect(page.getByText('Distribuição por status')).toBeVisible();
     await expect(page.getByText('Distribuição por tipo')).toBeVisible();
     await expect(page.getByText('Distribuição por prioridade')).toBeVisible();
-    await expect(page.getByText('Modelos de máquinas')).toBeVisible();
+    await expect(page.getByText('Distribuição detalhada por status')).toBeVisible();
+    await expect(page.getByText('Acompanhamento Crítico')).toBeVisible();
   });
 });
