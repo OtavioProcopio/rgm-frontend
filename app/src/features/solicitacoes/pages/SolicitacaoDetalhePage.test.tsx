@@ -111,7 +111,7 @@ describe('SolicitacaoDetalhePage', () => {
       data: mockSolicitacao,
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -124,7 +124,7 @@ describe('SolicitacaoDetalhePage', () => {
       data: undefined,
       isLoading: false,
       error: new Error('Falha'),
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -136,7 +136,7 @@ describe('SolicitacaoDetalhePage', () => {
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'A_FAZER' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -148,7 +148,7 @@ describe('SolicitacaoDetalhePage', () => {
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -160,7 +160,7 @@ describe('SolicitacaoDetalhePage', () => {
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -171,7 +171,7 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: mockSolicitacao, isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -183,7 +183,7 @@ describe('SolicitacaoDetalhePage', () => {
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, tipo: 'INSPECAO', descricao: 'Verificar pressão' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -194,11 +194,11 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useTriarSolicitacao } = await import('../hooks/useTriarSolicitacao');
     const triarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useTriarSolicitacao).mockReturnValue({ mutateAsync: triarMock, isPending: false } as ReturnType<typeof useTriarSolicitacao>);
+    vi.mocked(useTriarSolicitacao).mockReturnValue({ mutateAsync: triarMock, isPending: false } as unknown as ReturnType<typeof useTriarSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'A_FAZER' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -211,11 +211,11 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useEnviarParaValidacao } = await import('../hooks/useEnviarParaValidacao');
     const enviarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useEnviarParaValidacao).mockReturnValue({ mutateAsync: enviarMock, isPending: false } as ReturnType<typeof useEnviarParaValidacao>);
+    vi.mocked(useEnviarParaValidacao).mockReturnValue({ mutateAsync: enviarMock, isPending: false } as unknown as ReturnType<typeof useEnviarParaValidacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_ANDAMENTO', responsavelIds: ['u1'] },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -227,11 +227,11 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useEncerrarSolicitacao } = await import('../hooks/useEncerrarSolicitacao');
     const encerrarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useEncerrarSolicitacao).mockReturnValue({ mutateAsync: encerrarMock, isPending: false } as ReturnType<typeof useEncerrarSolicitacao>);
+    vi.mocked(useEncerrarSolicitacao).mockReturnValue({ mutateAsync: encerrarMock, isPending: false } as unknown as ReturnType<typeof useEncerrarSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -244,11 +244,11 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useDevolverSolicitacao } = await import('../hooks/useDevolverSolicitacao');
     const devolverMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useDevolverSolicitacao).mockReturnValue({ mutateAsync: devolverMock, isPending: false } as ReturnType<typeof useDevolverSolicitacao>);
+    vi.mocked(useDevolverSolicitacao).mockReturnValue({ mutateAsync: devolverMock, isPending: false } as unknown as ReturnType<typeof useDevolverSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
       isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -261,10 +261,10 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useRegistrarComentario } = await import('../hooks/useRegistrarComentario');
     const comentarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useRegistrarComentario).mockReturnValue({ mutateAsync: comentarMock, isPending: false } as ReturnType<typeof useRegistrarComentario>);
+    vi.mocked(useRegistrarComentario).mockReturnValue({ mutateAsync: comentarMock, isPending: false } as unknown as ReturnType<typeof useRegistrarComentario>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: mockSolicitacao, isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
@@ -276,7 +276,7 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: mockSolicitacao, isLoading: false, error: null,
-    } as ReturnType<typeof useSolicitacao>);
+    } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
