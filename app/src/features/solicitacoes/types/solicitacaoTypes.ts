@@ -47,6 +47,8 @@ export type SolicitacoesFilters = {
   size: number;
   status?: StatusSolicitacao;
   modeloId?: string;
+  tipo?: TipoSolicitacao;
+  prioridade?: PrioridadeSolicitacao;
 };
 
 export type AbrirSolicitacaoRequest = {

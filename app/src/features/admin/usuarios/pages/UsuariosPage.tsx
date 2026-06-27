@@ -8,6 +8,8 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
 
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
+
 import { DeleteUsuarioDialog } from '../components/DeleteUsuarioDialog';
 import { UsuariosFilters } from '../components/UsuariosFilters';
 import { UsuariosTable } from '../components/UsuariosTable';
@@ -30,6 +32,7 @@ export function UsuariosPage() {
     size: PAGE_SIZE,
   });
   const [selectedForDelete, setSelectedForDelete] = useState<Usuario | null>(null);
+  const [selectedForDesativar, setSelectedForDesativar] = useState<Usuario | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, error, isLoading } = useUsuarios(filters);
   const ativarUsuario = useAtivarUsuario();
@@ -48,17 +51,15 @@ export function UsuariosPage() {
     }
   }
 
-  async function handleDesativar(usuario: Usuario) {
-    if (!window.confirm(`Deseja desativar ${usuario.nome}?`)) {
-      return;
-    }
-
+  async function handleConfirmDesativar() {
+    if (!selectedForDesativar) return;
     setActionError(null);
-
     try {
-      await desativarUsuario.mutateAsync(usuario.id);
+      await desativarUsuario.mutateAsync(selectedForDesativar.id);
+      setSelectedForDesativar(null);
     } catch (mutationError) {
       setActionError(getUsuarioErrorMessage(mutationError));
+      setSelectedForDesativar(null);
     }
   }
 
@@ -106,6 +107,20 @@ export function UsuariosPage() {
         </div>
       ) : null}
 
+      {selectedForDesativar ? (
+        <div className="mb-4">
+          <ConfirmDialog
+            title="Desativar usuário"
+            message={`Deseja desativar ${selectedForDesativar.nome}? O usuário perderá acesso ao sistema.`}
+            confirmLabel="Desativar"
+            variant="danger"
+            isPending={desativarUsuario.isPending}
+            onCancel={() => setSelectedForDesativar(null)}
+            onConfirm={handleConfirmDesativar}
+          />
+        </div>
+      ) : null}
+
       {selectedForDelete ? (
         <div className="mb-4">
           <DeleteUsuarioDialog
@@ -139,7 +154,7 @@ export function UsuariosPage() {
             usuarios={data.content}
             isMutating={isMutating}
             onAtivar={handleAtivar}
-            onDesativar={handleDesativar}
+            onDesativar={setSelectedForDesativar}
             onExcluir={setSelectedForDelete}
           />
 

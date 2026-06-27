@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
@@ -16,40 +17,32 @@ import { useModelos } from '../hooks/useModelos';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { Modelo, ModelosFilters as ModelosFiltersType } from '../types/modeloTypes';
 
+type PendingAction = { type: 'desativar' | 'ativar'; modelo: Modelo };
+
 const PAGE_SIZE = 20;
 
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, error, isLoading } = useModelos(filters);
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
-  async function handleDesativar(modelo: Modelo) {
-    if (
-      !window.confirm(
-        'Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?',
-      )
-    )
-      return;
+  async function handleConfirmAction() {
+    if (!pendingAction) return;
     setActionError(null);
     try {
-      await desativarModelo.mutateAsync(modelo.id);
+      if (pendingAction.type === 'desativar') {
+        await desativarModelo.mutateAsync(pendingAction.modelo.id);
+      } else {
+        await ativarModelo.mutateAsync(pendingAction.modelo.id);
+      }
+      setPendingAction(null);
     } catch (mutationError) {
       setActionError(getModeloErrorMessage(mutationError));
-    }
-  }
-
-  async function handleAtivar(modelo: Modelo) {
-    if (!window.confirm(`Deseja ativar o modelo ${modelo.codigo}?`)) {
-      return;
-    }
-    setActionError(null);
-    try {
-      await ativarModelo.mutateAsync(modelo.id);
-    } catch (mutationError) {
-      setActionError(getModeloErrorMessage(mutationError));
+      setPendingAction(null);
     }
   }
 
@@ -75,6 +68,31 @@ export function ModelosPage() {
           <ErrorState title="Operação não concluída" description={actionError} />
         </div>
       ) : null}
+      {pendingAction ? (
+        <div className="mb-4">
+          {pendingAction.type === 'desativar' ? (
+            <ConfirmDialog
+              title="Desativar modelo"
+              message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+              confirmLabel="Desativar"
+              variant="danger"
+              isPending={isMutating}
+              onCancel={() => setPendingAction(null)}
+              onConfirm={handleConfirmAction}
+            />
+          ) : (
+            <ConfirmDialog
+              title="Ativar modelo"
+              message={`Deseja ativar o modelo ${pendingAction.modelo.codigo}?`}
+              confirmLabel="Ativar"
+              variant="warning"
+              isPending={isMutating}
+              onCancel={() => setPendingAction(null)}
+              onConfirm={handleConfirmAction}
+            />
+          )}
+        </div>
+      ) : null}
       {isLoading ? <LoadingState title="Carregando modelos..." /> : null}
       {error ? (
         <ErrorState
@@ -90,8 +108,8 @@ export function ModelosPage() {
           <ModelosTable
             modelos={data.content}
             isMutating={isMutating}
-            onDesativar={handleDesativar}
-            onAtivar={handleAtivar}
+            onDesativar={(modelo) => setPendingAction({ type: 'desativar', modelo })}
+            onAtivar={(modelo) => setPendingAction({ type: 'ativar', modelo })}
           />
           <Pagination
             page={data.page}
