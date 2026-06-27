@@ -3,7 +3,7 @@
  */
 import { cleanup, render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SolicitacaoCard } from './SolicitacaoCard';
 
@@ -18,7 +18,8 @@ const solicitacao = {
   id: '1', titulo: 'Bomba quebrada', descricao: 'Trocar vedações',
   tipo: 'REPARO' as const, status: 'A_FAZER' as const, prioridade: 'ALTA' as const,
   criadaEm: '2024-06-01T10:00:00Z', atualizadaEm: '2024-06-01T10:00:00Z',
-  solicitanteId: 'u1', solicitanteNome: 'João', modeloId: 'm1', modeloCodigo: 'M01',
+  modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
+  concluidaEm: null, canceladaEm: null, responsavelIds: [],
 };
 
 afterEach(cleanup);

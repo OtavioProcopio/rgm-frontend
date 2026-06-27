@@ -29,10 +29,12 @@ const solicitacao = {
   prioridade: null,
   criadaEm: new Date().toISOString(),
   atualizadaEm: new Date().toISOString(),
-  solicitanteId: 'u1',
-  solicitanteNome: 'João',
   modeloId: 'm1',
-  modeloCodigo: 'M01',
+  abertaPorUsuarioId: 'u1',
+  comentarioFinal: null,
+  concluidaEm: null,
+  canceladaEm: null,
+  responsavelIds: [],
 };
 
 afterEach(cleanup);

@@ -33,7 +33,7 @@ describe('ModelosPage (gestor/operador)', () => {
       data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
       error: null,
       isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });

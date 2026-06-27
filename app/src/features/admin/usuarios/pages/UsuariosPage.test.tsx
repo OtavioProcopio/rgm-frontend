@@ -67,7 +67,7 @@ describe('UsuariosPage', () => {
       data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
       error: null,
       isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
@@ -84,7 +84,7 @@ describe('UsuariosPage', () => {
     const { useUsuarios } = await import('../hooks/useUsuarios');
     vi.mocked(useUsuarios).mockReturnValue({
       data: undefined, error: new Error('fail'), isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
@@ -101,7 +101,7 @@ describe('UsuariosPage', () => {
         page: 0, totalPages: 1, totalElements: 1,
       },
       error: null, isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
@@ -114,7 +114,7 @@ describe('UsuariosPage', () => {
     vi.mocked(useUsuarios).mockReturnValue({
       data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
       error: null, isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
@@ -128,7 +128,7 @@ describe('UsuariosPage', () => {
     vi.mocked(useUsuarios).mockReturnValue({
       data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
       error: null, isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
@@ -141,11 +141,11 @@ describe('UsuariosPage', () => {
     const { useUsuarios } = await import('../hooks/useUsuarios');
     const { useAtivarUsuario } = await import('../hooks/useAtivarUsuario');
     const ativarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useAtivarUsuario).mockReturnValue({ mutateAsync: ativarMock, isPending: false } as ReturnType<typeof useAtivarUsuario>);
+    vi.mocked(useAtivarUsuario).mockReturnValue({ mutateAsync: ativarMock, isPending: false } as unknown as ReturnType<typeof useAtivarUsuario>);
     vi.mocked(useUsuarios).mockReturnValue({
       data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: false, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
       error: null, isLoading: false,
-    } as ReturnType<typeof useUsuarios>);
+    } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });

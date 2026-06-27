@@ -39,10 +39,10 @@ describe('EditarModeloPage', () => {
   it('shows form when modelo is loaded', async () => {
     const { useModelo } = await import('../hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquinaId: 'm1', fotoCapa: null, criadoEm: '', atualizadoEm: '' },
+      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useModelo>);
+    } as unknown as ReturnType<typeof useModelo>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
     const { container } = render(<EditarModeloPage />, { wrapper: AppWrapper });

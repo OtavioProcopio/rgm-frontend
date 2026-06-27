@@ -9,7 +9,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ModeloActionsMenu } from './ModeloActionsMenu';
 
 const modelo = {
-  id: '1', codigo: 'M01', descricao: 'Desc', maquinaId: 'm1',
+  id: '1', codigo: 'M01', descricao: 'Desc', maquina: 'Injetora',
+  versao: 1, observacoes: null, temPendenciaAberta: false,
   ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '',
 };
 

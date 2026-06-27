@@ -53,7 +53,7 @@ const mockSolicitacao = {
   criadaEm: '2024-01-01T00:00:00Z', atualizadaEm: '2024-01-01T00:00:00Z',
   concluidaEm: null, canceladaEm: null, responsavelIds: [],
 };
-const mockPage = { content: [mockSolicitacao], page: 0, totalPages: 1, totalElements: 1 };
+const mockPage = { content: [mockSolicitacao], page: 0, size: 20, totalPages: 1, totalElements: 1 };
 
 afterEach(() => vi.clearAllMocks());
 
@@ -115,7 +115,7 @@ describe('useDashboardData', () => {
     const { solicitacoesApi } = await import('../api/solicitacoesApi');
     const concluded = {
       ...mockSolicitacao,
-      status: 'CONCLUIDA',
+      status: 'CONCLUIDA' as const,
       criadaEm: '2024-01-01T00:00:00Z',
       concluidaEm: '2024-01-03T00:00:00Z',
     };
@@ -140,7 +140,8 @@ describe('mutation hooks', () => {
     ['useRegistrarComentario', useRegistrarComentario],
   ] as const)('%s exposes mutateAsync', (_, hook) => {
     const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => hook(), { wrapper: QueryWrapper });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { result } = renderHook(() => (hook as (id?: string) => any)('test-id'), { wrapper: QueryWrapper });
     expect(typeof result.current.mutateAsync).toBe('function');
   });
 });

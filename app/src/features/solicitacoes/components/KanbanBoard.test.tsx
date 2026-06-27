@@ -43,7 +43,7 @@ describe('KanbanBoard', () => {
     const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
     vi.mocked(useKanbanSolicitacoes).mockReturnValue({
       data: [], isLoading: false, error: null,
-    } as ReturnType<typeof useKanbanSolicitacoes>);
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });

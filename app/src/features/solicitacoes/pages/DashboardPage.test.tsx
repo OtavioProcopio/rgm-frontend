@@ -38,7 +38,7 @@ describe('DashboardPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useMetricas>);
+    } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -51,7 +51,7 @@ describe('DashboardPage', () => {
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 7200 },
       isLoading: false, isError: false, error: null,
-    } as ReturnType<typeof useMetricas>);
+    } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -63,7 +63,7 @@ describe('DashboardPage', () => {
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 120 },
       isLoading: false, isError: false, error: null,
-    } as ReturnType<typeof useMetricas>);
+    } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -75,7 +75,7 @@ describe('DashboardPage', () => {
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 30 },
       isLoading: false, isError: false, error: null,
-    } as ReturnType<typeof useMetricas>);
+    } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -87,7 +87,7 @@ describe('DashboardPage', () => {
     const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
     vi.mocked(useMetricas).mockReturnValue({
       data: mockMetricas, isLoading: false, isError: false, error: null,
-    } as ReturnType<typeof useMetricas>);
+    } as unknown as ReturnType<typeof useMetricas>);
     const old = new Date(Date.now() - 10 * 86400 * 1000).toISOString();
     vi.mocked(useKanbanSolicitacoes).mockReturnValue({
       data: [{
@@ -96,7 +96,7 @@ describe('DashboardPage', () => {
         modeloCodigo: 'M01', solicitanteId: 'u1', solicitanteNome: 'J', atualizadaEm: old,
       }],
       isLoading: false, error: null,
-    } as ReturnType<typeof useKanbanSolicitacoes>);
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });

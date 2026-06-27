@@ -8,10 +8,14 @@ import { EventosModeloList } from './EventosModeloList';
 
 const evento = {
   id: 'e1',
+  modeloId: 'm1',
   titulo: 'Manutenção preventiva',
   tipo: 'MANUTENCAO',
   descricao: 'Revisão geral',
   estadoModeloDescricao: null,
+  defineFotoCapa: false,
+  executadoPorUsuarioId: null,
+  solicitacaoRelacionadaId: null,
   criadoEm: '2024-06-01T10:00:00Z',
 };
 

@@ -33,7 +33,7 @@ describe('EvidenciaUploader', () => {
   it('calls onUpload with valid file', async () => {
     const onUpload = vi.fn();
     const { container } = render(<EvidenciaUploader onUpload={onUpload} />);
-    const input = container.querySelector('input[type="file"]')!;
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = makeFile('foto.jpg', 'image/jpeg', 100);
 
     await userEvent.upload(input, file);

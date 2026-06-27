@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SolicitacaoTimeline } from './SolicitacaoTimeline';
 
 const atividade = {
-  id: 'a1', tipo: 'ABERTURA' as const, autorNome: 'João',
+  id: 'a1', solicitacaoId: 's1', autorUsuarioId: 'u1',
+  tipo: 'ABERTURA' as const, autorNome: 'João',
   criadaEm: '2024-06-01T10:00:00Z', comentario: null,
   deStatus: null, paraStatus: null,
 };

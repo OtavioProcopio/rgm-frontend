@@ -3,7 +3,7 @@
  */
 import { cleanup, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { MemoryRouter, Outlet } from 'react-router';
+import { MemoryRouter } from 'react-router';
 
 import { AuthContext, type AuthContextValue } from '@/app/providers/authContext';
 
@@ -33,7 +33,7 @@ function wrap(ui: React.ReactNode, auth: AuthContextValue, path = '/') {
 describe('ProtectedRoute', () => {
   it('renders outlet when authenticated', () => {
     const { container } = wrap(
-      <ProtectedRoute><Outlet /></ProtectedRoute>,
+      <ProtectedRoute />,
       authValue(),
     );
     expect(container).toBeDefined();

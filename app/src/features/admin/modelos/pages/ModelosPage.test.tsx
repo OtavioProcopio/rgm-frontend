@@ -62,7 +62,7 @@ describe('ModelosPage', () => {
       data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
       error: null,
       isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
@@ -79,7 +79,7 @@ describe('ModelosPage', () => {
     const { useModelos } = await import('../hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({
       data: undefined, error: new Error('fail'), isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
@@ -91,12 +91,12 @@ describe('ModelosPage', () => {
     vi.mocked(useModelos).mockReturnValue({
       data: {
         content: [
-          { id: '1', codigo: 'M01', descricao: 'D', maquinaId: 'm1', ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
+          { id: '1', codigo: 'M01', descricao: 'D', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
         ],
         page: 0, totalPages: 1, totalElements: 1,
       },
       error: null, isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
@@ -107,9 +107,9 @@ describe('ModelosPage', () => {
     const userEvent = (await import('@testing-library/user-event')).default;
     const { useModelos } = await import('../hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({
-      data: { content: [{ id: '1', codigo: 'M01', descricao: 'D', maquinaId: 'm1', ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
+      data: { content: [{ id: '1', codigo: 'M01', descricao: 'D', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
       error: null, isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
@@ -121,9 +121,9 @@ describe('ModelosPage', () => {
     const userEvent = (await import('@testing-library/user-event')).default;
     const { useModelos } = await import('../hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({
-      data: { content: [{ id: '2', codigo: 'M02', descricao: 'D', maquinaId: 'm1', ativo: false, fotoUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
+      data: { content: [{ id: '2', codigo: 'M02', descricao: 'D', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: false, fotoUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
       error: null, isLoading: false,
-    } as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useModelos>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
