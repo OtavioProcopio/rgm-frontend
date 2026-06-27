@@ -1,12 +1,13 @@
 import { CheckCircle2, ClipboardList, UserCheck } from 'lucide-react';
-import { useMemo } from 'react';
 import { Link } from 'react-router';
 
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
+import { useQuery } from '@tanstack/react-query';
 
-import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
+import { solicitacoesApi } from '../api/solicitacoesApi';
+import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
 import { statusLabel } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { KPICard } from './DashboardKpiCard';
@@ -57,23 +58,32 @@ function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
 
 export function PessoalTab() {
   const { data: profile, isLoading: loadingPerfil } = usePerfil();
-  const { data: solicitacoes = [], isLoading: loadingSolicitacoes } = useKanbanSolicitacoes();
+  const userId = profile?.id;
 
-  const dados = useMemo(() => {
-    const id = profile?.id;
-    const minhasAbertas = solicitacoes.filter(
-      (s) => s.abertaPorUsuarioId === id && isAberta(s),
-    );
-    const souResponsavel = solicitacoes.filter(
-      (s) => id && s.responsavelIds?.includes(id) && isAberta(s),
-    );
-    const concluidasComoResponsavel = solicitacoes.filter(
-      (s) => id && s.responsavelIds?.includes(id) && s.status === 'CONCLUIDA',
-    );
-    return { minhasAbertas, souResponsavel, concluidasComoResponsavel };
-  }, [solicitacoes, profile?.id]);
+  const filtersMinhas = { page: 0, size: 100, abertaPorUsuarioId: userId };
+  const filtersResponsavel = { page: 0, size: 100, responsavelId: userId };
 
-  if (loadingPerfil || loadingSolicitacoes) {
+  const { data: minhasPage, isLoading: loadingMinhas } = useQuery({
+    queryKey: solicitacoesKeys.list(filtersMinhas as Parameters<typeof solicitacoesKeys.list>[0]),
+    queryFn: () => solicitacoesApi.listar(filtersMinhas as Parameters<typeof solicitacoesApi.listar>[0]),
+    enabled: Boolean(userId),
+    select: (data) => data.content,
+  });
+
+  const { data: responsavelPage, isLoading: loadingResponsavel } = useQuery({
+    queryKey: solicitacoesKeys.list(filtersResponsavel as Parameters<typeof solicitacoesKeys.list>[0]),
+    queryFn: () => solicitacoesApi.listar(filtersResponsavel as Parameters<typeof solicitacoesApi.listar>[0]),
+    enabled: Boolean(userId),
+    select: (data) => data.content,
+  });
+
+  const minhasAbertas = (minhasPage ?? []).filter(isAberta);
+  const souResponsavel = (responsavelPage ?? []).filter(isAberta);
+  const concluidasComoResponsavel = (responsavelPage ?? []).filter(
+    (s) => s.status === 'CONCLUIDA',
+  );
+
+  if (loadingPerfil || loadingMinhas || loadingResponsavel) {
     return <LoadingState title="Carregando seu painel pessoal..." />;
   }
 
@@ -83,21 +93,21 @@ export function PessoalTab() {
         <KPICard
           icon={ClipboardList}
           label="Abertas por mim"
-          value={dados.minhasAbertas.length}
+          value={minhasAbertas.length}
           subtext="Em andamento"
           gradient="sky"
         />
         <KPICard
           icon={UserCheck}
           label="Sou responsável"
-          value={dados.souResponsavel.length}
+          value={souResponsavel.length}
           subtext="Atribuídas a mim"
           gradient="amber"
         />
         <KPICard
           icon={CheckCircle2}
           label="Concluídas por mim"
-          value={dados.concluidasComoResponsavel.length}
+          value={concluidasComoResponsavel.length}
           subtext="Como responsável"
           gradient="emerald"
         />
@@ -108,14 +118,14 @@ export function PessoalTab() {
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Minhas solicitações abertas
           </h2>
-          <ListaSolicitacoes itens={dados.minhasAbertas} />
+          <ListaSolicitacoes itens={minhasAbertas} />
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Sob minha responsabilidade
           </h2>
-          <ListaSolicitacoes itens={dados.souResponsavel} />
+          <ListaSolicitacoes itens={souResponsavel} />
         </div>
       </div>
     </div>

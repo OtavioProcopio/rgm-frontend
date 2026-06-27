@@ -51,6 +51,8 @@ export type SolicitacoesFilters = {
   prioridade?: PrioridadeSolicitacao;
   criadaEmInicio?: string;
   criadaEmFim?: string;
+  abertaPorUsuarioId?: string;
+  responsavelId?: string;
 };
 
 export type AbrirSolicitacaoRequest = {
@@ -86,6 +88,10 @@ export type DevolverSolicitacaoRequest = {
 
 export type ComentarioRequest = {
   comentario: string;
+};
+
+export type AlterarResponsaveisRequest = {
+  responsavelIds: string[];
 };
 
 export type MetricasResponse = {
