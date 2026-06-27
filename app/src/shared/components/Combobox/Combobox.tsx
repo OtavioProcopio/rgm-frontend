@@ -32,19 +32,9 @@ export function Combobox({
   const generatedId = useId();
   const comboboxId = id ?? generatedId;
   
-  const [prevValue, setPrevValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [search, setSearch] = useState(() => {
-    const selected = options.find((opt) => opt.value === value);
-    return selected ? selected.label : '';
-  });
-
-  if (value !== prevValue) {
-    setPrevValue(value);
-    const selected = options.find((opt) => opt.value === value);
-    setSearch(selected ? selected.label : '');
-  }
+  const [search, setSearch] = useState('');
 
   // Encontra a opção selecionada
   const selectedOption = options.find((opt) => opt.value === value);
@@ -90,7 +80,7 @@ export function Combobox({
         <input
           id={comboboxId}
           type="text"
-          value={search}
+          value={isOpen ? search : (selectedOption ? selectedOption.label : search)}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onFocus={() => {

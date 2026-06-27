@@ -20,7 +20,7 @@ export function ModeloActionsMenu({
       {modelo.ativo ? (
         <Link
           to={`/app/solicitacoes/nova?modeloId=${modelo.id}`}
-          className="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+          className="inline-flex items-center justify-center rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
         >
           Abrir solicitação
         </Link>
