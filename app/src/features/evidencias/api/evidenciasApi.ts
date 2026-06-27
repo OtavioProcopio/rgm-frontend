@@ -11,4 +11,7 @@ export const evidenciasApi = {
     formData.append('file', file);
     return httpClient.post<Evidencia>(`/solicitacoes/${solicitacaoId}/evidencias`, formData);
   },
+
+  excluir: (solicitacaoId: string, evidenciaId: string) =>
+    httpClient.delete<void>(`/solicitacoes/${solicitacaoId}/evidencias/${evidenciaId}`),
 };

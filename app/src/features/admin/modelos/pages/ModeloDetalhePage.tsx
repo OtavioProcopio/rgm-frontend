@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { modelosApi } from '../api/modelosApi';
+
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
@@ -11,6 +13,7 @@ import { canManageModelos } from '@/shared/lib/permissions';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
+import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
@@ -33,6 +36,7 @@ export function ModeloDetalhePage() {
   const ativarModelo = useAtivarModelo();
   const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const podeGerenciarFoto = canManageModelos(user?.perfil);
 
   async function handleConfirmAction() {
@@ -53,36 +57,60 @@ export function ModeloDetalhePage() {
 
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
+  async function handleExportarFicha() {
+    if (!id) return;
+    setIsExporting(true);
+    try {
+      const blob = await modelosApi.exportarFicha(id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `ficha-modelo-${modelo?.codigo ?? id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao exportar ficha:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <section>
       <PageHeader
         title="Detalhe do modelo"
         description="Consulte dados, eventos e foto de capa do modelo."
         actions={
-          id && podeGerenciarFoto ? (
-            <div className="flex gap-2">
-              <Link to={`/app/admin/modelos/${id}/editar`}>
-                <Button variant="secondary">Editar</Button>
-              </Link>
-              {modelo?.ativo ? (
-                <Button
-                  variant="secondary"
-                  disabled={isMutating}
-                  onClick={() => setShowConfirm('desativar')}
-                >
-                  Desativar
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  disabled={isMutating}
-                  onClick={() => setShowConfirm('ativar')}
-                >
-                  Ativar
-                </Button>
-              )}
-            </div>
-          ) : null
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={isExporting} onClick={handleExportarFicha}>
+              {isExporting ? 'Exportando...' : 'Exportar PDF'}
+            </Button>
+            {id && podeGerenciarFoto ? (
+              <>
+                <Link to={`/app/admin/modelos/${id}/editar`}>
+                  <Button variant="secondary">Editar</Button>
+                </Link>
+                {modelo?.ativo ? (
+                  <Button
+                    variant="secondary"
+                    disabled={isMutating}
+                    onClick={() => setShowConfirm('desativar')}
+                  >
+                    Desativar
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    disabled={isMutating}
+                    onClick={() => setShowConfirm('ativar')}
+                  >
+                    Ativar
+                  </Button>
+                )}
+              </>
+            ) : null}
+          </div>
         }
       />
       {actionError ? (
@@ -153,6 +181,15 @@ export function ModeloDetalhePage() {
             </aside>
           </div>
           <div>
+            <h2 className="mb-1 text-lg font-semibold text-slate-950 dark:text-white">
+              Visão geral das solicitações
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Indicadores consolidados de todos os chamados vinculados a este modelo.
+            </p>
+            <ModeloDashboard solicitacoes={solicitacoesPage?.content ?? []} />
+          </div>
+          <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
               Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções concluídas neste modelo.
@@ -191,6 +228,53 @@ export function ModeloDetalhePage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
+  const total = solicitacoes.length;
+  const abertas = solicitacoes.filter((s) => !['CONCLUIDA', 'CANCELADA'].includes(s.status)).length;
+  const concluidas = solicitacoes.filter((s) => s.status === 'CONCLUIDA').length;
+  const taxaSucesso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <KpiCard label="Total" value={total} color="slate" />
+      <KpiCard label="Abertas" value={abertas} color="amber" />
+      <KpiCard label="Concluídas" value={concluidas} color="green" />
+      <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | string;
+  color: 'slate' | 'amber' | 'green' | 'blue';
+}) {
+  const colorMap = {
+    slate: 'border-slate-200 dark:border-slate-700',
+    amber: 'border-amber-200 dark:border-amber-800',
+    green: 'border-green-200 dark:border-green-800',
+    blue: 'border-sky-200 dark:border-sky-800',
+  };
+  const valueColorMap = {
+    slate: 'text-slate-900 dark:text-slate-100',
+    amber: 'text-amber-600 dark:text-amber-400',
+    green: 'text-green-600 dark:text-green-400',
+    blue: 'text-sky-600 dark:text-sky-400',
+  };
+  return (
+    <div
+      className={`rounded-md border bg-white p-4 dark:bg-slate-900 ${colorMap[color]}`}
+    >
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${valueColorMap[color]}`}>{value}</p>
+    </div>
   );
 }
 

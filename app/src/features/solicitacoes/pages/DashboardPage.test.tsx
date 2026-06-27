@@ -15,6 +15,12 @@ const mockMetricas = {
   tempoMedioResolucaoSegundos: 86400,
 };
 
+vi.mock('../api/solicitacoesApi', () => ({
+  solicitacoesApi: {
+    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, totalPages: 0 }),
+  },
+}));
+
 vi.mock('../hooks/useMetricas', () => ({
   useMetricas: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null, isError: false }),
 }));
