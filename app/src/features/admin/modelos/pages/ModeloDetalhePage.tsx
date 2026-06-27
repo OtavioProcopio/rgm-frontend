@@ -180,7 +180,15 @@ export function ModeloDetalhePage() {
               <ModeloFotoCapa fotoUrl={modelo.fotoUrl} className="h-80" />
             </aside>
           </div>
-          <ModeloDashboard solicitacoes={solicitacoesPage?.content ?? []} />
+          <div>
+            <h2 className="mb-1 text-lg font-semibold text-slate-950 dark:text-white">
+              Visão geral das solicitações
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Indicadores consolidados de todos os chamados vinculados a este modelo.
+            </p>
+            <ModeloDashboard solicitacoes={solicitacoesPage?.content ?? []} />
+          </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
