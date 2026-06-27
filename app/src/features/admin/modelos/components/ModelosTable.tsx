@@ -5,16 +5,10 @@ import type { Modelo } from '../types/modeloTypes';
 
 type ModelosTableProps = {
   modelos: Modelo[];
-  isMutating?: boolean;
-  onDesativar: (modelo: Modelo) => void;
-  onAtivar: (modelo: Modelo) => void;
 };
 
 export function ModelosTable({
-  isMutating,
   modelos,
-  onDesativar,
-  onAtivar,
 }: ModelosTableProps) {
   return (
     <>
@@ -47,12 +41,7 @@ export function ModelosTable({
               {modelo.maquina}
             </p>
             <div className="mt-4">
-              <ModeloActionsMenu
-                modelo={modelo}
-                isMutating={isMutating}
-                onDesativar={onDesativar}
-                onAtivar={onAtivar}
-              />
+              <ModeloActionsMenu modelo={modelo} />
             </div>
           </article>
         ))}
@@ -92,12 +81,7 @@ export function ModelosTable({
                   {modelo.temPendenciaAberta ? 'Sim' : 'Não'}
                 </td>
                 <td className="px-4 py-3">
-                  <ModeloActionsMenu
-                    modelo={modelo}
-                    isMutating={isMutating}
-                    onDesativar={onDesativar}
-                    onAtivar={onAtivar}
-                  />
+                  <ModeloActionsMenu modelo={modelo} />
                 </td>
               </tr>
             ))}

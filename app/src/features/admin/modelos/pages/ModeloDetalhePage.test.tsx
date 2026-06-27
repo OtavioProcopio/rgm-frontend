@@ -14,20 +14,20 @@ vi.mock('../hooks/useModelo', () => ({
 vi.mock('../hooks/useEventosModelo', () => ({
   useEventosModelo: vi.fn().mockReturnValue({ data: [] }),
 }));
-vi.mock('../hooks/useUploadFotoCapa', () => ({
-  useUploadFotoCapa: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
-}));
 vi.mock('@/features/solicitacoes/hooks/useSolicitacoes', () => ({
   useSolicitacoes: vi.fn().mockReturnValue({ data: undefined }),
+}));
+vi.mock('../hooks/useDesativarModelo', () => ({
+  useDesativarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock('../hooks/useAtivarModelo', () => ({
+  useAtivarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('../components/EventosModeloList', () => ({
   EventosModeloList: () => <div />,
 }));
 vi.mock('../components/ModeloFotoCapa', () => ({
   ModeloFotoCapa: () => <div />,
-}));
-vi.mock('../components/UploadFotoCapaDialog', () => ({
-  UploadFotoCapaDialog: () => null,
 }));
 
 afterEach(cleanup);

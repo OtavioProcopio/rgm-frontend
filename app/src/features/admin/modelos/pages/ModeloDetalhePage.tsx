@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -13,10 +14,10 @@ import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import { UploadFotoCapaDialog } from '../components/UploadFotoCapaDialog';
+import { useDesativarModelo } from '../hooks/useDesativarModelo';
+import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
 import { useModelo } from '../hooks/useModelo';
-import { useUploadFotoCapa } from '../hooks/useUploadFotoCapa';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 
 export function ModeloDetalhePage() {
@@ -28,19 +29,29 @@ export function ModeloDetalhePage() {
     { modeloId: id, page: 0, size: 50 },
     { enabled: !!id },
   );
-  const uploadFoto = useUploadFotoCapa();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const desativarModelo = useDesativarModelo();
+  const ativarModelo = useAtivarModelo();
+  const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const podeGerenciarFoto = canManageModelos(user?.perfil);
 
-  async function handleUpload(file: File) {
-    if (!id) return;
-    setErrorMessage(null);
+  async function handleConfirmAction() {
+    if (!id || !showConfirm) return;
+    setActionError(null);
     try {
-      await uploadFoto.mutateAsync({ id, file });
+      if (showConfirm === 'desativar') {
+        await desativarModelo.mutateAsync(id);
+      } else {
+        await ativarModelo.mutateAsync(id);
+      }
+      setShowConfirm(null);
     } catch (mutationError) {
-      setErrorMessage(getModeloErrorMessage(mutationError));
+      setActionError(getModeloErrorMessage(mutationError));
+      setShowConfirm(null);
     }
   }
+
+  const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
   return (
     <section>
@@ -49,24 +60,68 @@ export function ModeloDetalhePage() {
         description="Consulte dados, eventos e foto de capa do modelo."
         actions={
           id && podeGerenciarFoto ? (
-            <Link to={`/app/admin/modelos/${id}/editar`}>
-              <Button variant="secondary">Editar</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to={`/app/admin/modelos/${id}/editar`}>
+                <Button variant="secondary">Editar</Button>
+              </Link>
+              {modelo?.ativo ? (
+                <Button
+                  variant="secondary"
+                  disabled={isMutating}
+                  onClick={() => setShowConfirm('desativar')}
+                >
+                  Desativar
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  disabled={isMutating}
+                  onClick={() => setShowConfirm('ativar')}
+                >
+                  Ativar
+                </Button>
+              )}
+            </div>
           ) : null
         }
       />
+      {actionError ? (
+        <div className="mb-4">
+          <ErrorState title="Operação não concluída" description={actionError} />
+        </div>
+      ) : null}
+      {showConfirm ? (
+        <div className="mb-4">
+          {showConfirm === 'desativar' ? (
+            <ConfirmDialog
+              title="Desativar modelo"
+              message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+              confirmLabel="Desativar"
+              variant="danger"
+              isPending={isMutating}
+              onCancel={() => setShowConfirm(null)}
+              onConfirm={handleConfirmAction}
+            />
+          ) : (
+            <ConfirmDialog
+              title="Ativar modelo"
+              message={`Deseja ativar o modelo ${modelo?.codigo}?`}
+              confirmLabel="Ativar"
+              variant="warning"
+              isPending={isMutating}
+              onCancel={() => setShowConfirm(null)}
+              onConfirm={handleConfirmAction}
+            />
+          )}
+        </div>
+      ) : null}
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
         <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
       ) : null}
-      {errorMessage ? (
-        <div className="mb-4">
-          <ErrorState title="Operação não concluída" description={errorMessage} />
-        </div>
-      ) : null}
       {modelo ? (
         <div className="space-y-6">
-          <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
+          <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
             <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
@@ -93,21 +148,24 @@ export function ModeloDetalhePage() {
                 </p>
               ) : null}
             </div>
-            <aside className="space-y-4">
-              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
-              {podeGerenciarFoto ? (
-                <UploadFotoCapaDialog isUploading={uploadFoto.isPending} onUpload={handleUpload} />
-              ) : null}
+            <aside>
+              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} className="h-80" />
             </aside>
           </div>
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">Eventos</h2>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções concluídas neste modelo.
+            </p>
             <EventosModeloList eventos={eventosData ?? []} />
           </div>
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">
-              Solicitações ({solicitacoesPage?.totalElements ?? 0})
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+              Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
             </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já encerrados) vinculados a este modelo.
+            </p>
             {solicitacoesPage?.content?.length ? (
               <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
                 {solicitacoesPage.content.map((s) => (
