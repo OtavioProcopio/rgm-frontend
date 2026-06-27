@@ -9,6 +9,16 @@ import { createAppWrapper } from '@/test-utils/appWrapper';
 
 import { SolicitacaoDetalhePage } from './SolicitacaoDetalhePage';
 
+vi.mock('../api/solicitacoesApi', () => ({
+  solicitacoesApi: {
+    alterarResponsaveis: vi.fn().mockResolvedValue({}),
+  },
+}));
+
+vi.mock('../hooks/useAlterarResponsaveis', () => ({
+  useAlterarResponsaveis: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
 vi.mock('../hooks/useSolicitacao', () => ({
   useSolicitacao: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
 }));
