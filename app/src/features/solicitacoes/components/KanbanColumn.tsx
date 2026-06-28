@@ -18,6 +18,7 @@ type Props = {
   isDropTarget: boolean;
   isInvalidDrop: boolean;
   mobileView?: boolean;
+  canDragCard: (s: Solicitacao) => boolean;
   onDragStart: (s: Solicitacao) => void;
   onDragOver: (status: StatusSolicitacao) => void;
   onDrop: (status: StatusSolicitacao) => void;
@@ -29,6 +30,7 @@ export function KanbanColumn({
   isDropTarget,
   isInvalidDrop,
   mobileView = false,
+  canDragCard,
   onDragStart,
   onDragOver,
   onDrop,
@@ -82,7 +84,7 @@ export function KanbanColumn({
             <p className="text-xs text-slate-400 dark:text-slate-600">Nenhuma solicitação</p>
           </div>
         ) : (
-          cards.map((s) => <KanbanCard key={s.id} solicitacao={s} onDragStart={onDragStart} />)
+          cards.map((s) => <KanbanCard key={s.id} solicitacao={s} isDraggable={canDragCard(s)} onDragStart={onDragStart} />)
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { useAuth } from '@/app/providers/authContext';
+import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
@@ -92,8 +93,17 @@ type Props = { modeloId?: string };
 
 export function KanbanBoard({ modeloId }: Props) {
   const { user } = useAuth();
+  const { data: profile } = usePerfil();
   const canManage = canManageSolicitacoes(user?.perfil);
   const canAdmin = canAccessAdmin(user?.perfil);
+  const isOperador = user?.perfil === 'OPERADOR';
+
+  function canDragCard(s: Solicitacao): boolean {
+    if (s.status === 'CONCLUIDA' || s.status === 'CANCELADA') return false;
+    if (canManage) return true;
+    // OPERADOR só pode arrastar card EM_ANDAMENTO do qual é responsável
+    return isOperador && s.status === 'EM_ANDAMENTO' && !!(profile?.id && s.responsavelIds.includes(profile.id));
+  }
 
   const { data: solicitacoes = [], isLoading, error } = useKanbanSolicitacoes(modeloId);
   const actions = useKanbanActions();
@@ -115,13 +125,14 @@ export function KanbanBoard({ modeloId }: Props) {
   );
 
   function handleDrop(toStatus: StatusSolicitacao) {
-    if (!dragging || !canManage) {
+    if (!dragging || !canDragCard(dragging)) {
       setDragging(null);
       setDragOverStatus(null);
       return;
     }
     const moveType = getMoveType(dragging.status, toStatus);
-    if (!moveType) {
+    // OPERADOR só pode fazer o move 'direct' (EM_ANDAMENTO → EM_VALIDACAO)
+    if (!moveType || (!canManage && moveType !== 'direct')) {
       setDragging(null);
       setDragOverStatus(null);
       return;
@@ -266,6 +277,7 @@ export function KanbanBoard({ modeloId }: Props) {
             isDropTarget={false}
             isInvalidDrop={false}
             mobileView
+            canDragCard={canDragCard}
             onDragStart={setDragging}
             onDragOver={setDragOverStatus}
             onDrop={handleDrop}
@@ -278,7 +290,7 @@ export function KanbanBoard({ modeloId }: Props) {
         {COLUMNS.map((col) => {
           const isDropTarget = dragOverStatus === col.status;
           const moveType = dragging ? getMoveType(dragging.status, col.status) : null;
-          const isInvalidDrop = isDropTarget && !moveType;
+          const isInvalidDrop = isDropTarget && (!moveType || (!canManage && moveType !== 'direct'));
           return (
             <KanbanColumn
               key={col.status}
@@ -286,6 +298,7 @@ export function KanbanBoard({ modeloId }: Props) {
               cards={cardsByStatus[col.status] ?? []}
               isDropTarget={isDropTarget}
               isInvalidDrop={isInvalidDrop}
+              canDragCard={canDragCard}
               onDragStart={setDragging}
               onDragOver={setDragOverStatus}
               onDrop={handleDrop}

@@ -8,6 +8,7 @@ import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 
 type Props = {
   solicitacao: Solicitacao;
+  isDraggable: boolean;
   onDragStart: (s: Solicitacao) => void;
 };
 
@@ -60,7 +61,7 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
   );
 }
 
-export function KanbanCard({ solicitacao, onDragStart }: Props) {
+export function KanbanCard({ solicitacao, isDraggable, onDragStart }: Props) {
   const tipo = TIPO_CONFIG[solicitacao.tipo];
   const { Icon } = tipo;
   const borderClass = solicitacao.prioridade
@@ -69,15 +70,15 @@ export function KanbanCard({ solicitacao, onDragStart }: Props) {
 
   return (
     <div
-      draggable
-      onDragStart={(e) => {
+      draggable={isDraggable}
+      onDragStart={isDraggable ? (e) => {
         e.dataTransfer.effectAllowed = 'move';
         onDragStart(solicitacao);
-      }}
+      } : undefined}
       className={cn(
         'group rounded-lg border border-slate-200 border-l-4 bg-white shadow-sm',
         'transition-all hover:shadow-md active:opacity-50',
-        'lg:cursor-grab lg:active:cursor-grabbing',
+        isDraggable && 'lg:cursor-grab lg:active:cursor-grabbing',
         'dark:border-slate-700 dark:bg-slate-800',
         borderClass,
       )}

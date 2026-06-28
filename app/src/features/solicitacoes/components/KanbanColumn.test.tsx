@@ -47,6 +47,7 @@ describe('KanbanColumn', () => {
         cards={[]}
         isDropTarget={false}
         isInvalidDrop={false}
+        canDragCard={() => true}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
@@ -62,6 +63,7 @@ describe('KanbanColumn', () => {
         cards={[]}
         isDropTarget={false}
         isInvalidDrop={false}
+        canDragCard={() => true}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
@@ -77,6 +79,7 @@ describe('KanbanColumn', () => {
         cards={[solicitacao]}
         isDropTarget={false}
         isInvalidDrop={false}
+        canDragCard={() => true}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
@@ -94,6 +97,7 @@ describe('KanbanColumn', () => {
         isDropTarget={false}
         isInvalidDrop={false}
         mobileView
+        canDragCard={() => true}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
@@ -109,6 +113,7 @@ describe('KanbanColumn', () => {
         cards={[solicitacao, { ...solicitacao, id: '2' }]}
         isDropTarget={false}
         isInvalidDrop={false}
+        canDragCard={() => true}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
