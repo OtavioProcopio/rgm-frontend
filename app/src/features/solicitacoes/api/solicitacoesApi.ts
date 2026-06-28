@@ -56,6 +56,6 @@ export const solicitacoesApi = {
     httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
 
   exportar: (filters: SolicitacoesFilters) =>
-    httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),
+    httpClient.get<Blob>('/solicitacoes/exportar', { params: filters }),
 };
 
