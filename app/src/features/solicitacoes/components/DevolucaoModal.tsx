@@ -24,7 +24,7 @@ const prioridadeOptions = [
 ];
 
 export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
-  const { register, handleSubmit } = useForm<DevolverSolicitacaoFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<DevolverSolicitacaoFormData>({
     resolver: zodResolver(devolverSolicitacaoSchema),
   });
 
@@ -36,8 +36,9 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
       </p>
       <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
         <Textarea
-          label="Motivo (opcional)"
+          label="Motivo da devolução *"
           placeholder="Descreva o motivo da devolução..."
+          error={errors.motivo?.message}
           {...register('motivo')}
         />
         <Select

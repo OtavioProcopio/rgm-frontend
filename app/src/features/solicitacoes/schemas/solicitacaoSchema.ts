@@ -18,7 +18,7 @@ export const encerrarSolicitacaoSchema = z.object({
 });
 
 export const devolverSolicitacaoSchema = z.object({
-  motivo: z.string().optional(),
+  motivo: z.string().min(1, 'Motivo obrigatório'),
   prioridade: z.enum(['BAIXA', 'MEDIA', 'ALTA', 'URGENTE']).optional(),
 });
 

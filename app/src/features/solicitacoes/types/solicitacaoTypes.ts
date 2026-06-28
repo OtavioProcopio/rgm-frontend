@@ -86,7 +86,7 @@ export type CancelarSolicitacaoRequest = {
 };
 
 export type DevolverSolicitacaoRequest = {
-  motivo?: string;
+  motivo: string;
   prioridade?: PrioridadeSolicitacao;
 };
 

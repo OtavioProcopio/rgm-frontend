@@ -77,16 +77,21 @@ describe('solicitacaoSchema', () => {
   });
 
   describe('devolverSolicitacaoSchema', () => {
-    it('accepts devolução without optional fields', () => {
+    it('rejects devolução without motivo', () => {
       const result = devolverSolicitacaoSchema.safeParse({});
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
-    it('accepts optional fields when provided', () => {
+    it('accepts devolução with motivo and optional prioridade', () => {
       const result = devolverSolicitacaoSchema.safeParse({
         motivo: 'Falta peça de reposição',
         prioridade: 'URGENTE',
       });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts devolução with only motivo', () => {
+      const result = devolverSolicitacaoSchema.safeParse({ motivo: 'Motivo válido' });
       expect(result.success).toBe(true);
     });
   });

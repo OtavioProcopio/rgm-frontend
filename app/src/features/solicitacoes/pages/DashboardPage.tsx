@@ -11,6 +11,7 @@ import { cn } from '@/shared/lib/cn';
 import { HistoricoChart } from '../components/HistoricoChart';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { useMetricas } from '../hooks/useMetricas';
+import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { ModelosTab } from './ModelosTab';
 import { PessoalTab } from './PessoalTab';
 import { SolicitacoesTab } from './SolicitacoesTab';
@@ -26,6 +27,7 @@ const TABS: { id: TabId; label: string }[] = [
 export function DashboardPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('solicitacoes');
+  useSolicitacaoEvents();
   const { data: metricas, isLoading: loadingMetricas, isError: errorMetricas } = useMetricas();
   const {
     data: solicitacoes = [],
