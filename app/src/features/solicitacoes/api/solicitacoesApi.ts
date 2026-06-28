@@ -11,6 +11,7 @@ import type {
   EditarSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
   EnviarParaValidacaoRequest,
+  HistoricoMetricas,
   MetricasResponse,
   Solicitacao,
   SolicitacoesFilters,
@@ -55,6 +56,11 @@ export const solicitacoesApi = {
 
   obterMetricas: () =>
     httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
+
+  obterHistoricoMetricas: (dias: number, modeloId?: string) =>
+    httpClient.get<HistoricoMetricas>('/solicitacoes/metricas/historico', {
+      params: { dias, modeloId },
+    }),
 
   exportar: (filters: SolicitacoesFilters) =>
     httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),

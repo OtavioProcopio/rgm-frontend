@@ -98,6 +98,21 @@ export type AlterarResponsaveisRequest = {
   responsavelIds: string[];
 };
 
+export type PontoDeSerie = {
+  periodo: string;
+  total: number;
+  abertas: number;
+  concluidas: number;
+  canceladas: number;
+  slaMediaHoras: number;
+};
+
+export type HistoricoMetricas = {
+  series: PontoDeSerie[];
+  slaGlobalMediaHoras: number;
+  periodoLabel: string;
+};
+
 export type MetricasResponse = {
   totalUsuarios: number;
   totalModelos: number;

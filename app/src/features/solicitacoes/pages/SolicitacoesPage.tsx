@@ -15,6 +15,7 @@ import { solicitacoesApi } from '../api/solicitacoesApi';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { SolicitacaoCard } from '../components/SolicitacaoCard';
 import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
+import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
@@ -27,6 +28,8 @@ export function SolicitacoesPage() {
   const [view, setView] = useState<View>('kanban');
   const [filters, setFilters] = useState<SolicitacoesFilters>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
+
+  useSolicitacaoEvents();
   const [isExporting, setIsExporting] = useState(false);
 
   const canCreate = canOperateSolicitacoes(user?.perfil);

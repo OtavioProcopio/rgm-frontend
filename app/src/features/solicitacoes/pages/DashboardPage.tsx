@@ -8,6 +8,7 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 import { cn } from '@/shared/lib/cn';
 
+import { HistoricoChart } from '../components/HistoricoChart';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { useMetricas } from '../hooks/useMetricas';
 import { ModelosTab } from './ModelosTab';
@@ -77,12 +78,15 @@ export function DashboardPage() {
             description="Verifique sua conexão com o servidor."
           />
         ) : (
-          <SolicitacoesTab
-            metricas={metricas}
-            solicitacoes={solicitacoes}
-            isAdmin={isAdmin}
-            isGestor={isGestor}
-          />
+          <div className="space-y-6">
+            <SolicitacoesTab
+              metricas={metricas}
+              solicitacoes={solicitacoes}
+              isAdmin={isAdmin}
+              isGestor={isGestor}
+            />
+            <HistoricoChart />
+          </div>
         )
       ) : null}
 
