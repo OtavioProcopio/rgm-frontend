@@ -12,6 +12,7 @@ import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal
 import { ComentarioForm } from '../components/ComentarioForm';
 import { DevolucaoModal } from '../components/DevolucaoModal';
 import { EncerramentoModal } from '../components/EncerramentoModal';
+import { EnviarValidacaoModal } from '../components/EnviarValidacaoModal';
 import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeBadge';
 import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
@@ -43,7 +44,7 @@ import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
-type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | null;
+type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | 'enviarValidacao' | null;
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -98,10 +99,11 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
-  async function handleEnviarValidacao() {
+  async function handleEnviarValidacao(data: { comentario: string }) {
     setActionError(null);
     try {
-      await enviarValidacao.mutateAsync();
+      await enviarValidacao.mutateAsync(data.comentario);
+      setActiveModal(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
@@ -365,9 +367,9 @@ export function SolicitacaoDetalhePage() {
               <Button
                 type="button"
                 disabled={enviarValidacao.isPending}
-                onClick={handleEnviarValidacao}
+                onClick={() => setActiveModal('enviarValidacao')}
               >
-                {enviarValidacao.isPending ? 'Enviando...' : 'Enviar para validação'}
+                Enviar para validação
               </Button>
             ) : null}
             {canManage && solicitacao.status === 'EM_VALIDACAO' ? (
@@ -419,6 +421,14 @@ export function SolicitacaoDetalhePage() {
               isPending={alterarResponsaveis.isPending}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleAlterarResponsaveis}
+            />
+          ) : null}
+          {activeModal === 'enviarValidacao' ? (
+            <EnviarValidacaoModal
+              solicitacaoId={id!}
+              isPending={enviarValidacao.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleEnviarValidacao}
             />
           ) : null}
         </div>

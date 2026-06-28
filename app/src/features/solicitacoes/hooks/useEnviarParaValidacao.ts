@@ -7,7 +7,8 @@ export function useEnviarParaValidacao(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => solicitacoesApi.enviarParaValidacao(id),
+    mutationFn: (comentario: string) =>
+      solicitacoesApi.enviarParaValidacao(id, { comentario }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() });

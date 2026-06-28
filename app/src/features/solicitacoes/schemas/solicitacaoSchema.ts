@@ -26,8 +26,16 @@ export const comentarioSchema = z.object({
   comentario: z.string().min(1, 'Comentário obrigatório'),
 });
 
+export const enviarParaValidacaoSchema = z.object({
+  comentario: z
+    .string()
+    .min(10, 'Descreva o serviço realizado (mínimo 10 caracteres)')
+    .max(1000, 'Máximo 1000 caracteres'),
+});
+
 export type AbrirSolicitacaoFormData = z.infer<typeof abrirSolicitacaoSchema>;
 export type TriarSolicitacaoFormData = z.infer<typeof triarSolicitacaoSchema>;
 export type EncerrarSolicitacaoFormData = z.infer<typeof encerrarSolicitacaoSchema>;
 export type DevolverSolicitacaoFormData = z.infer<typeof devolverSolicitacaoSchema>;
 export type ComentarioFormData = z.infer<typeof comentarioSchema>;
+export type EnviarParaValidacaoFormData = z.infer<typeof enviarParaValidacaoSchema>;

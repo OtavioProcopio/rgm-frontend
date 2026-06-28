@@ -6,6 +6,7 @@ import type {
   DevolverSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
   TriarSolicitacaoRequest,
+  EnviarParaValidacaoRequest,
 } from '../types/solicitacaoTypes';
 import { solicitacoesKeys } from './solicitacoesKeys';
 
@@ -20,7 +21,8 @@ export function useKanbanActions() {
   });
 
   const enviarValidacao = useMutation({
-    mutationFn: (id: string) => solicitacoesApi.enviarParaValidacao(id),
+    mutationFn: ({ id, ...data }: { id: string } & EnviarParaValidacaoRequest) =>
+      solicitacoesApi.enviarParaValidacao(id, data),
     onSuccess: invalidate,
   });
 

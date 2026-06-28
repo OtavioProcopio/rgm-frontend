@@ -20,6 +20,7 @@ import type {
 } from '../types/solicitacaoTypes';
 import { DevolucaoModal } from './DevolucaoModal';
 import { EncerramentoModal } from './EncerramentoModal';
+import { EnviarValidacaoModal } from './EnviarValidacaoModal';
 import { KanbanColumn, type ColumnConfig } from './KanbanColumn';
 import { TriagemModal } from './TriagemModal';
 
@@ -84,7 +85,8 @@ function getMoveType(from: StatusSolicitacao, to: StatusSolicitacao): MoveType {
 type PendingMove =
   | { type: 'triagem'; card: Solicitacao }
   | { type: 'encerramento'; card: Solicitacao; podeConcluir: boolean }
-  | { type: 'devolucao'; card: Solicitacao };
+  | { type: 'devolucao'; card: Solicitacao }
+  | { type: 'enviarValidacao'; card: Solicitacao };
 
 type Props = { modeloId?: string };
 
@@ -125,7 +127,7 @@ export function KanbanBoard({ modeloId }: Props) {
       return;
     }
     if (moveType === 'direct') {
-      actions.enviarValidacao.mutate(dragging.id);
+      setPendingMove({ type: 'enviarValidacao', card: dragging });
       setDragging(null);
       setDragOverStatus(null);
       return;
@@ -178,6 +180,17 @@ export function KanbanBoard({ modeloId }: Props) {
     setActionError(null);
     try {
       await actions.devolver.mutateAsync({ id: pendingMove.card.id, ...data });
+      setPendingMove(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleEnviarValidacao(data: { comentario: string }) {
+    if (!pendingMove) return;
+    setActionError(null);
+    try {
+      await actions.enviarValidacao.mutateAsync({ id: pendingMove.card.id, comentario: data.comentario });
       setPendingMove(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
@@ -306,6 +319,14 @@ export function KanbanBoard({ modeloId }: Props) {
                 isPending={actions.devolver.isPending}
                 onCancel={clearPendingMove}
                 onConfirm={handleDevolver}
+              />
+            )}
+            {pendingMove.type === 'enviarValidacao' && (
+              <EnviarValidacaoModal
+                solicitacaoId={pendingMove.card.id}
+                isPending={actions.enviarValidacao.isPending}
+                onCancel={clearPendingMove}
+                onConfirm={handleEnviarValidacao}
               />
             )}
             {actionError && (

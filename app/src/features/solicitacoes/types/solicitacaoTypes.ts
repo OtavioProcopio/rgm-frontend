@@ -72,6 +72,10 @@ export type TriarSolicitacaoRequest = {
   responsavelIds: string[];
 };
 
+export type EnviarParaValidacaoRequest = {
+  comentario: string;
+};
+
 export type EncerrarSolicitacaoRequest = {
   concluir: boolean;
   comentario: string;

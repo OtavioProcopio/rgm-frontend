@@ -10,6 +10,7 @@ import type {
   DevolverSolicitacaoRequest,
   EditarSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
+  EnviarParaValidacaoRequest,
   MetricasResponse,
   Solicitacao,
   SolicitacoesFilters,
@@ -31,8 +32,8 @@ export const solicitacoesApi = {
   triar: (id: string, payload: TriarSolicitacaoRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/triar`, payload),
 
-  enviarParaValidacao: (id: string) =>
-    httpClient.patch<Solicitacao>(`/solicitacoes/${id}/enviar-validacao`),
+  enviarParaValidacao: (id: string, payload: EnviarParaValidacaoRequest) =>
+    httpClient.patch<Solicitacao>(`/solicitacoes/${id}/enviar-validacao`, payload),
 
   encerrar: (id: string, payload: EncerrarSolicitacaoRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/encerrar`, payload),
