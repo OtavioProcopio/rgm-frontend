@@ -20,7 +20,7 @@ describe('ModeloForm', () => {
   it('renders create form fields', () => {
     const { container } = render(<ModeloForm mode="create" onSubmit={vi.fn()} />);
     expect(within(container).getByLabelText(/código/i)).toBeDefined();
-    expect(within(container).getByRole('button')).toBeDefined();
+    expect(within(container).getByRole('button', { name: /salvar modelo/i })).toBeDefined();
   });
 
   it('renders edit form with pre-filled values', () => {
@@ -37,7 +37,7 @@ describe('ModeloForm', () => {
     await userEvent.type(within(container).getByLabelText(/código/i), 'M99');
     await userEvent.type(within(container).getByLabelText(/máquina/i), 'Injetora X');
     await userEvent.type(within(container).getByLabelText(/descrição/i), 'Teste desc');
-    await userEvent.click(within(container).getByRole('button'));
+    await userEvent.click(within(container).getByRole('button', { name: /salvar modelo/i }));
     expect(onSubmit).toHaveBeenCalled();
   });
 
@@ -46,7 +46,7 @@ describe('ModeloForm', () => {
     const { container } = render(
       <ModeloForm mode="edit" modelo={baseMockModelo} onSubmit={onSubmit} />,
     );
-    await userEvent.click(within(container).getByRole('button'));
+    await userEvent.click(within(container).getByRole('button', { name: /salvar modelo/i }));
     expect(onSubmit).toHaveBeenCalled();
   });
 });

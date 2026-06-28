@@ -6,6 +6,7 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 
 import { ModeloForm } from '../components/ModeloForm';
 import { useCriarModelo } from '../hooks/useCriarModelo';
+import { useUploadFotoCapa } from '../hooks/useUploadFotoCapa';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { CriarModeloRequest } from '../types/modeloTypes';
 
@@ -16,18 +17,34 @@ type Props = {
 export function NovoModeloPage({ backPath }: Props) {
   const navigate = useNavigate();
   const criarModelo = useCriarModelo();
+  const uploadFoto = useUploadFotoCapa();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const resolvedBackPath = backPath ?? '/app/admin/modelos';
 
-  async function handleSubmit(payload: CriarModeloRequest) {
+  async function handleSubmit(payload: CriarModeloRequest, photo: File | null) {
     setErrorMessage(null);
     try {
-      await criarModelo.mutateAsync(payload);
+      const created = await criarModelo.mutateAsync(payload);
+      if (photo) {
+        setIsUploadingPhoto(true);
+        try {
+          await uploadFoto.mutateAsync({ id: created.id, file: photo });
+        } catch (err) {
+          console.error('Erro ao enviar foto de capa do modelo:', err);
+          // O modelo foi criado com sucesso, mas a foto falhou. 
+          // Vamos alertar ou apenas navegar? Como o modelo foi criado, podemos navegar.
+        } finally {
+          setIsUploadingPhoto(false);
+        }
+      }
       navigate(resolvedBackPath);
     } catch (mutationError) {
       setErrorMessage(getModeloErrorMessage(mutationError));
     }
   }
+
+  const isSubmitting = criarModelo.isPending || isUploadingPhoto;
 
   return (
     <section>
@@ -39,7 +56,7 @@ export function NovoModeloPage({ backPath }: Props) {
       ) : null}
       <ModeloForm
         mode="create"
-        isSubmitting={criarModelo.isPending}
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
       />
       <div className="mt-4">

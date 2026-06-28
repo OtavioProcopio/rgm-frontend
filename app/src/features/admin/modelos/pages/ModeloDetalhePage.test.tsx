@@ -8,26 +8,32 @@ import { createAppWrapper } from '@/test-utils/appWrapper';
 
 import { ModeloDetalhePage } from './ModeloDetalhePage';
 
+vi.mock('../api/modelosApi', () => ({
+  modelosApi: {
+    exportarFicha: vi.fn().mockResolvedValue(new Blob()),
+  },
+}));
+
 vi.mock('../hooks/useModelo', () => ({
   useModelo: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
 }));
 vi.mock('../hooks/useEventosModelo', () => ({
   useEventosModelo: vi.fn().mockReturnValue({ data: [] }),
 }));
-vi.mock('../hooks/useUploadFotoCapa', () => ({
-  useUploadFotoCapa: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
-}));
 vi.mock('@/features/solicitacoes/hooks/useSolicitacoes', () => ({
   useSolicitacoes: vi.fn().mockReturnValue({ data: undefined }),
+}));
+vi.mock('../hooks/useDesativarModelo', () => ({
+  useDesativarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock('../hooks/useAtivarModelo', () => ({
+  useAtivarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('../components/EventosModeloList', () => ({
   EventosModeloList: () => <div />,
 }));
 vi.mock('../components/ModeloFotoCapa', () => ({
   ModeloFotoCapa: () => <div />,
-}));
-vi.mock('../components/UploadFotoCapaDialog', () => ({
-  UploadFotoCapaDialog: () => null,
 }));
 
 afterEach(cleanup);

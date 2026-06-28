@@ -88,9 +88,9 @@ describe('SolicitacoesPage', () => {
     expect(within(container).getByText(/não foi possível carregar/i)).toBeDefined();
   });
 
-  it('shows export csv button', () => {
+  it('shows export pdf button', () => {
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<SolicitacoesPage />, { wrapper: AppWrapper });
-    expect(within(container).getByRole('button', { name: /exportar csv/i })).toBeDefined();
+    expect(within(container).getByRole('button', { name: /exportar pdf/i })).toBeDefined();
   });
 });

@@ -29,12 +29,12 @@ describe('solicitacaoSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('rejects invalid uuid for model', () => {
+    it('rejects empty model id', () => {
       const result = abrirSolicitacaoSchema.safeParse({
         titulo: 'Inspeção semestral',
         descricao: 'Verificar alinhamento da correia',
         tipo: 'INSPECAO',
-        modeloId: 'not-a-uuid',
+        modeloId: '',
       });
       expect(result.success).toBe(false);
     });

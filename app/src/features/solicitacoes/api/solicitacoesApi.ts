@@ -3,6 +3,7 @@ import type { PageResponse } from '@/shared/types/page';
 
 import type {
   AbrirSolicitacaoRequest,
+  AlterarResponsaveisRequest,
   AtividadeSolicitacao,
   CancelarSolicitacaoRequest,
   ComentarioRequest,
@@ -48,10 +49,13 @@ export const solicitacoesApi = {
   listarAtividades: (id: string) =>
     httpClient.get<AtividadeSolicitacao[]>(`/solicitacoes/${id}/atividades`),
 
+  alterarResponsaveis: (id: string, payload: AlterarResponsaveisRequest) =>
+    httpClient.patch<Solicitacao>(`/solicitacoes/${id}/responsaveis`, payload),
+
   obterMetricas: () =>
     httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
 
   exportar: (filters: SolicitacoesFilters) =>
-    httpClient.get<string>('/solicitacoes/exportar', { params: filters }),
+    httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),
 };
 

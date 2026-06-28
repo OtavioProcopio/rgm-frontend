@@ -40,4 +40,12 @@ describe('SolicitacaoFilters', () => {
     );
     expect(within(container).getByText('M01')).toBeDefined();
   });
+
+  it('renders date filters', () => {
+    const { container } = render(
+      <SolicitacaoFilters filters={{ page: 0, size: 20 }} onChange={vi.fn()} />,
+    );
+    expect(within(container).getByLabelText(/criada a partir de/i)).toBeDefined();
+    expect(within(container).getByLabelText(/criada até/i)).toBeDefined();
+  });
 });

@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { modelosApi } from '../api/modelosApi';
+
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -10,13 +13,14 @@ import { canManageModelos } from '@/shared/lib/permissions';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
+import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import { UploadFotoCapaDialog } from '../components/UploadFotoCapaDialog';
+import { useDesativarModelo } from '../hooks/useDesativarModelo';
+import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
 import { useModelo } from '../hooks/useModelo';
-import { useUploadFotoCapa } from '../hooks/useUploadFotoCapa';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 
 export function ModeloDetalhePage() {
@@ -28,17 +32,47 @@ export function ModeloDetalhePage() {
     { modeloId: id, page: 0, size: 50 },
     { enabled: !!id },
   );
-  const uploadFoto = useUploadFotoCapa();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const desativarModelo = useDesativarModelo();
+  const ativarModelo = useAtivarModelo();
+  const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const podeGerenciarFoto = canManageModelos(user?.perfil);
 
-  async function handleUpload(file: File) {
-    if (!id) return;
-    setErrorMessage(null);
+  async function handleConfirmAction() {
+    if (!id || !showConfirm) return;
+    setActionError(null);
     try {
-      await uploadFoto.mutateAsync({ id, file });
+      if (showConfirm === 'desativar') {
+        await desativarModelo.mutateAsync(id);
+      } else {
+        await ativarModelo.mutateAsync(id);
+      }
+      setShowConfirm(null);
     } catch (mutationError) {
-      setErrorMessage(getModeloErrorMessage(mutationError));
+      setActionError(getModeloErrorMessage(mutationError));
+      setShowConfirm(null);
+    }
+  }
+
+  const isMutating = desativarModelo.isPending || ativarModelo.isPending;
+
+  async function handleExportarFicha() {
+    if (!id) return;
+    setIsExporting(true);
+    try {
+      const blob = await modelosApi.exportarFicha(id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `ficha-modelo-${modelo?.codigo ?? id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao exportar ficha:', err);
+    } finally {
+      setIsExporting(false);
     }
   }
 
@@ -48,25 +82,74 @@ export function ModeloDetalhePage() {
         title="Detalhe do modelo"
         description="Consulte dados, eventos e foto de capa do modelo."
         actions={
-          id && podeGerenciarFoto ? (
-            <Link to={`/app/admin/modelos/${id}/editar`}>
-              <Button variant="secondary">Editar</Button>
-            </Link>
-          ) : null
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={isExporting} onClick={handleExportarFicha}>
+              {isExporting ? 'Exportando...' : 'Exportar PDF'}
+            </Button>
+            {id && podeGerenciarFoto ? (
+              <>
+                <Link to={`/app/admin/modelos/${id}/editar`}>
+                  <Button variant="secondary">Editar</Button>
+                </Link>
+                {modelo?.ativo ? (
+                  <Button
+                    variant="secondary"
+                    disabled={isMutating}
+                    onClick={() => setShowConfirm('desativar')}
+                  >
+                    Desativar
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    disabled={isMutating}
+                    onClick={() => setShowConfirm('ativar')}
+                  >
+                    Ativar
+                  </Button>
+                )}
+              </>
+            ) : null}
+          </div>
         }
       />
+      {actionError ? (
+        <div className="mb-4">
+          <ErrorState title="Operação não concluída" description={actionError} />
+        </div>
+      ) : null}
+      {showConfirm ? (
+        <div className="mb-4">
+          {showConfirm === 'desativar' ? (
+            <ConfirmDialog
+              title="Desativar modelo"
+              message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+              confirmLabel="Desativar"
+              variant="danger"
+              isPending={isMutating}
+              onCancel={() => setShowConfirm(null)}
+              onConfirm={handleConfirmAction}
+            />
+          ) : (
+            <ConfirmDialog
+              title="Ativar modelo"
+              message={`Deseja ativar o modelo ${modelo?.codigo}?`}
+              confirmLabel="Ativar"
+              variant="warning"
+              isPending={isMutating}
+              onCancel={() => setShowConfirm(null)}
+              onConfirm={handleConfirmAction}
+            />
+          )}
+        </div>
+      ) : null}
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
         <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
       ) : null}
-      {errorMessage ? (
-        <div className="mb-4">
-          <ErrorState title="Operação não concluída" description={errorMessage} />
-        </div>
-      ) : null}
       {modelo ? (
         <div className="space-y-6">
-          <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
+          <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
             <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
@@ -93,21 +176,33 @@ export function ModeloDetalhePage() {
                 </p>
               ) : null}
             </div>
-            <aside className="space-y-4">
-              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
-              {podeGerenciarFoto ? (
-                <UploadFotoCapaDialog isUploading={uploadFoto.isPending} onUpload={handleUpload} />
-              ) : null}
+            <aside>
+              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} className="h-80" />
             </aside>
           </div>
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">Eventos</h2>
+            <h2 className="mb-1 text-lg font-semibold text-slate-950 dark:text-white">
+              Visão geral das solicitações
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Indicadores consolidados de todos os chamados vinculados a este modelo.
+            </p>
+            <ModeloDashboard solicitacoes={solicitacoesPage?.content ?? []} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções concluídas neste modelo.
+            </p>
             <EventosModeloList eventos={eventosData ?? []} />
           </div>
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-slate-950 dark:text-white">
-              Solicitações ({solicitacoesPage?.totalElements ?? 0})
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+              Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
             </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já encerrados) vinculados a este modelo.
+            </p>
             {solicitacoesPage?.content?.length ? (
               <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
                 {solicitacoesPage.content.map((s) => (
@@ -133,6 +228,53 @@ export function ModeloDetalhePage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
+  const total = solicitacoes.length;
+  const abertas = solicitacoes.filter((s) => !['CONCLUIDA', 'CANCELADA'].includes(s.status)).length;
+  const concluidas = solicitacoes.filter((s) => s.status === 'CONCLUIDA').length;
+  const taxaSucesso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <KpiCard label="Total" value={total} color="slate" />
+      <KpiCard label="Abertas" value={abertas} color="amber" />
+      <KpiCard label="Concluídas" value={concluidas} color="green" />
+      <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | string;
+  color: 'slate' | 'amber' | 'green' | 'blue';
+}) {
+  const colorMap = {
+    slate: 'border-slate-200 dark:border-slate-700',
+    amber: 'border-amber-200 dark:border-amber-800',
+    green: 'border-green-200 dark:border-green-800',
+    blue: 'border-sky-200 dark:border-sky-800',
+  };
+  const valueColorMap = {
+    slate: 'text-slate-900 dark:text-slate-100',
+    amber: 'text-amber-600 dark:text-amber-400',
+    green: 'text-green-600 dark:text-green-400',
+    blue: 'text-sky-600 dark:text-sky-400',
+  };
+  return (
+    <div
+      className={`rounded-md border bg-white p-4 dark:bg-slate-900 ${colorMap[color]}`}
+    >
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${valueColorMap[color]}`}>{value}</p>
+    </div>
   );
 }
 

@@ -9,11 +9,14 @@ import { createAppWrapper } from '@/test-utils/appWrapper';
 import { NovoModeloPage } from './NovoModeloPage';
 
 vi.mock('../hooks/useCriarModelo', () => ({
-  useCriarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
+  useCriarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({ id: '123' }), isPending: false }),
+}));
+vi.mock('../hooks/useUploadFotoCapa', () => ({
+  useUploadFotoCapa: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('../components/ModeloForm', () => ({
-  ModeloForm: ({ onSubmit }: { onSubmit: (v: unknown) => void }) => (
-    <button onClick={() => onSubmit({ codigo: 'M01' })}>Salvar</button>
+  ModeloForm: ({ onSubmit }: { onSubmit: (v: unknown, photo: File | null) => void }) => (
+    <button onClick={() => onSubmit({ codigo: 'M01' }, null)}>Salvar</button>
   ),
 }));
 

@@ -49,6 +49,10 @@ export type SolicitacoesFilters = {
   modeloId?: string;
   tipo?: TipoSolicitacao;
   prioridade?: PrioridadeSolicitacao;
+  criadaEmInicio?: string;
+  criadaEmFim?: string;
+  abertaPorUsuarioId?: string;
+  responsavelId?: string;
 };
 
 export type AbrirSolicitacaoRequest = {
@@ -86,9 +90,12 @@ export type ComentarioRequest = {
   comentario: string;
 };
 
+export type AlterarResponsaveisRequest = {
+  responsavelIds: string[];
+};
+
 export type MetricasResponse = {
   totalUsuarios: number;
-  totalMaquinas: number;
   totalModelos: number;
   totalSolicitacoes: number;
   solicitacoesPorStatus: Record<StatusSolicitacao, number>;

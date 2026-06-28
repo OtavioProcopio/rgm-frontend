@@ -8,6 +8,7 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canManageSolicitacoes } from '@/shared/lib/permissions';
 
+import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal';
 import { ComentarioForm } from '../components/ComentarioForm';
 import { DevolucaoModal } from '../components/DevolucaoModal';
 import { EncerramentoModal } from '../components/EncerramentoModal';
@@ -15,6 +16,7 @@ import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeB
 import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
 import { TriagemModal } from '../components/TriagemModal';
+import { useAlterarResponsaveis } from '../hooks/useAlterarResponsaveis';
 import { useAtividades } from '../hooks/useAtividades';
 import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
 import { useDevolverSolicitacao } from '../hooks/useDevolverSolicitacao';
@@ -32,16 +34,16 @@ import type {
 } from '../types/solicitacaoTypes';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
+import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { useQuery } from '@tanstack/react-query';
-import { canAccessAdmin } from '@/shared/lib/permissions';
 import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
-type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | null;
+type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | null;
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -69,6 +71,8 @@ export function SolicitacaoDetalhePage() {
   const comentar = useRegistrarComentario(id!);
   const uploadEvidencia = useUploadEvidencia(id!);
   const editar = useEditarSolicitacao(id!);
+  const alterarResponsaveis = useAlterarResponsaveis(id!);
+  const deleteEvidencia = useDeleteEvidencia(id!);
 
   const canManage = canManageSolicitacoes(user?.perfil);
   const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
@@ -77,7 +81,7 @@ export function SolicitacaoDetalhePage() {
   const { data: usuariosPage } = useQuery({
     queryKey: ['admin', 'usuarios', 'triagem'],
     queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
-    enabled: canAccessAdmin(user?.perfil),
+    enabled: canManageSolicitacoes(user?.perfil),
     staleTime: 5 * 60 * 1000,
   });
   const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
@@ -131,6 +135,25 @@ export function SolicitacaoDetalhePage() {
     setActionError(null);
     try {
       await comentar.mutateAsync(data);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleAlterarResponsaveis(responsavelIds: string[]) {
+    setActionError(null);
+    try {
+      await alterarResponsaveis.mutateAsync({ responsavelIds });
+      setActiveModal(null);
+    } catch (err) {
+      setActionError(getSolicitacaoErrorMessage(err));
+    }
+  }
+
+  async function handleDeleteEvidencia(evidenciaId: string) {
+    setActionError(null);
+    try {
+      await deleteEvidencia.mutateAsync(evidenciaId);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
@@ -263,7 +286,7 @@ export function SolicitacaoDetalhePage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Status
@@ -287,7 +310,7 @@ export function SolicitacaoDetalhePage() {
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Tipo
             </p>
-            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+            <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
               {tipoLabel[solicitacao.tipo]}
             </p>
           </div>
@@ -298,7 +321,7 @@ export function SolicitacaoDetalhePage() {
             <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
           </div>
           {modelo ? (
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Modelo (rastreabilidade)
               </p>
@@ -311,7 +334,7 @@ export function SolicitacaoDetalhePage() {
             </div>
           ) : null}
           {solicitacao.comentarioFinal ? (
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Comentário final
               </p>
@@ -331,6 +354,11 @@ export function SolicitacaoDetalhePage() {
             {canManage && solicitacao.status === 'A_FAZER' ? (
               <Button type="button" onClick={() => setActiveModal('triagem')}>
                 Triar
+              </Button>
+            ) : null}
+            {canManage && solicitacao.status !== 'A_FAZER' ? (
+              <Button type="button" variant="secondary" onClick={() => setActiveModal('responsaveis')}>
+                Alterar responsáveis
               </Button>
             ) : null}
             {canEnviarValidacao && solicitacao.status === 'EM_ANDAMENTO' ? (
@@ -384,6 +412,15 @@ export function SolicitacaoDetalhePage() {
               onConfirm={handleDevolver}
             />
           ) : null}
+          {activeModal === 'responsaveis' ? (
+            <AlterarResponsaveisModal
+              responsaveisAtuais={solicitacao.responsavelIds}
+              usuarios={responsaveisOpcoes}
+              isPending={alterarResponsaveis.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleAlterarResponsaveis}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -397,7 +434,12 @@ export function SolicitacaoDetalhePage() {
             <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
           </div>
         ) : null}
-        <EvidenciaList evidencias={evidencias} isLoading={isLoadingEvidencias} />
+        <EvidenciaList
+          evidencias={evidencias}
+          isLoading={isLoadingEvidencias}
+          onDelete={canAnexarEvidencia ? handleDeleteEvidencia : undefined}
+          isDeleting={deleteEvidencia.isPending}
+        />
       </div>
 
       {/* Histórico */}

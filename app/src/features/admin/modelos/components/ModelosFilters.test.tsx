@@ -32,4 +32,25 @@ describe('ModelosFilters', () => {
     expect(within(container).getByText('Ativos')).toBeDefined();
     expect(within(container).getByText('Inativos')).toBeDefined();
   });
+
+  it('renders descricao and maquina inputs', () => {
+    const { container } = render(
+      <ModelosFilters onCodigoChange={vi.fn()} onAtivoChange={vi.fn()} />,
+    );
+    expect(within(container).getByLabelText(/descrição/i)).toBeDefined();
+    expect(within(container).getByLabelText(/máquina/i)).toBeDefined();
+  });
+
+  it('shows current descricao and maquina values', () => {
+    const { container } = render(
+      <ModelosFilters
+        descricao="My Description"
+        maquina="My Machine"
+        onCodigoChange={vi.fn()}
+        onAtivoChange={vi.fn()}
+      />,
+    );
+    expect(within(container).getByDisplayValue('My Description')).toBeDefined();
+    expect(within(container).getByDisplayValue('My Machine')).toBeDefined();
+  });
 });
