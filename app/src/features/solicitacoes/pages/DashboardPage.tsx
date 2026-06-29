@@ -8,8 +8,10 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 import { cn } from '@/shared/lib/cn';
 
+import { HistoricoChart } from '../components/HistoricoChart';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { useMetricas } from '../hooks/useMetricas';
+import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { ModelosTab } from './ModelosTab';
 import { PessoalTab } from './PessoalTab';
 import { SolicitacoesTab } from './SolicitacoesTab';
@@ -25,6 +27,7 @@ const TABS: { id: TabId; label: string }[] = [
 export function DashboardPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('solicitacoes');
+  useSolicitacaoEvents();
   const { data: metricas, isLoading: loadingMetricas, isError: errorMetricas } = useMetricas();
   const {
     data: solicitacoes = [],
@@ -77,12 +80,15 @@ export function DashboardPage() {
             description="Verifique sua conexão com o servidor."
           />
         ) : (
-          <SolicitacoesTab
-            metricas={metricas}
-            solicitacoes={solicitacoes}
-            isAdmin={isAdmin}
-            isGestor={isGestor}
-          />
+          <div className="space-y-6">
+            <SolicitacoesTab
+              metricas={metricas}
+              solicitacoes={solicitacoes}
+              isAdmin={isAdmin}
+              isGestor={isGestor}
+            />
+            <HistoricoChart />
+          </div>
         )
       ) : null}
 

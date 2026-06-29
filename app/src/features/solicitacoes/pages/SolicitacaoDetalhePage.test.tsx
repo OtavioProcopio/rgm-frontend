@@ -235,7 +235,7 @@ describe('SolicitacaoDetalhePage', () => {
     expect(triarMock).toHaveBeenCalled();
   });
 
-  it('calls handleEnviarValidacao when button is clicked', async () => {
+  it('opens enviarValidacao modal when button is clicked', async () => {
     const { useSolicitacao } = await import('../hooks/useSolicitacao');
     const { useEnviarParaValidacao } = await import('../hooks/useEnviarParaValidacao');
     const enviarMock = vi.fn().mockResolvedValue(undefined);
@@ -248,7 +248,8 @@ describe('SolicitacaoDetalhePage', () => {
     const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /enviar para validação/i }));
-    expect(enviarMock).toHaveBeenCalled();
+    // Modal should now be visible — getByText throws if not found
+    within(container).getByText(/Descrição do serviço realizado/i);
   });
 
   it('opens encerramento modal and calls handleEncerrar', async () => {

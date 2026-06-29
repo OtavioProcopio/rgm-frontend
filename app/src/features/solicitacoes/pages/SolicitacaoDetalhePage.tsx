@@ -12,6 +12,7 @@ import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal
 import { ComentarioForm } from '../components/ComentarioForm';
 import { DevolucaoModal } from '../components/DevolucaoModal';
 import { EncerramentoModal } from '../components/EncerramentoModal';
+import { EnviarValidacaoModal } from '../components/EnviarValidacaoModal';
 import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeBadge';
 import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
@@ -43,7 +44,7 @@ import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
-type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | null;
+type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | 'enviarValidacao' | null;
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +58,7 @@ export function SolicitacaoDetalhePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitulo, setEditTitulo] = useState('');
   const [editDescricao, setEditDescricao] = useState('');
+  const [editTipo, setEditTipo] = useState<import('../types/solicitacaoTypes').TipoSolicitacao>('REPARO');
 
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
@@ -77,6 +79,11 @@ export function SolicitacaoDetalhePage() {
   const canManage = canManageSolicitacoes(user?.perfil);
   const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
   const canEnviarValidacao = canManage || (user?.perfil === 'OPERADOR' && isResponsavel);
+  const canOperadorCancelar =
+    user?.perfil === 'OPERADOR' &&
+    solicitacao?.status === 'A_FAZER' &&
+    solicitacao?.abertaPorUsuarioId === profile?.id &&
+    (solicitacao?.responsavelIds?.length ?? 0) === 0;
 
   const { data: usuariosPage } = useQuery({
     queryKey: ['admin', 'usuarios', 'triagem'],
@@ -98,10 +105,11 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
-  async function handleEnviarValidacao() {
+  async function handleEnviarValidacao(data: { comentario: string }) {
     setActionError(null);
     try {
-      await enviarValidacao.mutateAsync();
+      await enviarValidacao.mutateAsync(data.comentario);
+      setActiveModal(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
@@ -193,6 +201,7 @@ export function SolicitacaoDetalhePage() {
       await editar.mutateAsync({
         titulo: editTitulo.trim(),
         descricao: editDescricao.trim(),
+        tipo: editTipo,
       });
       setIsEditing(false);
     } catch (err) {
@@ -244,6 +253,7 @@ export function SolicitacaoDetalhePage() {
                     onClick={() => {
                       setEditTitulo(solicitacao.titulo);
                       setEditDescricao(solicitacao.descricao);
+                      setEditTipo(solicitacao.tipo);
                       setIsEditing(true);
                     }}
                   >
@@ -271,6 +281,21 @@ export function SolicitacaoDetalhePage() {
             disabled={editar.isPending}
             required
           />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Tipo
+            </label>
+            <select
+              className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+              value={editTipo}
+              onChange={(e) => setEditTipo(e.target.value as import('../types/solicitacaoTypes').TipoSolicitacao)}
+              disabled={editar.isPending}
+            >
+              <option value="REPARO">Reparo</option>
+              <option value="INSPECAO">Inspeção</option>
+              <option value="REENGENHARIA">Reengenharia</option>
+            </select>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
               Descrição
@@ -347,7 +372,7 @@ export function SolicitacaoDetalhePage() {
       )}
 
       {/* Ações */}
-      {!isTerminal && (canManage || canEnviarValidacao) ? (
+      {!isTerminal && (canManage || canEnviarValidacao || canOperadorCancelar) ? (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
           <div className="flex flex-wrap gap-2">
@@ -365,9 +390,9 @@ export function SolicitacaoDetalhePage() {
               <Button
                 type="button"
                 disabled={enviarValidacao.isPending}
-                onClick={handleEnviarValidacao}
+                onClick={() => setActiveModal('enviarValidacao')}
               >
-                {enviarValidacao.isPending ? 'Enviando...' : 'Enviar para validação'}
+                Enviar para validação
               </Button>
             ) : null}
             {canManage && solicitacao.status === 'EM_VALIDACAO' ? (
@@ -385,6 +410,15 @@ export function SolicitacaoDetalhePage() {
                 onClick={() => setActiveModal('encerramento')}
               >
                 {solicitacao.status === 'EM_VALIDACAO' ? 'Encerrar' : 'Cancelar'}
+              </Button>
+            ) : null}
+            {canOperadorCancelar ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setActiveModal('encerramento')}
+              >
+                Cancelar
               </Button>
             ) : null}
           </div>
@@ -419,6 +453,14 @@ export function SolicitacaoDetalhePage() {
               isPending={alterarResponsaveis.isPending}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleAlterarResponsaveis}
+            />
+          ) : null}
+          {activeModal === 'enviarValidacao' ? (
+            <EnviarValidacaoModal
+              solicitacaoId={id!}
+              isPending={enviarValidacao.isPending}
+              onCancel={() => setActiveModal(null)}
+              onConfirm={handleEnviarValidacao}
             />
           ) : null}
         </div>
