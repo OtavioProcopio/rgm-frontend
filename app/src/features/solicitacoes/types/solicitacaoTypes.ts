@@ -65,6 +65,7 @@ export type AbrirSolicitacaoRequest = {
 export type EditarSolicitacaoRequest = {
   titulo: string;
   descricao: string;
+  tipo: TipoSolicitacao;
 };
 
 export type TriarSolicitacaoRequest = {
@@ -86,7 +87,7 @@ export type CancelarSolicitacaoRequest = {
 };
 
 export type DevolverSolicitacaoRequest = {
-  motivo?: string;
+  motivo: string;
   prioridade?: PrioridadeSolicitacao;
 };
 
@@ -96,6 +97,21 @@ export type ComentarioRequest = {
 
 export type AlterarResponsaveisRequest = {
   responsavelIds: string[];
+};
+
+export type PontoDeSerie = {
+  periodo: string;
+  total: number;
+  abertas: number;
+  concluidas: number;
+  canceladas: number;
+  slaMediaHoras: number;
+};
+
+export type HistoricoMetricas = {
+  series: PontoDeSerie[];
+  slaGlobalMediaHoras: number;
+  periodoLabel: string;
 };
 
 export type MetricasResponse = {
