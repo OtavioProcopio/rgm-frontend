@@ -65,6 +65,7 @@ export type AbrirSolicitacaoRequest = {
 export type EditarSolicitacaoRequest = {
   titulo: string;
   descricao: string;
+  tipo: TipoSolicitacao;
 };
 
 export type TriarSolicitacaoRequest = {
