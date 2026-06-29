@@ -17,7 +17,7 @@ let refreshPromise: Promise<RefreshTokenResponse> | null = null;
 function buildUrl(path: string, params?: QueryParams) {
   const baseUrl = env.apiBaseUrl.endsWith('/') ? env.apiBaseUrl.slice(0, -1) : env.apiBaseUrl;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = new URL(`${baseUrl}${normalizedPath}`);
+  const url = new URL(`${baseUrl}${normalizedPath}`, window.location.origin);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
