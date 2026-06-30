@@ -39,4 +39,21 @@ describe('ThemeToggle', () => {
     expect(localStorage.getItem('rgm.theme')).toBe('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
+
+  it('renders in light mode when light theme is stored', () => {
+    localStorage.setItem('rgm.theme', 'light');
+    localStorage.setItem('rgm.theme.defaulted', '2');
+
+    render(<ThemeToggle />);
+
+    expect(screen.getByRole('button', { name: 'Ativar tema escuro' })).toBeDefined();
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
+
+  it('accepts optional className prop', () => {
+    render(<ThemeToggle className="custom-class" />);
+
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('custom-class');
+  });
 });

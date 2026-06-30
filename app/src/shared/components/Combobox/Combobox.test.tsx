@@ -184,6 +184,43 @@ describe('Combobox', () => {
     expect(screen.queryByText('Opção 1')).toBeNull();
   });
 
+  it('keeps dropdown open when clicking inside', () => {
+    render(
+      <Combobox
+        label="Meu Combobox"
+        value=""
+        onChange={vi.fn()}
+        options={mockOptions}
+      />,
+    );
+
+    const input = screen.getByLabelText('Meu Combobox');
+    fireEvent.focus(input);
+    expect(screen.getByText('Opção 1')).toBeDefined();
+
+    fireEvent.mouseDown(input);
+    expect(screen.getByText('Opção 1')).toBeDefined();
+  });
+
+  it('closes dropdown with reset to selected when clicking outside with a value', () => {
+    render(
+      <div>
+        <div data-testid="outside2">Fora2</div>
+        <Combobox
+          label="Meu Combobox"
+          value="1"
+          onChange={vi.fn()}
+          options={mockOptions}
+        />
+      </div>,
+    );
+
+    const input = screen.getByLabelText('Meu Combobox') as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.mouseDown(screen.getByTestId('outside2'));
+    expect(input.value).toBe('Opção 1');
+  });
+
   it('shows validation error message when error prop is provided', () => {
     render(
       <Combobox
