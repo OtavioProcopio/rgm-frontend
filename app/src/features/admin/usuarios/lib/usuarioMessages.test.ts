@@ -44,4 +44,10 @@ describe('getUsuarioErrorMessage', () => {
   it('returns api message for other status codes', () => {
     expect(getUsuarioErrorMessage(new ApiError({ status: 422, message: 'Inválido' }))).toBe('Inválido');
   });
+
+  it('returns fallback for default status with empty message', () => {
+    expect(getUsuarioErrorMessage(new ApiError({ status: 422, message: '' }))).toBe(
+      'Não foi possível concluir a operação. Tente novamente.',
+    );
+  });
 });

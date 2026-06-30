@@ -23,6 +23,30 @@ describe('usuarioSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('fails when internal user has email but senha is too short', () => {
+    const result = criarUsuarioSchema.safeParse({
+      nome: 'Operador RGM',
+      email: 'op@rgm.com',
+      senha: '123',
+      perfil: 'OPERADOR',
+      ativo: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts internal user with valid email and senha', () => {
+    const result = criarUsuarioSchema.safeParse({
+      nome: 'Operador RGM',
+      email: 'op@rgm.com',
+      senha: 'senha123',
+      perfil: 'OPERADOR',
+      ativo: true,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it('does not accept password in edit payload', () => {
     const result = editarUsuarioSchema.safeParse({
       nome: 'Gestor RGM',
