@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# RGM Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web do sistema de gerenciamento de solicitações de manutenção industrial.
 
-Currently, two official plugins are available:
+**Stack:** React 19 · TypeScript · Vite 6 · TanStack Query · React Router v7 · React Hook Form + Zod · Tailwind CSS 4 · Vitest
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Quick Start
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+# Sobe tudo (PostgreSQL + MinIO + Backend + Frontend)
+cd ../rgm-infra && docker compose -f docker-compose.dev.yml up -d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**URLs locais:**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8080/api |
+| Swagger | http://localhost:8080/swagger-ui.html |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+Login padrão (perfil `dev`): `admin@rgm.com` / `admin123`
+
+## Desenvolvimento
+
+```bash
+# Ciclo rápido (lint + typecheck + testes + build, sem coverage)
+docker exec rgm-frontend-dev sh -c "cd /workspace && npm run check"
+
+# Pipeline completo (inclui coverage 85%)
+docker exec rgm-frontend-dev sh -c "cd /workspace && npm run validate"
+
+# Apenas testes
+docker exec rgm-frontend-dev sh -c "cd /workspace && npm run test:run"
 ```
+
+## Variáveis de ambiente
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+Copie `app/.env.example` para `app/.env` para desenvolvimento local.
+
+## Qualidade
+
+| Métrica | Meta |
+|---------|------|
+| Cobertura de linhas | 95% |
+| Cobertura de branches | 95% |
+| Lint (ESLint) | 0 erros |
+| Typecheck | 0 erros |
+
+## 📚 Documentação
+
+| | |
+|---|---|
+| 🏗️ [Referência Técnica](../docs/frontend-project.md) | Arquitetura, estrutura de diretórios, padrões e convenções |
+| 🔌 [Contrato da API](../../rgm-backend/docs/swagger.json) | Swagger JSON — fonte de verdade dos endpoints |
+| 📋 [Casos de Uso](../../rgm-backend/docs/casos-de-uso.md) | Regras de negócio do backend |
