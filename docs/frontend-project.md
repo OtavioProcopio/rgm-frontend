@@ -1,49 +1,28 @@
-# RGM Frontend — Definição Técnica do Projeto
+# RGM Frontend — Referência Técnica
+
+> Documentação técnica completa. Para subir o projeto, veja o [README](../app/README.md).
 
 ## 1. Objetivo do projeto
 
-Este projeto é o front-end web do sistema RGM.
+Front-end web do sistema RGM: interface para gerenciamento de solicitações de manutenção industrial com controle Kanban, RBAC e evidências digitais.
 
-O sistema deve consumir a API do backend RGM, exposta via Spring Boot, usando os contratos definidos no arquivo `swagger.json`.
+Consome a API do backend RGM (Spring Boot). Contrato em `swagger.json`.
 
-O front-end será desenvolvido com:
+Stack:
 
-- React
-- Vite
-- TypeScript
-- React Router
+- React 19 + TypeScript
+- Vite 6
+- React Router v7
 - TanStack Query
-- React Hook Form
-- Zod
-- ESLint
-- Prettier
-- Vitest
-- Testing Library
-
-O foco do projeto é construir uma aplicação com boa organização, clareza arquitetural, facilidade de manutenção e padrão profissional de engenharia.
+- React Hook Form + Zod
+- Tailwind CSS 4
+- Vitest + Testing Library
 
 ---
 
-## 2. Regra principal para o agente
+## 2. Escopo funcional
 
-O agente deve sempre consultar os arquivos de referência antes de implementar qualquer feature.
-
-Arquivos de referência esperados:
-
-```txt
-swagger.json
-docs/frontend-project.md
-````
-
-O agente não deve inventar endpoints, payloads, enums ou respostas da API.
-
-Sempre que precisar criar uma chamada HTTP, deve verificar o contrato no `swagger.json`.
-
----
-
-## 3. Escopo funcional do front-end
-
-O front-end deve cobrir os principais módulos do backend:
+Módulos implementados:
 
 ```txt
 Auth
@@ -72,58 +51,34 @@ Fluxos principais:
 
 ---
 
-## 4. Stack oficial
+## 3. Estrutura de diretórios
 
-A stack oficial do projeto é:
+Arquitetura orientada por features.
 
-```txt
-React
-Vite
-TypeScript
-React Router
-TanStack Query
-React Hook Form
-Zod
-Vitest
-Testing Library
-ESLint
-Prettier
-```
-
-Evitar adicionar bibliotecas novas sem necessidade real.
-
-Antes de instalar uma nova dependência, o agente deve justificar:
-
-* Qual problema ela resolve.
-* Por que a solução nativa ou já existente não basta.
-* Qual impacto ela terá na manutenção do projeto.
-
----
-
-## 5. Estrutura de diretórios
-
-O projeto deve usar arquitetura orientada por features.
-
-Estrutura base:
+Estrutura:
 
 ```txt
 app/
-  public/
   src/
     app/
-      App.tsx
-      main.tsx
       router.tsx
 
       providers/
         AppProviders.tsx
         QueryProvider.tsx
         AuthProvider.tsx
+        authContext.ts
 
       layouts/
         PublicLayout.tsx
         AppLayout.tsx
         AdminLayout.tsx
+
+      routes/
+        ProtectedRoute.tsx
+        PublicOnlyRoute.tsx
+        AdminRoute.tsx              ← apenas ADMINISTRADOR
+        ModeloManagementRoute.tsx   ← ADMINISTRADOR + GESTOR
 
     shared/
       api/
@@ -136,24 +91,25 @@ app/
 
       components/
         Button/
-          Button.tsx
-          Button.test.tsx
-        Input/
-        Modal/
-        DataTable/
-        PageHeader/
-        LoadingState/
+        Combobox/
+        ConfirmDialog/
         EmptyState/
         ErrorState/
+        Input/
+        LoadingState/
+        PageHeader/
+        Pagination/
+        Select/
+        Textarea/
+        ThemeToggle/
 
       hooks/
         useDebounce.ts
-        usePagination.ts
 
       lib/
-        date.ts
-        formatters.ts
+        cn.ts
         permissions.ts
+        theme.ts
 
       types/
         api.ts
@@ -163,13 +119,17 @@ app/
       auth/
         api/
           authApi.ts
+          perfilApi.ts
         hooks/
           useLogin.ts
-          useLogout.ts
+          usePerfil.ts
+          useAlterarSenha.ts
         pages/
           LoginPage.tsx
+          PerfilPage.tsx
         schemas/
           loginSchema.ts
+          perfilSchema.ts
         types/
           authTypes.ts
 
@@ -185,19 +145,38 @@ app/
           useDevolverSolicitacao.ts
           useEncerrarSolicitacao.ts
           useRegistrarComentario.ts
+          useAlterarResponsaveis.ts
+          useCancelarSolicitacao.ts
+          useKanbanSolicitacoes.ts
+          useKanbanActions.ts
+          useMetricas.ts
+          useDashboardData.ts
+          useHistoricoMetricas.ts
+          useAtividades.ts
+          solicitacoesKeys.ts
         pages/
           SolicitacoesPage.tsx
           NovaSolicitacaoPage.tsx
           SolicitacaoDetalhePage.tsx
+          DashboardPage.tsx
         components/
+          KanbanBoard.tsx
+          KanbanCard.tsx
+          KanbanColumn.tsx
           SolicitacaoCard.tsx
-          SolicitacaoForm.tsx
-          SolicitacaoStatusBadge.tsx
           SolicitacaoFilters.tsx
+          SolicitacaoStatusBadge.tsx
+          SolicitacaoPrioridadeBadge.tsx
           SolicitacaoTimeline.tsx
           TriagemModal.tsx
           EncerramentoModal.tsx
           DevolucaoModal.tsx
+          EnviarValidacaoModal.tsx
+          AlterarResponsaveisModal.tsx
+          ComentarioForm.tsx
+          HistoricoChart.tsx
+        lib/
+          solicitacaoMessages.ts
         schemas/
           solicitacaoSchema.ts
         types/
@@ -209,6 +188,8 @@ app/
         hooks/
           useEvidencias.ts
           useUploadEvidencia.ts
+          useDeleteEvidencia.ts
+          evidenciasKeys.ts
         components/
           EvidenciaUploader.tsx
           EvidenciaList.tsx
@@ -216,49 +197,82 @@ app/
         types/
           evidenciaTypes.ts
 
-      modelos/
-        api/
-          modelosApi.ts
-        hooks/
-          useModelos.ts
-          useModelo.ts
-          useCriarModelo.ts
-          useEditarModelo.ts
-          useAtualizarFotoCapa.ts
-        pages/
-          ModelosPage.tsx
-          ModeloDetalhePage.tsx
-          NovoModeloPage.tsx
+      modelos/                      ← catálogo público (todos os perfis)
         components/
           ModeloCard.tsx
-          ModeloForm.tsx
-          ModeloStatusBadge.tsx
-          EventosModeloList.tsx
-        schemas/
-          modeloSchema.ts
-        types/
-          modeloTypes.ts
+        pages/
+          ModelosPage.tsx
 
       admin/
-        usuarios/
+        pages/
+          AdminDashboardPage.tsx
+        components/
+          AdminCard.tsx
+        modelos/                    ← CRUD de modelos (GESTOR/ADMIN)
+          api/
+            modelosApi.ts
+          hooks/
+            useModelos.ts
+            useModelo.ts
+            useCriarModelo.ts
+            useEditarModelo.ts
+            useDesativarModelo.ts
+            useAtivarModelo.ts
+            useUploadFotoCapa.ts
+            useEventosModelo.ts
+            modelosKeys.ts
+          pages/
+            ModelosPage.tsx
+            ModeloDetalhePage.tsx
+            NovoModeloPage.tsx
+            EditarModeloPage.tsx
+          components/
+            ModeloForm.tsx
+            ModelosTable.tsx
+            ModelosFilters.tsx
+            ModeloStatusBadge.tsx
+            ModeloActionsMenu.tsx
+            ModeloFotoCapa.tsx
+            UploadFotoCapaDialog.tsx
+            EventosModeloList.tsx
+          lib/
+            modeloMessages.ts
+          schemas/
+            modeloSchema.ts
+          types/
+            modeloTypes.ts
+        usuarios/                   ← CRUD de usuários (ADMIN)
           api/
             usuariosApi.ts
           hooks/
             useUsuarios.ts
+            useUsuario.ts
             useCriarUsuario.ts
             useEditarUsuario.ts
+            useAtivarUsuario.ts
+            useDesativarUsuario.ts
+            useExcluirUsuario.ts
+            useAlterarPerfilUsuario.ts
+            useRedefinirSenhaUsuario.ts
+            usuariosKeys.ts
           pages/
             UsuariosPage.tsx
+            NovoUsuarioPage.tsx
+            EditarUsuarioPage.tsx
           components/
             UsuarioForm.tsx
-            UsuarioTable.tsx
+            UsuariosTable.tsx
+            UsuariosFilters.tsx
+            UsuarioStatusBadge.tsx
+            UsuarioPerfilBadge.tsx
+            UsuarioActionsMenu.tsx
+            DeleteUsuarioDialog.tsx
+          lib/
+            usuarioMessages.ts
           schemas/
             usuarioSchema.ts
           types/
             usuarioTypes.ts
-
-    styles/
-      globals.css
 ```
 
 ---
@@ -533,7 +547,7 @@ export function canManageModelos(perfil: PerfilUsuario) {
 
 ---
 
-## 11. Rotas recomendadas
+## 11. Rotas
 
 Rotas públicas:
 
@@ -541,20 +555,34 @@ Rotas públicas:
 /login
 ```
 
-Rotas privadas:
+Rotas privadas (qualquer perfil autenticado):
 
 ```txt
-/app
+/app/dashboard
+/app/perfil
 /app/solicitacoes
 /app/solicitacoes/nova
 /app/solicitacoes/:id
-/app/modelos
-/app/modelos/novo
-/app/modelos/:id
-/app/admin/usuarios
+/app/modelos              ← catálogo de modelos (read-only)
 ```
 
-Rotas admin devem ser visíveis apenas para usuários com perfil `ADMINISTRADOR`.
+Rotas de gestão de modelos (`ModeloManagementRoute` — GESTOR + ADMINISTRADOR):
+
+```txt
+/app/admin/modelos
+/app/admin/modelos/novo
+/app/admin/modelos/:id
+/app/admin/modelos/:id/editar
+```
+
+Rotas de administração (`AdminRoute` — somente ADMINISTRADOR):
+
+```txt
+/app/admin               ← dashboard admin
+/app/admin/usuarios
+/app/admin/usuarios/novo
+/app/admin/usuarios/:id/editar
+```
 
 ---
 
@@ -679,17 +707,17 @@ Exemplos:
 
 ```txt
 Button
-Input
-Select
-Textarea
-Modal
-DataTable
-PageHeader
-LoadingState
+Combobox
+ConfirmDialog
 EmptyState
 ErrorState
-ConfirmDialog
-StatusBadge
+Input
+LoadingState
+PageHeader
+Pagination
+Select
+Textarea
+ThemeToggle
 ```
 
 Componentes específicos ficam dentro da feature.
@@ -736,7 +764,7 @@ export function isSolicitacaoEmValidacao(status: StatusSolicitacao) {
 
 ## 18. ESLint, Prettier e qualidade
 
-O projeto deve possuir scripts:
+O projeto possui os seguintes scripts:
 
 ```json
 {
@@ -745,20 +773,18 @@ O projeto deve possuir scripts:
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "eslint .",
-    "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build"
+    "test:coverage": "vitest run --coverage",
+    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build",
+    "validate": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   }
 }
 ```
 
-Antes de abrir Pull Request, o comando abaixo deve passar:
-
-```bash
-npm run check
-```
+- `check` — ciclo rápido (sem coverage), ideal para desenvolvimento ativo.
+- `validate` — pipeline completo com coverage 95%; obrigatório antes de abrir PR.
 
 ---
 
@@ -824,18 +850,7 @@ Cada PR deve ter escopo pequeno.
 
 Evitar PRs com muitas features misturadas.
 
-Ordem recomendada:
-
-```txt
-1. chore/frontend-base-setup
-2. feature/auth-flow
-3. feature/solicitacoes-list
-4. feature/solicitacao-detail
-5. feature/solicitacao-actions
-6. feature/evidencias
-7. feature/modelos
-8. feature/admin-usuarios
-```
+PRs sempre vão para `develop`. Usar `gh pr create --base develop`.
 
 ---
 
@@ -950,117 +965,3 @@ Uma tarefa só deve ser considerada concluída quando:
 ```
 
 ---
-
-## 25. Ordem inicial de implementação
-
-O agente deve seguir esta ordem:
-
-### Etapa 1 — Base
-
-```txt
-- Conferir estrutura Vite React TS.
-- Configurar aliases.
-- Configurar ESLint/Prettier.
-- Configurar Router.
-- Configurar TanStack Query.
-- Criar AppProviders.
-- Criar layouts básicos.
-- Criar httpClient.
-- Criar env.ts.
-```
-
-### Etapa 2 — Auth
-
-```txt
-- Criar authApi.
-- Criar LoginPage.
-- Criar useLogin.
-- Criar AuthProvider.
-- Criar PrivateRoute.
-- Criar logout.
-- Guardar tokens.
-```
-
-### Etapa 3 — Solicitações
-
-```txt
-- Criar types base.
-- Criar solicitacoesApi.
-- Criar useSolicitacoes.
-- Criar SolicitacoesPage.
-- Criar filtro por status.
-- Criar detalhe da solicitação.
-- Criar criação de solicitação.
-```
-
-### Etapa 4 — Ações da solicitação
-
-```txt
-- Triar.
-- Enviar para validação.
-- Devolver.
-- Encerrar.
-- Comentar.
-- Atualizar cache após mutations.
-```
-
-### Etapa 5 — Evidências
-
-```txt
-- Listar evidências.
-- Upload de evidência.
-- Preview.
-- Validação de arquivo.
-```
-
-### Etapa 6 — Modelos
-
-```txt
-- Listar modelos.
-- Criar modelo.
-- Editar modelo.
-- Detalhar modelo.
-- Foto de capa.
-```
-
-### Etapa 7 — Admin
-
-```txt
-- Usuários.
-- Máquinas.
-- Prestadores externos.
-- Ações administrativas.
-```
-
----
-
-## 26. Restrições para o agente
-
-O agente não deve:
-
-```txt
-- Criar endpoint que não existe no swagger.json.
-- Alterar arquitetura sem justificar.
-- Misturar features diferentes no mesmo PR.
-- Colocar regra de negócio complexa dentro de componente visual.
-- Usar any sem justificativa.
-- Fazer fetch diretamente em pages.
-- Espalhar localStorage pelo código.
-- Ignorar erros HTTP.
-- Criar dependência nova sem necessidade.
-- Fazer refatoração ampla junto com feature.
-```
-
----
-
-## 27. Resultado esperado
-
-O resultado esperado é um front-end profissional, modular e sustentável, capaz de evoluir junto com o backend RGM.
-
-O projeto deve ser simples o suficiente para manter, mas organizado o suficiente para não virar código descartável.
-
-```
-
-Esse arquivo já serve bem como “contrato de trabalho” para o agente.  
-O próximo markdown útil seria um `docs/agent-tasks.md`, com a ordem exata dos prompts/tarefas para ele executar em branches pequenas.
-```
