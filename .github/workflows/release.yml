@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           fetch-depth: 0
@@ -86,7 +86,7 @@ jobs:
             type=raw,value=${{ steps.get_version.outputs.version }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
