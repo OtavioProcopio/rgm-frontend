@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ImageOff, Star, X, ZoomIn } from 'lucide-react';
+import { Check, ImageOff, Pencil, Star, Trash2, X, ZoomIn } from 'lucide-react';
 
-import { Button } from '@/shared/components/Button/Button';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
+import { cn } from '@/shared/lib/cn';
 
 import type { FotoGaleria } from '../types/galeriaTypes';
 
@@ -39,20 +39,25 @@ export function GaleriaFotoCard({
     setEditing(false);
   }
 
+  function handleCancelarEdicao() {
+    setEditing(false);
+    setIdentificacao(foto.identificacao);
+  }
+
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <div className="group/card overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
       <div className="relative">
         {!imgError ? (
           <button
             type="button"
             onClick={() => setLightboxOpen(true)}
-            className="group block h-40 w-full focus:outline-none"
+            className="group block h-44 w-full focus:outline-none"
             aria-label={`Ampliar foto: ${foto.identificacao}`}
           >
             <img
               src={foto.publicUrl}
               alt={foto.identificacao}
-              className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
               onError={() => setImgError(true)}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/30">
@@ -63,7 +68,7 @@ export function GaleriaFotoCard({
             </div>
           </button>
         ) : (
-          <div className="flex h-40 w-full items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800/50 dark:text-slate-500">
+          <div className="flex h-44 w-full items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800/50 dark:text-slate-500">
             <ImageOff size={28} />
           </div>
         )}
@@ -73,89 +78,87 @@ export function GaleriaFotoCard({
           </span>
         ) : null}
       </div>
-      <div className="space-y-2 p-3">
+      <div className="flex items-center gap-2 p-3">
         {editing ? (
-          <input
-            autoFocus
-            value={identificacao}
-            onChange={(event) => setIdentificacao(event.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-950 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-          />
+          <>
+            <input
+              autoFocus
+              value={identificacao}
+              onChange={(event) => setIdentificacao(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') handleSalvarIdentificacao();
+                if (event.key === 'Escape') handleCancelarEdicao();
+              }}
+              className="h-8 w-full min-w-0 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-950 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
+            <IconButton
+              label="Salvar identificação"
+              disabled={isSaving}
+              onClick={handleSalvarIdentificacao}
+              className="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+            >
+              <Check size={16} />
+            </IconButton>
+            <IconButton label="Cancelar edição" disabled={isSaving} onClick={handleCancelarEdicao}>
+              <X size={16} />
+            </IconButton>
+          </>
         ) : (
-          <p
-            className="truncate text-sm font-medium text-slate-800 dark:text-slate-100"
-            title={foto.identificacao}
-          >
-            {foto.identificacao}
-          </p>
-        )}
-        {podeGerenciar ? (
-          <div className="flex flex-wrap gap-1.5">
-            {editing ? (
-              <>
-                <Button
-                  variant="secondary"
-                  className="px-2 py-1 text-xs"
-                  disabled={isSaving}
-                  onClick={handleSalvarIdentificacao}
-                >
-                  Salvar
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="px-2 py-1 text-xs"
-                  disabled={isSaving}
-                  onClick={() => {
-                    setEditing(false);
-                    setIdentificacao(foto.identificacao);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEditing(true)}>
-                  Renomear
-                </Button>
+          <>
+            <p
+              className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100"
+              title={foto.identificacao}
+            >
+              {foto.identificacao}
+            </p>
+            {podeGerenciar ? (
+              <div className="flex shrink-0 items-center gap-1">
+                <IconButton label="Renomear foto" onClick={() => setEditing(true)}>
+                  <Pencil size={15} />
+                </IconButton>
                 {!foto.principal ? (
-                  <Button
-                    variant="ghost"
-                    className="px-2 py-1 text-xs"
+                  <IconButton
+                    label="Definir capa"
                     disabled={isSaving}
                     onClick={onDefinirCapa}
                   >
-                    Definir capa
-                  </Button>
+                    <Star size={15} />
+                  </IconButton>
                 ) : null}
-                <Button
-                  variant="ghost"
-                  className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                <IconButton
+                  label="Remover foto"
                   disabled={isRemoving}
                   onClick={() => setShowConfirmRemover(true)}
+                  className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                 >
-                  Remover
-                </Button>
-              </>
-            )}
-          </div>
-        ) : null}
+                  <Trash2 size={15} />
+                </IconButton>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
 
       {showConfirmRemover ? (
-        <div className="border-t border-slate-200 p-3 dark:border-slate-700">
-          <ConfirmDialog
-            title="Remover foto"
-            message="Esta foto será removida permanentemente da galeria. Deseja continuar?"
-            confirmLabel="Remover"
-            variant="danger"
-            isPending={isRemoving}
-            onCancel={() => setShowConfirmRemover(false)}
-            onConfirm={() => {
-              onRemover();
-              setShowConfirmRemover(false);
-            }}
-          />
+        <div
+          role="presentation"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => setShowConfirmRemover(false)}
+        >
+          <div className="w-full max-w-sm" onClick={(event) => event.stopPropagation()}>
+            <ConfirmDialog
+              title="Remover foto"
+              message="Esta foto será removida permanentemente da galeria. Deseja continuar?"
+              confirmLabel="Remover"
+              variant="danger"
+              isPending={isRemoving}
+              onCancel={() => setShowConfirmRemover(false)}
+              onConfirm={() => {
+                onRemover();
+                setShowConfirmRemover(false);
+              }}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -184,5 +187,35 @@ export function GaleriaFotoCard({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function IconButton({
+  label,
+  disabled,
+  onClick,
+  className,
+  children,
+}: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800',
+        className,
+      )}
+    >
+      {children}
+    </button>
   );
 }
