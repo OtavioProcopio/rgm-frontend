@@ -1,7 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Camera, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
@@ -20,7 +18,7 @@ type ModeloFormProps =
   | {
       mode: 'create';
       isSubmitting?: boolean;
-      onSubmit: (data: CriarModeloRequest, photo: File | null) => Promise<void>;
+      onSubmit: (data: CriarModeloRequest) => Promise<void>;
     }
   | {
       mode: 'edit';
@@ -34,17 +32,10 @@ export function ModeloForm(props: ModeloFormProps) {
   return <CriarModeloForm {...props} />;
 }
 
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
-
 function CriarModeloForm({
   isSubmitting,
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'create' }>) {
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions();
 
   const {
@@ -57,45 +48,10 @@ function CriarModeloForm({
     defaultValues: { codigo: '', descricao: '', observacoes: '', maquina: '' },
   });
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPhotoError(null);
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setPhotoError('Apenas imagens nos formatos JPG, PNG ou WEBP são permitidas.');
-      return;
-    }
-
-    if (file.size > MAX_SIZE_BYTES) {
-      setPhotoError('A imagem deve ter no máximo 10 MB.');
-      return;
-    }
-
-    setPhoto(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function handleRemovePhoto() {
-    setPhoto(null);
-    setPhotoPreview(null);
-    setPhotoError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }
-
   return (
     <form
       className="space-y-5"
-      onSubmit={handleSubmit((data) =>
-        onSubmit({ ...data, observacoes: data.observacoes || undefined }, photo),
-      )}
+      onSubmit={handleSubmit((data) => onSubmit({ ...data, observacoes: data.observacoes || undefined }))}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
@@ -126,69 +82,6 @@ function CriarModeloForm({
         {...register('descricao')}
       />
       <TextArea label="Observações" disabled={isSubmitting} register={register('observacoes')} />
-
-      {/* Upload Foto de Capa (Opcional) */}
-      <div className="space-y-2">
-        <span className="block text-sm font-medium text-slate-850 dark:text-slate-100">
-          Foto de capa (Opcional)
-        </span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPTED_IMAGE_TYPES.join(',')}
-          onChange={handlePhotoChange}
-          disabled={isSubmitting}
-          className="hidden"
-        />
-        {!photoPreview ? (
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isSubmitting}
-            className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-350 bg-slate-50/50 py-6 px-4 text-center hover:bg-slate-50 transition-colors focus:outline-none dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900 cursor-pointer"
-          >
-            <div className="rounded-full bg-slate-100 p-2 text-slate-500 dark:bg-slate-850 dark:text-slate-400">
-              <Camera size={20} />
-            </div>
-            <span className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-              Clique para selecionar uma foto
-            </span>
-            <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Formatos suportados: JPG, PNG ou WEBP até 10 MB
-            </span>
-          </button>
-        ) : (
-          <div className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-3">
-              <div className="h-16 w-16 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
-                <img
-                  src={photoPreview}
-                  alt="Preview da foto do modelo"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                  {photo?.name}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {(photo!.size / (1024 * 1024)).toFixed(2)} MB
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                disabled={isSubmitting}
-                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
-                title="Remover foto"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        )}
-        {photoError && <p className="text-sm text-red-600 dark:text-red-400">{photoError}</p>}
-      </div>
 
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Salvando...' : 'Salvar modelo'}

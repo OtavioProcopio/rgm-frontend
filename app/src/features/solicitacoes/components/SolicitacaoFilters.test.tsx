@@ -32,7 +32,7 @@ describe('SolicitacaoFilters', () => {
   it('shows modelo filter when modelos are available', async () => {
     const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({
-      data: { content: [{ id: 'm1', codigo: 'M01', descricao: '', maquina: 'X', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
+      data: { content: [{ id: 'm1', codigo: 'M01', descricao: '', maquina: 'X', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
     } as unknown as ReturnType<typeof useModelos>);
 
     const { container } = render(

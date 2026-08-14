@@ -5,7 +5,6 @@ import type {
   CriarModeloRequest,
   EditarModeloRequest,
   EventoModelo,
-  FotoCapaUploadRequest,
   Modelo,
   ModelosFilters,
 } from '../types/modeloTypes';
@@ -20,15 +19,6 @@ export const modelosApi = {
     httpClient.put<Modelo>(`/modelos/${id}`, payload),
   desativar: (id: string) => httpClient.patch<Modelo>(`/modelos/${id}/desativar`),
   ativar: (id: string) => httpClient.patch<Modelo>(`/modelos/${id}/ativar`),
-  uploadFotoCapa: (id: string, file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return httpClient.post<Modelo>(`/modelos/${id}/foto-capa`, formData);
-  },
-  usarEvidenciaComoFotoCapa: (id: string, evidenciaId: string) =>
-    httpClient.patch<Modelo>(`/modelos/${id}/foto-capa`, {
-      evidenciaId,
-    } satisfies FotoCapaUploadRequest),
   excluir: (id: string) =>
     httpClient.delete<void>('/admin/registros', {
       tipoRecurso: 'MODELO',

@@ -19,7 +19,7 @@ export function ModelosTable({
             className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
           >
             <div className="flex gap-3">
-              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
+              <ModeloFotoCapa fotoUrl={modelo.fotoCapaUrl} />
               <div>
                 <h2 className="font-semibold text-slate-950 dark:text-white">
                   {modelo.codigo} v{modelo.versao}
@@ -64,7 +64,7 @@ export function ModelosTable({
             {modelos.map((modelo) => (
               <tr key={modelo.id}>
                 <td className="px-4 py-3">
-                  <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
+                  <ModeloFotoCapa fotoUrl={modelo.fotoCapaUrl} />
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-950 dark:text-white">
                   {modelo.codigo}

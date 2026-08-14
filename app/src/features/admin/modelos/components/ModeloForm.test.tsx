@@ -9,7 +9,7 @@ import { ModeloForm } from './ModeloForm';
 
 const baseMockModelo = {
   id: '1', codigo: 'M01', descricao: 'Desc', maquinaId: 'm1',
-  ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '',
+  ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '',
   maquina: 'Injetora', observacoes: null, versao: 1,
   temPendenciaAberta: false,
 };

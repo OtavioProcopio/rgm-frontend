@@ -19,7 +19,7 @@ const baseModelo: Modelo = {
   observacoes: null,
   ativo: true,
   maquina: 'Máquina A',
-  fotoUrl: null,
+  fotoCapaUrl: null,
   temPendenciaAberta: false,
   criadoEm: '2024-01-01T00:00:00',
   atualizadoEm: '2024-01-01T00:00:00',
@@ -88,14 +88,14 @@ describe('ModeloCard', () => {
     expect(link.getAttribute('href')).toBe('/app/admin/modelos/1');
   });
 
-  it('shows initials placeholder when fotoUrl is null', () => {
-    const c = renderCard({ fotoUrl: null });
+  it('shows initials placeholder when fotoCapaUrl is null', () => {
+    const c = renderCard({ fotoCapaUrl: null });
 
     expect(c.getByText('MD')).toBeDefined();
   });
 
-  it('renders image when fotoUrl is provided', () => {
-    const c = renderCard({ fotoUrl: 'https://example.com/foto.jpg' });
+  it('renders image when fotoCapaUrl is provided', () => {
+    const c = renderCard({ fotoCapaUrl: 'https://example.com/foto.jpg' });
 
     const img = c.getByRole('img', { name: 'MDL-001' });
     expect(img.getAttribute('src')).toBe('https://example.com/foto.jpg');

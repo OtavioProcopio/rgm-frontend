@@ -6,11 +6,8 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 
 import { ModeloForm } from '../components/ModeloForm';
-import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
-import { UploadFotoCapaDialog } from '../components/UploadFotoCapaDialog';
 import { useEditarModelo } from '../hooks/useEditarModelo';
 import { useModelo } from '../hooks/useModelo';
-import { useUploadFotoCapa } from '../hooks/useUploadFotoCapa';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { EditarModeloRequest } from '../types/modeloTypes';
 
@@ -19,7 +16,6 @@ export function EditarModeloPage() {
   const navigate = useNavigate();
   const { data: modelo, error, isLoading } = useModelo(id);
   const editarModelo = useEditarModelo();
-  const uploadFoto = useUploadFotoCapa();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(payload: EditarModeloRequest) {
@@ -27,17 +23,7 @@ export function EditarModeloPage() {
     setErrorMessage(null);
     try {
       await editarModelo.mutateAsync({ id, payload });
-      navigate('/app/admin/modelos');
-    } catch (mutationError) {
-      setErrorMessage(getModeloErrorMessage(mutationError));
-    }
-  }
-
-  async function handleUpload(file: File) {
-    if (!id) return;
-    setErrorMessage(null);
-    try {
-      await uploadFoto.mutateAsync({ id, file });
+      navigate(`/app/admin/modelos/${id}`);
     } catch (mutationError) {
       setErrorMessage(getModeloErrorMessage(mutationError));
     }
@@ -67,17 +53,13 @@ export function EditarModeloPage() {
         </div>
       ) : null}
       {modelo ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
+        <div className="max-w-2xl">
           <ModeloForm
             mode="edit"
             modelo={modelo}
             isSubmitting={editarModelo.isPending}
             onSubmit={handleSubmit}
           />
-          <aside className="space-y-4">
-            <ModeloFotoCapa fotoUrl={modelo.fotoUrl} />
-            <UploadFotoCapaDialog isUploading={uploadFoto.isPending} onUpload={handleUpload} />
-          </aside>
         </div>
       ) : null}
     </section>
