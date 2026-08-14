@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Images, Plus, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
@@ -7,12 +7,15 @@ import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 
 import { AdicionarFotoGaleriaForm } from './AdicionarFotoGaleriaForm';
-import { GaleriaFotoCard } from './GaleriaFotoCard';
+import { GaleriaCarousel } from './GaleriaCarousel';
+import { GaleriaFotoThumb } from './GaleriaFotoThumb';
 import { useAdicionarFotoGaleria } from '../hooks/useAdicionarFotoGaleria';
 import { useEditarFotoGaleria } from '../hooks/useEditarFotoGaleria';
 import { useGaleriaModelo } from '../hooks/useGaleriaModelo';
 import { useRemoverFotoGaleria } from '../hooks/useRemoverFotoGaleria';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
+
+const PREVIEW_COUNT = 4;
 
 type Props = {
   modeloId: string;
@@ -27,6 +30,7 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingFotoId, setPendingFotoId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState<number | null>(null);
 
   async function handleAdicionar(file: File, identificacao: string) {
     setActionError(null);
@@ -75,6 +79,7 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
   }
 
   const temFotos = !!fotos && fotos.length > 0;
+  const extras = fotos && fotos.length > PREVIEW_COUNT ? fotos.length - PREVIEW_COUNT : 0;
 
   return (
     <div className="space-y-4">
@@ -88,21 +93,29 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
           description={getModeloErrorMessage(error)}
         />
       ) : null}
+
       {temFotos ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {fotos.map((foto) => (
-            <GaleriaFotoCard
-              key={foto.id}
-              foto={foto}
-              podeGerenciar={podeGerenciar}
-              isSaving={pendingFotoId === foto.id && editarFoto.isPending}
-              isRemoving={pendingFotoId === foto.id && removerFoto.isPending}
-              onDefinirCapa={() => handleDefinirCapa(foto.id)}
-              onRenomear={(identificacao) => handleRenomear(foto.id, identificacao)}
-              onRemover={() => handleRemover(foto.id)}
-            />
-          ))}
-          {podeGerenciar ? <AdicionarFotoTile onClick={() => setShowAddModal(true)} /> : null}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {fotos.slice(0, PREVIEW_COUNT).map((foto, i) => (
+              <GaleriaFotoThumb
+                key={foto.id}
+                foto={foto}
+                overlayCount={i === PREVIEW_COUNT - 1 ? extras : undefined}
+                onClick={() => setCarouselIndex(i)}
+              />
+            ))}
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setCarouselIndex(0)}>
+              <Images size={16} className="mr-1.5 -ml-0.5" /> Ver galeria completa
+            </Button>
+            {podeGerenciar ? (
+              <Button onClick={() => setShowAddModal(true)}>
+                <Plus size={16} className="mr-1.5 -ml-0.5" /> Adicionar foto
+              </Button>
+            ) : null}
+          </div>
         </div>
       ) : !isLoading ? (
         <EmptyState
@@ -155,19 +168,21 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
           </div>
         </div>
       ) : null}
-    </div>
-  );
-}
 
-function AdicionarFotoTile({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition-colors hover:border-sky-400 hover:bg-sky-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:bg-sky-950/30 dark:hover:text-sky-400"
-    >
-      <Plus size={24} />
-      <span className="text-sm font-medium">Adicionar foto</span>
-    </button>
+      {carouselIndex !== null && temFotos ? (
+        <GaleriaCarousel
+          fotos={fotos}
+          initialIndex={carouselIndex}
+          podeGerenciar={podeGerenciar}
+          pendingFotoId={pendingFotoId}
+          isSavingGlobal={editarFoto.isPending}
+          isRemovingGlobal={removerFoto.isPending}
+          onDefinirCapa={handleDefinirCapa}
+          onRenomear={handleRenomear}
+          onRemover={handleRemover}
+          onClose={() => setCarouselIndex(null)}
+        />
+      ) : null}
+    </div>
   );
 }
