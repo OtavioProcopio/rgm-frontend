@@ -14,6 +14,16 @@ const baseMockModelo = {
   temPendenciaAberta: false,
 };
 
+vi.mock('../hooks/useMaquinas', () => ({
+  useMaquinas: vi.fn().mockReturnValue({
+    data: [
+      { id: 'm1', nome: 'FBOX', ativo: true, criadoEm: '', atualizadoEm: '' },
+      { id: 'm2', nome: 'Injetora', ativo: true, criadoEm: '', atualizadoEm: '' },
+    ],
+    isLoading: false,
+  }),
+}));
+
 afterEach(cleanup);
 
 describe('ModeloForm', () => {
@@ -35,7 +45,7 @@ describe('ModeloForm', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const { container } = render(<ModeloForm mode="create" onSubmit={onSubmit} />);
     await userEvent.type(within(container).getByLabelText(/código/i), 'M99');
-    await userEvent.type(within(container).getByLabelText(/máquina/i), 'Injetora X');
+    await userEvent.selectOptions(within(container).getByLabelText(/máquina/i), 'FBOX');
     await userEvent.type(within(container).getByLabelText(/descrição/i), 'Teste desc');
     await userEvent.click(within(container).getByRole('button', { name: /salvar modelo/i }));
     expect(onSubmit).toHaveBeenCalled();
@@ -48,5 +58,28 @@ describe('ModeloForm', () => {
     );
     await userEvent.click(within(container).getByRole('button', { name: /salvar modelo/i }));
     expect(onSubmit).toHaveBeenCalled();
+  });
+
+  it('lists machines from the catalog instead of a free text field', () => {
+    const { container } = render(<ModeloForm mode="create" onSubmit={vi.fn()} />);
+    const select = within(container).getByLabelText(/máquina/i);
+    expect(select.tagName).toBe('SELECT');
+    expect(within(select).getByRole('option', { name: 'FBOX' })).toBeDefined();
+    expect(within(select).getByRole('option', { name: 'Injetora' })).toBeDefined();
+  });
+
+  it('keeps the current machine selected when editing, even if it is no longer in the active catalog', () => {
+    const { container } = render(
+      <ModeloForm
+        mode="edit"
+        modelo={{ ...baseMockModelo, maquina: 'Prensa Antiga' }}
+        onSubmit={vi.fn()}
+      />,
+    );
+    const select = within(container).getByLabelText<HTMLSelectElement>(/máquina/i);
+    expect(select.value).toBe('Prensa Antiga');
+    expect(
+      within(select).getByRole('option', { name: /prensa antiga.*fora do catálogo/i }),
+    ).toBeDefined();
   });
 });
