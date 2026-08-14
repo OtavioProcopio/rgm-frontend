@@ -17,11 +17,12 @@ describe('AdminDashboardPage', () => {
     expect(within(container).getByText(/painel administrativo/i)).toBeDefined();
   });
 
-  it('renders Usuários and Modelos cards', () => {
+  it('renders Usuários, Modelos and Máquinas cards', () => {
     const { container } = render(
       <MemoryRouter><AdminDashboardPage /></MemoryRouter>,
     );
     expect(within(container).getByText('Usuários')).toBeDefined();
     expect(within(container).getByText('Modelos')).toBeDefined();
+    expect(within(container).getByText('Máquinas')).toBeDefined();
   });
 });
