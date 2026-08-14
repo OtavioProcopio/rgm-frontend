@@ -58,7 +58,7 @@ export function SolicitacoesPage() {
         title="Solicitações"
         description="Gerencie as solicitações de manutenção."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
               <button
                 type="button"

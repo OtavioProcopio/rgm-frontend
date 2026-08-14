@@ -249,7 +249,7 @@ export function KanbanBoard({ modeloId }: Props) {
                 type="button"
                 onClick={() => setActiveTab(col.status)}
                 className={cn(
-                  'flex min-w-0 flex-1 flex-col items-center border-b-2 px-2 py-2.5 text-center transition-colors',
+                  'flex shrink-0 flex-col items-center border-b-2 px-4 py-2.5 text-center transition-colors',
                   isActive
                     ? cn('border-b-2', TAB_ACCENT[col.status])
                     : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200',
@@ -263,7 +263,7 @@ export function KanbanBoard({ modeloId }: Props) {
                 >
                   {count}
                 </span>
-                <span className="mt-0.5 truncate text-xs font-medium">{col.label}</span>
+                <span className="mt-0.5 whitespace-nowrap text-xs font-medium">{col.label}</span>
               </button>
             );
           })}
