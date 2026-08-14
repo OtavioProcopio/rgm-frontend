@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Camera, X } from 'lucide-react';
 
@@ -7,7 +7,7 @@ import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
 
-import { useMaquinas } from '../hooks/useMaquinas';
+import { useMaquinaOptions } from '../hooks/useMaquinaOptions';
 import {
   criarModeloSchema,
   editarModeloSchema,
@@ -15,28 +15,6 @@ import {
   type EditarModeloFormData,
 } from '../schemas/modeloSchema';
 import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/modeloTypes';
-
-/**
- * Opções de máquina/encaixe a partir do catálogo (GET /api/maquinas).
- * Mantém a máquina atual visível mesmo se estiver desativada ou fora do
- * catálogo, para não perder/alterar o dado ao editar um modelo existente.
- */
-function useMaquinaOptions(currentValue?: string) {
-  const { data: maquinas, isLoading } = useMaquinas();
-
-  const options = useMemo(() => {
-    const ativas = (maquinas ?? []).filter((m) => m.ativo);
-    const opts = ativas.map((m) => ({ value: m.nome, label: m.nome }));
-
-    if (currentValue && !ativas.some((m) => m.nome === currentValue)) {
-      opts.push({ value: currentValue, label: `${currentValue} (fora do catálogo)` });
-    }
-
-    return opts;
-  }, [maquinas, currentValue]);
-
-  return { options, isLoading };
-}
 
 type ModeloFormProps =
   | {
