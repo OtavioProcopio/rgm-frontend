@@ -82,7 +82,7 @@ export function ModeloDetalhePage() {
         title="Detalhe do modelo"
         description="Consulte dados, eventos e a galeria de fotos do modelo."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" disabled={isExporting} onClick={handleExportarFicha}>
               {isExporting ? 'Exportando...' : 'Exportar PDF'}
             </Button>

@@ -227,7 +227,7 @@ export function SolicitacaoDetalhePage() {
         title={isEditing ? 'Editar solicitação' : solicitacao.titulo}
         description={isEditing ? 'Atualize o título e a descrição da solicitação.' : `Aberta em ${criadaEm}`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {isEditing ? (
               <>
                 <Button

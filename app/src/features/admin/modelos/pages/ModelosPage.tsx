@@ -55,7 +55,7 @@ export function ModelosPage() {
         title="Modelos"
         description="Gerencie modelos vinculados às máquinas."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" disabled={isExporting} onClick={handleExportar}>
               {isExporting ? 'Exportando...' : 'Exportar PDF'}
             </Button>
