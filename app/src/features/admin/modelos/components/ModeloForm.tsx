@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useRef, useMemo } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Camera, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { Select } from '@/shared/components/Select/Select';
 
+import { useMaquinas } from '../hooks/useMaquinas';
 import {
   criarModeloSchema,
   editarModeloSchema,
@@ -13,6 +15,28 @@ import {
   type EditarModeloFormData,
 } from '../schemas/modeloSchema';
 import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/modeloTypes';
+
+/**
+ * Opções de máquina/encaixe a partir do catálogo (GET /api/maquinas).
+ * Mantém a máquina atual visível mesmo se estiver desativada ou fora do
+ * catálogo, para não perder/alterar o dado ao editar um modelo existente.
+ */
+function useMaquinaOptions(currentValue?: string) {
+  const { data: maquinas, isLoading } = useMaquinas();
+
+  const options = useMemo(() => {
+    const ativas = (maquinas ?? []).filter((m) => m.ativo);
+    const opts = ativas.map((m) => ({ value: m.nome, label: m.nome }));
+
+    if (currentValue && !ativas.some((m) => m.nome === currentValue)) {
+      opts.push({ value: currentValue, label: `${currentValue} (fora do catálogo)` });
+    }
+
+    return opts;
+  }, [maquinas, currentValue]);
+
+  return { options, isLoading };
+}
 
 type ModeloFormProps =
   | {
@@ -43,8 +67,10 @@ function CriarModeloForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions();
 
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
@@ -100,12 +126,19 @@ function CriarModeloForm({
           disabled={isSubmitting}
           {...register('codigo')}
         />
-        <Input
-          label="Máquina / Encaixe"
-          placeholder="Ex: FBOX, Fast Loop, Vick, Manual"
-          error={errors.maquina?.message}
-          disabled={isSubmitting}
-          {...register('maquina')}
+        <Controller
+          name="maquina"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Máquina / Encaixe"
+              placeholder={maquinasLoading ? 'Carregando máquinas...' : 'Selecione a máquina'}
+              options={maquinaOptions}
+              error={errors.maquina?.message}
+              disabled={isSubmitting || maquinasLoading}
+              {...field}
+            />
+          )}
         />
       </div>
       <Input
@@ -115,7 +148,7 @@ function CriarModeloForm({
         {...register('descricao')}
       />
       <TextArea label="Observações" disabled={isSubmitting} register={register('observacoes')} />
-      
+
       {/* Upload Foto de Capa (Opcional) */}
       <div className="space-y-2">
         <span className="block text-sm font-medium text-slate-850 dark:text-slate-100">
@@ -191,7 +224,12 @@ function EditarModeloForm({
   modelo,
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'edit' }>) {
+  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
+    modelo.maquina,
+  );
+
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
@@ -224,12 +262,19 @@ function EditarModeloForm({
           disabled={isSubmitting}
           {...register('codigo')}
         />
-        <Input
-          label="Máquina / Encaixe"
-          placeholder="Ex: FBOX, Fast Loop, Vick, Manual"
-          error={errors.maquina?.message}
-          disabled={isSubmitting}
-          {...register('maquina')}
+        <Controller
+          name="maquina"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Máquina / Encaixe"
+              placeholder={maquinasLoading ? 'Carregando máquinas...' : 'Selecione a máquina'}
+              options={maquinaOptions}
+              error={errors.maquina?.message}
+              disabled={isSubmitting || maquinasLoading}
+              {...field}
+            />
+          )}
         />
       </div>
       <Input
