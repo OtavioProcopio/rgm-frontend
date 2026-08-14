@@ -14,7 +14,6 @@ const evento = {
   tipo: 'MANUTENCAO',
   descricao: 'Revisão geral',
   estadoModeloDescricao: null,
-  defineFotoCapa: false,
   executadoPorUsuarioId: null,
   solicitacaoRelacionadaId: null,
   criadoEm: '2024-06-01T10:00:00Z',

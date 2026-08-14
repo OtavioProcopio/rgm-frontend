@@ -15,17 +15,8 @@ vi.mock('../hooks/useModelo', () => ({
 vi.mock('../hooks/useEditarModelo', () => ({
   useEditarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
-vi.mock('../hooks/useUploadFotoCapa', () => ({
-  useUploadFotoCapa: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
-}));
 vi.mock('../components/ModeloForm', () => ({
   ModeloForm: () => <div data-testid="modelo-form" />,
-}));
-vi.mock('../components/ModeloFotoCapa', () => ({
-  ModeloFotoCapa: () => <div data-testid="modelo-foto" />,
-}));
-vi.mock('../components/UploadFotoCapaDialog', () => ({
-  UploadFotoCapaDialog: () => null,
 }));
 
 afterEach(cleanup);
@@ -50,7 +41,7 @@ describe('EditarModeloPage', () => {
   it('shows form when modelo is loaded', async () => {
     const { useModelo } = await import('../hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
+      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' },
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useModelo>);
@@ -62,7 +53,7 @@ describe('EditarModeloPage', () => {
   it('links back to modelo details', async () => {
     const { useModelo } = await import('../hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
+      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' },
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useModelo>);

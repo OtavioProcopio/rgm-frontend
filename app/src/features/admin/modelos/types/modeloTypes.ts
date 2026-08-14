@@ -4,7 +4,7 @@ export type Modelo = {
   versao: number;
   descricao: string;
   observacoes: string | null;
-  fotoUrl: string | null;
+  fotoCapaUrl: string | null;
   ativo: boolean;
   maquina: string;
   temPendenciaAberta: boolean;
@@ -19,7 +19,6 @@ export type EventoModelo = {
   titulo: string;
   descricao: string | null;
   estadoModeloDescricao: string | null;
-  defineFotoCapa: boolean;
   executadoPorUsuarioId: string | null;
   solicitacaoRelacionadaId: string | null;
   criadoEm: string;
@@ -48,6 +47,3 @@ export type EditarModeloRequest = {
   maquina: string;
 };
 
-export type FotoCapaUploadRequest = {
-  evidenciaId: string;
-};

@@ -61,7 +61,7 @@ describe('ModelosPage (gestor/operador)', () => {
     vi.mocked(useModelos).mockReturnValue({
       data: {
         content: [
-          { id: '1', codigo: 'M001', descricao: 'Modelo A', ativo: true, versao: 1, maquina: 'Máq1', temPendenciaAberta: false, fotoUrl: null, criadoEm: '', atualizadoEm: '', observacoes: '' },
+          { id: '1', codigo: 'M001', descricao: 'Modelo A', ativo: true, versao: 1, maquina: 'Máq1', temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '', observacoes: '' },
         ],
         page: 0,
         totalPages: 2,

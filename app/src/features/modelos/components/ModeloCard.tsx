@@ -11,9 +11,9 @@ type Props = {
 export function ModeloCard({ modelo, linkBase = '/app/modelos' }: Props) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
-      {modelo.fotoUrl ? (
+      {modelo.fotoCapaUrl ? (
         <img
-          src={modelo.fotoUrl}
+          src={modelo.fotoCapaUrl}
           alt={modelo.codigo}
           className="h-36 w-full object-cover"
         />

@@ -20,7 +20,7 @@ const modelo = (over: Record<string, unknown>) => ({
   versao: 1,
   descricao: 'Molde',
   observacoes: null,
-  fotoUrl: null,
+  fotoCapaUrl: null,
   ativo: true,
   maquina: 'Prensa PH-200',
   temPendenciaAberta: false,

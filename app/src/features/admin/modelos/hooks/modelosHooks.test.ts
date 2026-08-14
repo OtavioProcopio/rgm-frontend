@@ -13,7 +13,6 @@ import { useEditarModelo } from './useEditarModelo';
 import { useEventosModelo } from './useEventosModelo';
 import { useModelo } from './useModelo';
 import { useModelos } from './useModelos';
-import { useUploadFotoCapa } from './useUploadFotoCapa';
 
 vi.mock('../api/modelosApi', () => ({
   modelosApi: {
@@ -24,7 +23,6 @@ vi.mock('../api/modelosApi', () => ({
     editar: vi.fn().mockResolvedValue({ id: '1', codigo: 'M01' }),
     desativar: vi.fn().mockResolvedValue({ id: '1', codigo: 'M01', ativo: false }),
     ativar: vi.fn().mockResolvedValue({ id: '1', codigo: 'M01', ativo: true }),
-    uploadFotoCapa: vi.fn().mockResolvedValue({ id: '1', codigo: 'M01' }),
   },
 }));
 
@@ -97,14 +95,6 @@ describe('useAtivarModelo', () => {
   it('exposes mutate function', () => {
     const { QueryWrapper } = createQueryWrapper();
     const { result } = renderHook(() => useAtivarModelo(), { wrapper: QueryWrapper });
-    expect(typeof result.current.mutateAsync).toBe('function');
-  });
-});
-
-describe('useUploadFotoCapa', () => {
-  it('exposes mutate function', () => {
-    const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useUploadFotoCapa(), { wrapper: QueryWrapper });
     expect(typeof result.current.mutateAsync).toBe('function');
   });
 });

@@ -15,6 +15,7 @@ import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/Solic
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
+import { GaleriaModelo } from '../components/GaleriaModelo';
 import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
@@ -80,7 +81,7 @@ export function ModeloDetalhePage() {
     <section>
       <PageHeader
         title="Detalhe do modelo"
-        description="Consulte dados, eventos e foto de capa do modelo."
+        description="Consulte dados, eventos e a galeria de fotos do modelo."
         actions={
           <div className="flex gap-2">
             <Button variant="secondary" disabled={isExporting} onClick={handleExportarFicha}>
@@ -177,8 +178,18 @@ export function ModeloDetalhePage() {
               ) : null}
             </div>
             <aside>
-              <ModeloFotoCapa fotoUrl={modelo.fotoUrl} className="h-80" />
+              <ModeloFotoCapa fotoUrl={modelo.fotoCapaUrl} className="h-80" />
             </aside>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+              Galeria de fotos
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Fotos de apresentação e estado atual do modelo. Independente do histórico de
+              evidências — marque uma foto como capa para destacá-la nas listagens.
+            </p>
+            {id ? <GaleriaModelo modeloId={id} podeGerenciar={podeGerenciarFoto} /> : null}
           </div>
           <div>
             <h2 className="mb-1 text-lg font-semibold text-slate-950 dark:text-white">

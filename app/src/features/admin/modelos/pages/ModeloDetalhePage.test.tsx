@@ -35,6 +35,9 @@ vi.mock('../components/EventosModeloList', () => ({
 vi.mock('../components/ModeloFotoCapa', () => ({
   ModeloFotoCapa: () => <div />,
 }));
+vi.mock('../components/GaleriaModelo', () => ({
+  GaleriaModelo: () => <div data-testid="galeria-modelo" />,
+}));
 
 afterEach(cleanup);
 

@@ -89,7 +89,7 @@ describe('ModelosPage', () => {
     vi.mocked(useModelos).mockReturnValue({
       data: {
         content: [
-          { id: '1', codigo: 'M01', descricao: 'D', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoUrl: null, criadoEm: '', atualizadoEm: '' },
+          { id: '1', codigo: 'M01', descricao: 'D', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' },
         ],
         page: 0, totalPages: 1, totalElements: 1,
       },
