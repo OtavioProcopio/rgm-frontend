@@ -19,6 +19,9 @@ vi.mock('../api/modelosApi', () => ({
 vi.mock('../hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({ data: undefined, error: null, isLoading: true }),
 }));
+vi.mock('../hooks/useMaquinaOptions', () => ({
+  useMaquinaOptions: vi.fn().mockReturnValue({ options: [], isLoading: false }),
+}));
 vi.mock('../components/ModelosTable', () => ({
   ModelosTable: ({ modelos }: {
     modelos: { id: string; codigo: string; ativo: boolean }[];

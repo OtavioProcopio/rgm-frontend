@@ -46,11 +46,40 @@ describe('ModelosFilters', () => {
       <ModelosFilters
         descricao="My Description"
         maquina="My Machine"
+        maquinaOptions={[{ value: 'My Machine', label: 'My Machine' }]}
         onCodigoChange={vi.fn()}
         onAtivoChange={vi.fn()}
       />,
     );
     expect(within(container).getByDisplayValue('My Description')).toBeDefined();
     expect(within(container).getByDisplayValue('My Machine')).toBeDefined();
+  });
+
+  it('lists machine options from the catalog', () => {
+    const { container } = render(
+      <ModelosFilters
+        maquinaOptions={[
+          { value: 'FBOX', label: 'FBOX' },
+          { value: 'VICK', label: 'VICK' },
+        ]}
+        onCodigoChange={vi.fn()}
+        onAtivoChange={vi.fn()}
+      />,
+    );
+    const select = within(container).getByLabelText(/máquina/i);
+    expect(select.tagName).toBe('SELECT');
+    expect(within(select).getByRole('option', { name: 'FBOX' })).toBeDefined();
+    expect(within(select).getByRole('option', { name: 'VICK' })).toBeDefined();
+  });
+
+  it('disables the machine select while options are loading', () => {
+    const { container } = render(
+      <ModelosFilters
+        maquinaOptionsLoading
+        onCodigoChange={vi.fn()}
+        onAtivoChange={vi.fn()}
+      />,
+    );
+    expect(within(container).getByLabelText<HTMLSelectElement>(/máquina/i).disabled).toBe(true);
   });
 });

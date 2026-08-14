@@ -11,6 +11,9 @@ import { ModelosPage } from './ModelosPage';
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({ data: undefined, error: null, isLoading: true }),
 }));
+vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
+  useMaquinaOptions: vi.fn().mockReturnValue({ options: [], isLoading: false }),
+}));
 
 afterEach(cleanup);
 

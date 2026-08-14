@@ -11,6 +11,7 @@ import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { modelosApi } from '../api/modelosApi';
 import { ModelosFilters } from '../components/ModelosFilters';
 import { ModelosTable } from '../components/ModelosTable';
+import { useMaquinaOptions } from '../hooks/useMaquinaOptions';
 import { useModelos } from '../hooks/useModelos';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 import type { ModelosFilters as ModelosFiltersType } from '../types/modeloTypes';
@@ -20,6 +21,9 @@ const PAGE_SIZE = 20;
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
+  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
+    filters.maquina,
+  );
   const [isExporting, setIsExporting] = useState(false);
 
   async function handleExportar() {
@@ -66,6 +70,8 @@ export function ModelosPage() {
         maquina={filters.maquina}
         descricao={filters.descricao}
         ativo={filters.ativo}
+        maquinaOptions={maquinaOptions}
+        maquinaOptionsLoading={maquinasLoading}
         onCodigoChange={(codigo) => setFilters((current) => ({ ...current, codigo, page: 0 }))}
         onMaquinaChange={(maquina) => setFilters((current) => ({ ...current, maquina, page: 0 }))}
         onDescricaoChange={(descricao) => setFilters((current) => ({ ...current, descricao, page: 0 }))}

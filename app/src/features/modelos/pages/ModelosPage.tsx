@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { ModelosFilters } from '@/features/admin/modelos/components/ModelosFilters';
+import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -22,6 +23,9 @@ export function ModelosPage() {
     descricao?: string;
   }>({ page: 0, size: PAGE_SIZE });
   const { data, error, isLoading } = useModelos(filters);
+  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
+    filters.maquina,
+  );
 
   return (
     <section>
@@ -35,6 +39,8 @@ export function ModelosPage() {
         maquina={filters.maquina}
         descricao={filters.descricao}
         ativo={filters.ativo}
+        maquinaOptions={maquinaOptions}
+        maquinaOptionsLoading={maquinasLoading}
         onCodigoChange={(codigo) => setFilters((f) => ({ ...f, page: 0, codigo }))}
         onMaquinaChange={(maquina) => setFilters((f) => ({ ...f, page: 0, maquina }))}
         onDescricaoChange={(descricao) => setFilters((f) => ({ ...f, page: 0, descricao }))}

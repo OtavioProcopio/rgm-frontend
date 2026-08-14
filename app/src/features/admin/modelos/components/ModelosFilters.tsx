@@ -1,11 +1,15 @@
 import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
 
+type MaquinaOption = { value: string; label: string };
+
 type ModelosFiltersProps = {
   codigo?: string;
   maquina?: string;
   descricao?: string;
   ativo?: boolean;
+  maquinaOptions?: MaquinaOption[];
+  maquinaOptionsLoading?: boolean;
   onCodigoChange: (codigo?: string) => void;
   onMaquinaChange?: (maquina?: string) => void;
   onDescricaoChange?: (descricao?: string) => void;
@@ -22,6 +26,8 @@ export function ModelosFilters({
   codigo,
   maquina,
   descricao,
+  maquinaOptions = [],
+  maquinaOptionsLoading,
   onAtivoChange,
   onCodigoChange,
   onMaquinaChange,
@@ -41,11 +47,13 @@ export function ModelosFilters({
         onChange={(e) => onDescricaoChange?.(e.target.value || undefined)}
         placeholder="Buscar por descrição"
       />
-      <Input
+      <Select
         label="Máquina"
+        options={maquinaOptions}
+        placeholder={maquinaOptionsLoading ? 'Carregando...' : 'Todas'}
+        disabled={maquinaOptionsLoading}
         value={maquina ?? ''}
         onChange={(e) => onMaquinaChange?.(e.target.value || undefined)}
-        placeholder="Buscar por máquina"
       />
       <Select
         label="Status"
