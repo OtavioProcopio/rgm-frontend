@@ -16,7 +16,6 @@ import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
-import { ModeloFotoCapa } from '../components/ModeloFotoCapa';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
@@ -150,36 +149,31 @@ export function ModeloDetalhePage() {
       ) : null}
       {modelo ? (
         <div className="space-y-6">
-          <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
-            <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
-                  {modelo.codigo} v{modelo.versao}
-                </h2>
-                <ModeloStatusBadge ativo={modelo.ativo} />
-              </div>
-              <p className="mt-3 text-slate-700 dark:text-slate-200">{modelo.descricao}</p>
-              <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-                <Detail
-                  label="Máquina / Encaixe"
-                  value={modelo.maquina}
-                />
-                <Detail
-                  label="Pendência aberta"
-                  value={modelo.temPendenciaAberta ? 'Sim' : 'Não'}
-                />
-                <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
-                <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
-              </dl>
-              {modelo.observacoes ? (
-                <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">
-                  {modelo.observacoes}
-                </p>
-              ) : null}
+          <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+                {modelo.codigo} v{modelo.versao}
+              </h2>
+              <ModeloStatusBadge ativo={modelo.ativo} />
             </div>
-            <aside>
-              <ModeloFotoCapa fotoUrl={modelo.fotoCapaUrl} className="h-80" />
-            </aside>
+            <p className="mt-3 text-slate-700 dark:text-slate-200">{modelo.descricao}</p>
+            <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+              <Detail
+                label="Máquina / Encaixe"
+                value={modelo.maquina}
+              />
+              <Detail
+                label="Pendência aberta"
+                value={modelo.temPendenciaAberta ? 'Sim' : 'Não'}
+              />
+              <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
+              <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
+            </dl>
+            {modelo.observacoes ? (
+              <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">
+                {modelo.observacoes}
+              </p>
+            ) : null}
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">

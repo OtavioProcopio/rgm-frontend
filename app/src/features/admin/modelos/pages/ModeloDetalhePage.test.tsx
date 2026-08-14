@@ -32,9 +32,6 @@ vi.mock('../hooks/useAtivarModelo', () => ({
 vi.mock('../components/EventosModeloList', () => ({
   EventosModeloList: () => <div />,
 }));
-vi.mock('../components/ModeloFotoCapa', () => ({
-  ModeloFotoCapa: () => <div />,
-}));
 vi.mock('../components/GaleriaModelo', () => ({
   GaleriaModelo: () => <div data-testid="galeria-modelo" />,
 }));
