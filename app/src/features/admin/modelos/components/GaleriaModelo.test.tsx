@@ -49,14 +49,50 @@ describe('GaleriaModelo', () => {
     expect(within(container).getByText('Parte 1')).toBeDefined();
   });
 
-  it('shows the add-photo form when podeGerenciar is true', () => {
+  it('shows the add-photo tile when podeGerenciar is true', () => {
     const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
     expect(within(container).getByRole('button', { name: /adicionar foto/i })).toBeDefined();
   });
 
-  it('hides the add-photo form when podeGerenciar is false', () => {
+  it('hides the add-photo tile when podeGerenciar is false', () => {
     const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar={false} />);
     expect(within(container).queryByRole('button', { name: /adicionar foto/i })).toBeNull();
+  });
+
+  it('opens the add-photo modal when the tile is clicked, and closes on X', async () => {
+    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+    await userEvent.click(within(container).getByRole('button', { name: /adicionar foto/i }));
+    expect(within(container).getByRole('dialog', { name: /adicionar foto à galeria/i })).toBeDefined();
+
+    await userEvent.click(within(container).getByRole('button', { name: /fechar/i }));
+    expect(within(container).queryByRole('dialog')).toBeNull();
+  });
+
+  it('closes the add-photo modal when cancel is clicked', async () => {
+    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+    await userEvent.click(within(container).getByRole('button', { name: /adicionar foto/i }));
+    await userEvent.click(within(container).getByRole('button', { name: /cancelar/i }));
+    expect(within(container).queryByRole('dialog')).toBeNull();
+  });
+
+  it('submits a new photo and closes the modal on success', async () => {
+    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+    await userEvent.click(within(container).getByRole('button', { name: /^adicionar foto$/i }));
+
+    await userEvent.type(within(container).getByLabelText(/identificação/i), 'Nova foto');
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['a'], 'foto.png', { type: 'image/png' });
+    await userEvent.upload(fileInput, file);
+
+    const submitButtons = within(container).getAllByRole('button', { name: /adicionar foto/i });
+    await userEvent.click(submitButtons[submitButtons.length - 1]);
+
+    expect(adicionarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      file,
+      identificacao: 'Nova foto',
+    });
+    expect(within(container).queryByRole('dialog')).toBeNull();
   });
 
   it('shows empty state when there are no photos', async () => {

@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 
+import { Button } from '@/shared/components/Button/Button';
+import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 
@@ -23,11 +26,13 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
   const removerFoto = useRemoverFotoGaleria();
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingFotoId, setPendingFotoId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   async function handleAdicionar(file: File, identificacao: string) {
     setActionError(null);
     try {
       await adicionarFoto.mutateAsync({ modeloId, file, identificacao });
+      setShowAddModal(false);
     } catch (err) {
       setActionError(getModeloErrorMessage(err));
     }
@@ -69,6 +74,8 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
     }
   }
 
+  const temFotos = !!fotos && fotos.length > 0;
+
   return (
     <div className="space-y-4">
       {actionError ? (
@@ -81,7 +88,7 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
           description={getModeloErrorMessage(error)}
         />
       ) : null}
-      {fotos && fotos.length > 0 ? (
+      {temFotos ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {fotos.map((foto) => (
             <GaleriaFotoCard
@@ -95,15 +102,72 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
               onRemover={() => handleRemover(foto.id)}
             />
           ))}
+          {podeGerenciar ? <AdicionarFotoTile onClick={() => setShowAddModal(true)} /> : null}
         </div>
       ) : !isLoading ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma foto na galeria deste modelo.
-        </p>
+        <EmptyState
+          title="Nenhuma foto na galeria deste modelo"
+          description={
+            podeGerenciar
+              ? 'Adicione fotos para apresentar o estado atual do ferramental.'
+              : undefined
+          }
+        />
       ) : null}
-      {podeGerenciar ? (
-        <AdicionarFotoGaleriaForm isSubmitting={adicionarFoto.isPending} onSubmit={handleAdicionar} />
+      {podeGerenciar && !temFotos ? (
+        <div className="flex justify-center">
+          <Button type="button" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} className="mr-1.5 -ml-0.5" /> Adicionar foto
+          </Button>
+        </div>
+      ) : null}
+
+      {showAddModal ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Adicionar foto à galeria"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-950 dark:text-white">
+                Adicionar foto à galeria
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <AdicionarFotoGaleriaForm
+              isSubmitting={adicionarFoto.isPending}
+              onSubmit={handleAdicionar}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </div>
+        </div>
       ) : null}
     </div>
+  );
+}
+
+function AdicionarFotoTile({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition-colors hover:border-sky-400 hover:bg-sky-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:bg-sky-950/30 dark:hover:text-sky-400"
+    >
+      <Plus size={24} />
+      <span className="text-sm font-medium">Adicionar foto</span>
+    </button>
   );
 }
