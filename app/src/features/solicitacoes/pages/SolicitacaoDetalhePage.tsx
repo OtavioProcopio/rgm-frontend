@@ -384,7 +384,7 @@ export function SolicitacaoDetalhePage() {
                 Modelo (rastreabilidade)
               </p>
               <Link
-                to={`/app/admin/modelos/${modelo.id}`}
+                to={`/app/modelos/${modelo.id}`}
                 className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
               >
                 {modelo.codigo} — {modelo.descricao}

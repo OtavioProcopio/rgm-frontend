@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
 import { statusLabel } from '../lib/solicitacaoMessages';
-import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
+import type { Solicitacao, SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { KPICard } from './DashboardKpiCard';
 
 const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
@@ -56,34 +56,81 @@ function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
   );
 }
 
+function useSolicitacoesTotal(filters: SolicitacoesFilters, enabled: boolean) {
+  return useQuery({
+    queryKey: solicitacoesKeys.list(filters),
+    queryFn: () => solicitacoesApi.listar(filters),
+    enabled,
+    select: (data) => data.totalElements,
+  });
+}
+
 export function PessoalTab() {
   const { data: profile, isLoading: loadingPerfil } = usePerfil();
   const userId = profile?.id;
+  const enabled = Boolean(userId);
 
-  const filtersMinhas = { page: 0, size: 100, abertaPorUsuarioId: userId };
-  const filtersResponsavel = { page: 0, size: 100, responsavelId: userId };
+  const filtersMinhas: SolicitacoesFilters = { page: 0, size: 100, abertaPorUsuarioId: userId };
+  const filtersResponsavel: SolicitacoesFilters = { page: 0, size: 100, responsavelId: userId };
 
-  const { data: minhasPage, isLoading: loadingMinhas } = useQuery({
-    queryKey: solicitacoesKeys.list(filtersMinhas as Parameters<typeof solicitacoesKeys.list>[0]),
-    queryFn: () => solicitacoesApi.listar(filtersMinhas as Parameters<typeof solicitacoesApi.listar>[0]),
-    enabled: Boolean(userId),
-    select: (data) => data.content,
+  const { data: minhasData, isLoading: loadingMinhas } = useQuery({
+    queryKey: solicitacoesKeys.list(filtersMinhas),
+    queryFn: () => solicitacoesApi.listar(filtersMinhas),
+    enabled,
   });
 
-  const { data: responsavelPage, isLoading: loadingResponsavel } = useQuery({
-    queryKey: solicitacoesKeys.list(filtersResponsavel as Parameters<typeof solicitacoesKeys.list>[0]),
-    queryFn: () => solicitacoesApi.listar(filtersResponsavel as Parameters<typeof solicitacoesApi.listar>[0]),
-    enabled: Boolean(userId),
-    select: (data) => data.content,
+  const { data: responsavelData, isLoading: loadingResponsavel } = useQuery({
+    queryKey: solicitacoesKeys.list(filtersResponsavel),
+    queryFn: () => solicitacoesApi.listar(filtersResponsavel),
+    enabled,
   });
 
-  const minhasAbertas = (minhasPage ?? []).filter(isAberta);
-  const souResponsavel = (responsavelPage ?? []).filter(isAberta);
-  const concluidasComoResponsavel = (responsavelPage ?? []).filter(
-    (s) => s.status === 'CONCLUIDA',
+  // Contagens exatas via totalElements da paginação (não via .length de um array
+  // limitado a 100 itens) — ver issue #60: capar em memória sub-contava usuários
+  // com mais de 100 solicitações no histórico.
+  const { data: minhasConcluidas, isLoading: loadingMinhasConcluidas } = useSolicitacoesTotal(
+    { page: 0, size: 1, abertaPorUsuarioId: userId, status: 'CONCLUIDA' },
+    enabled,
+  );
+  const { data: minhasCanceladas, isLoading: loadingMinhasCanceladas } = useSolicitacoesTotal(
+    { page: 0, size: 1, abertaPorUsuarioId: userId, status: 'CANCELADA' },
+    enabled,
+  );
+  const { data: responsavelConcluidas, isLoading: loadingResponsavelConcluidas } = useSolicitacoesTotal(
+    { page: 0, size: 1, responsavelId: userId, status: 'CONCLUIDA' },
+    enabled,
+  );
+  const { data: responsavelCanceladas, isLoading: loadingResponsavelCanceladas } = useSolicitacoesTotal(
+    { page: 0, size: 1, responsavelId: userId, status: 'CANCELADA' },
+    enabled,
   );
 
-  if (loadingPerfil || loadingMinhas || loadingResponsavel) {
+  const minhasAbertas = (minhasData?.content ?? []).filter(isAberta);
+  const souResponsavel = (responsavelData?.content ?? []).filter(isAberta);
+
+  const minhasAbertasCount =
+    minhasData && minhasConcluidas !== undefined && minhasCanceladas !== undefined
+      ? minhasData.totalElements - minhasConcluidas - minhasCanceladas
+      : minhasAbertas.length;
+
+  const souResponsavelCount =
+    responsavelData && responsavelConcluidas !== undefined && responsavelCanceladas !== undefined
+      ? responsavelData.totalElements - responsavelConcluidas - responsavelCanceladas
+      : souResponsavel.length;
+
+  const concluidasComoResponsavelCount =
+    responsavelConcluidas ??
+    (responsavelData?.content ?? []).filter((s) => s.status === 'CONCLUIDA').length;
+
+  if (
+    loadingPerfil ||
+    loadingMinhas ||
+    loadingResponsavel ||
+    loadingMinhasConcluidas ||
+    loadingMinhasCanceladas ||
+    loadingResponsavelConcluidas ||
+    loadingResponsavelCanceladas
+  ) {
     return <LoadingState title="Carregando seu painel pessoal..." />;
   }
 
@@ -93,21 +140,21 @@ export function PessoalTab() {
         <KPICard
           icon={ClipboardList}
           label="Abertas por mim"
-          value={minhasAbertas.length}
+          value={minhasAbertasCount}
           subtext="Em andamento"
           gradient="sky"
         />
         <KPICard
           icon={UserCheck}
           label="Sou responsável"
-          value={souResponsavel.length}
+          value={souResponsavelCount}
           subtext="Atribuídas a mim"
           gradient="amber"
         />
         <KPICard
           icon={CheckCircle2}
           label="Concluídas por mim"
-          value={concluidasComoResponsavel.length}
+          value={concluidasComoResponsavelCount}
           subtext="Como responsável"
           gradient="emerald"
         />

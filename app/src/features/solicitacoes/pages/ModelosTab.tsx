@@ -2,11 +2,13 @@ import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Package, 
 import { useMemo, useState } from 'react';
 
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
+import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { canManageModelos } from '@/shared/lib/permissions';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { useMetricasPorModelo } from '../hooks/useMetricasPorModelo';
@@ -17,7 +19,9 @@ import { KPICard } from './DashboardKpiCard';
 const RANKING_PAGE_SIZE = 10;
 
 export function ModelosTab() {
+  const { user } = useAuth();
   const { data, isLoading, isError } = useModelos({ page: 0, size: 100 });
+  const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
 
   const stats = useMemo(() => {
     const modelos = data?.content ?? [];
@@ -54,7 +58,7 @@ export function ModelosTab() {
           value={stats.total}
           subtext="Modelos cadastrados"
           gradient="sky"
-          onClickPath="/app/admin/modelos"
+          onClickPath={listaModelosPath}
         />
         <KPICard
           icon={CheckCircle2}
