@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
   encerrarSolicitacaoSchema,
@@ -14,11 +15,12 @@ type Props = {
   isPending?: boolean;
   podeConcluir?: boolean;
   onCancel: () => void;
-  onConfirm: (data: EncerrarSolicitacaoFormData) => void;
+  onConfirm: (data: EncerrarSolicitacaoFormData, foto: File | null) => void;
 };
 
 export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, onConfirm }: Props) {
   const [concluir, setConcluir] = useState(podeConcluir);
+  const [foto, setFoto] = useState<File | null>(null);
   const {
     register,
     handleSubmit,
@@ -34,6 +36,10 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
     setValue('concluir', value);
   }
 
+  function onSubmit(data: EncerrarSolicitacaoFormData) {
+    onConfirm(data, concluir ? foto : null);
+  }
+
   return (
     <div
       className={`rounded-md border p-4 text-sm ${
@@ -45,7 +51,7 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
       <h3 className="font-semibold text-slate-900 dark:text-white font-sans">
         {podeConcluir ? 'Encerrar solicitação' : 'Cancelar solicitação'}
       </h3>
-      <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
         {podeConcluir && (
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm">
@@ -74,6 +80,19 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
           error={errors.comentario?.message}
           {...register('comentario')}
         />
+        {concluir ? (
+          <div>
+            <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
+              Foto de conclusão (opcional)
+            </p>
+            <EvidenciaUploader onUpload={setFoto} />
+            {foto ? (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Anexado: {foto.name}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>
             Cancelar

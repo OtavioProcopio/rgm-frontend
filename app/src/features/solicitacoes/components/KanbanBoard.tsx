@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { useAuth } from '@/app/providers/authContext';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
@@ -160,23 +161,43 @@ export function KanbanBoard({ modeloId }: Props) {
     setActionError(null);
   }
 
-  async function handleTriar(data: TriarSolicitacaoRequest) {
+  async function handleTriar(data: TriarSolicitacaoRequest, foto: File | null, nota: string) {
     if (!pendingMove) return;
     setActionError(null);
     try {
       await actions.triar.mutateAsync({ id: pendingMove.card.id, ...data });
+      if (foto) {
+        try {
+          await evidenciasApi.anexar(pendingMove.card.id, foto, {
+            tipo: 'INSTRUCAO_SERVICO',
+            descricao: nota || undefined,
+          });
+        } catch (uploadErr) {
+          console.error('Erro ao anexar evidência de triagem:', uploadErr);
+        }
+      }
       setPendingMove(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
   }
 
-  async function handleEncerrar(data: EncerrarSolicitacaoRequest) {
+  async function handleEncerrar(data: EncerrarSolicitacaoRequest, foto: File | null) {
     if (!pendingMove) return;
     setActionError(null);
     try {
       if (data.concluir) {
         await actions.encerrar.mutateAsync({ id: pendingMove.card.id, ...data });
+        if (foto) {
+          try {
+            await evidenciasApi.anexar(pendingMove.card.id, foto, {
+              tipo: 'CONCLUSAO',
+              descricao: data.comentario,
+            });
+          } catch (uploadErr) {
+            console.error('Erro ao anexar evidência de conclusão:', uploadErr);
+          }
+        }
       } else {
         await actions.cancelar.mutateAsync({ id: pendingMove.card.id, motivo: data.comentario });
       }
@@ -186,11 +207,21 @@ export function KanbanBoard({ modeloId }: Props) {
     }
   }
 
-  async function handleDevolver(data: DevolverSolicitacaoRequest) {
+  async function handleDevolver(data: DevolverSolicitacaoRequest, foto: File | null) {
     if (!pendingMove) return;
     setActionError(null);
     try {
       await actions.devolver.mutateAsync({ id: pendingMove.card.id, ...data });
+      if (foto) {
+        try {
+          await evidenciasApi.anexar(pendingMove.card.id, foto, {
+            tipo: 'DEVOLUCAO',
+            descricao: data.motivo,
+          });
+        } catch (uploadErr) {
+          console.error('Erro ao anexar evidência de devolução:', uploadErr);
+        }
+      }
       setPendingMove(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));

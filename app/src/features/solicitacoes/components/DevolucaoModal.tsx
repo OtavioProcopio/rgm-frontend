@@ -1,9 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
   devolverSolicitacaoSchema,
@@ -13,7 +15,7 @@ import {
 type Props = {
   isPending?: boolean;
   onCancel: () => void;
-  onConfirm: (data: DevolverSolicitacaoFormData) => void;
+  onConfirm: (data: DevolverSolicitacaoFormData, foto: File | null) => void;
 };
 
 const prioridadeOptions = [
@@ -24,9 +26,14 @@ const prioridadeOptions = [
 ];
 
 export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
+  const [foto, setFoto] = useState<File | null>(null);
   const { register, handleSubmit, formState: { errors } } = useForm<DevolverSolicitacaoFormData>({
     resolver: zodResolver(devolverSolicitacaoSchema),
   });
+
+  function onSubmit(data: DevolverSolicitacaoFormData) {
+    onConfirm(data, foto);
+  }
 
   return (
     <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900/60 dark:bg-amber-950/30">
@@ -34,7 +41,7 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
       <p className="mt-1 text-amber-800 dark:text-amber-200">
         A solicitação voltará para EM ANDAMENTO.
       </p>
-      <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
         <Textarea
           label="Motivo da devolução *"
           placeholder="Descreva o motivo da devolução..."
@@ -47,6 +54,17 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
           placeholder="Manter atual"
           {...register('prioridade')}
         />
+        <div>
+          <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
+            Foto do que ainda precisa ser corrigido (opcional)
+          </p>
+          <EvidenciaUploader onUpload={setFoto} />
+          {foto ? (
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Anexado: {foto.name}
+            </p>
+          ) : null}
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>
             Cancelar

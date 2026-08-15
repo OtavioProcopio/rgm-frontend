@@ -122,7 +122,7 @@ export function NovaSolicitacaoPage() {
       // 2. Upload da foto se houver
       if (photo) {
         try {
-          await evidenciasApi.anexar(created.id, photo);
+          await evidenciasApi.anexar(created.id, photo, { tipo: 'ABERTURA' });
         } catch (uploadErr) {
           console.error('Erro ao fazer upload da evidência:', uploadErr);
           // Permite continuar, a solicitação já foi aberta

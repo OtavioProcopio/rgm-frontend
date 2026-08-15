@@ -17,6 +17,8 @@ const makeEvidencia = (overrides: Partial<Evidencia> = {}): Evidencia => ({
   tamanhoBytes: 1024,
   enviadaPorUsuarioId: 'user-1',
   criadaEm: '2024-01-01T00:00:00Z',
+  tipo: 'GERAL',
+  descricao: null,
   ...overrides,
 });
 
