@@ -67,6 +67,12 @@ const TAB_ACCENT: Record<StatusSolicitacao, string> = {
   CANCELADA: 'border-b-red-600 text-red-700 dark:text-red-300',
 };
 
+const NEXT_STATUS: Partial<Record<StatusSolicitacao, StatusSolicitacao>> = {
+  A_FAZER: 'EM_ANDAMENTO',
+  EM_ANDAMENTO: 'EM_VALIDACAO',
+  EM_VALIDACAO: 'CONCLUIDA',
+};
+
 type MoveType = 'triagem' | 'encerramento' | 'devolucao' | 'direct' | null;
 
 function getMoveType(from: StatusSolicitacao, to: StatusSolicitacao): MoveType {
@@ -125,35 +131,43 @@ export function KanbanBoard({ modeloId }: Props) {
     (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
   );
 
-  function handleDrop(toStatus: StatusSolicitacao) {
-    if (!dragging || !canDragCard(dragging)) {
-      setDragging(null);
-      setDragOverStatus(null);
-      return;
-    }
-    const moveType = getMoveType(dragging.status, toStatus);
+  function tryMove(card: Solicitacao, toStatus: StatusSolicitacao): boolean {
+    if (!canDragCard(card)) return false;
+    const moveType = getMoveType(card.status, toStatus);
     // OPERADOR só pode fazer o move 'direct' (EM_ANDAMENTO → EM_VALIDACAO)
-    if (!moveType || (!canManage && moveType !== 'direct')) {
-      setDragging(null);
-      setDragOverStatus(null);
-      return;
-    }
+    if (!moveType || (!canManage && moveType !== 'direct')) return false;
     if (moveType === 'direct') {
-      setPendingMove({ type: 'enviarValidacao', card: dragging });
-      setDragging(null);
-      setDragOverStatus(null);
-      return;
+      setPendingMove({ type: 'enviarValidacao', card });
+      return true;
     }
-    if (moveType === 'triagem') setPendingMove({ type: 'triagem', card: dragging });
+    if (moveType === 'triagem') setPendingMove({ type: 'triagem', card });
     else if (moveType === 'encerramento')
       setPendingMove({
         type: 'encerramento',
-        card: dragging,
-        podeConcluir: dragging.status === 'EM_VALIDACAO',
+        card,
+        podeConcluir: card.status === 'EM_VALIDACAO',
       });
-    else if (moveType === 'devolucao') setPendingMove({ type: 'devolucao', card: dragging });
+    else if (moveType === 'devolucao') setPendingMove({ type: 'devolucao', card });
+    return true;
+  }
+
+  function handleDrop(toStatus: StatusSolicitacao) {
+    if (dragging) tryMove(dragging, toStatus);
     setDragging(null);
     setDragOverStatus(null);
+  }
+
+  function canAdvanceCard(s: Solicitacao): boolean {
+    const next = NEXT_STATUS[s.status];
+    if (!next) return false;
+    if (!canDragCard(s)) return false;
+    const moveType = getMoveType(s.status, next);
+    return !!moveType && (canManage || moveType === 'direct');
+  }
+
+  function handleAdvance(s: Solicitacao) {
+    const next = NEXT_STATUS[s.status];
+    if (next) tryMove(s, next);
   }
 
   function clearPendingMove() {
@@ -309,9 +323,11 @@ export function KanbanBoard({ modeloId }: Props) {
             isInvalidDrop={false}
             mobileView
             canDragCard={canDragCard}
+            canAdvanceCard={canAdvanceCard}
             onDragStart={setDragging}
             onDragOver={setDragOverStatus}
             onDrop={handleDrop}
+            onAdvance={handleAdvance}
           />
         </div>
       </div>
@@ -330,9 +346,11 @@ export function KanbanBoard({ modeloId }: Props) {
               isDropTarget={isDropTarget}
               isInvalidDrop={isInvalidDrop}
               canDragCard={canDragCard}
+              canAdvanceCard={canAdvanceCard}
               onDragStart={setDragging}
               onDragOver={setDragOverStatus}
               onDrop={handleDrop}
+              onAdvance={handleAdvance}
             />
           );
         })}

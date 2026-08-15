@@ -19,9 +19,11 @@ type Props = {
   isInvalidDrop: boolean;
   mobileView?: boolean;
   canDragCard: (s: Solicitacao) => boolean;
+  canAdvanceCard: (s: Solicitacao) => boolean;
   onDragStart: (s: Solicitacao) => void;
   onDragOver: (status: StatusSolicitacao) => void;
   onDrop: (status: StatusSolicitacao) => void;
+  onAdvance: (s: Solicitacao) => void;
 };
 
 export function KanbanColumn({
@@ -31,9 +33,11 @@ export function KanbanColumn({
   isInvalidDrop,
   mobileView = false,
   canDragCard,
+  canAdvanceCard,
   onDragStart,
   onDragOver,
   onDrop,
+  onAdvance,
 }: Props) {
   return (
     <div className={cn('flex flex-col', mobileView ? 'w-full' : 'w-72 shrink-0')}>
@@ -84,7 +88,16 @@ export function KanbanColumn({
             <p className="text-xs text-slate-400 dark:text-slate-600">Nenhuma solicitação</p>
           </div>
         ) : (
-          cards.map((s) => <KanbanCard key={s.id} solicitacao={s} isDraggable={canDragCard(s)} onDragStart={onDragStart} />)
+          cards.map((s) => (
+            <KanbanCard
+              key={s.id}
+              solicitacao={s}
+              isDraggable={canDragCard(s)}
+              canAdvance={canAdvanceCard(s)}
+              onDragStart={onDragStart}
+              onAdvance={onAdvance}
+            />
+          ))
         )}
       </div>
     </div>
