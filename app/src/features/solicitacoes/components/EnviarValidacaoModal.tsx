@@ -32,15 +32,24 @@ export function EnviarValidacaoModal({
   const {
     register,
     handleSubmit,
+    getValues,
+    trigger,
     formState: { errors },
   } = useForm<EnviarParaValidacaoFormData>({
     resolver: zodResolver(enviarParaValidacaoSchema),
   });
 
   async function handleUpload(file: File) {
+    const descricaoValida = await trigger('comentario');
+    if (!descricaoValida) return;
+
     setUploadError(null);
     try {
-      await uploadEvidencia.mutateAsync(file);
+      await uploadEvidencia.mutateAsync({
+        file,
+        tipo: 'SERVICO_REALIZADO',
+        descricao: getValues('comentario'),
+      });
       setEvidenciaAnexada(true);
     } catch {
       setUploadError('Falha ao enviar a evidência. Tente novamente.');
@@ -53,56 +62,61 @@ export function EnviarValidacaoModal({
         Enviar para validação
       </h3>
       <p className="mt-1 text-blue-800 dark:text-blue-200">
-        Anexe uma foto do serviço realizado e descreva o que foi feito.
+        Descreva o serviço realizado e anexe uma foto como evidência.
       </p>
 
-      <div className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
+        <Textarea
+          label="Descrição do serviço realizado *"
+          placeholder="Descreva o que foi feito para resolver o problema..."
+          error={errors.comentario?.message}
+          disabled={evidenciaAnexada}
+          {...register('comentario')}
+        />
+
         <div>
           <p className="mb-2 font-medium text-blue-900 dark:text-blue-100">
             Evidência do serviço realizado{' '}
             <span className="text-red-600 dark:text-red-400">*</span>
           </p>
-          <EvidenciaUploader
-            isPending={uploadEvidencia.isPending}
-            onUpload={handleUpload}
-          />
-          {evidenciaAnexada && (
-            <p className="mt-1 text-xs text-green-700 dark:text-green-400">
+          {evidenciaAnexada ? (
+            <p className="text-xs text-green-700 dark:text-green-400">
               ✓ Evidência anexada com sucesso
             </p>
+          ) : (
+            <>
+              <EvidenciaUploader
+                isPending={uploadEvidencia.isPending}
+                onUpload={handleUpload}
+              />
+              <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                Preencha a descrição antes de anexar a foto.
+              </p>
+            </>
           )}
           {uploadError && (
             <p className="mt-1 text-xs text-red-600 dark:text-red-400">{uploadError}</p>
           )}
         </div>
 
-        <form onSubmit={handleSubmit(onConfirm)} className="space-y-4">
-          <Textarea
-            label="Descrição do serviço realizado *"
-            placeholder="Descreva o que foi feito para resolver o problema..."
-            error={errors.comentario?.message}
-            {...register('comentario')}
-          />
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isPending || uploadEvidencia.isPending}
-              onClick={onCancel}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending || uploadEvidencia.isPending || !evidenciaAnexada}
-              title={!evidenciaAnexada ? 'Anexe uma evidência do serviço realizado' : undefined}
-            >
-              {isPending ? 'Enviando...' : 'Enviar para validação'}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isPending || uploadEvidencia.isPending}
+            onClick={onCancel}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            disabled={isPending || uploadEvidencia.isPending || !evidenciaAnexada}
+            title={!evidenciaAnexada ? 'Anexe uma evidência do serviço realizado' : undefined}
+          >
+            {isPending ? 'Enviando...' : 'Enviar para validação'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

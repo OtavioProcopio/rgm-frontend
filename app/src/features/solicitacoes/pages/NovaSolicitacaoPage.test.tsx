@@ -106,7 +106,7 @@ describe('NovaSolicitacaoPage', () => {
         tipo: 'REPARO',
         modeloId: '1',
       });
-      expect(evidenciasApi.anexar).toHaveBeenCalledWith('sol-123', file);
+      expect(evidenciasApi.anexar).toHaveBeenCalledWith('sol-123', file, { tipo: 'ABERTURA' });
     });
   });
 });

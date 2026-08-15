@@ -1,3 +1,11 @@
+export type TipoEvidencia =
+  | 'GERAL'
+  | 'ABERTURA'
+  | 'INSTRUCAO_SERVICO'
+  | 'SERVICO_REALIZADO'
+  | 'CONCLUSAO'
+  | 'DEVOLUCAO';
+
 export type Evidencia = {
   id: string;
   publicUrl: string;
@@ -6,4 +14,6 @@ export type Evidencia = {
   tamanhoBytes: number;
   enviadaPorUsuarioId: string;
   criadaEm: string;
+  tipo: TipoEvidencia;
+  descricao: string | null;
 };

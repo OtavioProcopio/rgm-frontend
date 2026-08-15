@@ -10,7 +10,7 @@ import { useEvidencias } from './useEvidencias';
 import { useUploadEvidencia } from './useUploadEvidencia';
 
 vi.mock('../api/evidenciasApi', () => {
-  const e = { id: 'e1', publicUrl: 'http://minio/foto.jpg', mimeType: 'image/jpeg', nomeArquivo: 'foto.jpg', tamanhoBytes: 1024, enviadaPorUsuarioId: 'u1', criadaEm: '2024-01-01T00:00:00Z' };
+  const e = { id: 'e1', publicUrl: 'http://minio/foto.jpg', mimeType: 'image/jpeg', nomeArquivo: 'foto.jpg', tamanhoBytes: 1024, enviadaPorUsuarioId: 'u1', criadaEm: '2024-01-01T00:00:00Z', tipo: 'GERAL', descricao: null };
   return { evidenciasApi: { listar: vi.fn().mockResolvedValue([e]), anexar: vi.fn().mockResolvedValue(e) } };
 });
 

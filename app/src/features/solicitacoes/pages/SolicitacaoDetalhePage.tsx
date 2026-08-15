@@ -95,10 +95,21 @@ export function SolicitacaoDetalhePage() {
     (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
   );
 
-  async function handleTriar(data: TriarSolicitacaoRequest) {
+  async function handleTriar(data: TriarSolicitacaoRequest, foto: File | null, nota: string) {
     setActionError(null);
     try {
       await triar.mutateAsync(data);
+      if (foto) {
+        try {
+          await uploadEvidencia.mutateAsync({
+            file: foto,
+            tipo: 'INSTRUCAO_SERVICO',
+            descricao: nota || undefined,
+          });
+        } catch (uploadErr) {
+          console.error('Erro ao anexar evidência de triagem:', uploadErr);
+        }
+      }
       setActiveModal(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
@@ -115,11 +126,22 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
-  async function handleEncerrar(data: EncerrarSolicitacaoRequest) {
+  async function handleEncerrar(data: EncerrarSolicitacaoRequest, foto: File | null) {
     setActionError(null);
     try {
       if (data.concluir) {
         await encerrar.mutateAsync(data);
+        if (foto) {
+          try {
+            await uploadEvidencia.mutateAsync({
+              file: foto,
+              tipo: 'CONCLUSAO',
+              descricao: data.comentario,
+            });
+          } catch (uploadErr) {
+            console.error('Erro ao anexar evidência de conclusão:', uploadErr);
+          }
+        }
       } else {
         await cancelar.mutateAsync({ motivo: data.comentario });
       }
@@ -129,10 +151,21 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
-  async function handleDevolver(data: DevolverSolicitacaoRequest) {
+  async function handleDevolver(data: DevolverSolicitacaoRequest, foto: File | null) {
     setActionError(null);
     try {
       await devolver.mutateAsync(data);
+      if (foto) {
+        try {
+          await uploadEvidencia.mutateAsync({
+            file: foto,
+            tipo: 'DEVOLUCAO',
+            descricao: data.motivo,
+          });
+        } catch (uploadErr) {
+          console.error('Erro ao anexar evidência de devolução:', uploadErr);
+        }
+      }
       setActiveModal(null);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
@@ -170,7 +203,7 @@ export function SolicitacaoDetalhePage() {
   async function handleUpload(file: File) {
     setActionError(null);
     try {
-      await uploadEvidencia.mutateAsync(file);
+      await uploadEvidencia.mutateAsync({ file });
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
