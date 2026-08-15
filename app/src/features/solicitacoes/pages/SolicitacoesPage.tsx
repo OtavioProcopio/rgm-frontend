@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
@@ -25,8 +25,14 @@ type View = 'lista' | 'kanban';
 
 export function SolicitacoesPage() {
   const { user } = useAuth();
-  const [view, setView] = useState<View>('kanban');
-  const [filters, setFilters] = useState<SolicitacoesFilters>({ page: 0, size: PAGE_SIZE });
+  const [searchParams] = useSearchParams();
+  const maquinaFromUrl = searchParams.get('maquina') || undefined;
+  const [view, setView] = useState<View>(maquinaFromUrl ? 'lista' : 'kanban');
+  const [filters, setFilters] = useState<SolicitacoesFilters>({
+    page: 0,
+    size: PAGE_SIZE,
+    maquina: maquinaFromUrl,
+  });
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
   useSolicitacaoEvents();

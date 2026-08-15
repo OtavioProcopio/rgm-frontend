@@ -1,3 +1,4 @@
+import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Select } from '@/shared/components/Select/Select';
 import { Input } from '@/shared/components/Input/Input';
@@ -37,9 +38,14 @@ const prioridadeOptions = [
 
 export function SolicitacaoFilters({ filters, onChange }: Props) {
   const { data: modelosData } = useModelos({ page: 0, size: 100, ativo: true });
+  const { options: maquinaOptions } = useMaquinaOptions(filters.maquina);
 
   const modeloOptions =
     modelosData?.content.map((m) => ({ value: m.id, label: m.codigo })) ?? [];
+
+  function handleMaquinaChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    onChange({ ...filters, page: 0, maquina: e.target.value || undefined });
+  }
 
   function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value as StatusSolicitacao | '';
@@ -115,6 +121,17 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
             placeholder="Todos os modelos"
             value={filters.modeloId ?? ''}
             onChange={handleModeloChange}
+          />
+        </div>
+      )}
+      {maquinaOptions.length > 0 && (
+        <div className="w-full sm:w-56">
+          <Select
+            label="Máquina"
+            options={maquinaOptions}
+            placeholder="Todas as máquinas"
+            value={filters.maquina ?? ''}
+            onChange={handleMaquinaChange}
           />
         </div>
       )}

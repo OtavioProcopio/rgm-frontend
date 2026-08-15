@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Package, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { useAuth } from '@/app/providers/authContext';
@@ -20,8 +21,13 @@ const RANKING_PAGE_SIZE = 10;
 
 export function ModelosTab() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useModelos({ page: 0, size: 100 });
   const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
+
+  function irParaSolicitacoesDaMaquina(maquina: string) {
+    navigate(`/app/solicitacoes?maquina=${encodeURIComponent(maquina)}`);
+  }
 
   const stats = useMemo(() => {
     const modelos = data?.content ?? [];
@@ -104,7 +110,20 @@ export function ModelosTab() {
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {stats.maquinasOrdenadas.map(([maquina, count]) => (
-                  <tr key={maquina} className="bg-white dark:bg-slate-800/50">
+                  <tr
+                    key={maquina}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Ver solicitações da máquina ${maquina}`}
+                    onClick={() => irParaSolicitacoesDaMaquina(maquina)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        irParaSolicitacoesDaMaquina(maquina);
+                      }
+                    }}
+                    className="cursor-pointer bg-white transition-colors hover:bg-sky-50 dark:bg-slate-800/50 dark:hover:bg-sky-950/20"
+                  >
                     <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
                       {maquina}
                     </td>

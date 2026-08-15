@@ -86,13 +86,21 @@ GESTOR/ADMINISTRADOR) e a solicitacao nao esta encerrada para OPERADOR.
 
 ### Requirement: Vista em lista e exportacao
 O sistema SHALL oferecer, alem do quadro Kanban, uma vista em lista paginada
-com filtros (status, modelo), e um botao de exportar PDF que respeita os
-filtros aplicados.
+com filtros (status, modelo, maquina), e um botao de exportar PDF que
+respeita os filtros aplicados. A vista em lista tambem SHALL poder ser
+aberta diretamente ja filtrada por maquina via parametro de URL
+(`?maquina=<nome>`), usado pelo link "Modelos por maquina" do Dashboard.
 
 #### Scenario: Alternar para vista em lista
 - **WHEN** o usuario alterna do quadro Kanban para a vista em lista
 - **THEN** as mesmas solicitacoes sao exibidas paginadas, com filtros por
-  status e modelo disponiveis
+  status, modelo e maquina disponiveis
+
+#### Scenario: Abrir lista pre-filtrada por maquina
+- **WHEN** o usuario acessa `/app/solicitacoes?maquina=<nome>` (por exemplo,
+  clicando numa linha da tabela "Modelos por maquina" no Dashboard)
+- **THEN** a pagina abre diretamente na vista em lista, ja filtrada por
+  aquela maquina
 
 #### Scenario: Exportar PDF com filtros
 - **WHEN** o usuario aciona "Exportar PDF" com filtros aplicados na lista
