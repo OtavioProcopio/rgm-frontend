@@ -16,6 +16,12 @@ vi.mock('../hooks/useMetricasPorModelo', () => ({
   useMetricasPorModelo: vi.fn(),
 }));
 
+const mockNavigate = vi.fn();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
 afterEach(cleanup);
 
 const modelo = (over: Record<string, unknown>) => ({
@@ -78,6 +84,46 @@ describe('ModelosTab', () => {
     expect(within(container).getByText('Modelos por máquina')).toBeDefined();
     expect(within(container).getByText('Prensa PH-200')).toBeDefined();
     expect(within(container).getByText('Torno T-10')).toBeDefined();
+  });
+
+  it('navigates to filtered solicitacoes when a machine row is clicked', async () => {
+    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+    vi.mocked(useModelos).mockReturnValue({
+      data: {
+        content: [modelo({ id: 'm1', maquina: 'Prensa PH-200' })],
+        totalElements: 1,
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useModelos>);
+    await mockRanking();
+    mockNavigate.mockClear();
+
+    const { AppWrapper } = createAppWrapper();
+    const { getByText } = render(<ModelosTab />, { wrapper: AppWrapper });
+
+    fireEvent.click(getByText('Prensa PH-200'));
+    expect(mockNavigate).toHaveBeenCalledWith('/app/solicitacoes?maquina=Prensa%20PH-200');
+  });
+
+  it('navigates to filtered solicitacoes when Enter is pressed on a machine row', async () => {
+    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+    vi.mocked(useModelos).mockReturnValue({
+      data: {
+        content: [modelo({ id: 'm1', maquina: 'Prensa PH-200' })],
+        totalElements: 1,
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useModelos>);
+    await mockRanking();
+    mockNavigate.mockClear();
+
+    const { AppWrapper } = createAppWrapper();
+    const { getByRole } = render(<ModelosTab />, { wrapper: AppWrapper });
+
+    fireEvent.keyDown(getByRole('button', { name: /prensa ph-200/i }), { key: 'Enter' });
+    expect(mockNavigate).toHaveBeenCalledWith('/app/solicitacoes?maquina=Prensa%20PH-200');
   });
 
   it('renders error state', async () => {

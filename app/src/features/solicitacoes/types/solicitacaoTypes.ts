@@ -53,6 +53,7 @@ export type SolicitacoesFilters = {
   criadaEmFim?: string;
   abertaPorUsuarioId?: string;
   responsavelId?: string;
+  maquina?: string;
 };
 
 export type AbrirSolicitacaoRequest = {

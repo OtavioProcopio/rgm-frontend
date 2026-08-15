@@ -93,4 +93,22 @@ describe('SolicitacoesPage', () => {
     const { container } = render(<SolicitacoesPage />, { wrapper: AppWrapper });
     expect(within(container).getByRole('button', { name: /exportar pdf/i })).toBeDefined();
   });
+
+  it('opens directly in lista view filtered by maquina from the URL', async () => {
+    const { useSolicitacoes } = await import('../hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: undefined, error: null, isLoading: true,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+
+    const { AppWrapper } = createAppWrapper({
+      initialEntries: ['/app/solicitacoes?maquina=VICK'],
+    });
+    const { container } = render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    expect(within(container).getByTestId('solicitacao-filters')).toBeDefined();
+    expect(useSolicitacoes).toHaveBeenCalledWith(
+      expect.objectContaining({ maquina: 'VICK' }),
+      expect.anything(),
+    );
+  });
 });
