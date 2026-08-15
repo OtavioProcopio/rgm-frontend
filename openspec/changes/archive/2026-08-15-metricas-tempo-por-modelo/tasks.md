@@ -22,4 +22,4 @@
 
 - [x] 4.1 `tsc -b --noEmit`, `eslint .`
 - [x] 4.2 `vitest run --coverage` (>= 95% nos arquivos nao excluidos pela config) — 490/490 testes, 99.4% linhas
-- [ ] 4.3 Rodar `/opsx:archive` ao final, sincronizando `openspec/specs/metricas-dashboard/spec.md` e `openspec/specs/modelos/spec.md` com as mudancas deste change
+- [x] 4.3 Rodar `/opsx:archive` ao final, sincronizando `openspec/specs/metricas-dashboard/spec.md` e `openspec/specs/modelos/spec.md` com as mudancas deste change
