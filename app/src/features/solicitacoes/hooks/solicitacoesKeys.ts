@@ -1,4 +1,4 @@
-import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
+import type { MetricasPorModeloFilters, SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 export const solicitacoesKeys = {
   all: ['solicitacoes'] as const,
@@ -7,4 +7,6 @@ export const solicitacoesKeys = {
   details: () => [...solicitacoesKeys.all, 'detail'] as const,
   detail: (id: string) => [...solicitacoesKeys.details(), id] as const,
   atividades: (id: string) => [...solicitacoesKeys.detail(id), 'atividades'] as const,
+  metricasPorModelo: (filters: MetricasPorModeloFilters) =>
+    [...solicitacoesKeys.all, 'metricas-por-modelo', filters] as const,
 };

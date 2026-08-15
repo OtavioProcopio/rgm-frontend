@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/shared/api/apiError';
 
 import {
+  formatDuracao,
   getSolicitacaoErrorMessage,
   prioridadeLabel,
   statusLabel,
@@ -40,5 +41,17 @@ describe('solicitacaoMessages', () => {
     expect(getSolicitacaoErrorMessage(new Error('qualquer'))).toBe('Ocorreu um erro inesperado.');
     expect(getSolicitacaoErrorMessage('string')).toBe('Ocorreu um erro inesperado.');
     expect(getSolicitacaoErrorMessage(null)).toBe('Ocorreu um erro inesperado.');
+  });
+
+  it('formatDuracao shows hours when under 24h', () => {
+    expect(formatDuracao(3600)).toBe('1h');
+    expect(formatDuracao(7200)).toBe('2h');
+    expect(formatDuracao(0)).toBe('0h');
+  });
+
+  it('formatDuracao shows days and hours when 24h or more', () => {
+    expect(formatDuracao(24 * 3600)).toBe('1d 0h');
+    expect(formatDuracao(25 * 3600)).toBe('1d 1h');
+    expect(formatDuracao(50 * 3600)).toBe('2d 2h');
   });
 });

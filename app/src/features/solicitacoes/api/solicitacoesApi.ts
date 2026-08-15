@@ -12,6 +12,8 @@ import type {
   EncerrarSolicitacaoRequest,
   EnviarParaValidacaoRequest,
   HistoricoMetricas,
+  MetricaPorModelo,
+  MetricasPorModeloFilters,
   MetricasResponse,
   Solicitacao,
   SolicitacoesFilters,
@@ -64,5 +66,13 @@ export const solicitacoesApi = {
 
   exportar: (filters: SolicitacoesFilters) =>
     httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),
+
+  obterMetricasPorModelo: (filters: MetricasPorModeloFilters) =>
+    httpClient.get<PageResponse<MetricaPorModelo>>('/solicitacoes/metricas/por-modelo', {
+      params: filters,
+    }),
+
+  exportarMetricasPorModeloPdf: (filters: Omit<MetricasPorModeloFilters, 'page' | 'size'>) =>
+    httpClient.get<Blob>('/solicitacoes/metricas/por-modelo/pdf', { params: filters }),
 };
 
