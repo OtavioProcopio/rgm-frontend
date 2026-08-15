@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, Eye, Settings2, Wrench } from 'lucide-react';
+import { ArrowRightCircle, ExternalLink, Eye, Settings2, Wrench } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
 
@@ -9,7 +9,9 @@ import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 type Props = {
   solicitacao: Solicitacao;
   isDraggable: boolean;
+  canAdvance: boolean;
   onDragStart: (s: Solicitacao) => void;
+  onAdvance: (s: Solicitacao) => void;
 };
 
 const TIPO_CONFIG: Record<
@@ -105,7 +107,7 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
   );
 }
 
-export function KanbanCard({ solicitacao, isDraggable, onDragStart }: Props) {
+export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, onAdvance }: Props) {
   const tipo = TIPO_CONFIG[solicitacao.tipo];
   const { Icon } = tipo;
   const borderClass = solicitacao.prioridade
@@ -167,14 +169,30 @@ export function KanbanCard({ solicitacao, isDraggable, onDragStart }: Props) {
               prioridade={solicitacao.prioridade}
             />
           </div>
-          <a
-            href={`/app/solicitacoes/${solicitacao.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="flex shrink-0 items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-sky-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:bg-slate-700 dark:text-sky-400 dark:hover:bg-sky-900/30"
-          >
-            Ver
-            <ExternalLink size={10} />
-          </a>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {canAdvance ? (
+              <button
+                type="button"
+                title="Avançar para a próxima etapa"
+                aria-label="Avançar para a próxima etapa"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdvance(solicitacao);
+                }}
+                className="flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+              >
+                <ArrowRightCircle size={12} />
+              </button>
+            ) : null}
+            <a
+              href={`/app/solicitacoes/${solicitacao.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-sky-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:bg-slate-700 dark:text-sky-400 dark:hover:bg-sky-900/30"
+            >
+              Ver
+              <ExternalLink size={10} />
+            </a>
+          </div>
         </div>
       </div>
     </div>

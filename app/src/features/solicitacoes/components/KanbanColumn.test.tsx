@@ -48,9 +48,11 @@ describe('KanbanColumn', () => {
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
+        canAdvanceCard={() => false}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText('A Fazer')).toBeDefined();
@@ -64,9 +66,11 @@ describe('KanbanColumn', () => {
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
+        canAdvanceCard={() => false}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText(/nenhuma solicitação/i)).toBeDefined();
@@ -80,9 +84,11 @@ describe('KanbanColumn', () => {
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
+        canAdvanceCard={() => false}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByTestId('kanban-card')).toBeDefined();
@@ -98,9 +104,11 @@ describe('KanbanColumn', () => {
         isInvalidDrop={false}
         mobileView
         canDragCard={() => true}
+        canAdvanceCard={() => false}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).queryByText('A Fazer')).toBeNull();
@@ -114,9 +122,11 @@ describe('KanbanColumn', () => {
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
+        canAdvanceCard={() => false}
         onDragStart={vi.fn()}
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText('2')).toBeDefined();

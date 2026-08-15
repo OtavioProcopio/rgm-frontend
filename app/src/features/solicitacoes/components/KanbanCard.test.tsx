@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KanbanCard } from './KanbanCard';
@@ -32,7 +32,13 @@ afterEach(cleanup);
 describe('KanbanCard', () => {
   it('renders titulo and tipo', () => {
     const { container } = render(
-      <KanbanCard solicitacao={baseSolicitacao} isDraggable={false} onDragStart={vi.fn()} />,
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
     );
     expect(within(container).getByText('Manutenção da bomba')).toBeDefined();
     expect(within(container).getByText('Reparo')).toBeDefined();
@@ -40,7 +46,13 @@ describe('KanbanCard', () => {
 
   it('renders descricao when present', () => {
     const { container } = render(
-      <KanbanCard solicitacao={baseSolicitacao} isDraggable={false} onDragStart={vi.fn()} />,
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
     );
     expect(within(container).getByText('Trocar vedações')).toBeDefined();
   });
@@ -50,7 +62,9 @@ describe('KanbanCard', () => {
       <KanbanCard
         solicitacao={{ ...baseSolicitacao, prioridade: null }}
         isDraggable={false}
+        canAdvance={false}
         onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText(/sem prioridade/i)).toBeDefined();
@@ -61,7 +75,9 @@ describe('KanbanCard', () => {
       <KanbanCard
         solicitacao={{ ...baseSolicitacao, tipo: 'INSPECAO' }}
         isDraggable={false}
+        canAdvance={false}
         onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText('Inspeção')).toBeDefined();
@@ -72,7 +88,9 @@ describe('KanbanCard', () => {
       <KanbanCard
         solicitacao={{ ...baseSolicitacao, tipo: 'REENGENHARIA' }}
         isDraggable={false}
+        canAdvance={false}
         onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
       />,
     );
     expect(within(container).getByText('Reengenharia')).toBeDefined();
@@ -81,16 +99,58 @@ describe('KanbanCard', () => {
   it('shows age badge for old cards', () => {
     const old = new Date(Date.now() - 10 * 86_400_000).toISOString();
     const { container } = render(
-      <KanbanCard solicitacao={{ ...baseSolicitacao, criadaEm: old }} isDraggable={false} onDragStart={vi.fn()} />,
+      <KanbanCard
+        solicitacao={{ ...baseSolicitacao, criadaEm: old }}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
     );
     expect(within(container).getByText(/\d+d/)).toBeDefined();
   });
 
   it('has draggable attribute', () => {
     const { container } = render(
-      <KanbanCard solicitacao={baseSolicitacao} isDraggable={true} onDragStart={vi.fn()} />,
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={true}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
     );
     const card = container.querySelector('[draggable="true"]')!;
     expect(card).toBeDefined();
+  });
+
+  it('does not render advance button when canAdvance is false', () => {
+    const { container } = render(
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
+    );
+    expect(container.querySelector('[aria-label="Avançar para a próxima etapa"]')).toBeNull();
+  });
+
+  it('renders advance button and calls onAdvance when clicked', () => {
+    const onAdvance = vi.fn();
+    const { container } = render(
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={true}
+        canAdvance={true}
+        onDragStart={vi.fn()}
+        onAdvance={onAdvance}
+      />,
+    );
+    const button = container.querySelector('[aria-label="Avançar para a próxima etapa"]')!;
+    expect(button).toBeDefined();
+    fireEvent.click(button);
+    expect(onAdvance).toHaveBeenCalledWith(baseSolicitacao);
   });
 });
