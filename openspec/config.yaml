@@ -1,0 +1,44 @@
+schema: spec-driven
+
+context: |
+  Sistema RGM (Reparo/Gestao de Modelos) - frontend React 19 / Vite / TypeScript.
+  Estado servidor: TanStack Query. Formularios: react-hook-form + Zod (schemas em
+  features/<area>/schemas). Estilo: Tailwind CSS com variantes dark: em toda a UI.
+  Icones: lucide-react.
+  Arquitetura por feature (src/features/<area>/{api,hooks,components,pages,schemas,types,lib}):
+  api/ (funcoes que chamam httpClient), hooks/ (useQuery/useMutation), components/ (UI pura),
+  pages/ (rotas), schemas/ (validacao Zod + tipos inferidos), types/ (tipos de dominio).
+  shared/ para componentes/lib genericos reutilizaveis entre features.
+  Autorizacao no cliente espelha o backend: shared/lib/permissions.ts
+  (canManageSolicitacoes, canManageModelos, canAccessAdmin, etc.) deve sempre bater
+  1:1 com PerfilUsuario do backend.
+  Dominio central: Modelo -> Solicitacao (Kanban: A_FAZER -> EM_ANDAMENTO -> EM_VALIDACAO ->
+  CONCLUIDA/CANCELADA, com DEVOLUCAO de volta a EM_ANDAMENTO) -> Evidencia (com TipoEvidencia).
+  KanbanBoard.tsx e a pagina de detalhe da solicitacao compartilham os mesmos modais de
+  transicao (TriagemModal, EncerramentoModal, DevolucaoModal, EnviarValidacaoModal).
+  Testes: Vitest + Testing Library para unidade/componente (cobertura minima 95% nos arquivos
+  nao excluidos por vitest.config.ts); fluxos de pagina/E2E ficam para Playwright.
+  Qualidade: tsc -b --noEmit, eslint . - sempre rodar antes de finalizar uma mudanca.
+  Repos irmaos: rgm-backend (Spring Boot, Clean Architecture) e rgm-infra (docker-compose/deploy).
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
