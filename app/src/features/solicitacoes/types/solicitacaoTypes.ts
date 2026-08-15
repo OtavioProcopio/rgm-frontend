@@ -125,3 +125,20 @@ export type MetricasResponse = {
   tempoMedioResolucaoSegundos: number;
 };
 
+export type OrdenacaoMetricaModelo = 'TEMPO_RESOLUCAO' | 'INTERVALO';
+export type DirecaoOrdenacao = 'asc' | 'desc';
+
+export type MetricaPorModelo = {
+  modeloId: string;
+  codigo: string;
+  tempoMedioResolucaoSegundos: number;
+  intervaloMedioSegundos: number | null;
+};
+
+export type MetricasPorModeloFilters = {
+  sort: OrdenacaoMetricaModelo;
+  dir: DirecaoOrdenacao;
+  page: number;
+  size: number;
+};
+

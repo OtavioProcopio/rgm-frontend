@@ -33,3 +33,13 @@ export function getSolicitacaoErrorMessage(error: unknown): string {
   }
   return 'Ocorreu um erro inesperado.';
 }
+
+export function formatDuracao(segundos: number): string {
+  const horas = segundos / 3600;
+  if (horas < 24) {
+    return `${Math.round(horas)}h`;
+  }
+  const dias = Math.floor(horas / 24);
+  const horasRestantes = Math.round(horas % 24);
+  return `${dias}d ${horasRestantes}h`;
+}

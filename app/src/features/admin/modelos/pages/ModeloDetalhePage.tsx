@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { modelosApi } from '../api/modelosApi';
@@ -13,6 +13,7 @@ import { canManageModelos } from '@/shared/lib/permissions';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
+import { formatDuracao } from '@/features/solicitacoes/lib/solicitacaoMessages';
 import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
@@ -242,14 +243,55 @@ function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
   const concluidas = solicitacoes.filter((s) => s.status === 'CONCLUIDA').length;
   const taxaSucesso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
 
+  const { tempoMedioResolucaoSegundos, intervaloMedioSegundos } = useMemo(
+    () => calcularMetricasDeTempo(solicitacoes),
+    [solicitacoes],
+  );
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard label="Total" value={total} color="slate" />
       <KpiCard label="Abertas" value={abertas} color="amber" />
       <KpiCard label="Concluídas" value={concluidas} color="green" />
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
+      <KpiCard
+        label="Tempo médio de resolução"
+        value={tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'}
+        color="slate"
+      />
+      <KpiCard
+        label="Intervalo médio entre solicitações"
+        value={intervaloMedioSegundos != null ? formatDuracao(intervaloMedioSegundos) : '—'}
+        color="slate"
+      />
     </div>
   );
+}
+
+function calcularMetricasDeTempo(solicitacoes: Solicitacao[]) {
+  const concluidas = solicitacoes
+    .filter((s) => s.status === 'CONCLUIDA' && s.concluidaEm != null)
+    .sort((a, b) => new Date(a.criadaEm).getTime() - new Date(b.criadaEm).getTime());
+
+  if (concluidas.length < 2) {
+    return { tempoMedioResolucaoSegundos: null, intervaloMedioSegundos: null };
+  }
+
+  const temposResolucao = concluidas.map(
+    (s) => (new Date(s.concluidaEm as string).getTime() - new Date(s.criadaEm).getTime()) / 1000,
+  );
+  const tempoMedioResolucaoSegundos =
+    temposResolucao.reduce((acc, v) => acc + v, 0) / temposResolucao.length;
+
+  let somaIntervalos = 0;
+  for (let i = 1; i < concluidas.length; i++) {
+    somaIntervalos +=
+      (new Date(concluidas[i].criadaEm).getTime() - new Date(concluidas[i - 1].criadaEm).getTime()) /
+      1000;
+  }
+  const intervaloMedioSegundos = somaIntervalos / (concluidas.length - 1);
+
+  return { tempoMedioResolucaoSegundos, intervaloMedioSegundos };
 }
 
 function KpiCard({
