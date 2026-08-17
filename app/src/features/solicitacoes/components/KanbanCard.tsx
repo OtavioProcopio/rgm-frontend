@@ -110,6 +110,7 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
 export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, onAdvance }: Props) {
   const tipo = TIPO_CONFIG[solicitacao.tipo];
   const { Icon } = tipo;
+  const criadaEmFormatada = new Date(solicitacao.criadaEm).toLocaleDateString('pt-BR');
   const borderClass = solicitacao.prioridade
     ? PRIORITY_BORDER[solicitacao.prioridade]
     : 'border-l-slate-200 dark:border-l-slate-700';
@@ -141,7 +142,16 @@ export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, 
             <Icon size={10} />
             {tipo.label}
           </span>
-          <AgeBadge criadaEm={solicitacao.criadaEm} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <time
+              dateTime={solicitacao.criadaEm}
+              title={`Aberta em ${criadaEmFormatada}`}
+              className="text-xs text-slate-400 dark:text-slate-500"
+            >
+              {criadaEmFormatada}
+            </time>
+            <AgeBadge criadaEm={solicitacao.criadaEm} />
+          </div>
         </div>
 
         {/* Título */}

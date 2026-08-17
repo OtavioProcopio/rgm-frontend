@@ -26,17 +26,25 @@ const TABS: { id: TabId; label: string }[] = [
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabId>('solicitacoes');
+  const isOperador = user?.perfil === 'OPERADOR';
+  const [activeTab, setActiveTab] = useState<TabId>(isOperador ? 'pessoal' : 'solicitacoes');
   useSolicitacaoEvents();
-  const { data: metricas, isLoading: loadingMetricas, isError: errorMetricas } = useMetricas();
+  const {
+    data: metricas,
+    isLoading: loadingMetricas,
+    isError: errorMetricas,
+  } = useMetricas({ enabled: !isOperador });
   const {
     data: solicitacoes = [],
     isLoading: loadingSolicitacoes,
     isError: errorSolicitacoes,
-  } = useKanbanSolicitacoes();
+  } = useKanbanSolicitacoes(undefined, { enabled: !isOperador });
 
   const isAdmin = canAccessAdmin(user?.perfil);
   const isGestor = canManageModelos(user?.perfil) && !isAdmin;
+  // OPERADOR nao ve indicadores agregados de outros responsaveis (dashboard/contadores globais) —
+  // so a aba "Pessoal", ja escopada ao proprio usuario.
+  const visibleTabs = isOperador ? TABS.filter((tab) => tab.id === 'pessoal') : TABS;
 
   return (
     <section className="space-y-6">
@@ -44,7 +52,11 @@ export function DashboardPage() {
         <PageHeader
           title="Dashboard"
           description={
-            metricas ? `${metricas.totalSolicitacoes} solicitações no total` : 'Painel de indicadores'
+            isOperador
+              ? 'Suas solicitações'
+              : metricas
+                ? `${metricas.totalSolicitacoes} solicitações no total`
+                : 'Painel de indicadores'
           }
         />
         <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-sky-100 bg-sky-50/50 px-3 py-1 text-xs font-semibold text-sky-800 dark:border-sky-950/40 dark:bg-sky-950/20 dark:text-sky-300">
@@ -53,23 +65,25 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-              activeTab === tab.id
-                ? 'border-sky-600 text-sky-700 dark:border-sky-400 dark:text-sky-300'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {visibleTabs.length > 1 ? (
+        <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700">
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
+                activeTab === tab.id
+                  ? 'border-sky-600 text-sky-700 dark:border-sky-400 dark:text-sky-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {activeTab === 'solicitacoes' ? (
         loadingMetricas || loadingSolicitacoes ? (

@@ -131,6 +131,26 @@ describe('DashboardPage', () => {
     expect(within(container).getAllByText(/%/).length).toBeGreaterThan(0);
   });
 
+  it('shows only the Pessoal tab for OPERADOR and does not fetch global metricas', async () => {
+    const { useMetricas } = await import('../hooks/useMetricas');
+    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    vi.mocked(useMetricas).mockClear();
+    vi.mocked(useKanbanSolicitacoes).mockClear();
+
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
+
+    expect(within(container).queryByText('Solicitações', { selector: 'button' })).toBeNull();
+    expect(within(container).queryByText('Modelos', { selector: 'button' })).toBeNull();
+    expect(vi.mocked(useMetricas)).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false }),
+    );
+    expect(vi.mocked(useKanbanSolicitacoes)).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ enabled: false }),
+    );
+  });
+
   it('renders zero percentage when totalSolicitacoes is zero', async () => {
     const { useMetricas } = await import('../hooks/useMetricas');
     const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');

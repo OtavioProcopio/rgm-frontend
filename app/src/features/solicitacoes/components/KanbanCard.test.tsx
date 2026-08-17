@@ -96,6 +96,22 @@ describe('KanbanCard', () => {
     expect(within(container).getByText('Reengenharia')).toBeDefined();
   });
 
+  it('renders the formatted creation date', () => {
+    const criadaEm = new Date('2026-03-15T12:00:00Z').toISOString();
+    const { container } = render(
+      <KanbanCard
+        solicitacao={{ ...baseSolicitacao, criadaEm }}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
+    );
+    const time = container.querySelector('time')!;
+    expect(time).toBeDefined();
+    expect(time.getAttribute('dateTime')).toBe(criadaEm);
+  });
+
   it('shows age badge for old cards', () => {
     const old = new Date(Date.now() - 10 * 86_400_000).toISOString();
     const { container } = render(
