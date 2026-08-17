@@ -32,6 +32,57 @@ a transicao e permitida ao perfil do usuario logado.
   especifica) solta o card em outra coluna
 - **THEN** o drop e bloqueado no cliente antes de qualquer chamada a API
 
+#### Scenario: OPERADOR sem nenhuma solicitacao atribuida
+- **WHEN** o quadro Kanban carrega para um OPERADOR e a listagem (ja
+  escopada pelo backend as solicitacoes atribuidas a ele) retorna vazia
+- **THEN** o sistema exibe uma mensagem dedicada ("Nenhuma solicitacao
+  atribuida a voce") em vez do quadro de colunas vazias
+
+#### Scenario: Filtro de periodo no quadro Kanban
+- **WHEN** o usuario informa um periodo (data inicio/fim de criacao) na
+  vista Kanban
+- **THEN** apenas os cards criados dentro desse periodo sao exibidos nas
+  colunas, e a data de abertura de cada card e exibida no proprio card
+
+### Requirement: Atualizacoes em tempo real via SSE
+O sistema SHALL manter uma conexao SSE (Server-Sent Events) autenticada
+enquanto o usuario esta em telas que exibem solicitacoes (Kanban, Dashboard),
+reconectando automaticamente com um token valido quando a conexao cai por
+token expirado, e recriando a conexao quando o usuario logado muda.
+
+#### Scenario: Token expira com a conexao aberta
+- **WHEN** a conexao SSE cai porque o token usado para autentica-la expirou
+  (resposta nao-2xx, sem retry automatico do browser)
+- **THEN** o sistema renova o token e reabre a conexao automaticamente, sem
+  exigir que o usuario recarregue a pagina
+
+#### Scenario: Falha transitoria de rede
+- **WHEN** a conexao cai por instabilidade de rede (nao por token expirado)
+- **THEN** o sistema deixa a reconexao nativa do browser agir, sem forcar
+  uma renovacao de token desnecessaria
+
+#### Scenario: Troca de usuario logado
+- **WHEN** o usuario faz logout e login com outra conta enquanto a tela
+  esta aberta
+- **THEN** a conexao antiga e fechada e uma nova e aberta com o token da
+  nova sessao
+
+### Requirement: Dashboard escopado por perfil
+O sistema SHALL restringir, para o perfil OPERADOR, o Dashboard aos seus
+proprios indicadores (aba "Pessoal") — as abas "Solicitacoes" e "Modelos"
+exibem contadores agregados de todos os usuarios e nao sao mostradas nem
+buscadas para esse perfil.
+
+#### Scenario: OPERADOR abre o Dashboard
+- **WHEN** um usuario com perfil OPERADOR acessa o Dashboard
+- **THEN** apenas a aba "Pessoal" e exibida, e as metricas agregadas
+  globais nao sao buscadas da API
+
+#### Scenario: GESTOR/ADMINISTRADOR abre o Dashboard
+- **WHEN** um usuario GESTOR ou ADMINISTRADOR acessa o Dashboard
+- **THEN** as tres abas ("Solicitacoes", "Modelos", "Pessoal") ficam
+  disponiveis normalmente
+
 ### Requirement: Acoes equivalentes na pagina de detalhe
 O sistema SHALL oferecer, na pagina de detalhe da solicitacao, os mesmos
 botoes de transicao disponiveis no quadro (Triar, Enviar para validacao,

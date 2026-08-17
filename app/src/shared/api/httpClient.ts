@@ -48,7 +48,7 @@ async function readResponseBody(response: Response) {
   return response.text();
 }
 
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   const refreshToken = authToken.getRefreshToken();
 
   if (!refreshToken) {

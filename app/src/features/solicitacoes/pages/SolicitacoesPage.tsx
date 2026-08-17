@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
+import { Input } from '@/shared/components/Input/Input';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
@@ -109,7 +110,41 @@ export function SolicitacoesPage() {
       />
 
       {view === 'kanban' ? (
-        <KanbanBoard modeloId={filters.modeloId} />
+        <>
+          <div className="mb-3 flex flex-wrap gap-4">
+            <div className="w-full sm:w-44">
+              <Input
+                type="date"
+                label="Criada a partir de"
+                value={filters.criadaEmInicio ? filters.criadaEmInicio.split('T')[0] : ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    criadaEmInicio: e.target.value ? `${e.target.value}T00:00:00Z` : undefined,
+                  }))
+                }
+              />
+            </div>
+            <div className="w-full sm:w-44">
+              <Input
+                type="date"
+                label="Criada até"
+                value={filters.criadaEmFim ? filters.criadaEmFim.split('T')[0] : ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    criadaEmFim: e.target.value ? `${e.target.value}T23:59:59Z` : undefined,
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <KanbanBoard
+            modeloId={filters.modeloId}
+            dataInicio={filters.criadaEmInicio}
+            dataFim={filters.criadaEmFim}
+          />
+        </>
       ) : (
         <>
           <SolicitacaoFilters filters={filters} onChange={setFilters} />

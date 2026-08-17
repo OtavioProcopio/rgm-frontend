@@ -50,4 +50,37 @@ describe('KanbanBoard', () => {
     expect(within(container).getByText('A Fazer')).toBeDefined();
     expect(within(container).getByText('Em Andamento')).toBeDefined();
   });
+
+  it('shows a scoped empty state for OPERADOR with no assigned solicitacoes', async () => {
+    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
+      data: [], isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+    expect(within(container).getByText('Nenhuma solicitação atribuída a você')).toBeDefined();
+    expect(within(container).queryByText('A Fazer')).toBeNull();
+  });
+
+  it('renders normal columns for OPERADOR when there are assigned solicitacoes', async () => {
+    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
+      data: [
+        {
+          id: 's1', titulo: 'T', status: 'A_FAZER', tipo: 'REPARO', prioridade: null,
+          descricao: '', modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
+          criadaEm: new Date().toISOString(), atualizadaEm: new Date().toISOString(),
+          concluidaEm: null, canceladaEm: null, responsavelIds: [],
+        },
+      ],
+      isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+    expect(within(container).getByText('A Fazer')).toBeDefined();
+    expect(within(container).getByText('Em Andamento')).toBeDefined();
+    expect(within(container).queryByText('Nenhuma solicitação atribuída a você')).toBeNull();
+  });
 });

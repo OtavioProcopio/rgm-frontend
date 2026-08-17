@@ -5,6 +5,7 @@ import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { useAuth } from '@/app/providers/authContext';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
@@ -96,9 +97,9 @@ type PendingMove =
   | { type: 'devolucao'; card: Solicitacao }
   | { type: 'enviarValidacao'; card: Solicitacao };
 
-type Props = { modeloId?: string };
+type Props = { modeloId?: string; dataInicio?: string; dataFim?: string };
 
-export function KanbanBoard({ modeloId }: Props) {
+export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
   const { user } = useAuth();
   const { data: profile } = usePerfil();
   const canManage = canManageSolicitacoes(user?.perfil);
@@ -112,7 +113,10 @@ export function KanbanBoard({ modeloId }: Props) {
     return isOperador && s.status === 'EM_ANDAMENTO' && !!(profile?.id && s.responsavelIds.includes(profile.id));
   }
 
-  const { data: solicitacoes = [], isLoading, error } = useKanbanSolicitacoes(modeloId);
+  const { data: solicitacoes = [], isLoading, error } = useKanbanSolicitacoes(modeloId, {
+    dataInicio,
+    dataFim,
+  });
   const actions = useKanbanActions();
 
   const [dragging, setDragging] = useState<Solicitacao | null>(null);
@@ -261,6 +265,14 @@ export function KanbanBoard({ modeloId }: Props) {
         description={getSolicitacaoErrorMessage(error)}
       />
     );
+  if (isOperador && solicitacoes.length === 0) {
+    return (
+      <EmptyState
+        title="Nenhuma solicitação atribuída a você"
+        description="Assim que uma solicitação for atribuída a você, ela aparecerá aqui."
+      />
+    );
+  }
 
   const cardsByStatus = Object.fromEntries(
     COLUMNS.map((col) => [col.status, solicitacoes.filter((s) => s.status === col.status)]),
