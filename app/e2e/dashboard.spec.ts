@@ -8,10 +8,10 @@ test.describe('Dashboard', () => {
   test('exibe título e KPIs principais', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     await expect(page.getByText(/solicitações no total/i)).toBeVisible();
-    await expect(page.getByText('Total')).toBeVisible();
-    await expect(page.getByText('Concluídas')).toBeVisible();
+    await expect(page.getByText('Total', { exact: true })).toBeVisible();
+    await expect(page.getByText('Concluídas').first()).toBeVisible();
     await expect(page.getByText('Lead time médio')).toBeVisible();
-    await expect(page.getByText('Em atraso')).toBeVisible();
+    await expect(page.getByText('Em atraso').first()).toBeVisible();
   });
 
   test('exibe seções de distribuição', async ({ page }) => {

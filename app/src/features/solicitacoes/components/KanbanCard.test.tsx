@@ -112,6 +112,19 @@ describe('KanbanCard', () => {
     expect(time.getAttribute('dateTime')).toBe(criadaEm);
   });
 
+  it('renders CRIACAO tipo without a modelo vinculado', () => {
+    const { container } = render(
+      <KanbanCard
+        solicitacao={{ ...baseSolicitacao, tipo: 'CRIACAO', modeloId: null }}
+        isDraggable={false}
+        canAdvance={false}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
+    );
+    expect(within(container).getByText('Criação de modelo')).toBeDefined();
+  });
+
   it('shows age badge for old cards', () => {
     const old = new Date(Date.now() - 10 * 86_400_000).toISOString();
     const { container } = render(

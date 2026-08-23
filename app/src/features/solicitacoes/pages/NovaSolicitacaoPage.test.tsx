@@ -29,6 +29,13 @@ vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
   },
 }));
 
+vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
+  useMaquinaOptions: vi.fn().mockReturnValue({
+    options: [{ value: 'FBOX', label: 'FBOX' }],
+    isLoading: false,
+  }),
+}));
+
 afterEach(cleanup);
 
 describe('NovaSolicitacaoPage', () => {
@@ -107,6 +114,58 @@ describe('NovaSolicitacaoPage', () => {
         modeloId: '1',
       });
       expect(evidenciasApi.anexar).toHaveBeenCalledWith('sol-123', file, { tipo: 'ABERTURA' });
+    });
+  });
+
+  it('offers CRIACAO as a tipo option for GESTOR/ADMINISTRADOR', () => {
+    const { AppWrapper } = createAppWrapper();
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    const select = screen.getByLabelText(/tipo/i) as HTMLSelectElement;
+    const values = Array.from(select.options).map((o) => o.value);
+    expect(values).toContain('CRIACAO');
+  });
+
+  it('hides CRIACAO for OPERADOR', () => {
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    const select = screen.getByLabelText(/tipo/i) as HTMLSelectElement;
+    const values = Array.from(select.options).map((o) => o.value);
+    expect(values).not.toContain('CRIACAO');
+  });
+
+  it('submits CRIACAO with modelo fields instead of modeloId', async () => {
+    const mockMutate = vi.fn().mockResolvedValue({ id: 'sol-456' });
+    const useAbrirSolicitacaoMock = vi.mocked(useAbrirSolicitacao);
+    useAbrirSolicitacaoMock.mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof useAbrirSolicitacao>);
+
+    const { AppWrapper } = createAppWrapper();
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    await userEvent.type(screen.getByLabelText(/título/i), 'Novo modelo XYZ');
+    await userEvent.type(screen.getByLabelText(/descrição/i), 'Descrição pretendida');
+    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'CRIACAO');
+
+    expect(screen.getByLabelText(/código do modelo/i)).toBeDefined();
+
+    await userEvent.type(screen.getByLabelText(/código do modelo/i), 'COD-XYZ');
+    await userEvent.selectOptions(screen.getByLabelText(/máquina/i), 'FBOX');
+
+    fireEvent.click(screen.getByRole('button', { name: /abrir solicitação/i }));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith({
+        titulo: 'Novo modelo XYZ',
+        descricao: 'Descrição pretendida',
+        tipo: 'CRIACAO',
+        modeloCodigo: 'COD-XYZ',
+        modeloMaquina: 'FBOX',
+        modeloObservacoes: undefined,
+      });
     });
   });
 });

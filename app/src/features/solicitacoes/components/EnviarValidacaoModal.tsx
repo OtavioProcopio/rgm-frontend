@@ -15,6 +15,8 @@ import {
 type Props = {
   solicitacaoId: string;
   isPending?: boolean;
+  /** REPARO/INSPECAO/REENGENHARIA exigem evidência; CRIACAO não (backend não exige). */
+  evidenciaObrigatoria?: boolean;
   onCancel: () => void;
   onConfirm: (data: EnviarParaValidacaoFormData) => void;
 };
@@ -22,6 +24,7 @@ type Props = {
 export function EnviarValidacaoModal({
   solicitacaoId,
   isPending,
+  evidenciaObrigatoria = true,
   onCancel,
   onConfirm,
 }: Props) {
@@ -34,9 +37,10 @@ export function EnviarValidacaoModal({
     handleSubmit,
     getValues,
     trigger,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<EnviarParaValidacaoFormData>({
     resolver: zodResolver(enviarParaValidacaoSchema),
+    mode: 'onChange',
   });
 
   async function handleUpload(file: File) {
@@ -56,28 +60,38 @@ export function EnviarValidacaoModal({
     }
   }
 
+  const podeEnviar = evidenciaObrigatoria ? evidenciaAnexada : isValid;
+
   return (
     <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm dark:border-blue-900/60 dark:bg-blue-950/30">
       <h3 className="font-semibold text-blue-900 dark:text-blue-100">
         Enviar para validação
       </h3>
       <p className="mt-1 text-blue-800 dark:text-blue-200">
-        Descreva o serviço realizado e anexe uma foto como evidência.
+        {evidenciaObrigatoria
+          ? 'Descreva o serviço realizado e anexe uma foto como evidência.'
+          : 'Descreva o andamento antes de enviar para validação.'}
       </p>
 
       <form onSubmit={handleSubmit(onConfirm)} className="mt-4 space-y-4">
         <Textarea
-          label="Descrição do serviço realizado *"
+          label={evidenciaObrigatoria ? 'Descrição do serviço realizado *' : 'Comentário *'}
           placeholder="Descreva o que foi feito para resolver o problema..."
           error={errors.comentario?.message}
-          disabled={evidenciaAnexada}
+          disabled={evidenciaObrigatoria && evidenciaAnexada}
           {...register('comentario')}
         />
 
         <div>
           <p className="mb-2 font-medium text-blue-900 dark:text-blue-100">
             Evidência do serviço realizado{' '}
-            <span className="text-red-600 dark:text-red-400">*</span>
+            {evidenciaObrigatoria ? (
+              <span className="text-red-600 dark:text-red-400">*</span>
+            ) : (
+              <span className="text-xs font-normal text-blue-700 dark:text-blue-300">
+                (opcional)
+              </span>
+            )}
           </p>
           {evidenciaAnexada ? (
             <p className="text-xs text-green-700 dark:text-green-400">
@@ -89,9 +103,11 @@ export function EnviarValidacaoModal({
                 isPending={uploadEvidencia.isPending}
                 onUpload={handleUpload}
               />
-              <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
-                Preencha a descrição antes de anexar a foto.
-              </p>
+              {evidenciaObrigatoria ? (
+                <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                  Preencha a descrição antes de anexar a foto.
+                </p>
+              ) : null}
             </>
           )}
           {uploadError && (
@@ -110,8 +126,12 @@ export function EnviarValidacaoModal({
           </Button>
           <Button
             type="submit"
-            disabled={isPending || uploadEvidencia.isPending || !evidenciaAnexada}
-            title={!evidenciaAnexada ? 'Anexe uma evidência do serviço realizado' : undefined}
+            disabled={isPending || uploadEvidencia.isPending || !podeEnviar}
+            title={
+              evidenciaObrigatoria && !evidenciaAnexada
+                ? 'Anexe uma evidência do serviço realizado'
+                : undefined
+            }
           >
             {isPending ? 'Enviando...' : 'Enviar para validação'}
           </Button>

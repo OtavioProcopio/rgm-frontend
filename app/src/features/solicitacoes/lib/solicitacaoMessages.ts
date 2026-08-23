@@ -25,6 +25,7 @@ export const tipoLabel: Record<TipoSolicitacao, string> = {
   REPARO: 'Reparo',
   INSPECAO: 'Inspeção',
   REENGENHARIA: 'Reengenharia',
+  CRIACAO: 'Criação de modelo',
 };
 
 export function getSolicitacaoErrorMessage(error: unknown): string {

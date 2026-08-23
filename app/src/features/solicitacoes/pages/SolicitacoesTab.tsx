@@ -38,7 +38,7 @@ const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
   CANCELADA: 'text-rose-600 dark:text-rose-400',
 };
 
-const TIPO_ORDER: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA'];
+const TIPO_ORDER: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'];
 const PRIORIDADE_ORDER: PrioridadeSolicitacao[] = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
 
 const PRIORIDADE_COLOR: Record<PrioridadeSolicitacao, string> = {

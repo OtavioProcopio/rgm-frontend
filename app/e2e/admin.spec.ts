@@ -1,20 +1,25 @@
-import { test, expect, apiPost, API_URL } from './fixtures';
+import { test, expect, apiPost, API_URL, MAQUINA_CATALOGO } from './fixtures';
 
 const ts = () => Date.now();
 
 test.describe('Admin — Modelos', () => {
-  test('cria um novo modelo', async ({ page, loginAdmin }) => {
+  test('cria um novo modelo e oferece a galeria inline antes de navegar', async ({ page, loginAdmin }) => {
     const codigo = `MDL-PW-${ts()}`;
     await loginAdmin('/app/admin/modelos/novo');
 
     await page.fill('input[name="codigo"]', codigo);
     await page.fill('input[name="descricao"]', 'Modelo criado pelo Playwright');
-    await page.fill('input[name="maquina"]', 'Vick-PW');
+    await page.selectOption('select[name="maquina"]', MAQUINA_CATALOGO);
 
     await page.click('button:has-text("Salvar modelo")');
 
-    await expect(page).toHaveURL(/\/app\/admin\/modelos/);
-    await expect(page.getByRole('cell', { name: codigo })).toBeVisible();
+    // Passo 2: cadastro concluído, oferece a galeria inline (sem navegar ainda).
+    await expect(page.getByText('Modelo cadastrado')).toBeVisible();
+
+    // Segue para o detalhe sem adicionar fotos.
+    await page.click('button:has-text("Ir para o detalhe do modelo")');
+    await expect(page).toHaveURL(/\/app\/admin\/modelos\/[a-f0-9-]+$/);
+    await expect(page.getByText(codigo)).toBeVisible();
   });
 
   test('exibe detalhe do modelo com link de edição', async ({ page, loginAdmin, token, request }) => {
@@ -22,7 +27,7 @@ test.describe('Admin — Modelos', () => {
     const modelo = await apiPost<{ id: string }>(
       request,
       '/modelos',
-      { codigo, descricao: 'Detalhe PW', maquina: 'PW-01' },
+      { codigo, descricao: 'Detalhe PW', maquina: MAQUINA_CATALOGO },
       token,
     );
 
@@ -34,18 +39,24 @@ test.describe('Admin — Modelos', () => {
 
   test('desativa e reativa um modelo', async ({ page, loginAdmin, token, request }) => {
     const codigo = `MDL-AT-${ts()}`;
-    await apiPost<{ id: string }>(
+    const modelo = await apiPost<{ id: string }>(
       request,
       '/modelos',
-      { codigo, descricao: 'Ativar/desativar', maquina: 'PW-02' },
+      { codigo, descricao: 'Ativar/desativar', maquina: MAQUINA_CATALOGO },
       token,
     );
 
-    await loginAdmin('/app/admin/modelos');
+    await loginAdmin(`/app/admin/modelos/${modelo.id}`);
 
-    // Localiza a linha do modelo e clica em desativar
-    const row = page.getByRole('row', { name: new RegExp(codigo) });
-    await expect(row).toBeVisible();
+    await page.getByRole('button', { name: 'Desativar', exact: true }).click();
+    await expect(page.getByText('Desativar modelo')).toBeVisible();
+    await page.getByRole('button', { name: 'Desativar', exact: true }).last().click();
+    await expect(page.getByText('Inativo')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ativar', exact: true }).click();
+    await expect(page.getByText('Ativar modelo')).toBeVisible();
+    await page.getByRole('button', { name: 'Ativar', exact: true }).last().click();
+    await expect(page.getByText('Ativo').first()).toBeVisible();
   });
 });
 

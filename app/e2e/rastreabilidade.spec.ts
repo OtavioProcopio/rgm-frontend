@@ -3,7 +3,7 @@
  * - Detalhe da solicitação exibe card do modelo com link
  * - Detalhe do modelo lista todas as solicitações criadas para ele
  */
-import { test, expect, apiPost } from './fixtures';
+import { test, expect, apiPost, MAQUINA_CATALOGO } from './fixtures';
 
 const ts = () => Date.now();
 
@@ -16,7 +16,7 @@ test.describe('Rastreabilidade modelo ↔ solicitação', () => {
     const modelo = await apiPost<{ id: string }>(
       request,
       '/modelos',
-      { codigo: modeloCodigo, descricao: 'Modelo rastreabilidade PW', maquina: 'PW-RAST' },
+      { codigo: modeloCodigo, descricao: 'Modelo rastreabilidade PW', maquina: MAQUINA_CATALOGO },
       token,
     );
     modeloId = modelo.id;

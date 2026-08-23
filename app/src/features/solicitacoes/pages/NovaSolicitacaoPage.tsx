@@ -4,6 +4,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Camera, X } from 'lucide-react';
 
+import { useAuth } from '@/app/providers/authContext';
+import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -13,6 +15,7 @@ import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { Combobox } from '@/shared/components/Combobox/Combobox';
 import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
+import { canAbrirSolicitacaoCriacao } from '@/shared/lib/permissions';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
@@ -21,22 +24,30 @@ import {
   type AbrirSolicitacaoFormData,
 } from '../schemas/solicitacaoSchema';
 
-const tipoOptions = [
+const BASE_TIPO_OPTIONS = [
   { value: 'REPARO', label: 'Reparo' },
   { value: 'INSPECAO', label: 'Inspeção' },
   { value: 'REENGENHARIA', label: 'Reengenharia' },
 ];
+
+const CRIACAO_TIPO_OPTION = { value: 'CRIACAO', label: 'Criação de modelo' };
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export function NovaSolicitacaoPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const defaultModeloId = searchParams.get('modeloId') || '';
   const abrirSolicitacao = useAbrirSolicitacao();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  
+
+  const podeAbrirCriacao = canAbrirSolicitacaoCriacao(user?.perfil);
+  const tipoOptions = podeAbrirCriacao
+    ? [...BASE_TIPO_OPTIONS, CRIACAO_TIPO_OPTION]
+    : BASE_TIPO_OPTIONS;
+
   // Foto Evidência State
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -49,6 +60,7 @@ export function NovaSolicitacaoPage() {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<AbrirSolicitacaoFormData>({
     resolver: zodResolver(abrirSolicitacaoSchema),
@@ -59,6 +71,9 @@ export function NovaSolicitacaoPage() {
       modeloId: defaultModeloId,
     },
   });
+
+  const tipoSelecionado = watch('tipo');
+  const isCriacao = tipoSelecionado === 'CRIACAO';
 
   // Busca TODOS os modelos ativos (limite alto para abranger centenas)
   const { data: modelosPage, isLoading: isLoadingModelos } = useModelos({
@@ -72,6 +87,8 @@ export function NovaSolicitacaoPage() {
     label: `${m.codigo} - ${m.descricao}`,
     subLabel: m.maquina,
   })) ?? [];
+
+  const { options: maquinaOptions, isLoading: isLoadingMaquinas } = useMaquinaOptions();
 
   // Manipulação de Foto
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -112,12 +129,23 @@ export function NovaSolicitacaoPage() {
     setIsUploading(true);
     try {
       // 1. Cria a solicitação
-      const created = await abrirSolicitacao.mutateAsync({
-        titulo: data.titulo,
-        descricao: data.descricao,
-        tipo: data.tipo,
-        modeloId: data.modeloId,
-      });
+      const created = await abrirSolicitacao.mutateAsync(
+        data.tipo === 'CRIACAO'
+          ? {
+              titulo: data.titulo,
+              descricao: data.descricao,
+              tipo: data.tipo,
+              modeloCodigo: data.modeloCodigo,
+              modeloMaquina: data.modeloMaquina,
+              modeloObservacoes: data.modeloObservacoes || undefined,
+            }
+          : {
+              titulo: data.titulo,
+              descricao: data.descricao,
+              tipo: data.tipo,
+              modeloId: data.modeloId,
+            },
+      );
 
       // 2. Upload da foto se houver
       if (photo) {
@@ -178,21 +206,51 @@ export function NovaSolicitacaoPage() {
           {...register('tipo')}
         />
         
-        {/* Combobox de Modelo */}
-        <Controller
-          control={control}
-          name="modeloId"
-          render={({ field }) => (
-            <Combobox
-              label="Modelo"
-              placeholder={isLoadingModelos ? 'Carregando modelos...' : 'Selecione ou digite para filtrar o modelo...'}
-              options={modeloOptions}
-              value={field.value}
-              onChange={field.onChange}
-              error={errors.modeloId?.message}
+        {isCriacao ? (
+          <div className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              O modelo ainda não existe — ele será criado automaticamente quando esta
+              solicitação for concluída, com os dados abaixo.
+            </p>
+            <Input
+              label="Código do modelo"
+              placeholder="Ex.: MOD-042"
+              error={errors.modeloCodigo?.message}
+              disabled={isPending}
+              {...register('modeloCodigo')}
             />
-          )}
-        />
+            <Select
+              label="Máquina"
+              options={maquinaOptions}
+              placeholder={isLoadingMaquinas ? 'Carregando máquinas...' : 'Selecione a máquina...'}
+              error={errors.modeloMaquina?.message}
+              disabled={isPending}
+              {...register('modeloMaquina')}
+            />
+            <Textarea
+              label="Observações (opcional)"
+              placeholder="Detalhes adicionais sobre o modelo pretendido..."
+              error={errors.modeloObservacoes?.message}
+              disabled={isPending}
+              {...register('modeloObservacoes')}
+            />
+          </div>
+        ) : (
+          <Controller
+            control={control}
+            name="modeloId"
+            render={({ field }) => (
+              <Combobox
+                label="Modelo"
+                placeholder={isLoadingModelos ? 'Carregando modelos...' : 'Selecione ou digite para filtrar o modelo...'}
+                options={modeloOptions}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.modeloId?.message}
+              />
+            )}
+          />
+        )}
 
         {/* Anexar Foto (Evidência Inicial) */}
         <div className="space-y-2">

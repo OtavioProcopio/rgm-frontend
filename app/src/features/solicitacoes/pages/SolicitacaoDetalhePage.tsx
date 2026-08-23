@@ -54,11 +54,10 @@ export function SolicitacaoDetalhePage() {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // States para Edição
+  // States para Edição (tipo é imutável após a abertura — não é editável)
   const [isEditing, setIsEditing] = useState(false);
   const [editTitulo, setEditTitulo] = useState('');
   const [editDescricao, setEditDescricao] = useState('');
-  const [editTipo, setEditTipo] = useState<import('../types/solicitacaoTypes').TipoSolicitacao>('REPARO');
 
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
@@ -234,7 +233,6 @@ export function SolicitacaoDetalhePage() {
       await editar.mutateAsync({
         titulo: editTitulo.trim(),
         descricao: editDescricao.trim(),
-        tipo: editTipo,
       });
       setIsEditing(false);
     } catch (err) {
@@ -286,7 +284,6 @@ export function SolicitacaoDetalhePage() {
                     onClick={() => {
                       setEditTitulo(solicitacao.titulo);
                       setEditDescricao(solicitacao.descricao);
-                      setEditTipo(solicitacao.tipo);
                       setIsEditing(true);
                     }}
                   >
@@ -318,16 +315,10 @@ export function SolicitacaoDetalhePage() {
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
               Tipo
             </label>
-            <select
-              className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
-              value={editTipo}
-              onChange={(e) => setEditTipo(e.target.value as import('../types/solicitacaoTypes').TipoSolicitacao)}
-              disabled={editar.isPending}
-            >
-              <option value="REPARO">Reparo</option>
-              <option value="INSPECAO">Inspeção</option>
-              <option value="REENGENHARIA">Reengenharia</option>
-            </select>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {tipoLabel[solicitacao.tipo]}{' '}
+              <span className="text-xs">(não pode ser alterado após a abertura)</span>
+            </p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -389,6 +380,23 @@ export function SolicitacaoDetalhePage() {
               >
                 {modelo.codigo} — {modelo.descricao}
               </Link>
+            </div>
+          ) : solicitacao.tipo === 'CRIACAO' ? (
+            <div className="col-span-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Modelo pretendido
+              </p>
+              <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
+                {solicitacao.modeloCodigo} — {solicitacao.modeloMaquina}
+              </p>
+              {solicitacao.modeloObservacoes ? (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {solicitacao.modeloObservacoes}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                O modelo será criado ao concluir esta solicitação.
+              </p>
             </div>
           ) : null}
           {solicitacao.comentarioFinal ? (
@@ -492,6 +500,7 @@ export function SolicitacaoDetalhePage() {
             <EnviarValidacaoModal
               solicitacaoId={id!}
               isPending={enviarValidacao.isPending}
+              evidenciaObrigatoria={solicitacao.tipo !== 'CRIACAO'}
               onCancel={() => setActiveModal(null)}
               onConfirm={handleEnviarValidacao}
             />

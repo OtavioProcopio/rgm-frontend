@@ -27,6 +27,7 @@ const tipoOptions = [
   { value: 'REPARO', label: 'Reparo' },
   { value: 'INSPECAO', label: 'Inspeção' },
   { value: 'REENGENHARIA', label: 'Reengenharia' },
+  { value: 'CRIACAO', label: 'Criação de modelo' },
 ];
 
 const prioridadeOptions = [

@@ -809,6 +809,33 @@ Não é necessário testar detalhes internos de implementação.
 
 Testar comportamento observável.
 
+### 19.1 E2E (Playwright)
+
+Além dos testes unitários (Vitest, rodam sempre em container/CI), o
+repositório mantém uma suíte E2E real em `app/e2e/*.spec.ts`
+(`@playwright/test` — não Cypress; o serviço `cypress` do
+`docker-compose.dev.yml` é scaffolding legado, nunca usado). A suíte simula
+o fluxo de trabalho completo no navegador (login, abrir/triar/validar/
+concluir solicitação, Kanban, galeria de modelo, admin) contra o stack real
+subido via `make up`.
+
+Como rodar localmente:
+
+```txt
+# Navegadores do Playwright são instalados no HOST (glibc), não no
+# container (Alpine/musl não é suportado oficialmente pelo Playwright).
+# node_modules é compartilhado via bind mount, então basta instalar uma vez:
+cd app && npx playwright install --with-deps chromium
+
+# Com o stack rodando (make up):
+cd app && BASE_URL=http://localhost:5173 API_URL=http://localhost:8080/api \
+  npx playwright test --reporter=list
+```
+
+`e2e/fixtures.ts` fornece login programático via `localStorage`
+(`loginAdmin`/`loginAs`) e helpers de API (`apiPost`/`apiPatch`/`apiGet`/
+`apiCriarUsuario`) para preparar estado sem depender da UI em cada teste.
+
 ---
 
 ## 20. Git Flow
