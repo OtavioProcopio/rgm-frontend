@@ -311,4 +311,45 @@ describe('SolicitacaoDetalhePage', () => {
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     expect(within(container).getByTestId('evidencia-list')).toBeDefined();
   });
+
+  it('shows the pretended model data for a CRIACAO solicitacao without a modelo yet', async () => {
+    const { useSolicitacao } = await import('../hooks/useSolicitacao');
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: {
+        ...mockSolicitacao,
+        tipo: 'CRIACAO',
+        modeloId: null,
+        modeloCodigo: 'COD-XYZ',
+        modeloMaquina: 'FBOX',
+        modeloObservacoes: 'Observação livre',
+      },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    expect(within(container).getByText('Modelo pretendido')).toBeDefined();
+    expect(within(container).getByText('COD-XYZ — FBOX')).toBeDefined();
+    expect(within(container).getByText(/será criado ao concluir/i)).toBeDefined();
+  });
+
+  it('shows tipo as read-only text in edit mode (imutável após a abertura)', async () => {
+    const { useSolicitacao } = await import('../hooks/useSolicitacao');
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: mockSolicitacao, isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    await userEvent.click(within(container).getByRole('button', { name: /^editar$/i }));
+
+    expect(within(container).getByText(/não pode ser alterado/i)).toBeDefined();
+    expect(container.querySelector('select')).toBeNull();
+  });
 });

@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { Button } from '@/shared/components/Button/Button';
 
+import { GaleriaModelo } from '../components/GaleriaModelo';
 import { ModeloForm } from '../components/ModeloForm';
 import { useCriarModelo } from '../hooks/useCriarModelo';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
-import type { CriarModeloRequest } from '../types/modeloTypes';
+import type { CriarModeloRequest, Modelo } from '../types/modeloTypes';
 
 type Props = {
   backPath?: string;
@@ -17,23 +19,45 @@ export function NovoModeloPage({ backPath }: Props) {
   const navigate = useNavigate();
   const criarModelo = useCriarModelo();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [modeloCriado, setModeloCriado] = useState<Modelo | null>(null);
   const resolvedBackPath = backPath ?? '/app/admin/modelos';
 
   async function handleSubmit(payload: CriarModeloRequest) {
     setErrorMessage(null);
     try {
       const created = await criarModelo.mutateAsync(payload);
-      navigate(`/app/admin/modelos/${created.id}`);
+      setModeloCriado(created);
     } catch (mutationError) {
       setErrorMessage(getModeloErrorMessage(mutationError));
     }
+  }
+
+  function handleIrParaDetalhe() {
+    if (modeloCriado) navigate(`/app/admin/modelos/${modeloCriado.id}`);
+  }
+
+  if (modeloCriado) {
+    return (
+      <section>
+        <PageHeader
+          title="Modelo cadastrado"
+          description="Adicione fotos à galeria agora, se quiser, ou siga para o detalhe do modelo."
+        />
+        <GaleriaModelo modeloId={modeloCriado.id} podeGerenciar />
+        <div className="mt-4">
+          <Button type="button" onClick={handleIrParaDetalhe}>
+            Ir para o detalhe do modelo
+          </Button>
+        </div>
+      </section>
+    );
   }
 
   return (
     <section>
       <PageHeader
         title="Novo modelo"
-        description="Cadastre um modelo de fundição. A galeria de fotos pode ser adicionada depois, na página de detalhes."
+        description="Cadastre um modelo de fundição. Você poderá adicionar fotos à galeria logo em seguida."
       />
       {errorMessage ? (
         <div className="mb-4">

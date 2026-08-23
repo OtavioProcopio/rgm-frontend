@@ -5,7 +5,7 @@ export type StatusSolicitacao =
   | 'CONCLUIDA'
   | 'CANCELADA';
 export type PrioridadeSolicitacao = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA';
+export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA' | 'CRIACAO';
 export type TipoAtividadeSolicitacao =
   | 'ABERTURA'
   | 'ATRIBUICAO'
@@ -20,7 +20,12 @@ export type Solicitacao = {
   tipo: TipoSolicitacao;
   status: StatusSolicitacao;
   prioridade: PrioridadeSolicitacao | null;
-  modeloId: string;
+  /** Nulo enquanto uma solicitação CRIACAO ainda não foi concluída (o modelo ainda não existe). */
+  modeloId: string | null;
+  /** Preenchidos apenas em solicitações do tipo CRIACAO. */
+  modeloCodigo?: string | null;
+  modeloMaquina?: string | null;
+  modeloObservacoes?: string | null;
   abertaPorUsuarioId: string;
   comentarioFinal: string | null;
   criadaEm: string;
@@ -60,13 +65,18 @@ export type AbrirSolicitacaoRequest = {
   titulo: string;
   descricao: string;
   tipo: TipoSolicitacao;
-  modeloId: string;
+  /** Obrigatório para todos os tipos exceto CRIACAO. */
+  modeloId?: string;
+  /** Usados apenas quando tipo === 'CRIACAO', em vez de modeloId. */
+  modeloCodigo?: string;
+  modeloMaquina?: string;
+  modeloObservacoes?: string;
 };
 
+/** O tipo é imutável após a abertura — não faz parte deste request. */
 export type EditarSolicitacaoRequest = {
   titulo: string;
   descricao: string;
-  tipo: TipoSolicitacao;
 };
 
 export type TriarSolicitacaoRequest = {

@@ -2,6 +2,7 @@ import { test, expect, ADMIN_EMAIL, ADMIN_PASSWORD, API_URL } from './fixtures';
 
 test.describe('Autenticação', () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
     await page.evaluate(() => localStorage.clear());
   });
 
@@ -45,7 +46,7 @@ test.describe('Autenticação', () => {
     // Perfil agora fica no header — clica no link do nome do usuário
     await page.goto('/app/perfil');
     await expect(page).toHaveURL(/\/app\/perfil/);
-    await expect(page.getByText('ADMINISTRADOR')).toBeVisible();
+    await expect(page.getByRole('main').getByText('ADMINISTRADOR', { exact: true })).toBeVisible();
     await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();
   });
 

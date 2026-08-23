@@ -40,7 +40,12 @@ export function KanbanColumn({
   onAdvance,
 }: Props) {
   return (
-    <div className={cn('flex flex-col', mobileView ? 'w-full' : 'w-72 shrink-0')}>
+    <div
+      className={cn(
+        'flex flex-col',
+        mobileView ? 'w-full' : 'min-w-[170px] max-w-[340px] flex-1',
+      )}
+    >
       {/* Header — only shown in desktop (mobile shows tabs instead) */}
       {!mobileView && (
         <div

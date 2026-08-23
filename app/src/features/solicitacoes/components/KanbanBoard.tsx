@@ -399,6 +399,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
               <EnviarValidacaoModal
                 solicitacaoId={pendingMove.card.id}
                 isPending={actions.enviarValidacao.isPending}
+                evidenciaObrigatoria={pendingMove.card.tipo !== 'CRIACAO'}
                 onCancel={clearPendingMove}
                 onConfirm={handleEnviarValidacao}
               />

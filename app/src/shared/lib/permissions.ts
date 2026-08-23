@@ -16,6 +16,11 @@ export function canManageSolicitacoes(perfil?: PerfilUsuario | null) {
   return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR';
 }
 
+/** Espelha Solicitacao.validarAutorizacaoAbrirCriacao no backend. */
+export function canAbrirSolicitacaoCriacao(perfil?: PerfilUsuario | null) {
+  return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR';
+}
+
 export function canViewModelos(perfil?: PerfilUsuario | null) {
   return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || perfil === 'OPERADOR';
 }

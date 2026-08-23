@@ -38,6 +38,37 @@ describe('solicitacaoSchema', () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it('accepts a valid CRIACAO request with modeloCodigo/modeloMaquina instead of modeloId', () => {
+      const result = abrirSolicitacaoSchema.safeParse({
+        titulo: 'Novo modelo XYZ',
+        descricao: 'Descrição do modelo pretendido',
+        tipo: 'CRIACAO',
+        modeloCodigo: 'COD-XYZ',
+        modeloMaquina: 'FBOX',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects CRIACAO without modeloCodigo', () => {
+      const result = abrirSolicitacaoSchema.safeParse({
+        titulo: 'Novo modelo XYZ',
+        descricao: 'Descrição do modelo pretendido',
+        tipo: 'CRIACAO',
+        modeloMaquina: 'FBOX',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects CRIACAO without modeloMaquina', () => {
+      const result = abrirSolicitacaoSchema.safeParse({
+        titulo: 'Novo modelo XYZ',
+        descricao: 'Descrição do modelo pretendido',
+        tipo: 'CRIACAO',
+        modeloCodigo: 'COD-XYZ',
+      });
+      expect(result.success).toBe(false);
+    });
   });
 
   describe('triarSolicitacaoSchema', () => {
