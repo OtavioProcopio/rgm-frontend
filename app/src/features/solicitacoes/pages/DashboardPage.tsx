@@ -9,7 +9,6 @@ import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 import { cn } from '@/shared/lib/cn';
 
 import { HistoricoChart } from '../components/HistoricoChart';
-import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { useMetricas } from '../hooks/useMetricas';
 import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { ModelosTab } from './ModelosTab';
@@ -34,11 +33,6 @@ export function DashboardPage() {
     isLoading: loadingMetricas,
     isError: errorMetricas,
   } = useMetricas({ enabled: !isOperador });
-  const {
-    data: solicitacoes = [],
-    isLoading: loadingSolicitacoes,
-    isError: errorSolicitacoes,
-  } = useKanbanSolicitacoes(undefined, { enabled: !isOperador });
 
   const isAdmin = canAccessAdmin(user?.perfil);
   const isGestor = canManageModelos(user?.perfil) && !isAdmin;
@@ -86,21 +80,16 @@ export function DashboardPage() {
       ) : null}
 
       {activeTab === 'solicitacoes' ? (
-        loadingMetricas || loadingSolicitacoes ? (
+        loadingMetricas ? (
           <LoadingState title="Carregando painel de indicadores..." />
-        ) : errorMetricas || errorSolicitacoes || !metricas ? (
+        ) : errorMetricas || !metricas ? (
           <ErrorState
             title="Não foi possível carregar o dashboard"
             description="Verifique sua conexão com o servidor."
           />
         ) : (
           <div className="space-y-6">
-            <SolicitacoesTab
-              metricas={metricas}
-              solicitacoes={solicitacoes}
-              isAdmin={isAdmin}
-              isGestor={isGestor}
-            />
+            <SolicitacoesTab metricas={metricas} isAdmin={isAdmin} isGestor={isGestor} />
             <HistoricoChart />
           </div>
         )

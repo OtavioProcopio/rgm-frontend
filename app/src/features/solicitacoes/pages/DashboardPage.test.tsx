@@ -17,15 +17,12 @@ const mockMetricas = {
 
 vi.mock('../api/solicitacoesApi', () => ({
   solicitacoesApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, totalPages: 0 }),
+    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 }),
   },
 }));
 
 vi.mock('../hooks/useMetricas', () => ({
   useMetricas: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null, isError: false }),
-}));
-vi.mock('../hooks/useKanbanSolicitacoes', () => ({
-  useKanbanSolicitacoes: vi.fn().mockReturnValue({ data: [], isLoading: false, error: null }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({ data: { content: [], totalElements: 0 }, isLoading: false, error: null }),
@@ -34,7 +31,14 @@ vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: null, isLoading: false }),
 }));
 
-afterEach(cleanup);
+afterEach(async () => {
+  cleanup();
+  const { solicitacoesApi } = await import('../api/solicitacoesApi');
+  vi.mocked(solicitacoesApi.listar).mockReset();
+  vi.mocked(solicitacoesApi.listar).mockResolvedValue({
+    content: [], totalElements: 0, page: 0, size: 20, totalPages: 0,
+  });
+});
 
 describe('DashboardPage', () => {
   it('renders loading state', () => {
@@ -94,36 +98,37 @@ describe('DashboardPage', () => {
     expect(within(container).getByText(/30s/)).toBeDefined();
   });
 
-  it('renders with aging tasks from kanban', async () => {
+  it('renders with aging tasks from the atrasada filter', async () => {
     const { useMetricas } = await import('../hooks/useMetricas');
-    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
+    const { solicitacoesApi } = await import('../api/solicitacoesApi');
     vi.mocked(useMetricas).mockReturnValue({
       data: mockMetricas, isLoading: false, isError: false, error: null,
     } as unknown as ReturnType<typeof useMetricas>);
     const old = new Date(Date.now() - 10 * 86400 * 1000).toISOString();
-    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
-      data: [{
-        id: 's1', titulo: 'Tarefa Velha', criadaEm: old, status: 'A_FAZER',
-        tipo: 'REPARO', prioridade: 'ALTA', descricao: '', modeloId: 'm1',
-        modeloCodigo: 'M01', solicitanteId: 'u1', solicitanteNome: 'J', atualizadaEm: old,
-      }],
-      isLoading: false, error: null,
-    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+    vi.mocked(solicitacoesApi.listar).mockImplementation(((filters: { atrasada?: boolean }) => {
+      if (filters.atrasada) {
+        return Promise.resolve({
+          content: [{
+            id: 's1', titulo: 'Tarefa Velha', criadaEm: old, status: 'A_FAZER',
+            tipo: 'REPARO', prioridade: 'ALTA', descricao: '', modeloId: 'm1',
+            modeloCodigo: 'M01', solicitanteId: 'u1', solicitanteNome: 'J', atualizadaEm: old,
+          }],
+          totalElements: 1, page: 0, size: 5, totalPages: 1,
+        });
+      }
+      return Promise.resolve({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 });
+    }) as unknown as typeof solicitacoesApi.listar);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
-    expect(within(container).getByText('Tarefa Velha')).toBeDefined();
+    expect(await within(container).findByText('Tarefa Velha')).toBeDefined();
   });
 
   it('renders status distribution table with percentages', async () => {
     const { useMetricas } = await import('../hooks/useMetricas');
-    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
     vi.mocked(useMetricas).mockReturnValue({
       data: mockMetricas, isLoading: false, isError: false, error: null,
     } as unknown as ReturnType<typeof useMetricas>);
-    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
-      data: [], isLoading: false, error: null,
-    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -133,9 +138,7 @@ describe('DashboardPage', () => {
 
   it('shows only the Pessoal tab for OPERADOR and does not fetch global metricas', async () => {
     const { useMetricas } = await import('../hooks/useMetricas');
-    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
     vi.mocked(useMetricas).mockClear();
-    vi.mocked(useKanbanSolicitacoes).mockClear();
 
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
@@ -145,22 +148,14 @@ describe('DashboardPage', () => {
     expect(vi.mocked(useMetricas)).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false }),
     );
-    expect(vi.mocked(useKanbanSolicitacoes)).toHaveBeenCalledWith(
-      undefined,
-      expect.objectContaining({ enabled: false }),
-    );
   });
 
   it('renders zero percentage when totalSolicitacoes is zero', async () => {
     const { useMetricas } = await import('../hooks/useMetricas');
-    const { useKanbanSolicitacoes } = await import('../hooks/useKanbanSolicitacoes');
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, totalSolicitacoes: 0, solicitacoesPorStatus: { A_FAZER: 0, EM_ANDAMENTO: 0, EM_VALIDACAO: 0, CONCLUIDA: 0, CANCELADA: 0 } },
       isLoading: false, isError: false, error: null,
     } as unknown as ReturnType<typeof useMetricas>);
-    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
-      data: [], isLoading: false, error: null,
-    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });

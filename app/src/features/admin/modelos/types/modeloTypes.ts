@@ -1,3 +1,18 @@
+export type TipoModelo =
+  | 'PLACA_ALUMINIO'
+  | 'MADEIRA_E_3D'
+  | 'ALUMINIO_E_3D'
+  | 'RESINA'
+  | 'COQUILHA_ACO';
+
+export const TIPO_MODELO_LABELS: Record<TipoModelo, string> = {
+  PLACA_ALUMINIO: 'Placa Alumínio',
+  MADEIRA_E_3D: 'Madeira e 3D',
+  ALUMINIO_E_3D: 'Alumínio e 3D',
+  RESINA: 'Resina',
+  COQUILHA_ACO: 'Coquilha em Aço',
+};
+
 export type Modelo = {
   id: string;
   codigo: string;
@@ -7,6 +22,7 @@ export type Modelo = {
   fotoCapaUrl: string | null;
   ativo: boolean;
   maquina: string;
+  tipo: TipoModelo | null;
   temPendenciaAberta: boolean;
   criadoEm: string;
   atualizadoEm: string;
@@ -38,6 +54,7 @@ export type CriarModeloRequest = {
   descricao: string;
   observacoes?: string;
   maquina: string;
+  tipo?: TipoModelo;
 };
 
 export type EditarModeloRequest = {
@@ -45,5 +62,6 @@ export type EditarModeloRequest = {
   descricao: string;
   observacoes?: string;
   maquina: string;
+  tipo?: TipoModelo;
 };
 

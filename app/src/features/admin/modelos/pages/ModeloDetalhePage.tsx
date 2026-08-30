@@ -18,6 +18,7 @@ import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes
 import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
+import { TIPO_MODELO_LABELS } from '../types/modeloTypes';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
@@ -32,6 +33,14 @@ export function ModeloDetalhePage() {
   const { data: solicitacoesPage } = useSolicitacoes(
     { modeloId: id, page: 0, size: 50 },
     { enabled: !!id },
+  );
+  // Lista completa (tamanho = total real, nao os 50 exibidos no historico) para o
+  // mini-dashboard abaixo — evita o bug de "dados irreais" quando o modelo tem mais
+  // de 50 solicitacoes no historico.
+  const totalSolicitacoesModelo = solicitacoesPage?.totalElements ?? 0;
+  const { data: solicitacoesCompletas } = useSolicitacoes(
+    { modeloId: id, page: 0, size: Math.max(totalSolicitacoesModelo, 1) },
+    { enabled: !!id && solicitacoesPage !== undefined },
   );
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
@@ -164,6 +173,10 @@ export function ModeloDetalhePage() {
                 value={modelo.maquina}
               />
               <Detail
+                label="Tipo do Modelo"
+                value={modelo.tipo ? TIPO_MODELO_LABELS[modelo.tipo] : 'Não definido'}
+              />
+              <Detail
                 label="Pendência aberta"
                 value={modelo.temPendenciaAberta ? 'Sim' : 'Não'}
               />
@@ -193,7 +206,7 @@ export function ModeloDetalhePage() {
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
               Indicadores consolidados de todos os chamados vinculados a este modelo.
             </p>
-            <ModeloDashboard solicitacoes={solicitacoesPage?.content ?? []} />
+            <ModeloDashboard solicitacoes={solicitacoesCompletas?.content ?? []} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
