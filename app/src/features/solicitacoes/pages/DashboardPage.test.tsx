@@ -17,7 +17,7 @@ const mockMetricas = {
 
 vi.mock('../api/solicitacoesApi', () => ({
   solicitacoesApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, totalPages: 0 }),
+    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 }),
   },
 }));
 
@@ -36,7 +36,7 @@ afterEach(async () => {
   const { solicitacoesApi } = await import('../api/solicitacoesApi');
   vi.mocked(solicitacoesApi.listar).mockReset();
   vi.mocked(solicitacoesApi.listar).mockResolvedValue({
-    content: [], totalElements: 0, page: 0, totalPages: 0,
+    content: [], totalElements: 0, page: 0, size: 20, totalPages: 0,
   });
 });
 
@@ -105,7 +105,7 @@ describe('DashboardPage', () => {
       data: mockMetricas, isLoading: false, isError: false, error: null,
     } as unknown as ReturnType<typeof useMetricas>);
     const old = new Date(Date.now() - 10 * 86400 * 1000).toISOString();
-    vi.mocked(solicitacoesApi.listar).mockImplementation((filters: { atrasada?: boolean }) => {
+    vi.mocked(solicitacoesApi.listar).mockImplementation(((filters: { atrasada?: boolean }) => {
       if (filters.atrasada) {
         return Promise.resolve({
           content: [{
@@ -113,11 +113,11 @@ describe('DashboardPage', () => {
             tipo: 'REPARO', prioridade: 'ALTA', descricao: '', modeloId: 'm1',
             modeloCodigo: 'M01', solicitanteId: 'u1', solicitanteNome: 'J', atualizadaEm: old,
           }],
-          totalElements: 1, page: 0, totalPages: 1,
+          totalElements: 1, page: 0, size: 5, totalPages: 1,
         });
       }
-      return Promise.resolve({ content: [], totalElements: 0, page: 0, totalPages: 0 });
-    });
+      return Promise.resolve({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 });
+    }) as unknown as typeof solicitacoesApi.listar);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<DashboardPage />, { wrapper: AppWrapper });

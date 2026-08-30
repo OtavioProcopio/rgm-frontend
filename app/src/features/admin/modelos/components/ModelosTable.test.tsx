@@ -15,7 +15,7 @@ vi.mock('./ModeloFotoCapa', () => ({
 
 const modelo = {
   id: '1', codigo: 'M01', descricao: 'Desc', maquina: 'Injetora',
-  versao: 1, observacoes: null, temPendenciaAberta: false,
+  versao: 1, observacoes: null, temPendenciaAberta: false, tipo: null,
   ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '',
 };
 

@@ -9,7 +9,7 @@ import { ModeloActionsMenu } from './ModeloActionsMenu';
 
 const modelo = {
   id: '123', codigo: 'M01', descricao: 'Desc', maquina: 'Injetora',
-  versao: 1, observacoes: null, temPendenciaAberta: false,
+  versao: 1, observacoes: null, temPendenciaAberta: false, tipo: null,
   ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '',
 };
 

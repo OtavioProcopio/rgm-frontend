@@ -20,6 +20,7 @@ const baseModelo: Modelo = {
   ativo: true,
   maquina: 'Máquina A',
   fotoCapaUrl: null,
+  tipo: null,
   temPendenciaAberta: false,
   criadoEm: '2024-01-01T00:00:00',
   atualizadoEm: '2024-01-01T00:00:00',
