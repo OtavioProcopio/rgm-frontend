@@ -1,18 +1,97 @@
 import { AlertTriangle, CheckCircle2, Clock, Hourglass, Layers, Package, Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { cn } from '@/shared/lib/cn';
 
+import { solicitacoesApi } from '../api/solicitacoesApi';
+import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
 import { statusLabel, tipoLabel, prioridadeLabel } from '../lib/solicitacaoMessages';
 import type {
   MetricasResponse,
   PrioridadeSolicitacao,
-  Solicitacao,
+  SolicitacoesFilters,
   StatusSolicitacao,
   TipoSolicitacao,
 } from '../types/solicitacaoTypes';
 import { KPICard } from './DashboardKpiCard';
+
+function useSolicitacoesTotal(filters: SolicitacoesFilters) {
+  return useQuery({
+    queryKey: solicitacoesKeys.list(filters),
+    queryFn: () => solicitacoesApi.listar(filters),
+    select: (data) => data.totalElements,
+  });
+}
+
+function useSolicitacoesPorStatusAberto(status: StatusSolicitacao) {
+  return useQuery({
+    queryKey: solicitacoesKeys.list({ status, page: 0, size: 1000 }),
+    queryFn: () => solicitacoesApi.listar({ status, page: 0, size: 1000 }),
+    select: (data) => data.content,
+  });
+}
+
+/**
+ * Distribuicao por tipo/prioridade e lista de atrasadas usando contagens reais do backend
+ * (nao um array capado no cliente) — ver bug do dashboard "dados irreais": distribuicoes
+ * calculadas a partir de uma pagina fixa de 200 registros ficavam incorretas assim que o
+ * total de solicitacoes passava disso.
+ */
+function useDistribuicoes() {
+  const [now] = useState(() => Date.now());
+
+  const reparo = useSolicitacoesTotal({ tipo: 'REPARO', page: 0, size: 1 });
+  const inspecao = useSolicitacoesTotal({ tipo: 'INSPECAO', page: 0, size: 1 });
+  const reengenharia = useSolicitacoesTotal({ tipo: 'REENGENHARIA', page: 0, size: 1 });
+  const criacao = useSolicitacoesTotal({ tipo: 'CRIACAO', page: 0, size: 1 });
+  const byTipo: Record<string, number> = {
+    REPARO: reparo.data ?? 0,
+    INSPECAO: inspecao.data ?? 0,
+    REENGENHARIA: reengenharia.data ?? 0,
+    CRIACAO: criacao.data ?? 0,
+  };
+
+  const aFazer = useSolicitacoesPorStatusAberto('A_FAZER');
+  const emAndamento = useSolicitacoesPorStatusAberto('EM_ANDAMENTO');
+  const emValidacao = useSolicitacoesPorStatusAberto('EM_VALIDACAO');
+
+  const byPrioridade: Record<string, number> = {};
+  for (const status of [aFazer, emAndamento, emValidacao]) {
+    for (const s of status.data ?? []) {
+      if (s.prioridade) {
+        byPrioridade[s.prioridade] = (byPrioridade[s.prioridade] ?? 0) + 1;
+      }
+    }
+  }
+
+  const atrasadasCount = useSolicitacoesTotal({ atrasada: true, page: 0, size: 1 });
+  const atrasadasLista = useQuery({
+    queryKey: solicitacoesKeys.list({ atrasada: true, page: 0, size: 5 }),
+    queryFn: () => solicitacoesApi.listar({ atrasada: true, page: 0, size: 5 }),
+    select: (data) => data.content,
+  });
+
+  const maxTipo = Math.max(...TIPO_ORDER.map((t) => byTipo[t] ?? 0), 1);
+  const maxPrio = Math.max(...PRIORIDADE_ORDER.map((p) => byPrioridade[p] ?? 0), 1);
+
+  const agingTasks = (atrasadasLista.data ?? []).map((s) => ({
+    id: s.id,
+    titulo: s.titulo,
+    status: s.status,
+    diasAberta: Math.floor((now - new Date(s.criadaEm).getTime()) / 86_400_000),
+  }));
+
+  return {
+    byTipo,
+    byPrioridade,
+    maxTipo,
+    maxPrio,
+    agingCount: atrasadasCount.data ?? 0,
+    agingTasks,
+  };
+}
 
 const STATUS_ORDER: StatusSolicitacao[] = [
   'A_FAZER',
@@ -47,8 +126,6 @@ const PRIORIDADE_COLOR: Record<PrioridadeSolicitacao, string> = {
   MEDIA: 'bg-amber-500 dark:bg-amber-400',
   BAIXA: 'bg-slate-400 dark:bg-slate-500',
 };
-
-const AGING_THRESHOLD_DAYS = 7;
 
 function BarRow({
   label,
@@ -89,45 +166,13 @@ function BarRow({
 
 type Props = {
   metricas: MetricasResponse;
-  solicitacoes: Solicitacao[];
   isAdmin: boolean;
   isGestor: boolean;
 };
 
-export function SolicitacoesTab({ metricas, solicitacoes, isAdmin, isGestor }: Props) {
-  const [now] = useState(() => Date.now());
-
-  const distributions = useMemo(() => {
-    const byTipo: Record<string, number> = {};
-    const byPrioridade: Record<string, number> = {};
-
-    for (const s of solicitacoes) {
-      byTipo[s.tipo] = (byTipo[s.tipo] ?? 0) + 1;
-      if (s.prioridade && s.status !== 'CONCLUIDA' && s.status !== 'CANCELADA') {
-        byPrioridade[s.prioridade] = (byPrioridade[s.prioridade] ?? 0) + 1;
-      }
-    }
-
-    const maxTipo = Math.max(...TIPO_ORDER.map((t) => byTipo[t] ?? 0), 1);
-    const maxPrio = Math.max(...PRIORIDADE_ORDER.map((p) => byPrioridade[p] ?? 0), 1);
-
-    return { byTipo, byPrioridade, maxTipo, maxPrio };
-  }, [solicitacoes]);
-
-  const agingTasks = solicitacoes
-    .filter((s) => {
-      if (s.status === 'CONCLUIDA' || s.status === 'CANCELADA') return false;
-      const dias = (now - new Date(s.criadaEm).getTime()) / 86_400_000;
-      return dias > AGING_THRESHOLD_DAYS;
-    })
-    .map((s) => ({
-      id: s.id,
-      titulo: s.titulo,
-      status: s.status,
-      diasAberta: Math.floor((now - new Date(s.criadaEm).getTime()) / 86_400_000),
-    }))
-    .sort((a, b) => b.diasAberta - a.diasAberta)
-    .slice(0, 5);
+export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
+  const distributions = useDistribuicoes();
+  const { agingCount, agingTasks } = distributions;
 
   const maxStatus = Math.max(
     ...STATUS_ORDER.map((status) => metricas.solicitacoesPorStatus[status] ?? 0),
@@ -183,9 +228,9 @@ export function SolicitacoesTab({ metricas, solicitacoes, isAdmin, isGestor }: P
         <KPICard
           icon={AlertTriangle}
           label="Em atraso"
-          value={agingTasks.length}
+          value={agingCount}
           subtext="abertos há +7 dias"
-          gradient={agingTasks.length > 0 ? 'rose' : 'slate'}
+          gradient={agingCount > 0 ? 'rose' : 'slate'}
         />
       </div>
 
@@ -340,7 +385,7 @@ export function SolicitacoesTab({ metricas, solicitacoes, isAdmin, isGestor }: P
             </div>
           </div>
 
-          {agingTasks.length === 0 ? (
+          {agingCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <CheckCircle2 className="h-10 w-10 text-emerald-500" />
               <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">

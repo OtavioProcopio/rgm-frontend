@@ -12,7 +12,13 @@ import {
   type CriarModeloFormData,
   type EditarModeloFormData,
 } from '../schemas/modeloSchema';
+import { TIPO_MODELO_LABELS } from '../types/modeloTypes';
 import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/modeloTypes';
+
+const tipoModeloOptions = [
+  { value: '', label: 'Não definido' },
+  ...Object.entries(TIPO_MODELO_LABELS).map(([value, label]) => ({ value, label })),
+];
 
 type ModeloFormProps =
   | {
@@ -45,13 +51,19 @@ function CriarModeloForm({
     register,
   } = useForm<CriarModeloFormData>({
     resolver: zodResolver(criarModeloSchema),
-    defaultValues: { codigo: '', descricao: '', observacoes: '', maquina: '' },
+    defaultValues: { codigo: '', descricao: '', observacoes: '', maquina: '', tipo: '' },
   });
 
   return (
     <form
       className="space-y-5"
-      onSubmit={handleSubmit((data) => onSubmit({ ...data, observacoes: data.observacoes || undefined }))}
+      onSubmit={handleSubmit((data) =>
+        onSubmit({
+          ...data,
+          observacoes: data.observacoes || undefined,
+          tipo: data.tipo || undefined,
+        }),
+      )}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
@@ -75,6 +87,13 @@ function CriarModeloForm({
           )}
         />
       </div>
+      <Select
+        label="Tipo do Modelo"
+        options={tipoModeloOptions}
+        error={errors.tipo?.message}
+        disabled={isSubmitting}
+        {...register('tipo')}
+      />
       <Input
         label="Descrição"
         error={errors.descricao?.message}
@@ -111,6 +130,7 @@ function EditarModeloForm({
       descricao: modelo.descricao,
       observacoes: modelo.observacoes ?? '',
       maquina: modelo.maquina,
+      tipo: modelo.tipo ?? '',
     },
   });
 
@@ -123,6 +143,7 @@ function EditarModeloForm({
           descricao: data.descricao,
           observacoes: data.observacoes || undefined,
           maquina: data.maquina,
+          tipo: data.tipo || undefined,
         }),
       )}
     >
@@ -148,6 +169,13 @@ function EditarModeloForm({
           )}
         />
       </div>
+      <Select
+        label="Tipo do Modelo"
+        options={tipoModeloOptions}
+        error={errors.tipo?.message}
+        disabled={isSubmitting}
+        {...register('tipo')}
+      />
       <Input
         label="Descrição"
         error={errors.descricao?.message}

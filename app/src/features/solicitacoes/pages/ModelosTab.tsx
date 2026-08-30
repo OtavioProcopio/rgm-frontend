@@ -22,18 +22,39 @@ const RANKING_PAGE_SIZE = 10;
 export function ModelosTab() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useModelos({ page: 0, size: 100 });
   const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
+
+  // Contagens exatas via totalElements da paginacao — nao via .length de um array
+  // limitado a 100 itens (bug do dashboard "dados irreais": ativos/inativos/pendencias/
+  // maquina ficavam incorretos assim que o total de modelos passava de 100).
+  const { data: totalData, isLoading: loadingTotal, isError: errorTotal } = useModelos({
+    page: 0,
+    size: 1,
+  });
+  const totalElements = totalData?.totalElements ?? 0;
+  const { data: ativosData, isLoading: loadingAtivos } = useModelos({
+    page: 0,
+    size: 1,
+    ativo: true,
+  });
+  const { data: inativosData, isLoading: loadingInativos } = useModelos({
+    page: 0,
+    size: 1,
+    ativo: false,
+  });
+  // Lista completa (tamanho = total real, nao um limite arbitrario) so para derivar
+  // pendencias e a distribuicao por maquina, que nao tem endpoint agregado dedicado.
+  const { data: fullData, isLoading: loadingFull, isError: errorFull } = useModelos({
+    page: 0,
+    size: Math.max(totalElements, 1),
+  });
 
   function irParaSolicitacoesDaMaquina(maquina: string) {
     navigate(`/app/solicitacoes?maquina=${encodeURIComponent(maquina)}`);
   }
 
   const stats = useMemo(() => {
-    const modelos = data?.content ?? [];
-    const total = data?.totalElements ?? modelos.length;
-    const ativos = modelos.filter((m) => m.ativo).length;
-    const inativos = modelos.filter((m) => !m.ativo).length;
+    const modelos = fullData?.content ?? [];
     const comPendencia = modelos.filter((m) => m.temPendenciaAberta).length;
 
     const porMaquina: Record<string, number> = {};
@@ -42,8 +63,17 @@ export function ModelosTab() {
     }
     const maquinasOrdenadas = Object.entries(porMaquina).sort((a, b) => b[1] - a[1]);
 
-    return { total, ativos, inativos, comPendencia, maquinasOrdenadas };
-  }, [data]);
+    return {
+      total: totalElements,
+      ativos: ativosData?.totalElements ?? 0,
+      inativos: inativosData?.totalElements ?? 0,
+      comPendencia,
+      maquinasOrdenadas,
+    };
+  }, [fullData, totalElements, ativosData, inativosData]);
+
+  const isLoading = loadingTotal || loadingAtivos || loadingInativos || loadingFull;
+  const isError = errorTotal || errorFull;
 
   if (isLoading) return <LoadingState title="Carregando estatísticas de modelos..." />;
   if (isError) {
