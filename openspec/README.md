@@ -19,3 +19,4 @@ entra nesta tabela na mesma entrega.
 
 | Capacidade (`openspec/specs/`) | Feature que altera o comportamento |
 |---|---|
+| `solicitacoes-kanban` | `specs/001-responsaveis-disponiveis-fora-da-administracao` — o modal de triagem do quadro passa a listar responsáveis também para gestor |

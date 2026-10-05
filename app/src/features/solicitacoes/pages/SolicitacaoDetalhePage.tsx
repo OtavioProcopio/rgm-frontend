@@ -38,8 +38,7 @@ import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUpl
 import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
-import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
-import { useQuery } from '@tanstack/react-query';
+import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useResponsaveisDisponiveis';
 import { Input } from '@/shared/components/Input/Input';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
@@ -84,15 +83,7 @@ export function SolicitacaoDetalhePage() {
     solicitacao?.abertaPorUsuarioId === profile?.id &&
     (solicitacao?.responsavelIds?.length ?? 0) === 0;
 
-  const { data: usuariosPage } = useQuery({
-    queryKey: ['admin', 'usuarios', 'triagem'],
-    queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
-    enabled: canManageSolicitacoes(user?.perfil),
-    staleTime: 5 * 60 * 1000,
-  });
-  const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
-    (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
-  );
+  const { responsaveis: responsaveisOpcoes } = useResponsaveisDisponiveis();
 
   async function handleTriar(data: TriarSolicitacaoRequest, foto: File | null, nota: string) {
     setActionError(null);

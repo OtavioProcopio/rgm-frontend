@@ -1,15 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
-import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
+import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useResponsaveisDisponiveis';
 import { useAuth } from '@/app/providers/authContext';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
-import { canAccessAdmin, canManageSolicitacoes } from '@/shared/lib/permissions';
+import { canManageSolicitacoes } from '@/shared/lib/permissions';
 
 import { useKanbanActions } from '../hooks/useKanbanActions';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
@@ -103,7 +102,6 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
   const { user } = useAuth();
   const { data: profile } = usePerfil();
   const canManage = canManageSolicitacoes(user?.perfil);
-  const canAdmin = canAccessAdmin(user?.perfil);
   const isOperador = user?.perfil === 'OPERADOR';
 
   function canDragCard(s: Solicitacao): boolean {
@@ -125,15 +123,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<StatusSolicitacao>('A_FAZER');
 
-  const { data: usuariosPage } = useQuery({
-    queryKey: ['admin', 'usuarios', 'triagem'],
-    queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
-    enabled: canAdmin,
-    staleTime: 5 * 60 * 1000,
-  });
-  const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
-    (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
-  );
+  const { responsaveis: responsaveisOpcoes } = useResponsaveisDisponiveis();
 
   function tryMove(card: Solicitacao, toStatus: StatusSolicitacao): boolean {
     if (!canDragCard(card)) return false;
