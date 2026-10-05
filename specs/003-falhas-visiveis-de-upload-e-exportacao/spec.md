@@ -14,6 +14,8 @@ tivesse dado certo:
 
 - **Foto anexada junto de uma ação:** na abertura, na triagem, na conclusão e na devolução.
   A ação acontece, a foto não é enviada e ninguém é avisado.
+- **Na conclusão a foto nunca é salva:** a tela conclui a solicitação e só depois envia a
+  foto, e a API recusa anexo em solicitação encerrada. Vale desde a v1.5.0.
 - **Exportação de PDF:** relatório de solicitações, ranking de modelos, lista de modelos e
   ficha do modelo. O botão é clicado e nada acontece.
 
@@ -46,7 +48,7 @@ qualquer envio.
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-01 | Quando a ação é concluída e o envio da foto falha, a tela deve informar que a ação foi feita e que a foto não foi enviada, nomeando a ação | obrigatório |
+| RF-01 | Na abertura, na triagem e na devolução, quando a ação é feita e o envio da foto falha, a tela deve informar que a ação foi feita e que a foto não foi enviada, nomeando a ação | obrigatório |
 | RF-02 | O aviso de RF-01 deve oferecer "Tentar novamente", que reenvia o mesmo arquivo sem refazer a ação | obrigatório |
 | RF-03 | O aviso de RF-01 deve dizer que a foto pode ser anexada depois, pelo detalhe da solicitação | obrigatório |
 | RF-04 | Enquanto o aviso de RF-01 estiver aberto, o usuário não deve ser levado para outra tela automaticamente; ele dispensa o aviso ou segue por um botão | obrigatório |
@@ -55,6 +57,8 @@ qualquer envio.
 | RF-07 | A regra de RF-06 deve ser a mesma em toda tela que anexa evidência; telas que só aceitam imagem continuam restritas a imagem | obrigatório |
 | RF-08 | Falha em qualquer exportação de PDF deve mostrar mensagem de erro visível junto do botão que a disparou | obrigatório |
 | RF-09 | Nenhuma falha de upload ou de exportação deve ficar registrada apenas no console | obrigatório |
+| RF-10 | Na conclusão com foto, a foto deve ser enviada antes de a solicitação ser concluída; se o envio falhar, a solicitação não é concluída e o formulário mostra o erro, sem fechar | obrigatório |
+| RF-11 | Se a foto da conclusão foi enviada e a conclusão foi recusada, uma nova tentativa de concluir não deve enviar a mesma foto outra vez | obrigatório |
 
 ## Requisitos não funcionais
 
@@ -89,6 +93,17 @@ Funcionalidade: Falhas visíveis de upload e exportação
     E vejo um botão para ir ao detalhe da solicitação
     Mas não sou levado ao detalhe automaticamente
 
+  Cenário: Conclusão com foto
+    Dado que estou concluindo uma solicitação em "Em Validação" com uma foto
+    Quando confirmo
+    Então a foto é enviada antes de a solicitação ser concluída
+
+  Cenário: Foto da conclusão falha
+    Dado que estou concluindo uma solicitação com uma foto
+    Quando o envio da foto falha
+    Então a solicitação não é concluída
+    E vejo o erro no formulário de encerramento, que continua aberto
+
   Cenário: Arquivo grande demais
     Quando escolho um arquivo de 11 MB
     Então vejo "Arquivo muito grande. O limite é 10 MB."
@@ -118,6 +133,14 @@ Nenhuma em aberto.
   componente de notificação no projeto e porque o aviso de upload precisa de botão de
   ação, que fica mal num toast que some sozinho. Um toast pode vir com a issue #116.
 
+- **Foto da conclusão** (a issue trata a conclusão como os outros casos): a API recusa
+  anexo em solicitação encerrada, então "Tentar novamente" falharia sempre. Decisão do
+  usuário em 2026-10-05: só na conclusão, a foto vai antes da ação (RF-10). Funciona com o
+  backend v1.5.0. A solução definitiva segue sendo OtavioProcopio/rgm-backend#91.
+- **Telas só de imagem** (foto de abertura e galeria do modelo): continuam aceitando JPEG,
+  PNG e WebP, que é o que a galeria aceita na API.
+
 ## Métricas de sucesso
 
 - Nenhum relato de "anexei a foto e ela não apareceu" sem que a tela tenha avisado.
+- Solicitação concluída com foto passa a ter a evidência de conclusão registrada.
