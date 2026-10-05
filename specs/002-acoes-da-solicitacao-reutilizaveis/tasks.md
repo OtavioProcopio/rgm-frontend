@@ -4,30 +4,30 @@
 
 ## Fase 1 — Domínio
 
-- [ ] T001 Campo opcional `acoesPermitidas` em `app/src/features/solicitacoes/types/solicitacaoTypes.ts`
-- [ ] T002 Teste da regra em `app/src/features/solicitacoes/lib/acoesSolicitacao.test.ts` (cenários "A API informa as ações", "A API não informa as ações", "Operador não responsável não move o card", "Operador que abriu cancela antes da triagem")
-- [ ] T003 Implementar `app/src/features/solicitacoes/lib/acoesSolicitacao.ts`
+- [x] T001 Campo opcional `acoesPermitidas` em `app/src/features/solicitacoes/types/solicitacaoTypes.ts`
+- [x] T002 Teste da regra em `app/src/features/solicitacoes/lib/acoesSolicitacao.test.ts` (cenários "A API informa as ações", "A API não informa as ações", "Operador não responsável não move o card", "Operador que abriu cancela antes da triagem")
+- [x] T003 Implementar `app/src/features/solicitacoes/lib/acoesSolicitacao.ts`
 
 ## Fase 2 — Aplicação
 
-- [ ] T004 [P] Teste e implementação de `app/src/features/solicitacoes/hooks/useAcoesPermitidas.ts`
-- [ ] T005 [P] Teste e implementação de `app/src/features/solicitacoes/hooks/useExecutarAcao.ts` (cenário "Erro da API fica no formulário")
-- [ ] T006 [P] `useAlterarResponsaveis.ts` invalida as listas; ajustar o teste existente
+- [x] T004 [P] Teste e implementação de `app/src/features/solicitacoes/hooks/useAcoesPermitidas.ts`
+- [x] T005 [P] Teste e implementação de `app/src/features/solicitacoes/hooks/useExecutarAcao.ts` (cenário "Erro da API fica no formulário")
+- [x] T006 [P] `useAlterarResponsaveis.ts` invalida as listas; ajustar o teste existente
 
 ## Fase 3 — Adapters e infra
 
-- [ ] T007 Testes e componentes de `app/src/features/solicitacoes/actions/`: `AcaoErro`, `TriarAction`, `EnviarValidacaoAction`, `DevolverAction`, `EncerrarAction`, `CancelarAction`, `ResponsaveisAction`
-- [ ] T008 Teste e componente `app/src/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`
-- [ ] T009 Teste e componente `app/src/features/solicitacoes/components/SolicitacaoAcoes.tsx` (cenários "A API informa as ações" e "Operador que abriu cancela antes da triagem", na tela)
-- [ ] T010 Teste e componente `app/src/features/solicitacoes/components/SolicitacaoResumo.tsx`
-- [ ] T011 `SolicitacaoDetalhePage.tsx` usa `SolicitacaoResumo` e `SolicitacaoAcoes`; ajustar `SolicitacaoDetalhePage.test.tsx`
-- [ ] T012 `KanbanBoard.tsx` usa a regra, `kanbanColunas.ts` e `AcaoSolicitacaoAtiva`; ajustar `KanbanBoard.test.tsx` (cenários "Operador responsável envia para validação pelo quadro", "Operador não responsável não move o card", "Mesmo fluxo nos dois lugares")
-- [ ] T013 Remover `useKanbanActions.ts` e `useKanbanActions.test.ts`
+- [x] T007 Testes e componentes de `app/src/features/solicitacoes/actions/`: `AcaoErro`, `TriarAction`, `EnviarValidacaoAction`, `DevolverAction`, `EncerrarAction`, `CancelarAction`, `ResponsaveisAction`
+- [x] T008 Teste e componente `app/src/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`
+- [x] T009 Teste e componente `app/src/features/solicitacoes/components/SolicitacaoAcoes.tsx` (cenários "A API informa as ações" e "Operador que abriu cancela antes da triagem", na tela)
+- [x] T010 Teste e componente `app/src/features/solicitacoes/components/SolicitacaoResumo.tsx`
+- [x] T011 `SolicitacaoDetalhePage.tsx` usa `SolicitacaoResumo` e `SolicitacaoAcoes`; ajustar `SolicitacaoDetalhePage.test.tsx`
+- [x] T012 `KanbanBoard.tsx` usa a regra, `kanbanColunas.ts` e `AcaoSolicitacaoAtiva`; ajustar `KanbanBoard.test.tsx` (cenários "Operador responsável envia para validação pelo quadro", "Operador não responsável não move o card", "Mesmo fluxo nos dois lugares")
+- [x] T013 Remover `useKanbanActions.ts` e `useKanbanActions.test.ts`
 
 ## Fase 4 — Integração
 
-- [ ] T014 `features/*/actions` no mapa do Princípio 7 em `.specify/project.md`; linha em `openspec/README.md`
-- [ ] T015 `make validate` verde; detalhe e quadro com no máximo 300 linhas (RNF-01)
+- [x] T014 `features/*/actions` no mapa do Princípio 7 em `.specify/project.md`; linha em `openspec/README.md`
+- [x] T015 `make validate` verde; detalhe e quadro com no máximo 300 linhas (RNF-01)
 
 ## Rastreabilidade
 

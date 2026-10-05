@@ -27,7 +27,7 @@ responde por uma camada Byte Union:
 |---|---|
 | `features/*/api`, `shared/api` | `adapters/clients` |
 | `features/*/hooks`, `shared/hooks` | adaptador entre a UI e a regra |
-| `features/*/components`, `features/*/pages`, `shared/components`, `app/layouts` | `adapters/presenters` |
+| `features/*/components`, `features/*/actions`, `features/*/pages`, `shared/components`, `app/layouts` | `adapters/presenters` |
 | `features/*/schemas`, `features/*/types`, `features/*/lib`, `shared/lib`, `shared/types` | `core/domain` |
 | `shared/config`, `app/providers`, `app/routes` | `infra` |
 

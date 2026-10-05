@@ -20,3 +20,4 @@ entra nesta tabela na mesma entrega.
 | Capacidade (`openspec/specs/`) | Feature que altera o comportamento |
 |---|---|
 | `solicitacoes-kanban` | `specs/001-responsaveis-disponiveis-fora-da-administracao` — o modal de triagem do quadro passa a listar responsáveis também para gestor |
+| `solicitacoes-kanban` | `specs/002-acoes-da-solicitacao-reutilizaveis` — quadro e detalhe usam os mesmos formulários de ação; as ações oferecidas seguem `acoesPermitidas` da API quando ela informa; soltar um card em "Cancelada" abre o formulário de cancelamento |
