@@ -14,7 +14,10 @@ Várias telas pedem "tudo de uma vez" à API, com um tamanho de página alto:
 - o painel busca até 1000 solicitações por status em aberto, só para contar prioridades;
 - a abertura de solicitação busca até 1000 modelos para o seletor;
 - o filtro de solicitações busca 100 modelos;
-- a aba pessoal busca 100 solicitações por lista.
+- a aba pessoal busca 100 solicitações por lista;
+- o painel de modelos busca todos os modelos (tamanho de página igual ao total) para contar
+  pendências e modelos por máquina;
+- a ficha do modelo busca todas as solicitações dele para montar o mini-painel.
 
 Com pouco volume funciona. Conforme os dados crescem, a tela fica lenta e, pior, o que passa
 do limite **some sem aviso**: um card além do 200º não aparece no quadro, um modelo além do
@@ -57,6 +60,8 @@ item, carregando mais ou buscando, e sabe quando há mais do que está vendo.
 | RF-09 | O seletor de modelo deve continuar mostrando o modelo já selecionado, mesmo que ele não esteja entre as opções da busca atual | obrigatório |
 | RF-10 | A distribuição por prioridade do painel deve ser contada pela API, não somando itens trazidos para a tela | obrigatório |
 | RF-11 | Nenhuma tela deve pedir mais de 100 itens por página à API | obrigatório |
+| RF-13 | O painel de modelos deve receber da API as contagens (total, ativos, inativos, com pendência aberta e por máquina), sem trazer a lista de modelos | obrigatório |
+| RF-14 | O mini-painel da ficha do modelo deve receber da API o resumo das solicitações do modelo (total, abertas, concluídas, tempo médio de resolução e intervalo médio entre solicitações), sem trazer a lista de solicitações | obrigatório |
 | RF-12 | Uma ação sobre um card, ou um evento de tempo real, deve atualizar as colunas afetadas mantendo os blocos já carregados | obrigatório |
 
 ## Requisitos não funcionais
@@ -146,6 +151,15 @@ Nenhuma em aberto. Decisões registradas em 2026-10-05:
   Cancelada ficaria vazia sem filtro de período.
 - **Contagem por prioridade do painel:** usa o mesmo filtro de "em aberto" com o filtro de
   prioridade e lê só o total; mesma ordem de publicação.
+- **Painel de modelos e mini-painel da ficha do modelo** (a issue não lista; achados em
+  2026-10-05): as duas telas pedem a lista inteira e quebrariam com o limite da
+  rgm-backend#89. Decisão do usuário em 2026-10-05: o backend ganha endpoints agregados e
+  as telas passam a usá-los (RF-13, RF-14). Mesma ordem de publicação: backend antes.
+- **Contrato com o backend:** esta feature depende de quatro adições na API, todas a
+  especificar no `rgm-backend` antes da implementação daqui: filtro "em aberto" na
+  listagem de solicitações; data de cancelamento considerada no filtro por data de
+  encerramento; resumo de modelos; resumo das solicitações de um modelo. O limite de
+  `size` (rgm-backend#89) só entra depois que este frontend estiver pronto.
 - **Usuários:** mantida a lista de até 100 ativos (opção dada pela própria issue); busca por
   nome fica para uma issue de backend.
 - **Tamanho dos blocos:** 20 no quadro (issue); 10 na aba pessoal e 20 opções no seletor,
