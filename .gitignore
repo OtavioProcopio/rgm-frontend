@@ -60,3 +60,8 @@ Thumbs.db
 .claude-flow/
 app/.claude-flow/
 app/cypress/screenshots/
+
+### Byte Union ###
+/.specify/memory/constitution.md
+/CLAUDE.md
+/.claude/.bu-state.json
