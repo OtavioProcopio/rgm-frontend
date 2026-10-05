@@ -4,8 +4,13 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { evidenciasKeys } from '@/features/evidencias/hooks/evidenciasKeys';
+import { MockEventSource } from '@/test-utils/mockEventSource';
 import { createQueryWrapper } from '@/test-utils/queryWrapper';
+import { criarSolicitacao } from '@/test-utils/solicitacaoFixture';
 
+import type { Solicitacao } from '../types/solicitacaoTypes';
+import { solicitacoesKeys } from './solicitacoesKeys';
 import { useSolicitacaoEvents } from './useSolicitacaoEvents';
 
 const mockUseAuth = vi.fn();
@@ -18,48 +23,8 @@ vi.mock('@/shared/api/httpClient', () => ({
   refreshAccessToken: () => mockRefreshAccessToken(),
 }));
 
-class MockEventSource {
-  static CLOSED = 2;
-  static OPEN = 1;
-  static CONNECTING = 0;
-
-  readyState = MockEventSource.OPEN;
-  url: string;
-  onerror: (() => void) | null = null;
-  private listeners = new Map<string, Set<() => void>>();
-
-  constructor(url: string) {
-    this.url = url;
-    instances.push(this);
-  }
-
-  addEventListener(type: string, listener: () => void) {
-    const set = this.listeners.get(type) ?? new Set();
-    set.add(listener);
-    this.listeners.set(type, set);
-  }
-
-  removeEventListener(type: string, listener: () => void) {
-    this.listeners.get(type)?.delete(listener);
-  }
-
-  close() {
-    this.readyState = MockEventSource.CLOSED;
-  }
-
-  emit(type: string) {
-    this.listeners.get(type)?.forEach((listener) => listener());
-  }
-
-  triggerError() {
-    this.onerror?.();
-  }
-}
-
-let instances: MockEventSource[] = [];
-
 beforeEach(() => {
-  instances = [];
+  MockEventSource.reset();
   localStorage.clear();
   vi.stubGlobal('EventSource', MockEventSource);
 });
@@ -77,7 +42,7 @@ describe('useSolicitacaoEvents', () => {
     const { QueryWrapper } = createQueryWrapper();
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    expect(instances).toHaveLength(0);
+    expect(MockEventSource.instances).toHaveLength(0);
   });
 
   it('does not connect when there is a user but no stored token', () => {
@@ -86,7 +51,7 @@ describe('useSolicitacaoEvents', () => {
     const { QueryWrapper } = createQueryWrapper();
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    expect(instances).toHaveLength(0);
+    expect(MockEventSource.instances).toHaveLength(0);
   });
 
   it('connects with the stored token when a user is authenticated', () => {
@@ -96,8 +61,8 @@ describe('useSolicitacaoEvents', () => {
     const { QueryWrapper } = createQueryWrapper();
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    expect(instances).toHaveLength(1);
-    expect(instances[0].url).toContain('token=token-abc');
+    expect(MockEventSource.instances).toHaveLength(1);
+    expect(MockEventSource.instances[0].url).toContain('token=token-abc');
   });
 
   it('invalidates solicitacoes queries when a solicitacao event arrives', async () => {
@@ -108,7 +73,7 @@ describe('useSolicitacaoEvents', () => {
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    instances[0].emit('solicitacao');
+    MockEventSource.instances[0].emit('solicitacao');
 
     expect(invalidateSpy).toHaveBeenCalledWith(
       expect.objectContaining({ queryKey: expect.arrayContaining(['solicitacoes']) }),
@@ -122,7 +87,7 @@ describe('useSolicitacaoEvents', () => {
     const { QueryWrapper } = createQueryWrapper();
     const { unmount } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    const closeSpy = vi.spyOn(instances[0], 'close');
+    const closeSpy = vi.spyOn(MockEventSource.instances[0], 'close');
     unmount();
 
     expect(closeSpy).toHaveBeenCalled();
@@ -139,16 +104,16 @@ describe('useSolicitacaoEvents', () => {
 
     const { QueryWrapper } = createQueryWrapper();
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
-    expect(instances).toHaveLength(1);
+    expect(MockEventSource.instances).toHaveLength(1);
 
-    instances[0].readyState = MockEventSource.CLOSED;
-    instances[0].triggerError();
+    MockEventSource.instances[0].readyState = MockEventSource.CLOSED;
+    MockEventSource.instances[0].triggerError();
 
     await vi.advanceTimersByTimeAsync(3000);
 
-    expect(instances).toHaveLength(2);
+    expect(MockEventSource.instances).toHaveLength(2);
     expect(mockRefreshAccessToken).toHaveBeenCalled();
-    expect(instances[1].url).toContain('token=fresh-token');
+    expect(MockEventSource.instances[1].url).toContain('token=fresh-token');
   });
 
   it('does not reconnect on a transient error (browser will retry on its own)', async () => {
@@ -159,12 +124,12 @@ describe('useSolicitacaoEvents', () => {
     const { QueryWrapper } = createQueryWrapper();
     renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
 
-    instances[0].readyState = MockEventSource.CONNECTING;
-    instances[0].triggerError();
+    MockEventSource.instances[0].readyState = MockEventSource.CONNECTING;
+    MockEventSource.instances[0].triggerError();
 
     await vi.advanceTimersByTimeAsync(5000);
 
-    expect(instances).toHaveLength(1);
+    expect(MockEventSource.instances).toHaveLength(1);
     expect(mockRefreshAccessToken).not.toHaveBeenCalled();
   });
 
@@ -174,15 +139,134 @@ describe('useSolicitacaoEvents', () => {
 
     const { QueryWrapper } = createQueryWrapper();
     const { rerender } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
-    expect(instances).toHaveLength(1);
-    const closeSpy = vi.spyOn(instances[0], 'close');
+    expect(MockEventSource.instances).toHaveLength(1);
+    const closeSpy = vi.spyOn(MockEventSource.instances[0], 'close');
 
     localStorage.setItem('rgm.accessToken', 'token-user-2');
     mockUseAuth.mockReturnValue({ user: { nome: 'Op2', perfil: 'GESTOR' } });
     rerender();
 
     expect(closeSpy).toHaveBeenCalled();
-    expect(instances).toHaveLength(2);
-    expect(instances[1].url).toContain('token=token-user-2');
+    expect(MockEventSource.instances).toHaveLength(2);
+    expect(MockEventSource.instances[1].url).toContain('token=token-user-2');
+  });
+});
+
+describe('useSolicitacaoEvents — eventos recebidos', () => {
+  function conectar() {
+    localStorage.setItem('rgm.accessToken', 'token-abc');
+    mockUseAuth.mockReturnValue({ user: { nome: 'Ge', perfil: 'GESTOR' } });
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
+    return { conexao: MockEventSource.instances[0], queryClient, invalidar };
+  }
+
+  it('deve atualizar as listas e o quadro quando outro usuário tria uma solicitação', () => {
+    // Arrange
+    const { conexao, invalidar } = conectar();
+
+    // Act
+    conexao.emit('solicitacao', { tipo: 'triada', solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }) });
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve atualizar as listas quando outro usuário abre uma solicitação', () => {
+    // Arrange
+    const { conexao, invalidar, queryClient } = conectar();
+    const nova = criarSolicitacao({ id: 'nova' });
+
+    // Act
+    conexao.emit('solicitacao', { tipo: 'aberta', solicitacao: nova });
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+    expect(queryClient.getQueryData(solicitacoesKeys.detail('nova'))).toBeUndefined();
+  });
+
+  it('deve mostrar no detalhe aberto o status do evento, mantendo os responsáveis, e pedir a confirmação do detalhe e do histórico quando outro usuário devolve a solicitação', () => {
+    // Arrange
+    const { conexao, queryClient, invalidar } = conectar();
+    const noDetalhe = criarSolicitacao({ status: 'EM_VALIDACAO', responsavelIds: ['op'], acoesPermitidas: ['DEVOLVER'] });
+    queryClient.setQueryData(solicitacoesKeys.detail('s1'), noDetalhe);
+
+    // Act
+    conexao.emit('solicitacao', { tipo: 'devolvida', solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }) });
+
+    // Assert
+    const atualizado = queryClient.getQueryData<Solicitacao>(solicitacoesKeys.detail('s1'));
+    expect(atualizado).toMatchObject({ status: 'EM_ANDAMENTO', responsavelIds: ['op'], acoesPermitidas: null });
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.detail('s1') });
+    expect(solicitacoesKeys.atividades('s1').slice(0, 3)).toEqual([...solicitacoesKeys.detail('s1')]);
+  });
+
+  it('deve contar a mudança da solicitação quando um evento dela chega', () => {
+    // Arrange
+    const { conexao, queryClient } = conectar();
+    const evento = { tipo: 'editada', solicitacao: criarSolicitacao() };
+
+    // Act
+    conexao.emit('solicitacao', evento);
+    conexao.emit('solicitacao', evento);
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.atualizacao('s1'))).toBe(2);
+    expect(queryClient.getQueryData(solicitacoesKeys.atualizacao('outra'))).toBeUndefined();
+  });
+
+  it('deve atualizar o histórico e as evidências, sem contar mudança, quando outro usuário comenta', () => {
+    // Arrange
+    const { conexao, queryClient, invalidar } = conectar();
+
+    // Act
+    conexao.emit('solicitacao_atividade', { tipo: 'comentada', solicitacaoId: 's1' });
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.atividades('s1') });
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: evidenciasKeys.bySolicitacao('s1') });
+    expect(queryClient.getQueryData(solicitacoesKeys.atualizacao('s1'))).toBeUndefined();
+  });
+
+  it('deve só atualizar as listas quando o evento de solicitação vem sem corpo legível', () => {
+    // Arrange
+    const { conexao, invalidar } = conectar();
+
+    // Act
+    conexao.emit('solicitacao');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve ignorar o aviso de atividade quando ele vem sem corpo legível', () => {
+    // Arrange
+    const { conexao, invalidar } = conectar();
+
+    // Act
+    conexao.emit('solicitacao_atividade');
+
+    // Assert
+    expect(invalidar).not.toHaveBeenCalled();
+  });
+
+  it('deve parar de ouvir os dois eventos quando a tela é desmontada', () => {
+    // Arrange
+    localStorage.setItem('rgm.accessToken', 'token-abc');
+    mockUseAuth.mockReturnValue({ user: { nome: 'Ge', perfil: 'GESTOR' } });
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    const { unmount } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
+    const conexao = MockEventSource.instances[0];
+
+    // Act
+    unmount();
+    conexao.emit('solicitacao', { tipo: 'triada', solicitacao: criarSolicitacao() });
+    conexao.emit('solicitacao_atividade', { tipo: 'comentada', solicitacaoId: 's1' });
+
+    // Assert
+    expect(invalidar).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
@@ -196,5 +196,56 @@ describe('useExecutarAcao', () => {
     expect(evidenciasApi.anexar).toHaveBeenCalledTimes(1);
     expect(acao).toHaveBeenCalledTimes(2);
     expect(onConcluida).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve indicar atualização por outro usuário quando um evento da solicitação chega com o formulário aberto', async () => {
+    // Arrange
+    const { result, queryClient } = montar();
+
+    // Act
+    queryClient.setQueryData(solicitacoesKeys.atualizacao('s1'), 1);
+
+    // Assert
+    await waitFor(() => expect(result.current.atualizadaPorOutro).toBe(true));
+  });
+
+  it('deve não indicar atualização quando o evento é de outra solicitação', async () => {
+    // Arrange
+    const { result, queryClient } = montar();
+
+    // Act
+    queryClient.setQueryData(solicitacoesKeys.atualizacao('outra'), 1);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+    // Assert
+    expect(result.current.atualizadaPorOutro).toBe(false);
+  });
+
+  it('deve não indicar atualização quando a mudança chegou antes de o formulário abrir', () => {
+    // Arrange
+    const onConcluida = vi.fn();
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    queryClient.setQueryData(solicitacoesKeys.atualizacao('s1'), 3);
+
+    // Act
+    const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), { wrapper: QueryWrapper });
+
+    // Assert
+    expect(result.current.atualizadaPorOutro).toBe(false);
+  });
+
+  it('deve não indicar atualização quando o evento chega durante a execução da própria ação', async () => {
+    // Arrange
+    const { result, queryClient } = montar();
+    const acaoQueGeraEvento = async () => {
+      queryClient.setQueryData(solicitacoesKeys.atualizacao('s1'), 1);
+      throw new Error('recusada');
+    };
+
+    // Act
+    await act(() => result.current.executar(acaoQueGeraEvento));
+
+    // Assert
+    expect(result.current.atualizadaPorOutro).toBe(false);
   });
 });

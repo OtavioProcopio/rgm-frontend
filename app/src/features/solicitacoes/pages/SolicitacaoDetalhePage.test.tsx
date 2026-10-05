@@ -41,6 +41,7 @@ vi.mock('@/features/evidencias/hooks/useDeleteEvidencia', () => ({
 vi.mock('../hooks/useSolicitacao', () => ({
   useSolicitacao: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
 }));
+vi.mock('../hooks/useSolicitacaoEvents', () => ({ useSolicitacaoEvents: vi.fn() }));
 vi.mock('../hooks/useAtividades', () => ({
   useAtividades: vi.fn().mockReturnValue({ data: [], isLoading: false }),
 }));
@@ -382,5 +383,17 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByText('Gil Gestor')).toBeDefined();
     expect(within(container).queryByText('Ana Administradora')).toBeNull();
     expect(within(container).queryByText('Ivo Inativo')).toBeNull();
+  });
+
+  it('deve ouvir os eventos de tempo real quando o detalhe é aberto', async () => {
+    // Arrange
+    const { useSolicitacaoEvents } = await import('../hooks/useSolicitacaoEvents');
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+
+    // Act
+    render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(useSolicitacaoEvents).toHaveBeenCalled();
   });
 });

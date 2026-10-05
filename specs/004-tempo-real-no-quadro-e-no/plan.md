@@ -40,7 +40,7 @@ A v1.5.0 envia só `solicitacao`, com o mesmo corpo, nas mudanças de status.
 
 | Camada | Arquivo | Ação | Teste |
 |---|---|---|---|
-| infra | `nginx.conf` | alterar: bloco da rota de eventos | `app/src/shared/config/nginxConf.test.ts` |
+| infra | `nginx.conf` | alterar: bloco da rota de eventos | `app/nginxConf.test.ts` |
 | core/domain | `app/src/features/solicitacoes/lib/eventosSolicitacao.ts` | criar | `app/src/features/solicitacoes/lib/eventosSolicitacao.test.ts` |
 | hook | `app/src/features/solicitacoes/hooks/solicitacoesKeys.ts` | alterar: chave `atualizacao(id)` | — |
 | hook | `app/src/features/solicitacoes/hooks/useSolicitacaoEvents.ts` | alterar: detalhe, atividades, evidências, marca | `useSolicitacaoEvents.test.ts` |

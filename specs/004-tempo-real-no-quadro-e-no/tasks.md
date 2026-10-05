@@ -4,24 +4,24 @@
 
 ## Fase 1 — Domínio
 
-- [ ] T001 Teste e implementação de `app/src/features/solicitacoes/lib/eventosSolicitacao.ts` (RF-05, RF-09)
+- [x] T001 Teste e implementação de `app/src/features/solicitacoes/lib/eventosSolicitacao.ts` (RF-05, RF-09)
 
 ## Fase 2 — Aplicação
 
-- [ ] T002 Chave `atualizacao(id)` em `solicitacoesKeys.ts`; dublê `app/src/test-utils/mockEventSource.ts`
-- [ ] T003 `useSolicitacaoEvents.ts`: detalhe, atividades, evidências e marca; testes novos em `useSolicitacaoEvents.test.ts` (cenários "Quadro reage a mudança de outro usuário", "Detalhe reage a mudança de outro usuário", "Comentário de outro usuário", "Solicitação nova aparece no quadro")
-- [ ] T004 `useExecutarAcao.ts` devolve `atualizadaPorOutro`; testes
+- [x] T002 Chave `atualizacao(id)` em `solicitacoesKeys.ts`; dublê `app/src/test-utils/mockEventSource.ts`
+- [x] T003 `useSolicitacaoEvents.ts`: detalhe, atividades, evidências e marca; testes novos em `useSolicitacaoEvents.test.ts` (cenários "Quadro reage a mudança de outro usuário", "Detalhe reage a mudança de outro usuário", "Comentário de outro usuário", "Solicitação nova aparece no quadro")
+- [x] T004 `useExecutarAcao.ts` devolve `atualizadaPorOutro`; testes
 
 ## Fase 3 — Adapters e infra
 
-- [ ] T005 [P] `nginx.conf`: rota de eventos sem buffer e com 1 hora de leitura; teste `app/src/shared/config/nginxConf.test.ts` (RF-01 a RF-03, RNF-01, RNF-02)
-- [ ] T006 `AcaoAvisos.tsx` no lugar de `AcaoErro.tsx`; ações passam `atualizadaPorOutro`; testes em `SolicitacaoAcoes.test.tsx` (cenários "Formulário aberto não é atropelado" e "Evento de outra solicitação não avisa")
-- [ ] T007 `SolicitacaoDetalhePage.tsx` chama `useSolicitacaoEvents()`; teste
+- [x] T005 [P] `nginx.conf`: rota de eventos sem buffer e com 1 hora de leitura; teste `app/nginxConf.test.ts` (RF-01 a RF-03, RNF-01, RNF-02)
+- [x] T006 `AcaoAvisos.tsx` no lugar de `AcaoErro.tsx`; ações passam `atualizadaPorOutro`; testes em `SolicitacaoAcoes.test.tsx` (cenários "Formulário aberto não é atropelado" e "Evento de outra solicitação não avisa")
+- [x] T007 `SolicitacaoDetalhePage.tsx` chama `useSolicitacaoEvents()`; teste
 
 ## Fase 4 — Integração
 
-- [ ] T008 Linha em `openspec/README.md`
-- [ ] T009 `make validate` verde
+- [x] T008 Linha em `openspec/README.md`
+- [x] T009 `make validate` verde
 
 ## Rastreabilidade
 

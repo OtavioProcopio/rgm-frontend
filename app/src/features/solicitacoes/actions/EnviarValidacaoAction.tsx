@@ -1,12 +1,12 @@
 import { EnviarValidacaoModal } from '../components/EnviarValidacaoModal';
 import { useEnviarParaValidacao } from '../hooks/useEnviarParaValidacao';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
-import { AcaoErro } from './AcaoErro';
+import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
 export function EnviarValidacaoAction({ solicitacao, onClose }: AcaoProps) {
   const enviar = useEnviarParaValidacao(solicitacao.id);
-  const { erro, executar } = useExecutarAcao(solicitacao.id, onClose);
+  const { erro, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
   return (
     <>
@@ -17,7 +17,7 @@ export function EnviarValidacaoAction({ solicitacao, onClose }: AcaoProps) {
         onCancel={onClose}
         onConfirm={(data) => executar(() => enviar.mutateAsync(data.comentario))}
       />
-      <AcaoErro mensagem={erro} />
+      <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>
   );
 }

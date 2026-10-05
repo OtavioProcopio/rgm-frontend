@@ -15,6 +15,7 @@ import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
 import { useAtividades } from '../hooks/useAtividades';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
+import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
 import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
@@ -37,6 +38,8 @@ export function SolicitacaoDetalhePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitulo, setEditTitulo] = useState('');
   const [editDescricao, setEditDescricao] = useState('');
+
+  useSolicitacaoEvents();
 
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);

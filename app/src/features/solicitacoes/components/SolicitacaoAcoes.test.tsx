@@ -1,14 +1,16 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '@/features/auth/types/authTypes';
 import { createAppWrapper } from '@/test-utils/appWrapper';
+import { MockEventSource } from '@/test-utils/mockEventSource';
 import { criarSolicitacao } from '@/test-utils/solicitacaoFixture';
 
+import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import type { Solicitacao } from '../types/solicitacaoTypes';
 import { SolicitacaoAcoes } from './SolicitacaoAcoes';
 
@@ -117,5 +119,73 @@ describe('SolicitacaoAcoes', () => {
     // Assert
     expect(screen.getByLabelText('Motivo da devolução *')).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Devolver' })).toBeNull();
+  });
+});
+
+describe('SolicitacaoAcoes — tempo real', () => {
+  function TelaComEventos({ solicitacao }: { solicitacao: Solicitacao }) {
+    useSolicitacaoEvents();
+    return <SolicitacaoAcoes solicitacao={solicitacao} />;
+  }
+
+  /** Abre o formulário de triagem de `s1` como gestor e devolve a conexão de eventos. */
+  async function abrirTriagemComEventos() {
+    localStorage.setItem('rgm.accessToken', 'token-abc');
+    const { AppWrapper } = createAppWrapper({ user: gestor });
+    render(<TelaComEventos solicitacao={criarSolicitacao({ id: 's1', status: 'A_FAZER' })} />, {
+      wrapper: AppWrapper,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Triar' }));
+    await userEvent.selectOptions(screen.getByLabelText('Prioridade'), 'ALTA');
+    return MockEventSource.instances[0];
+  }
+
+  beforeEach(() => {
+    MockEventSource.reset();
+    vi.stubGlobal('EventSource', MockEventSource);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    vi.unstubAllGlobals();
+  });
+
+  it('deve avisar no formulário e manter o que foi preenchido quando outro usuário altera a solicitação', async () => {
+    // Arrange
+    const conexao = await abrirTriagemComEventos();
+
+    // Act
+    act(() => conexao.emit('solicitacao', { tipo: 'editada', solicitacao: criarSolicitacao({ id: 's1' }) }));
+
+    // Assert
+    expect((await screen.findByRole('status')).textContent).toContain('Atualizada por outro usuário');
+    expect((screen.getByLabelText('Prioridade') as HTMLSelectElement).value).toBe('ALTA');
+  });
+
+  it('deve não avisar no formulário quando outro usuário altera uma solicitação diferente', async () => {
+    // Arrange
+    const conexao = await abrirTriagemComEventos();
+
+    // Act
+    act(() => conexao.emit('solicitacao', { tipo: 'editada', solicitacao: criarSolicitacao({ id: 'outra' }) }));
+
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+    // Assert
+    expect(screen.queryByText(/Atualizada por outro usuário/)).toBeNull();
+    expect((screen.getByLabelText('Prioridade') as HTMLSelectElement).value).toBe('ALTA');
+  });
+
+  it('deve não avisar no formulário quando outro usuário só comenta na solicitação', async () => {
+    // Arrange
+    const conexao = await abrirTriagemComEventos();
+
+    // Act
+    act(() => conexao.emit('solicitacao_atividade', { tipo: 'comentada', solicitacaoId: 's1' }));
+
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+    // Assert
+    expect(screen.queryByText(/Atualizada por outro usuário/)).toBeNull();
   });
 });

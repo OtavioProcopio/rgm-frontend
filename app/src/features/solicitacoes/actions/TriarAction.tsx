@@ -5,13 +5,13 @@ import { TriagemModal } from '../components/TriagemModal';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
 import { acaoFeitaSemFoto } from '../lib/solicitacaoMessages';
 import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
-import { AcaoErro } from './AcaoErro';
+import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
 export function TriarAction({ solicitacao, onClose }: AcaoProps) {
   const triar = useTriarSolicitacao(solicitacao.id);
   const { responsaveis } = useResponsaveisDisponiveis();
-  const { erro, aviso, executar } = useExecutarAcao(solicitacao.id, onClose);
+  const { erro, aviso, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
   if (aviso) return <AvisoFotoNaoEnviada {...aviso} onSair={onClose} />;
 
@@ -30,7 +30,7 @@ export function TriarAction({ solicitacao, onClose }: AcaoProps) {
           })
         }
       />
-      <AcaoErro mensagem={erro} />
+      <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>
   );
 }

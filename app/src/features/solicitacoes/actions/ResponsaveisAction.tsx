@@ -3,13 +3,13 @@ import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useR
 import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal';
 import { useAlterarResponsaveis } from '../hooks/useAlterarResponsaveis';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
-import { AcaoErro } from './AcaoErro';
+import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
 export function ResponsaveisAction({ solicitacao, onClose }: AcaoProps) {
   const alterar = useAlterarResponsaveis(solicitacao.id);
   const { responsaveis } = useResponsaveisDisponiveis();
-  const { erro, executar } = useExecutarAcao(solicitacao.id, onClose);
+  const { erro, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
   return (
     <>
@@ -20,7 +20,7 @@ export function ResponsaveisAction({ solicitacao, onClose }: AcaoProps) {
         onCancel={onClose}
         onConfirm={(responsavelIds) => executar(() => alterar.mutateAsync({ responsavelIds }))}
       />
-      <AcaoErro mensagem={erro} />
+      <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>
   );
 }

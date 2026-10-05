@@ -2,7 +2,7 @@ import { EncerramentoModal } from '../components/EncerramentoModal';
 import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
 import { useEncerrarSolicitacao } from '../hooks/useEncerrarSolicitacao';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
-import { AcaoErro } from './AcaoErro';
+import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
 /**
@@ -12,7 +12,7 @@ import type { AcaoProps } from '../types/acaoProps';
 export function EncerrarAction({ solicitacao, onClose }: AcaoProps) {
   const encerrar = useEncerrarSolicitacao(solicitacao.id);
   const cancelar = useCancelarSolicitacao(solicitacao.id);
-  const { erro, executar } = useExecutarAcao(solicitacao.id, onClose);
+  const { erro, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
   return (
     <>
@@ -31,7 +31,7 @@ export function EncerrarAction({ solicitacao, onClose }: AcaoProps) {
             : executar(() => cancelar.mutateAsync({ motivo: data.comentario }))
         }
       />
-      <AcaoErro mensagem={erro} />
+      <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>
   );
 }
