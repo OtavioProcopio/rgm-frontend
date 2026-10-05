@@ -22,8 +22,8 @@ vi.mock('../hooks/useEncerrarSolicitacao', () => ({
 vi.mock('../hooks/useCancelarSolicitacao', () => ({
   useCancelarSolicitacao: () => ({ mutateAsync: cancelar, isPending: false }),
 }));
-vi.mock('@/features/evidencias/hooks/useUploadEvidencia', () => ({
-  useUploadEvidencia: () => ({ mutateAsync: anexar, isPending: false }),
+vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
+  evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
 }));
 vi.mock('../components/EncerramentoModal', () => ({
   EncerramentoModal: ({
@@ -72,20 +72,43 @@ describe('EncerrarAction', () => {
     expect(screen.getByRole('form', { name: 'Encerramento' })).toBeDefined();
   });
 
-  it('deve concluir, anexar a foto como evidência de conclusão e fechar quando o usuário conclui', async () => {
+  it('deve enviar a foto antes de concluir e fechar quando o usuário conclui com foto', async () => {
     // Arrange
-    encerrar.mockResolvedValue(undefined);
-    anexar.mockResolvedValue(undefined);
+    const ordem: string[] = [];
+    anexar.mockImplementation(async () => {
+      ordem.push('foto');
+    });
+    encerrar.mockImplementation(async () => {
+      ordem.push('conclusão');
+    });
     const { onClose } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Concluir' }));
 
     // Assert
+    expect(ordem).toEqual(['foto', 'conclusão']);
+    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'CONCLUSAO', descricao: 'Peça aprovada' });
     expect(encerrar).toHaveBeenCalledWith({ concluir: true, comentario: 'Peça aprovada' });
-    expect(anexar).toHaveBeenCalledWith({ file: foto, tipo: 'CONCLUSAO', descricao: 'Peça aprovada' });
     expect(cancelar).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve não concluir e mostrar o erro no formulário quando o envio da foto falha', async () => {
+    // Arrange
+    anexar.mockRejectedValue(new Error('rede'));
+    const { onClose } = montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Concluir' }));
+
+    // Assert
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'A foto não foi enviada e a solicitação não foi concluída.',
+    );
+    expect(encerrar).not.toHaveBeenCalled();
+    expect(screen.getByRole('form', { name: 'Encerramento' })).toBeDefined();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('deve cancelar com o motivo e fechar quando o usuário escolhe cancelar', async () => {
@@ -106,6 +129,7 @@ describe('EncerrarAction', () => {
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa a conclusão', async () => {
     // Arrange
     const recusa = new ApiError({ status: 422, message: 'Solicitação não está em validação.' });
+    anexar.mockResolvedValue(undefined);
     encerrar.mockRejectedValue(recusa);
     const { onClose } = montar();
 

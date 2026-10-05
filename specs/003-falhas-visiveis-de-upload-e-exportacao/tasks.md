@@ -4,30 +4,30 @@
 
 ## Fase 1 — Domínio
 
-- [ ] T001 [P] Teste e implementação de `app/src/shared/lib/arquivoPermitido.ts` (cenários "Arquivo grande demais", "Tipo não aceito", "Vídeo aceito")
-- [ ] T002 [P] Teste e implementação de `app/src/shared/lib/exportacao.ts`
-- [ ] T003 [P] `acaoFeitaSemFoto` e `mensagemFotoNaoEnviadaAntes` em `app/src/features/solicitacoes/lib/solicitacaoMessages.ts`, com teste
+- [x] T001 [P] Teste e implementação de `app/src/shared/lib/arquivoPermitido.ts` (cenários "Arquivo grande demais", "Tipo não aceito", "Vídeo aceito")
+- [x] T002 [P] Teste e implementação de `app/src/shared/lib/exportacao.ts`
+- [x] T003 [P] `acaoFeitaSemFoto` e `mensagemFotoNaoEnviadaAntes` em `app/src/features/solicitacoes/lib/solicitacaoMessages.ts`, com teste
 
 ## Fase 2 — Aplicação
 
-- [ ] T004 Teste e implementação de `app/src/features/evidencias/hooks/useAnexoComAviso.ts` (cenário "Nova tentativa dá certo")
-- [ ] T005 `app/src/features/solicitacoes/hooks/useExecutarAcao.ts`: aviso no lugar do `console.error`, `anexarAntes`; ajustar o teste (cenários "Conclusão com foto", "Foto da conclusão falha")
+- [x] T004 Teste e implementação de `app/src/features/evidencias/hooks/useAnexoComAviso.ts` (cenário "Nova tentativa dá certo")
+- [x] T005 `app/src/features/solicitacoes/hooks/useExecutarAcao.ts`: aviso no lugar do `console.error`, `anexarAntes`; ajustar o teste (cenários "Conclusão com foto", "Foto da conclusão falha")
 
 ## Fase 3 — Adapters e infra
 
-- [ ] T006 [P] Teste e componente `app/src/features/evidencias/components/AvisoFotoNaoEnviada.tsx`
-- [ ] T007 [P] `EvidenciaUploader.tsx` usa `validarArquivo`; ajustar o teste
-- [ ] T008 [P] `AdicionarFotoGaleriaForm.tsx` usa `validarArquivo`; ajustar o teste
-- [ ] T009 `TriarAction`, `DevolverAction` e `EncerrarAction` mostram o aviso; conclusão envia a foto antes; ajustar os testes (cenário "Triagem feita, foto não enviada")
-- [ ] T010 `SolicitacaoAcoes.tsx` e `SolicitacaoDetalhePage.tsx`: ação aberta sobrevive à mudança de status; teste
-- [ ] T011 `NovaSolicitacaoPage.tsx`: aviso, sem navegação automática, `validarArquivo`, sem `evidenciasApi`; ajustar o teste (cenário "Abertura com foto que falha")
-- [ ] T012 Teste e componente `app/src/shared/components/ExportarPdfButton/ExportarPdfButton.tsx` (cenário "Exportação falha")
-- [ ] T013 `SolicitacoesPage.tsx`, `ModelosTab.tsx`, `ModelosPage.tsx` e `ModeloDetalhePage.tsx` usam `ExportarPdfButton`; ajustar os testes
+- [x] T006 [P] Teste e componente `app/src/features/evidencias/components/AvisoFotoNaoEnviada.tsx`
+- [x] T007 [P] `EvidenciaUploader.tsx` usa `validarArquivo`; ajustar o teste
+- [x] T008 [P] `AdicionarFotoGaleriaForm.tsx` usa `validarArquivo`; ajustar o teste
+- [x] T009 `TriarAction`, `DevolverAction` e `EncerrarAction` mostram o aviso; conclusão envia a foto antes; ajustar os testes (cenário "Triagem feita, foto não enviada")
+- [x] T010 `SolicitacaoAcoes.tsx` e `SolicitacaoDetalhePage.tsx`: ação aberta sobrevive à mudança de status; teste
+- [x] T011 `NovaSolicitacaoPage.tsx`: aviso, sem navegação automática, `validarArquivo`, sem `evidenciasApi`; ajustar o teste (cenário "Abertura com foto que falha")
+- [x] T012 Teste e componente `app/src/shared/components/ExportarPdfButton/ExportarPdfButton.tsx` (cenário "Exportação falha")
+- [x] T013 `SolicitacoesPage.tsx`, `ModelosTab.tsx`, `ModelosPage.tsx` e `ModeloDetalhePage.tsx` usam `ExportarPdfButton`; ajustar os testes
 
 ## Fase 4 — Integração
 
-- [ ] T014 Nenhum `console.error` de upload ou exportação em `app/src` (RF-09); linha em `openspec/README.md`
-- [ ] T015 `make validate` verde
+- [x] T014 Nenhum `console.error` de upload ou exportação em `app/src` (RF-09); linha em `openspec/README.md`
+- [x] T015 `make validate` verde
 
 ## Rastreabilidade
 

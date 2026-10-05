@@ -207,7 +207,7 @@ export function SolicitacaoDetalhePage() {
         <SolicitacaoResumo solicitacao={solicitacao} modelo={modelo} />
       )}
 
-      {!isTerminal ? <SolicitacaoAcoes solicitacao={solicitacao} /> : null}
+      <SolicitacaoAcoes solicitacao={solicitacao} />
 
       {/* Evidências */}
       <div>

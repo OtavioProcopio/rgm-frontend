@@ -3,9 +3,7 @@ import { Camera, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
-
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+import { nomesDosTipos, TAMANHO_MAXIMO_MB, TIPOS_DE_IMAGEM, validarArquivo } from '@/shared/lib/arquivoPermitido';
 
 type Props = {
   isSubmitting?: boolean;
@@ -24,17 +22,9 @@ export function AdicionarFotoGaleriaForm({ isSubmitting, onSubmit, onCancel }: P
     const selected = event.target.files?.[0];
     if (!selected) return;
 
-    setFileError(null);
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(selected.type)) {
-      setFileError('Apenas imagens nos formatos JPG, PNG ou WEBP são permitidas.');
-      return;
-    }
-
-    if (selected.size > MAX_SIZE_BYTES) {
-      setFileError('A imagem deve ter no máximo 10 MB.');
-      return;
-    }
+    const erro = validarArquivo(selected, TIPOS_DE_IMAGEM);
+    setFileError(erro);
+    if (erro) return;
 
     setFile(selected);
     const reader = new FileReader();
@@ -73,7 +63,8 @@ export function AdicionarFotoGaleriaForm({ isSubmitting, onSubmit, onCancel }: P
         <input
           ref={fileInputRef}
           type="file"
-          accept={ACCEPTED_IMAGE_TYPES.join(',')}
+          aria-label="Foto da galeria"
+          accept={TIPOS_DE_IMAGEM.join(',')}
           onChange={handleFileChange}
           disabled={isSubmitting}
           className="hidden"
@@ -92,7 +83,7 @@ export function AdicionarFotoGaleriaForm({ isSubmitting, onSubmit, onCancel }: P
               Clique para selecionar uma foto
             </span>
             <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Formatos suportados: JPG, PNG ou WEBP até 10 MB
+              Formatos suportados: {nomesDosTipos(TIPOS_DE_IMAGEM)} até {TAMANHO_MAXIMO_MB} MB
             </span>
           </button>
         ) : (

@@ -21,3 +21,5 @@ entra nesta tabela na mesma entrega.
 |---|---|
 | `solicitacoes-kanban` | `specs/001-responsaveis-disponiveis-fora-da-administracao` — o modal de triagem do quadro passa a listar responsáveis também para gestor |
 | `solicitacoes-kanban` | `specs/002-acoes-da-solicitacao-reutilizaveis` — quadro e detalhe usam os mesmos formulários de ação; as ações oferecidas seguem `acoesPermitidas` da API quando ela informa; soltar um card em "Cancelada" abre o formulário de cancelamento |
+| `evidencias` | `specs/003-falhas-visiveis-de-upload-e-exportacao` — evidência aceita JPEG, PNG, GIF, WebP, PDF e MP4 até 10 MB; foto que acompanha triagem, devolução ou abertura e falha gera aviso com "Tentar novamente"; a foto da conclusão é enviada antes de concluir |
+| `solicitacoes-kanban`, `modelos`, `metricas-dashboard` | `specs/003-falhas-visiveis-de-upload-e-exportacao` — falha na exportação de PDF aparece junto do botão |

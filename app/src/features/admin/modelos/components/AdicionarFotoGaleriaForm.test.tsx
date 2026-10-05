@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -28,21 +28,28 @@ describe('AdicionarFotoGaleriaForm', () => {
     expect(button).toHaveProperty('disabled', false);
   });
 
-  it('rejects unsupported file types', async () => {
-    const { container } = render(<AdicionarFotoGaleriaForm onSubmit={vi.fn()} />);
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(fileInput, makeFile('doc.pdf', 'application/pdf'), {
-      applyAccept: false,
-    });
-    expect(within(container).getByText(/apenas imagens/i)).toBeDefined();
+  it('deve recusar listando só imagens quando o arquivo é um PDF', async () => {
+    // Arrange
+    render(<AdicionarFotoGaleriaForm onSubmit={vi.fn()} />);
+    const pdf = makeFile('doc.pdf', 'application/pdf');
+
+    // Act
+    await userEvent.upload(screen.getByLabelText('Foto da galeria'), pdf, { applyAccept: false });
+
+    // Assert
+    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.')).toBeDefined();
   });
 
-  it('rejects files larger than 10MB', async () => {
-    const { container } = render(<AdicionarFotoGaleriaForm onSubmit={vi.fn()} />);
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
-    const bigFile = makeFile('foto.png', 'image/png', 11 * 1024 * 1024);
-    await userEvent.upload(fileInput, bigFile);
-    expect(within(container).getByText(/no máximo 10 mb/i)).toBeDefined();
+  it('deve recusar dizendo o limite quando a foto tem 11 MB', async () => {
+    // Arrange
+    render(<AdicionarFotoGaleriaForm onSubmit={vi.fn()} />);
+    const grande = makeFile('foto.png', 'image/png', 11 * 1024 * 1024);
+
+    // Act
+    await userEvent.upload(screen.getByLabelText('Foto da galeria'), grande);
+
+    // Assert
+    expect(screen.getByText('Arquivo muito grande. O limite é 10 MB.')).toBeDefined();
   });
 
   it('calls onSubmit with file and trimmed identificacao', async () => {

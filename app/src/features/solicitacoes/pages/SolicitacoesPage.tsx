@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -37,27 +38,8 @@ export function SolicitacoesPage() {
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
   useSolicitacaoEvents();
-  const [isExporting, setIsExporting] = useState(false);
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
-
-  async function handleExportar() {
-    setIsExporting(true);
-    try {
-      const blob = await solicitacoesApi.exportar(filters);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `relatorio_solicitacoes_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar relatório:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
 
   return (
     <section>
@@ -92,14 +74,10 @@ export function SolicitacoesPage() {
                 Lista
               </button>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isExporting}
-              onClick={handleExportar}
-            >
-              {isExporting ? 'Exportando...' : 'Exportar PDF'}
-            </Button>
+            <ExportarPdfButton
+              buscar={() => solicitacoesApi.exportar(filters)}
+              nomeDoArquivo={() => `relatorio_solicitacoes_${Date.now()}.pdf`}
+            />
             {canCreate ? (
               <Link to="/app/solicitacoes/nova">
                 <Button>Nova solicitação</Button>

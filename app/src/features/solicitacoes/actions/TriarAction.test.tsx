@@ -19,8 +19,8 @@ const dados = { prioridade: 'ALTA', responsavelIds: ['op'] };
 vi.mock('../hooks/useTriarSolicitacao', () => ({
   useTriarSolicitacao: () => ({ mutateAsync: triar, isPending: false }),
 }));
-vi.mock('@/features/evidencias/hooks/useUploadEvidencia', () => ({
-  useUploadEvidencia: () => ({ mutateAsync: anexar, isPending: false }),
+vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
+  evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
 }));
 vi.mock('@/features/admin/usuarios/hooks/useResponsaveisDisponiveis', () => ({
   useResponsaveisDisponiveis: () => ({ responsaveis: [{ id: 'op', nome: 'Olga Operadora' }], isLoading: false }),
@@ -92,7 +92,7 @@ describe('TriarAction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
 
     // Assert
-    expect(anexar).toHaveBeenCalledWith({ file: foto, tipo: 'INSTRUCAO_SERVICO', descricao: 'usar gabarito' });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'INSTRUCAO_SERVICO', descricao: 'usar gabarito' });
   });
 
   it('deve anexar a foto sem descrição quando a nota está vazia', async () => {
@@ -105,7 +105,7 @@ describe('TriarAction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto sem nota' }));
 
     // Assert
-    expect(anexar).toHaveBeenCalledWith({ file: foto, tipo: 'INSTRUCAO_SERVICO', descricao: undefined });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'INSTRUCAO_SERVICO', descricao: undefined });
   });
 
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa a triagem', async () => {
@@ -132,6 +132,55 @@ describe('TriarAction', () => {
 
     // Assert
     expect(triar).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve avisar que a solicitação foi triada e a foto não foi enviada, sem fechar, quando o envio da foto falha', async () => {
+    // Arrange
+    triar.mockResolvedValue(undefined);
+    anexar.mockRejectedValue(new Error('rede'));
+    const { onClose } = montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Assert
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toContain('A solicitação foi triada, mas a foto não foi enviada.');
+    expect(alerta.textContent).toContain('anexar a foto depois, pelo detalhe da solicitação');
+    expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeDefined();
+    expect(screen.queryByRole('form', { name: 'Triagem' })).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve trocar o aviso por Foto enviada sem triar de novo quando a nova tentativa dá certo', async () => {
+    // Arrange
+    triar.mockResolvedValue(undefined);
+    anexar.mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce(undefined);
+    montar();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Act
+    await userEvent.click(await screen.findByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect((await screen.findByRole('status')).textContent).toContain('Foto enviada.');
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(triar).toHaveBeenCalledTimes(1);
+    expect(anexar).toHaveBeenCalledTimes(2);
+  });
+
+  it('deve fechar quando o usuário sai do aviso de foto não enviada', async () => {
+    // Arrange
+    triar.mockResolvedValue(undefined);
+    anexar.mockRejectedValue(new Error('rede'));
+    const { onClose } = montar();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Act
+    await userEvent.click(await screen.findByRole('button', { name: 'Fechar' }));
+
+    // Assert
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

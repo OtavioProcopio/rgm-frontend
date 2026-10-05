@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { useAuth } from '@/app/providers/authContext';
-import { Button } from '@/shared/components/Button/Button';
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
@@ -177,7 +177,6 @@ function RankingModelos() {
   const [sort, setSort] = useState<OrdenacaoMetricaModelo>('TEMPO_RESOLUCAO');
   const [dir, setDir] = useState<DirecaoOrdenacao>('desc');
   const [page, setPage] = useState(0);
-  const [isExporting, setIsExporting] = useState(false);
   const { data, isLoading, isError } = useMetricasPorModelo({
     sort,
     dir,
@@ -195,33 +194,16 @@ function RankingModelos() {
     setPage(0);
   }
 
-  async function handleExportarPdf() {
-    setIsExporting(true);
-    try {
-      const blob = await solicitacoesApi.exportarMetricasPorModeloPdf({ sort, dir });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `ranking-modelos-por-tempo-${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar ranking:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
-
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           Ranking de modelos por tempo
         </h2>
-        <Button type="button" variant="secondary" disabled={isExporting} onClick={handleExportarPdf}>
-          {isExporting ? 'Exportando...' : 'Exportar PDF'}
-        </Button>
+        <ExportarPdfButton
+          buscar={() => solicitacoesApi.exportarMetricasPorModeloPdf({ sort, dir })}
+          nomeDoArquivo={() => `ranking-modelos-por-tempo-${Date.now()}.pdf`}
+        />
       </div>
 
       {isLoading ? <LoadingState title="Carregando ranking..." /> : null}

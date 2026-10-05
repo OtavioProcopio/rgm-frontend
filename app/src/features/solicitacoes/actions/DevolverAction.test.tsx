@@ -19,8 +19,8 @@ const dados = { motivo: 'Solda incompleta' };
 vi.mock('../hooks/useDevolverSolicitacao', () => ({
   useDevolverSolicitacao: () => ({ mutateAsync: devolver, isPending: false }),
 }));
-vi.mock('@/features/evidencias/hooks/useUploadEvidencia', () => ({
-  useUploadEvidencia: () => ({ mutateAsync: anexar, isPending: false }),
+vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
+  evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
 }));
 vi.mock('../components/DevolucaoModal', () => ({
   DevolucaoModal: ({
@@ -64,7 +64,7 @@ describe('DevolverAction', () => {
 
     // Assert
     expect(devolver).toHaveBeenCalledWith(dados);
-    expect(anexar).toHaveBeenCalledWith({ file: foto, tipo: 'DEVOLUCAO', descricao: dados.motivo });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'DEVOLUCAO', descricao: dados.motivo });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -92,5 +92,21 @@ describe('DevolverAction', () => {
     // Assert
     expect(devolver).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve avisar que a solicitação foi devolvida e a foto não foi enviada, sem fechar, quando o envio da foto falha', async () => {
+    // Arrange
+    devolver.mockResolvedValue(undefined);
+    anexar.mockRejectedValue(new Error('rede'));
+    const { onClose } = montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Assert
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'A solicitação foi devolvida, mas a foto não foi enviada.',
+    );
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

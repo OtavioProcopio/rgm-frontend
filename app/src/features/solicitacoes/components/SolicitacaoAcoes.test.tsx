@@ -102,4 +102,20 @@ describe('SolicitacaoAcoes', () => {
     // Assert
     expect(screen.queryByLabelText('Motivo da devolução *')).toBeNull();
   });
+
+  it('deve manter a ação aberta quando a solicitação muda de status e a ação deixa de ser permitida', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: gestor });
+    const { rerender } = render(<SolicitacaoAcoes solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })} />, {
+      wrapper: AppWrapper,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Devolver' }));
+
+    // Act
+    rerender(<SolicitacaoAcoes solicitacao={criarSolicitacao({ status: 'CONCLUIDA' })} />);
+
+    // Assert
+    expect(screen.getByLabelText('Motivo da devolução *')).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Devolver' })).toBeNull();
+  });
 });

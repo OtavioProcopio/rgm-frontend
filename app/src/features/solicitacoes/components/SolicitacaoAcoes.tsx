@@ -16,7 +16,9 @@ export function SolicitacaoAcoes({ solicitacao }: Props) {
 
   const acoes = acoesDe(solicitacao);
   const botoes = botoesDeAcao(acoes);
-  if (botoes.length === 0) return null;
+  // A ação aberta fica até fechar: depois de feita, ela pode deixar de ser permitida e
+  // ainda ter um aviso a mostrar (foto não enviada).
+  if (botoes.length === 0 && !acaoAberta) return null;
 
   return (
     <div className="space-y-4">
@@ -33,7 +35,7 @@ export function SolicitacaoAcoes({ solicitacao }: Props) {
           </Button>
         ))}
       </div>
-      {acaoAberta && acoes.has(acaoAberta) ? (
+      {acaoAberta ? (
         <AcaoSolicitacaoAtiva
           acao={acaoAberta}
           solicitacao={solicitacao}
