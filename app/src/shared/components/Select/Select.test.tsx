@@ -51,4 +51,21 @@ describe('Select', () => {
     const select = container.querySelector('select')!;
     expect(label.htmlFor).toBe(select.id);
   });
+
+  it('deve associar a mensagem de erro ao campo quando há erro', () => {
+    const { container } = render(<Select label="Status" options={OPTIONS} error="Campo inválido." />);
+
+    const campo = container.querySelector('select')!;
+    const descricao = container.ownerDocument.getElementById(
+      campo.getAttribute('aria-describedby')!,
+    );
+
+    expect(descricao?.textContent).toBe('Campo inválido.');
+  });
+
+  it('deve deixar o campo sem descrição associada quando não há erro', () => {
+    const { container } = render(<Select label="Status" options={OPTIONS} />);
+
+    expect(container.querySelector('select')!.hasAttribute('aria-describedby')).toBe(false);
+  });
 });

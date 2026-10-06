@@ -53,7 +53,7 @@ export function SolicitacoesPage() {
                 type="button"
                 onClick={() => setView('kanban')}
                 className={cn(
-                  'rounded-l-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-l-md px-3 py-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                   view === 'kanban'
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                     : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',
@@ -65,7 +65,7 @@ export function SolicitacoesPage() {
                 type="button"
                 onClick={() => setView('lista')}
                 className={cn(
-                  'rounded-r-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-r-md px-3 py-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                   view === 'lista'
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                     : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',

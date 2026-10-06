@@ -111,3 +111,8 @@ export function botoesDeAcao(acoes: ReadonlySet<AcaoSolicitacao>): BotaoDeAcao[]
     (botao) => acoes.has(botao.acao) && !(botao.acao === 'CANCELAR' && acoes.has('ENCERRAR')),
   );
 }
+
+/** Nome da ação para a tela: rótulo de botão e nome do diálogo. */
+export function rotuloDaAcao(acao: AcaoSolicitacao): string {
+  return BOTOES.find((botao) => botao.acao === acao)!.rotulo;
+}

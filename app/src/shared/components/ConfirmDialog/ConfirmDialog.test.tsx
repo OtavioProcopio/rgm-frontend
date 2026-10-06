@@ -63,4 +63,22 @@ describe('ConfirmDialog', () => {
     const { container } = render(<ConfirmDialog {...baseProps} variant="warning" />);
     expect(container.firstElementChild?.className).toContain('amber');
   });
+
+  it('deve usar o botão de perigo para confirmar quando a variante é danger', () => {
+    const { container } = render(<ConfirmDialog {...baseProps} />);
+
+    const classes = within(container).getByRole('button', { name: 'Confirmar' }).className;
+
+    expect(classes).toContain('bg-red-600');
+    expect(classes).not.toContain('bg-sky-600');
+  });
+
+  it('deve usar a cor de aviso para confirmar quando a variante é warning', () => {
+    const { container } = render(<ConfirmDialog {...baseProps} variant="warning" />);
+
+    const classes = within(container).getByRole('button', { name: 'Confirmar' }).className;
+
+    expect(classes).toContain('bg-amber-600');
+    expect(classes).not.toContain('bg-red-600');
+  });
 });

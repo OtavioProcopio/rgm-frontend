@@ -46,4 +46,21 @@ describe('Input', () => {
     await userEvent.type(input, 'a');
     expect(onChange).toHaveBeenCalled();
   });
+
+  it('deve associar a mensagem de erro ao campo quando há erro', () => {
+    const { container } = render(<Input label="Email" error="Campo inválido." />);
+
+    const campo = container.querySelector('input')!;
+    const descricao = container.ownerDocument.getElementById(
+      campo.getAttribute('aria-describedby')!,
+    );
+
+    expect(descricao?.textContent).toBe('Campo inválido.');
+  });
+
+  it('deve deixar o campo sem descrição associada quando não há erro', () => {
+    const { container } = render(<Input label="Email" />);
+
+    expect(container.querySelector('input')!.hasAttribute('aria-describedby')).toBe(false);
+  });
 });

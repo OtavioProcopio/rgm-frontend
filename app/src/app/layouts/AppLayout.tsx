@@ -101,7 +101,7 @@ export function AppLayout() {
                 to="/app/perfil"
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700',
+                    'flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors pointer-coarse:min-h-11 hover:bg-slate-100 dark:hover:bg-slate-700',
                     isActive && 'bg-slate-100 dark:bg-slate-700',
                   )
                 }
@@ -131,7 +131,7 @@ export function AppLayout() {
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+                      'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 pointer-coarse:min-h-11 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
                       isActive &&
                         'bg-sky-600 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-500',
                     )

@@ -55,3 +55,16 @@ button,
 input {
   font: inherit;
 }
+
+/*
+ * Foco do teclado visível em todo controle, nos dois temas. `:focus-visible` não dispara
+ * em clique nem em toque. Campos de texto têm o próprio anel de foco.
+ */
+:where(a, button, summary, [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--color-sky-600);
+  outline-offset: 2px;
+}
+
+.dark :where(a, button, summary, [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline-color: var(--color-sky-400);
+}

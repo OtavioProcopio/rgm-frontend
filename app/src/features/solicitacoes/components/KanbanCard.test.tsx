@@ -1,7 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, fireEvent, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render as renderSemRoteador, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KanbanCard } from './KanbanCard';
@@ -28,6 +30,26 @@ const baseSolicitacao = {
 };
 
 afterEach(cleanup);
+
+function render(ui: ReactElement) {
+  return renderSemRoteador(ui, { wrapper: MemoryRouter });
+}
+
+const HORA = 3_600_000;
+const horasAtras = (horas: number) => new Date(Date.now() - horas * HORA).toISOString();
+const emHoras = (horas: number) => new Date(Date.now() + horas * HORA).toISOString();
+
+function card(extra: object) {
+  return (
+    <KanbanCard
+      solicitacao={{ ...baseSolicitacao, ...extra }}
+      isDraggable={false}
+      canAdvance={false}
+      onDragStart={vi.fn()}
+      onAdvance={vi.fn()}
+    />
+  );
+}
 
 describe('KanbanCard', () => {
   it('renders titulo and tipo', () => {
@@ -163,7 +185,7 @@ describe('KanbanCard', () => {
         onAdvance={vi.fn()}
       />,
     );
-    expect(container.querySelector('[aria-label="Avançar para a próxima etapa"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Triar"]')).toBeNull();
   });
 
   it('renders advance button and calls onAdvance when clicked', () => {
@@ -177,9 +199,123 @@ describe('KanbanCard', () => {
         onAdvance={onAdvance}
       />,
     );
-    const button = container.querySelector('[aria-label="Avançar para a próxima etapa"]')!;
+    const button = container.querySelector('[aria-label="Triar"]')!;
     expect(button).toBeDefined();
     fireEvent.click(button);
     expect(onAdvance).toHaveBeenCalledWith(baseSolicitacao);
+  });
+
+  it('deve dizer há quanto tempo está atrasada quando a API marca atraso em solicitação em aberto', () => {
+    const { container } = render(
+      card({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(29),
+        prazoLimite: horasAtras(5),
+        atrasada: true,
+      }),
+    );
+
+    expect(within(container).getByText('Atrasada há 5 h')).toBeDefined();
+  });
+
+  it('deve manter o selo de atraso quando a solicitação acabou de ser atualizada', () => {
+    const { container } = render(
+      card({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(29),
+        atualizadaEm: new Date().toISOString(),
+        prazoLimite: horasAtras(5),
+        atrasada: true,
+      }),
+    );
+
+    expect(within(container).getByText('Atrasada há 5 h')).toBeDefined();
+  });
+
+  it('deve dizer quanto falta quando a solicitação está perto de vencer', () => {
+    const { container } = render(
+      card({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(20),
+        prazoLimite: emHoras(4.5),
+        atrasada: false,
+      }),
+    );
+
+    expect(within(container).getByText('Vence em 4 h')).toBeDefined();
+  });
+
+  it('deve dizer "Fora do prazo" e esconder a idade quando a concluída está atrasada', () => {
+    const { container } = render(
+      card({
+        status: 'CONCLUIDA',
+        criadaEm: horasAtras(24 * 10),
+        prazoLimite: horasAtras(24 * 9),
+        atrasada: true,
+      }),
+    );
+
+    expect(within(container).getByText('Fora do prazo')).toBeDefined();
+    expect(within(container).queryByText(/^\d+d$/)).toBeNull();
+  });
+
+  it('deve ficar sem selo de prazo e sem idade quando a solicitação está cancelada', () => {
+    const { container } = render(
+      card({
+        status: 'CANCELADA',
+        criadaEm: horasAtras(24 * 10),
+        prazoLimite: horasAtras(24 * 9),
+        atrasada: false,
+      }),
+    );
+
+    expect(within(container).queryByText(/prazo|Atrasada|Vence/)).toBeNull();
+    expect(within(container).queryByText(/^\d+d$/)).toBeNull();
+  });
+
+  it('deve ficar sem selo de prazo quando a API não informa o prazo', () => {
+    const { container } = render(card({ status: 'EM_ANDAMENTO', criadaEm: horasAtras(500) }));
+
+    expect(within(container).queryByText(/prazo|Atrasada|Vence/)).toBeNull();
+  });
+
+  it('deve apontar o link para o detalhe da solicitação', () => {
+    const { container } = render(card({ id: 'abc' }));
+
+    const link = within(container).getByRole('link', { name: /Ver solicitação/ });
+
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes/abc');
+  });
+
+  it('deve navegar para o detalhe sem recarregar quando o link é clicado', () => {
+    function Local() {
+      return <p>local: {useLocation().pathname}</p>;
+    }
+    const { container } = renderSemRoteador(
+      <MemoryRouter initialEntries={['/app/solicitacoes']}>
+        <Routes>
+          <Route path="/app/solicitacoes" element={card({ id: 'abc' })} />
+          <Route path="/app/solicitacoes/:id" element={<Local />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(within(container).getByRole('link', { name: /Ver solicitação/ }));
+
+    expect(within(container).getByText('local: /app/solicitacoes/abc')).toBeDefined();
+  });
+
+  it('deve nomear o botão de avançar com a ação da etapa', () => {
+    const { container } = render(
+      <KanbanCard
+        solicitacao={{ ...baseSolicitacao, status: 'EM_ANDAMENTO' }}
+        isDraggable={false}
+        canAdvance
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />,
+    );
+
+    expect(within(container).getByRole('button', { name: 'Enviar para validação' })).toBeDefined();
   });
 });

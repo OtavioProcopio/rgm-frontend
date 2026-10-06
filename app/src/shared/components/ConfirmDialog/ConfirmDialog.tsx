@@ -16,14 +16,13 @@ const styles: Record<Variant, { container: string; button: string }> = {
   danger: {
     container:
       'rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-950 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-100',
-    button:
-      'bg-red-600 hover:bg-red-700 focus-visible:outline-red-500 dark:bg-red-600 dark:hover:bg-red-500',
+    button: '',
   },
   warning: {
     container:
       'rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-100',
     button:
-      'bg-amber-600 hover:bg-amber-700 focus-visible:outline-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500',
+      'bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500',
   },
 };
 
@@ -46,7 +45,13 @@ export function ConfirmDialog({
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isPending}>
           Cancelar
         </Button>
-        <Button type="button" onClick={onConfirm} disabled={isPending} className={s.button}>
+        <Button
+          type="button"
+          variant={variant === 'danger' ? 'danger' : 'primary'}
+          onClick={onConfirm}
+          disabled={isPending}
+          className={s.button}
+        >
           {isPending ? 'Aguarde...' : confirmLabel}
         </Button>
       </div>
