@@ -21,7 +21,12 @@ vi.mock('@/features/admin/usuarios/hooks/useExcluirUsuario', () => ({
   useExcluirUsuario: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('@/features/admin/usuarios/components/UsuariosTable', () => ({
-  UsuariosTable: ({ usuarios, onDesativar, onExcluir, onAtivar }: {
+  UsuariosTable: ({
+    usuarios,
+    onDesativar,
+    onExcluir,
+    onAtivar,
+  }: {
     usuarios: { id: string; nome: string; ativo: boolean }[];
     onDesativar: (u: { id: string; nome: string }) => void;
     onAtivar: (u: { id: string; nome: string }) => void;
@@ -38,12 +43,6 @@ vi.mock('@/features/admin/usuarios/components/UsuariosTable', () => ({
       ))}
     </div>
   ),
-}));
-vi.mock('@/features/admin/usuarios/components/DeleteUsuarioDialog', () => ({
-  DeleteUsuarioDialog: () => <div data-testid="delete-dialog" />,
-}));
-vi.mock('@/shared/components/ConfirmDialog/ConfirmDialog', () => ({
-  ConfirmDialog: () => <div data-testid="confirm-dialog" />,
 }));
 
 afterEach(cleanup);
@@ -83,7 +82,9 @@ describe('UsuariosPage', () => {
   it('shows error state when request fails', async () => {
     const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
     vi.mocked(useUsuarios).mockReturnValue({
-      data: undefined, error: new Error('fail'), isLoading: false,
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
     } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
@@ -96,11 +97,22 @@ describe('UsuariosPage', () => {
     vi.mocked(useUsuarios).mockReturnValue({
       data: {
         content: [
-          { id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' },
+          {
+            id: '1',
+            nome: 'Alice',
+            email: 'a@a.com',
+            perfil: 'OPERADOR',
+            ativo: true,
+            criadoEm: '',
+            atualizadoEm: '',
+          },
         ],
-        page: 0, totalPages: 1, totalElements: 1,
+        page: 0,
+        totalPages: 1,
+        totalElements: 1,
       },
-      error: null, isLoading: false,
+      error: null,
+      isLoading: false,
     } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
@@ -112,28 +124,64 @@ describe('UsuariosPage', () => {
     const userEvent = (await import('@testing-library/user-event')).default;
     const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
     vi.mocked(useUsuarios).mockReturnValue({
-      data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
-      error: null, isLoading: false,
+      data: {
+        content: [
+          {
+            id: '1',
+            nome: 'Alice',
+            email: 'a@a.com',
+            perfil: 'OPERADOR',
+            ativo: true,
+            criadoEm: '',
+            atualizadoEm: '',
+          },
+        ],
+        page: 0,
+        totalPages: 1,
+        totalElements: 1,
+      },
+      error: null,
+      isLoading: false,
     } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByText('desativar-1'));
-    expect(within(container).getByTestId('confirm-dialog')).toBeDefined();
+    const dialogo = within(container).getByRole('dialog', { name: 'Desativar usuário' });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+    expect(document.activeElement).toBe(within(dialogo).getByRole('button', { name: 'Cancelar' }));
   });
 
   it('shows delete dialog when excluir is triggered', async () => {
     const userEvent = (await import('@testing-library/user-event')).default;
     const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
     vi.mocked(useUsuarios).mockReturnValue({
-      data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
-      error: null, isLoading: false,
+      data: {
+        content: [
+          {
+            id: '1',
+            nome: 'Alice',
+            email: 'a@a.com',
+            perfil: 'OPERADOR',
+            ativo: true,
+            criadoEm: '',
+            atualizadoEm: '',
+          },
+        ],
+        page: 0,
+        totalPages: 1,
+        totalElements: 1,
+      },
+      error: null,
+      isLoading: false,
     } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByText('excluir-1'));
-    expect(within(container).getByTestId('delete-dialog')).toBeDefined();
+    const dialogo = within(container).getByRole('dialog', { name: 'Confirmar exclusão' });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+    expect(document.activeElement).toBe(within(dialogo).getByRole('button', { name: 'Cancelar' }));
   });
 
   it('calls ativar mutation when ativar is triggered', async () => {
@@ -141,10 +189,29 @@ describe('UsuariosPage', () => {
     const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
     const { useAtivarUsuario } = await import('@/features/admin/usuarios/hooks/useAtivarUsuario');
     const ativarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useAtivarUsuario).mockReturnValue({ mutateAsync: ativarMock, isPending: false } as unknown as ReturnType<typeof useAtivarUsuario>);
+    vi.mocked(useAtivarUsuario).mockReturnValue({
+      mutateAsync: ativarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useAtivarUsuario>);
     vi.mocked(useUsuarios).mockReturnValue({
-      data: { content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: false, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
-      error: null, isLoading: false,
+      data: {
+        content: [
+          {
+            id: '1',
+            nome: 'Alice',
+            email: 'a@a.com',
+            perfil: 'OPERADOR',
+            ativo: false,
+            criadoEm: '',
+            atualizadoEm: '',
+          },
+        ],
+        page: 0,
+        totalPages: 1,
+        totalElements: 1,
+      },
+      error: null,
+      isLoading: false,
     } as unknown as ReturnType<typeof useUsuarios>);
 
     const { AppWrapper } = createAppWrapper();

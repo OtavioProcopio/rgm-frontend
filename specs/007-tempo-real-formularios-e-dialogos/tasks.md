@@ -43,8 +43,8 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 - [x] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste de cada um em `TST`
 - [x] T025 Testes e alteração de `SRC/features/solicitacoes/components/KanbanBoard.tsx`: usa `DialogoDaAcao`
 - [x] T026 Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoAcoes.tsx`: a ação do detalhe abre em diálogo modal com o mesmo nome do quadro; Esc fecha e o foco volta ao botão
-- [ ] T027 [P] Testes e alteração de `SRC/features/admin/usuarios/pages/UsuariosPage.tsx` e `SRC/features/admin/usuarios/components/DeleteUsuarioDialog.tsx`: desativar e excluir abrem como diálogo modal; foco inicial em desistir
-- [ ] T028 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx` e `SRC/features/admin/modelos/components/GaleriaCarousel.tsx`: desativar, ativar e remover foto abrem como diálogo modal; Esc na confirmação da galeria não fecha a galeria
+- [x] T027 [P] Testes e alteração de `SRC/features/admin/usuarios/pages/UsuariosPage.tsx` e `SRC/features/admin/usuarios/components/DeleteUsuarioDialog.tsx`: desativar e excluir abrem como diálogo modal; foco inicial em desistir
+- [x] T028 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx` e `SRC/features/admin/modelos/components/GaleriaCarousel.tsx`: desativar, ativar e remover foto abrem como diálogo modal; Esc na confirmação da galeria não fecha a galeria
 
 ## Parte 4 — Confirmações
 

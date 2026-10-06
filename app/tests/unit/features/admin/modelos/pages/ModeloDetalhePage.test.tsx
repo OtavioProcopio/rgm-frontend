@@ -1,7 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
@@ -78,7 +80,9 @@ describe('ModeloDetalhePage (admin)', () => {
   it('shows error state', async () => {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: undefined, isLoading: false, error: new Error('Erro'),
+      data: undefined,
+      isLoading: false,
+      error: new Error('Erro'),
     } as ReturnType<typeof useModelo>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
@@ -89,7 +93,9 @@ describe('ModeloDetalhePage (admin)', () => {
   it('computes time metrics client-side when there are 2+ concluidas', async () => {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: modelo, isLoading: false, error: null,
+      data: modelo,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useModelo>);
 
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
@@ -123,7 +129,9 @@ describe('ModeloDetalhePage (admin)', () => {
   it('shows placeholder when fewer than 2 concluidas', async () => {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: modelo, isLoading: false, error: null,
+      data: modelo,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useModelo>);
 
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
@@ -145,5 +153,58 @@ describe('ModeloDetalhePage (admin)', () => {
 
     const kpiCards = within(container).getAllByText('—');
     expect(kpiCards.length).toBe(2);
+  });
+});
+
+describe('ModeloDetalhePage (admin) — confirmações', () => {
+  /** Abre o detalhe do modelo, ativo ou inativo, como administrador. */
+  async function abrirDetalhe(ativo: boolean) {
+    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    vi.mocked(useModelo).mockReturnValue({
+      data: { ...modelo, ativo },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useModelo>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
+    render(
+      <Routes>
+        <Route path="/modelos/:id" element={<ModeloDetalhePage />} />
+      </Routes>,
+      { wrapper: AppWrapper },
+    );
+  }
+
+  it.each([
+    [true, 'Desativar', 'Desativar modelo'],
+    [false, 'Ativar', 'Ativar modelo'],
+  ])(
+    'deve abrir a confirmação como diálogo modal com o foco em Cancelar quando o modelo ativo=%s e o botão é %s',
+    async (ativo, botao, titulo) => {
+      // Arrange
+      await abrirDetalhe(ativo);
+
+      // Act
+      await userEvent.click(screen.getByRole('button', { name: botao }));
+
+      // Assert
+      const dialogo = screen.getByRole('dialog', { name: titulo });
+      expect(dialogo.getAttribute('aria-modal')).toBe('true');
+      expect(document.activeElement).toBe(
+        within(dialogo).getByRole('button', { name: 'Cancelar' }),
+      );
+    },
+  );
+
+  it('deve fechar a confirmação e devolver o foco ao botão quando Esc é apertado', async () => {
+    // Arrange
+    await abrirDetalhe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Desativar' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Desativar' }));
   });
 });
