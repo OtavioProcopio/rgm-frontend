@@ -53,7 +53,7 @@ A feature 006 entregou o diálogo modal e o levou às ações do quadro. Ficou d
 1. No detalhe da solicitação, as mesmas ações (triar, alterar responsáveis, enviar para
    validação, devolver, encerrar, cancelar) abrem como um bloco dentro da página. A mesma
    ação tem duas apresentações (quarta heurística de Nielsen, consistência).
-2. As confirmações (desativar e excluir usuário, excluir modelo, excluir foto da galeria)
+2. As confirmações (desativar e excluir usuário, desativar e ativar modelo, remover foto da galeria)
    também são blocos dentro da página: não prendem o foco, não fecham com Esc e empurram o
    conteúdo para baixo.
 3. Numa confirmação destrutiva, nada garante que o foco inicial esteja na opção segura.
@@ -128,7 +128,7 @@ mesmo diálogo e os mesmos alvos de toque em qualquer tela.
 | RF-17 | Cancelar a edição sem nenhuma alteração deve fechar a edição sem perguntar | obrigatório |
 | RF-18 | Fechar o diálogo de uma ação (Esc, clique fora ou "Cancelar") com algo preenchido deve pedir confirmação antes de descartar; sem nada preenchido, fecha sem perguntar | obrigatório |
 | RF-19 | No detalhe da solicitação, as ações (triar, alterar responsáveis, enviar para validação, devolver, encerrar, cancelar) devem abrir no mesmo diálogo modal do quadro, com nome que diga a ação e a solicitação | obrigatório |
-| RF-20 | As confirmações de desativar usuário, excluir usuário, excluir modelo e excluir foto da galeria devem abrir como diálogo modal, com o título da confirmação como nome | obrigatório |
+| RF-20 | As confirmações de desativar usuário, excluir usuário, desativar e ativar modelo e remover foto da galeria devem abrir como diálogo modal, com o título da confirmação como nome | obrigatório |
 | RF-21 | Em confirmação de ação destrutiva, o foco inicial deve estar no botão de desistir | obrigatório |
 | RF-22 | Em confirmação de ação destrutiva, a tecla Enter logo ao abrir não deve executar a ação | obrigatório |
 | RF-23 | Enquanto uma ação ou confirmação estiver sendo enviada, Esc e o clique fora não devem fechar o diálogo | obrigatório |
