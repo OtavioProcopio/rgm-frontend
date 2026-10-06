@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { modelosApi } from '../api/modelosApi';
 
 import { useAuth } from '@/app/providers/authContext';
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -46,7 +47,6 @@ export function ModeloDetalhePage() {
   const ativarModelo = useAtivarModelo();
   const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const podeGerenciarFoto = canManageModelos(user?.perfil);
 
   async function handleConfirmAction() {
@@ -67,25 +67,6 @@ export function ModeloDetalhePage() {
 
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
 
-  async function handleExportarFicha() {
-    if (!id) return;
-    setIsExporting(true);
-    try {
-      const blob = await modelosApi.exportarFicha(id);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `ficha-modelo-${modelo?.codigo ?? id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar ficha:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
-
   return (
     <section>
       <PageHeader
@@ -93,9 +74,12 @@ export function ModeloDetalhePage() {
         description="Consulte dados, eventos e a galeria de fotos do modelo."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" disabled={isExporting} onClick={handleExportarFicha}>
-              {isExporting ? 'Exportando...' : 'Exportar PDF'}
-            </Button>
+            {id ? (
+              <ExportarPdfButton
+                buscar={() => modelosApi.exportarFicha(id)}
+                nomeDoArquivo={() => `ficha-modelo-${modelo?.codigo ?? id}.pdf`}
+              />
+            ) : null}
             {id && podeGerenciarFoto ? (
               <>
                 <Link to={`/app/admin/modelos/${id}/editar`}>

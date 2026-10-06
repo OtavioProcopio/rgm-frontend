@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, fireEvent, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,31 +40,62 @@ describe('EvidenciaUploader', () => {
     expect(onUpload).toHaveBeenCalledWith(file);
   });
 
-  it('shows error for unsupported mime type', () => {
+  it('deve recusar listando os tipos aceitos, sem enviar, quando o arquivo é um executável', async () => {
+    // Arrange
     const onUpload = vi.fn();
-    const { container } = render(<EvidenciaUploader onUpload={onUpload} />);
-    const input = container.querySelector('input[type="file"]')! as HTMLInputElement;
-    const file = makeFile('doc.txt', 'text/plain', 100);
+    render(<EvidenciaUploader onUpload={onUpload} />);
+    const executavel = makeFile('instalador.exe', 'application/x-msdownload', 100);
 
-    // userEvent.upload respeita o accept do input; usamos fireEvent para testar
-    // a validação de tipo que ocorre no handler JS
-    Object.defineProperty(input, 'files', { value: [file], configurable: true });
-    fireEvent.change(input);
+    // Act
+    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), executavel, { applyAccept: false });
 
+    // Assert
+    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG, GIF, WebP, PDF e MP4.')).toBeDefined();
     expect(onUpload).not.toHaveBeenCalled();
-    expect(within(container).getByText(/tipo de arquivo não permitido/i)).toBeDefined();
   });
 
-  it('shows error for oversized file', () => {
+  it('deve recusar dizendo o limite, sem enviar, quando o arquivo tem 11 MB', async () => {
+    // Arrange
     const onUpload = vi.fn();
-    const { container } = render(<EvidenciaUploader onUpload={onUpload} />);
-    const input = container.querySelector('input[type="file"]')! as HTMLInputElement;
-    const file = makeFile('big.jpg', 'image/jpeg', 11 * 1024 * 1024);
+    render(<EvidenciaUploader onUpload={onUpload} />);
+    const grande = makeFile('grande.jpg', 'image/jpeg', 11 * 1024 * 1024);
 
-    Object.defineProperty(input, 'files', { value: [file], configurable: true });
-    fireEvent.change(input);
+    // Act
+    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), grande);
 
+    // Assert
+    expect(screen.getByText('Arquivo muito grande. O limite é 10 MB.')).toBeDefined();
     expect(onUpload).not.toHaveBeenCalled();
-    expect(within(container).getByText(/arquivo muito grande/i)).toBeDefined();
   });
+
+  it('deve enviar quando o arquivo é um MP4 de 5 MB', async () => {
+    // Arrange
+    const onUpload = vi.fn();
+    render(<EvidenciaUploader onUpload={onUpload} />);
+    const video = makeFile('servico.mp4', 'video/mp4', 5 * 1024 * 1024);
+
+    // Act
+    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), video);
+
+    // Assert
+    expect(onUpload).toHaveBeenCalledWith(video);
+    expect(screen.queryByText(/não permitido|muito grande/i)).toBeNull();
+  });
+
+  it('deve limpar o erro quando um arquivo válido é escolhido depois de um recusado', async () => {
+    // Arrange
+    const onUpload = vi.fn();
+    render(<EvidenciaUploader onUpload={onUpload} />);
+    const campo = screen.getByLabelText('Arquivo de evidência');
+    await userEvent.upload(campo, makeFile('nota.txt', 'text/plain', 10), { applyAccept: false });
+    const valido = makeFile('foto.png', 'image/png', 10);
+
+    // Act
+    await userEvent.upload(campo, valido);
+
+    // Assert
+    expect(screen.queryByText(/não permitido/i)).toBeNull();
+    expect(onUpload).toHaveBeenCalledWith(valido);
+  });
+
 });

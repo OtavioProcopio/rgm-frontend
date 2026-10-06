@@ -14,11 +14,13 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { Combobox } from '@/shared/components/Combobox/Combobox';
-import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
+import { AvisoFotoNaoEnviada } from '@/features/evidencias/components/AvisoFotoNaoEnviada';
+import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
+import { nomesDosTipos, TAMANHO_MAXIMO_MB, TIPOS_DE_IMAGEM, validarArquivo } from '@/shared/lib/arquivoPermitido';
 import { canAbrirSolicitacaoCriacao } from '@/shared/lib/permissions';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
-import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { acaoFeitaSemFoto, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import {
   abrirSolicitacaoSchema,
   type AbrirSolicitacaoFormData,
@@ -31,9 +33,6 @@ const BASE_TIPO_OPTIONS = [
 ];
 
 const CRIACAO_TIPO_OPTION = { value: 'CRIACAO', label: 'Criação de modelo' };
-
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export function NovaSolicitacaoPage() {
   const navigate = useNavigate();
@@ -53,6 +52,9 @@ export function NovaSolicitacaoPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const anexo = useAnexoComAviso();
+  /** Preenchido quando a solicitação foi aberta e a foto não foi enviada. */
+  const [abertaSemFotoId, setAbertaSemFotoId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form setup
@@ -95,17 +97,9 @@ export function NovaSolicitacaoPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPhotoError(null);
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setPhotoError('Apenas imagens nos formatos JPG, PNG ou WEBP são permitidas.');
-      return;
-    }
-
-    if (file.size > MAX_SIZE_BYTES) {
-      setPhotoError('A imagem deve ter no máximo 10 MB.');
-      return;
-    }
+    const erro = validarArquivo(file, TIPOS_DE_IMAGEM);
+    setPhotoError(erro);
+    if (erro) return;
 
     setPhoto(file);
     const reader = new FileReader();
@@ -147,13 +141,12 @@ export function NovaSolicitacaoPage() {
             },
       );
 
-      // 2. Upload da foto se houver
+      // 2. Upload da foto se houver. Se falhar, a solicitação já existe: fica na tela com o aviso.
       if (photo) {
-        try {
-          await evidenciasApi.anexar(created.id, photo, { tipo: 'ABERTURA' });
-        } catch (uploadErr) {
-          console.error('Erro ao fazer upload da evidência:', uploadErr);
-          // Permite continuar, a solicitação já foi aberta
+        const enviada = await anexo.anexar(created.id, photo, { tipo: 'ABERTURA' });
+        if (!enviada) {
+          setAbertaSemFotoId(created.id);
+          return;
         }
       }
 
@@ -166,6 +159,24 @@ export function NovaSolicitacaoPage() {
   }
 
   const isPending = abrirSolicitacao.isPending || isUploading;
+
+  if (abertaSemFotoId && anexo.estado) {
+    return (
+      <section>
+        <PageHeader title="Solicitação aberta" description="A solicitação foi registrada." />
+        <div className="max-w-lg">
+          <AvisoFotoNaoEnviada
+            mensagem={acaoFeitaSemFoto.ABRIR}
+            estado={anexo.estado}
+            enviando={anexo.enviando}
+            rotuloSair="Ir para a solicitação"
+            onTentarNovamente={() => void anexo.tentarNovamente()}
+            onSair={() => navigate(`/app/solicitacoes/${abertaSemFotoId}`)}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -261,7 +272,8 @@ export function NovaSolicitacaoPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept={ACCEPTED_IMAGE_TYPES.join(',')}
+            aria-label="Foto do problema"
+            accept={TIPOS_DE_IMAGEM.join(',')}
             onChange={handlePhotoChange}
             disabled={isPending}
             className="hidden"
@@ -281,7 +293,7 @@ export function NovaSolicitacaoPage() {
                 Clique para selecionar uma foto
               </span>
               <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Formatos suportados: JPG, PNG ou WEBP até 10 MB
+                Formatos suportados: {nomesDosTipos(TIPOS_DE_IMAGEM)} até {TAMANHO_MAXIMO_MB} MB
               </span>
             </button>
           ) : (

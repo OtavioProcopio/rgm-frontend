@@ -2,9 +2,12 @@ import { useRef, useState } from 'react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
-
-const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+import {
+  nomesDosTipos,
+  TAMANHO_MAXIMO_MB,
+  TIPOS_DE_EVIDENCIA,
+  validarArquivo,
+} from '@/shared/lib/arquivoPermitido';
 
 type Props = {
   isPending?: boolean;
@@ -19,15 +22,10 @@ export function EvidenciaUploader({ isPending, onUpload }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setValidationError(null);
-
-    if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
-      setValidationError('Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou PDF.');
-      return;
-    }
-
-    if (file.size > MAX_SIZE_BYTES) {
-      setValidationError('Arquivo muito grande. O limite é 10 MB.');
+    const erro = validarArquivo(file);
+    setValidationError(erro);
+    if (erro) {
+      e.target.value = '';
       return;
     }
 
@@ -44,7 +42,8 @@ export function EvidenciaUploader({ isPending, onUpload }: Props) {
         <input
           ref={inputRef}
           type="file"
-          accept={ACCEPTED_MIME_TYPES.join(',')}
+          aria-label="Arquivo de evidência"
+          accept={TIPOS_DE_EVIDENCIA.join(',')}
           className="hidden"
           onChange={handleChange}
         />
@@ -56,7 +55,9 @@ export function EvidenciaUploader({ isPending, onUpload }: Props) {
         >
           {isPending ? 'Enviando...' : 'Anexar arquivo'}
         </Button>
-        <span className="text-xs text-slate-400">JPG, PNG, WEBP, PDF — máx. 10 MB</span>
+        <span className="text-xs text-slate-400">
+          {nomesDosTipos(TIPOS_DE_EVIDENCIA)} — máx. {TAMANHO_MAXIMO_MB} MB
+        </span>
       </div>
     </div>
   );

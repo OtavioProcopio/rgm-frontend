@@ -1,10 +1,14 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiError } from '@/shared/api/apiError';
 import { createAppWrapper } from '@/test-utils/appWrapper';
+
+import { solicitacoesApi } from '../api/solicitacoesApi';
 
 import { SolicitacoesPage } from './SolicitacoesPage';
 
@@ -110,5 +114,22 @@ describe('SolicitacoesPage', () => {
       expect.objectContaining({ maquina: 'VICK' }),
       expect.anything(),
     );
+  });
+
+  it('deve mostrar o erro junto do botão de exportar quando a API responde com erro na exportação', async () => {
+    // Arrange
+    const recusa = new ApiError({ status: 500, message: 'Falha ao gerar o relatório.' });
+    vi.mocked(solicitacoesApi.exportar).mockRejectedValueOnce(recusa);
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const botao = screen.getByRole('button', { name: 'Exportar PDF' });
+
+    // Act
+    await userEvent.click(botao);
+
+    // Assert
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toBe(`Não foi possível exportar o PDF. ${recusa.message}`);
+    expect(alerta.parentElement).toBe(botao.parentElement);
   });
 });

@@ -5,6 +5,7 @@ import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { createAppWrapper } from '@/test-utils/appWrapper';
 
 import { SolicitacaoDetalhePage } from './SolicitacaoDetalhePage';
@@ -40,6 +41,7 @@ vi.mock('@/features/evidencias/hooks/useDeleteEvidencia', () => ({
 vi.mock('../hooks/useSolicitacao', () => ({
   useSolicitacao: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
 }));
+vi.mock('../hooks/useSolicitacaoEvents', () => ({ useSolicitacaoEvents: vi.fn() }));
 vi.mock('../hooks/useAtividades', () => ({
   useAtividades: vi.fn().mockReturnValue({ data: [], isLoading: false }),
 }));
@@ -351,5 +353,47 @@ describe('SolicitacaoDetalhePage', () => {
 
     expect(within(container).getByText(/não pode ser alterado/i)).toBeDefined();
     expect(container.querySelector('select')).toBeNull();
+  });
+
+  it('deve mostrar só os responsáveis disponíveis quando o gestor abre Alterar responsáveis', async () => {
+    // Arrange
+    const { useSolicitacao } = await import('../hooks/useSolicitacao');
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: { ...mockSolicitacao, status: 'EM_ANDAMENTO', responsavelIds: ['op'] },
+      isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const usuario = { email: null, ativo: true, criadoEm: '', atualizadoEm: '' };
+    vi.mocked(usuariosApi.listar).mockResolvedValueOnce({
+      content: [
+        { ...usuario, id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
+        { ...usuario, id: 'ge', nome: 'Gil Gestor', perfil: 'GESTOR' },
+        { ...usuario, id: 'ad', nome: 'Ana Administradora', perfil: 'ADMINISTRADOR' },
+        { ...usuario, id: 'in', nome: 'Ivo Inativo', perfil: 'OPERADOR', ativo: false },
+      ],
+      page: 0, totalPages: 1, totalElements: 4,
+    } as Awaited<ReturnType<typeof usuariosApi.listar>>);
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Alterar responsáveis' }));
+
+    // Assert
+    expect(await within(container).findByText('Olga Operadora')).toBeDefined();
+    expect(within(container).getByText('Gil Gestor')).toBeDefined();
+    expect(within(container).queryByText('Ana Administradora')).toBeNull();
+    expect(within(container).queryByText('Ivo Inativo')).toBeNull();
+  });
+
+  it('deve ouvir os eventos de tempo real quando o detalhe é aberto', async () => {
+    // Arrange
+    const { useSolicitacaoEvents } = await import('../hooks/useSolicitacaoEvents');
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+
+    // Act
+    render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(useSolicitacaoEvents).toHaveBeenCalled();
   });
 });

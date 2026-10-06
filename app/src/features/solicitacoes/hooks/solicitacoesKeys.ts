@@ -7,6 +7,8 @@ export const solicitacoesKeys = {
   details: () => [...solicitacoesKeys.all, 'detail'] as const,
   detail: (id: string) => [...solicitacoesKeys.details(), id] as const,
   atividades: (id: string) => [...solicitacoesKeys.detail(id), 'atividades'] as const,
+  /** Marca local, sem consulta: conta os eventos de mudança recebidos para a solicitação. */
+  atualizacao: (id: string) => [...solicitacoesKeys.all, 'atualizacao', id] as const,
   metricasPorModelo: (filters: MetricasPorModeloFilters) =>
     [...solicitacoesKeys.all, 'metricas-por-modelo', filters] as const,
 };

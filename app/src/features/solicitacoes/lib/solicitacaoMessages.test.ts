@@ -5,6 +5,7 @@ import { ApiError } from '@/shared/api/apiError';
 import {
   formatDuracao,
   getSolicitacaoErrorMessage,
+  mensagemFotoNaoEnviadaAntes,
   prioridadeLabel,
   statusLabel,
   tipoLabel,
@@ -53,5 +54,26 @@ describe('solicitacaoMessages', () => {
     expect(formatDuracao(24 * 3600)).toBe('1d 0h');
     expect(formatDuracao(25 * 3600)).toBe('1d 1h');
     expect(formatDuracao(50 * 3600)).toBe('2d 2h');
+  });
+});
+
+describe('mensagemFotoNaoEnviadaAntes', () => {
+  it('deve dizer que nada foi concluído e incluir o motivo quando a API recusa a foto', () => {
+    // Arrange
+    const recusa = new ApiError({ status: 422, message: 'Arquivo excede o tamanho máximo.' });
+
+    // Act
+    const mensagem = mensagemFotoNaoEnviadaAntes(recusa);
+
+    // Assert
+    expect(mensagem).toBe(`A foto não foi enviada e a solicitação não foi concluída. ${recusa.message}`);
+  });
+
+  it('deve dizer só que nada foi concluído quando a falha não veio da API', () => {
+    // Act
+    const mensagem = mensagemFotoNaoEnviadaAntes(new TypeError('Failed to fetch'));
+
+    // Assert
+    expect(mensagem).toBe('A foto não foi enviada e a solicitação não foi concluída.');
   });
 });

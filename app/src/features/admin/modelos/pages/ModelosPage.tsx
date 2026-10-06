@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
@@ -24,30 +25,6 @@ export function ModelosPage() {
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
     filters.maquina,
   );
-  const [isExporting, setIsExporting] = useState(false);
-
-  async function handleExportar() {
-    setIsExporting(true);
-    try {
-      const blob = await modelosApi.exportarLista({
-        ativo: filters.ativo,
-        codigo: filters.codigo,
-        maquina: filters.maquina,
-        descricao: filters.descricao,
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `relatorio_modelos_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar relatório:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
 
   return (
     <section>
@@ -56,9 +33,17 @@ export function ModelosPage() {
         description="Gerencie modelos vinculados às máquinas."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" disabled={isExporting} onClick={handleExportar}>
-              {isExporting ? 'Exportando...' : 'Exportar PDF'}
-            </Button>
+            <ExportarPdfButton
+              buscar={() =>
+                modelosApi.exportarLista({
+                  ativo: filters.ativo,
+                  codigo: filters.codigo,
+                  maquina: filters.maquina,
+                  descricao: filters.descricao,
+                })
+              }
+              nomeDoArquivo={() => `relatorio_modelos_${Date.now()}.pdf`}
+            />
             <Link to="/app/admin/modelos/novo">
               <Button>Novo modelo</Button>
             </Link>

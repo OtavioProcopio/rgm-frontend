@@ -5,6 +5,8 @@ import { cleanup, render, within, screen, fireEvent, waitFor } from '@testing-li
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { Route, Routes } from 'react-router';
+
 import { createAppWrapper } from '@/test-utils/appWrapper';
 import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
@@ -36,7 +38,36 @@ vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
   }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.mocked(evidenciasApi.anexar).mockReset();
+  vi.mocked(evidenciasApi.anexar).mockResolvedValue({} as Awaited<ReturnType<typeof evidenciasApi.anexar>>);
+});
+
+const foto = new File(['hello'], 'problema.png', { type: 'image/png' });
+
+/** Preenche o formulário com foto e envia; a abertura é aceita com o id `sol-123`. */
+async function abrirComFoto() {
+  vi.mocked(useAbrirSolicitacao).mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue({ id: 'sol-123' }),
+    isPending: false,
+  } as unknown as ReturnType<typeof useAbrirSolicitacao>);
+  const { AppWrapper } = createAppWrapper({ initialEntries: ['/app/solicitacoes/nova'] });
+  render(
+    <Routes>
+      <Route path="/app/solicitacoes/nova" element={<NovaSolicitacaoPage />} />
+      <Route path="/app/solicitacoes/:id" element={<p>Detalhe da solicitação</p>} />
+    </Routes>,
+    { wrapper: AppWrapper },
+  );
+  await userEvent.type(screen.getByLabelText(/título/i), 'Correia gasta');
+  await userEvent.type(screen.getByLabelText(/descrição/i), 'Correia da esteira desfiando');
+  await userEvent.click(screen.getByLabelText(/modelo/i));
+  await userEvent.click(screen.getByText('MD-1 - Modelo 1'));
+  await userEvent.upload(screen.getByLabelText('Foto do problema'), foto);
+  await screen.findByText('problema.png');
+  await userEvent.click(screen.getByRole('button', { name: 'Abrir solicitação' }));
+}
 
 describe('NovaSolicitacaoPage', () => {
   it('renders page title', () => {
@@ -167,5 +198,72 @@ describe('NovaSolicitacaoPage', () => {
         modeloObservacoes: undefined,
       });
     });
+  });
+
+  it('deve ir para o detalhe quando a solicitação é aberta e a foto é enviada', async () => {
+    // Act
+    await abrirComFoto();
+
+    // Assert
+    expect(await screen.findByText('Detalhe da solicitação')).toBeDefined();
+    expect(evidenciasApi.anexar).toHaveBeenCalledWith('sol-123', foto, { tipo: 'ABERTURA' });
+  });
+
+  it('deve continuar na tela com o aviso e um botão para o detalhe quando a solicitação é aberta e a foto falha', async () => {
+    // Arrange
+    vi.mocked(evidenciasApi.anexar).mockRejectedValue(new Error('rede'));
+
+    // Act
+    await abrirComFoto();
+
+    // Assert
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toContain('A solicitação foi aberta, mas a foto não foi enviada.');
+    expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Ir para a solicitação' })).toBeDefined();
+    expect(screen.queryByText('Detalhe da solicitação')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Abrir solicitação' })).toBeNull();
+  });
+
+  it('deve trocar o aviso por Foto enviada quando a nova tentativa da foto de abertura dá certo', async () => {
+    // Arrange
+    vi.mocked(evidenciasApi.anexar)
+      .mockRejectedValueOnce(new Error('rede'))
+      .mockResolvedValueOnce({} as Awaited<ReturnType<typeof evidenciasApi.anexar>>);
+    await abrirComFoto();
+
+    // Act
+    await userEvent.click(await screen.findByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect((await screen.findByRole('status')).textContent).toContain('Foto enviada.');
+    expect(evidenciasApi.anexar).toHaveBeenLastCalledWith('sol-123', foto, { tipo: 'ABERTURA' });
+    expect(screen.queryByText('Detalhe da solicitação')).toBeNull();
+  });
+
+  it('deve ir para o detalhe quando o usuário sai do aviso pelo botão', async () => {
+    // Arrange
+    vi.mocked(evidenciasApi.anexar).mockRejectedValue(new Error('rede'));
+    await abrirComFoto();
+
+    // Act
+    await userEvent.click(await screen.findByRole('button', { name: 'Ir para a solicitação' }));
+
+    // Assert
+    expect(await screen.findByText('Detalhe da solicitação')).toBeDefined();
+  });
+
+  it('deve recusar a foto listando só imagens quando o arquivo é um PDF', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+    const pdf = new File(['%PDF'], 'laudo.pdf', { type: 'application/pdf' });
+
+    // Act
+    await userEvent.upload(screen.getByLabelText('Foto do problema'), pdf, { applyAccept: false });
+
+    // Assert
+    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.')).toBeDefined();
+    expect(screen.queryByText('laudo.pdf')).toBeNull();
   });
 });

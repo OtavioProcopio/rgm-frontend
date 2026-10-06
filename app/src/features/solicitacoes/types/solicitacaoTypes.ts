@@ -33,6 +33,8 @@ export type Solicitacao = {
   concluidaEm: string | null;
   canceladaEm: string | null;
   responsavelIds: string[];
+  /** Só vem no detalhe, a partir da v1.6.0 do backend. Ausente em listagens e eventos. */
+  acoesPermitidas?: string[] | null;
 };
 
 export type AtividadeSolicitacao = {
