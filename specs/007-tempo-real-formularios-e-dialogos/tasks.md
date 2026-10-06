@@ -55,13 +55,13 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 - [x] T031 Alterar a área de toque em `SRC/features/solicitacoes/pages/DashboardPage.tsx`, `SRC/features/solicitacoes/components/HistoricoChart.tsx`, `SRC/features/modelos/components/ModeloCard.tsx`, `SRC/features/admin/usuarios/components/UsuariosFilters.tsx`, `SRC/features/admin/usuarios/components/UsuarioForm.tsx`, `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`, `SRC/features/admin/modelos/components/ModeloActionsMenu.tsx`, `SRC/features/admin/modelos/pages/NovoModeloPage.tsx`, `SRC/features/admin/modelos/pages/EditarModeloPage.tsx`, `SRC/features/solicitacoes/components/TriagemModal.tsx` e `SRC/features/solicitacoes/components/AlterarResponsaveisModal.tsx`
 - [x] T032 Testes e alteração de `SRC/features/auth/pages/PerfilPage.tsx` e `SRC/shared/components/Combobox/Combobox.tsx`: botões só de ícone com nome acessível e área de toque
-- [ ] T033 Medir RNF-06 (área de toque) e RNF-07 (contraste do foco) em todas as telas de RF-25, corrigir o que a medição ainda apontar e registrar na convergência
+- [x] T033 Medir RNF-06 (área de toque) e RNF-07 (contraste do foco) em todas as telas de RF-25, corrigir o que a medição ainda apontar e registrar na convergência
 
 ## Integração
 
-- [ ] T034 Medir RNF-01 com a aplicação rodando contra API simulada: derrubar a conexão, mudar uma solicitação, restabelecer e cronometrar até a tela refletir
-- [ ] T035 Capturas de tela antes e depois: aviso no cabeçalho, contador de caracteres, confirmação de evidência, ação do detalhe em diálogo e as quatro confirmações de administração (1440 px e 390 px, claro e escuro)
-- [ ] T036 `make validate` verde
+- [x] T034 Medir RNF-01 com a aplicação rodando contra API simulada: derrubar a conexão, mudar uma solicitação, restabelecer e cronometrar até a tela refletir
+- [x] T035 Capturas de tela antes e depois: aviso no cabeçalho, contador de caracteres, confirmação de evidência, ação do detalhe em diálogo e as quatro confirmações de administração (1440 px e 390 px, claro e escuro)
+- [x] T036 `make validate` verde
 
 ## Rastreabilidade
 
