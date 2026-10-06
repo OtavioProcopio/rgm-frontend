@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -56,12 +56,12 @@ describe('ConfirmDialog', () => {
 
   it('applies danger variant styles by default', () => {
     const { container } = render(<ConfirmDialog {...baseProps} />);
-    expect(container.firstElementChild?.className).toContain('red');
+    expect(within(container).getByRole('dialog').firstElementChild?.className).toContain('red');
   });
 
   it('applies warning variant styles', () => {
     const { container } = render(<ConfirmDialog {...baseProps} variant="warning" />);
-    expect(container.firstElementChild?.className).toContain('amber');
+    expect(within(container).getByRole('dialog').firstElementChild?.className).toContain('amber');
   });
 
   it('deve usar o botão de perigo para confirmar quando a variante é danger', () => {
@@ -80,5 +80,71 @@ describe('ConfirmDialog', () => {
 
     expect(classes).toContain('bg-amber-600');
     expect(classes).not.toContain('bg-red-600');
+  });
+
+  it('deve abrir como diálogo modal com o título como nome', () => {
+    // Act
+    render(<ConfirmDialog {...baseProps} />);
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: baseProps.title });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve pôr o foco inicial em Cancelar quando abre', () => {
+    // Act
+    render(<ConfirmDialog {...baseProps} />);
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancelar' }));
+  });
+
+  it('deve desistir em vez de confirmar quando Enter é apertado logo ao abrir', async () => {
+    // Arrange
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    render(<ConfirmDialog {...baseProps} onConfirm={onConfirm} onCancel={onCancel} />);
+
+    // Act
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('deve cancelar quando Esc é apertado', async () => {
+    // Arrange
+    const onCancel = vi.fn();
+    render(<ConfirmDialog {...baseProps} onCancel={onCancel} />);
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('deve continuar aberto quando Esc é apertado durante o envio', async () => {
+    // Arrange
+    const onCancel = vi.fn();
+    render(<ConfirmDialog {...baseProps} onCancel={onCancel} isPending />);
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('deve usar o rótulo informado no botão de desistir quando recebe cancelLabel', () => {
+    // Arrange
+    const rotulo = 'Continuar editando';
+
+    // Act
+    render(<ConfirmDialog {...baseProps} cancelLabel={rotulo} />);
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: rotulo }));
   });
 });

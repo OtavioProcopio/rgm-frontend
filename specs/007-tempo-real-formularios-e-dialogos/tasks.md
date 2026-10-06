@@ -34,10 +34,10 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 ## Parte 3 — Diálogo
 
-- [ ] T018 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: bloqueado ignora Esc; bloqueado ignora clique fora; controle dentro de elemento oculto fica fora do ciclo de Tab
-- [ ] T019 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: `bloqueado`, controles ocultos, fundo opaco
-- [ ] T020 Testes em `TST/shared/components/ConfirmDialog/ConfirmDialog.test.tsx`: é diálogo modal com o título como nome; foco inicial em "Cancelar"; Enter ao abrir não confirma; Esc cancela; durante o envio Esc não fecha; `cancelLabel`
-- [ ] T021 Alterar `SRC/shared/components/ConfirmDialog/ConfirmDialog.tsx`
+- [x] T018 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: bloqueado ignora Esc; bloqueado ignora clique fora; controle dentro de elemento oculto fica fora do ciclo de Tab
+- [x] T019 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: `bloqueado`, controles ocultos, fundo opaco
+- [x] T020 Testes em `TST/shared/components/ConfirmDialog/ConfirmDialog.test.tsx`: é diálogo modal com o título como nome; foco inicial em "Cancelar"; Enter ao abrir não confirma; Esc cancela; durante o envio Esc não fecha; `cancelLabel`
+- [x] T021 Alterar `SRC/shared/components/ConfirmDialog/ConfirmDialog.tsx`
 - [ ] T022 Criar `TST/features/solicitacoes/actions/DialogoDaAcao.test.tsx`: nome com a ação e a solicitação; Esc sem nada preenchido fecha; Esc com algo preenchido pergunta; "Continuar editando" mantém o texto; "Descartar" fecha; "Cancelar" do formulário com algo preenchido pergunta; durante o envio Esc e clique fora não fecham; falha no envio mantém o diálogo, o erro e o texto; ação concluída fecha sem perguntar
 - [ ] T023 Alterar `SRC/features/solicitacoes/types/acaoProps.ts` (`onCancelar`) e criar `SRC/features/solicitacoes/actions/DialogoDaAcao.tsx`
 - [ ] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste de cada um em `TST`
