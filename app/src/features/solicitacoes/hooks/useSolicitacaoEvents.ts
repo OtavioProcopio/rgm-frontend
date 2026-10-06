@@ -12,10 +12,12 @@ import {
   lerEventoSolicitacao,
   mesclarSolicitacaoDoEvento,
 } from '../lib/eventosSolicitacao';
+import { esperaDaTentativa, sessaoExpirou } from '../lib/reconexao';
 import type { Solicitacao } from '../types/solicitacaoTypes';
 import { solicitacoesKeys } from './solicitacoesKeys';
 
-const RECONNECT_DELAY_MS = 3000;
+/** Estado da conexão de tempo real, publicado no cache para quem mostra o aviso. */
+export type EstadoDaConexao = { aberta: boolean; desde: number };
 
 export function useSolicitacaoEvents() {
   const queryClient = useQueryClient();
@@ -29,6 +31,29 @@ export function useSolicitacaoEvents() {
     let source: EventSource | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
+    let aberturas = 0;
+    let tentativas = 0;
+
+    let conexao: EstadoDaConexao | null = null;
+
+    const publicarConexao = (aberta: boolean) => {
+      // Fechada que continua fechada mantém o instante da primeira queda.
+      if (conexao?.aberta !== aberta) {
+        conexao = { aberta, desde: Date.now() };
+      }
+      queryClient.setQueryData<EstadoDaConexao>(solicitacoesKeys.conexao(), conexao);
+    };
+
+    const handleOpen = () => {
+      aberturas += 1;
+      tentativas = 0;
+      publicarConexao(true);
+      if (aberturas === 1) return;
+      // Reconexão: o que mudou com a conexão fechada não veio por evento.
+      queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: solicitacoesKeys.details() });
+      queryClient.invalidateQueries({ queryKey: evidenciasKeys.all });
+    };
 
     const handleSolicitacao = (event: Event) => {
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() });
@@ -57,13 +82,18 @@ export function useSolicitacaoEvents() {
     function connect(token: string) {
       const url = `${env.apiBaseUrl}/solicitacoes/events?token=${encodeURIComponent(token)}`;
       source = new EventSource(url);
+      source.addEventListener('open', handleOpen);
       source.addEventListener('solicitacao', handleSolicitacao);
       source.addEventListener('solicitacao_atividade', handleAtividade);
       source.onerror = () => {
+        if (cancelled) {
+          return;
+        }
+        publicarConexao(false);
         // readyState CLOSED (resposta nao-2xx, ex.: token expirado) significa
         // que o browser NAO vai tentar reconectar sozinho — precisamos buscar
         // um token novo e recriar a conexao manualmente.
-        if (cancelled || source?.readyState !== EventSource.CLOSED) {
+        if (source?.readyState !== EventSource.CLOSED) {
           return;
         }
         source.close();
@@ -72,6 +102,7 @@ export function useSolicitacaoEvents() {
     }
 
     function scheduleReconnect() {
+      tentativas += 1;
       reconnectTimer = setTimeout(() => {
         if (cancelled) {
           return;
@@ -83,10 +114,14 @@ export function useSolicitacaoEvents() {
               connect(freshToken);
             }
           })
-          .catch(() => {
-            // sessao realmente expirada; um novo login recria o hook via `user`
+          .catch((erro: unknown) => {
+            // Sessão expirada: um novo login recria o hook via `user`. Falha de rede ou do
+            // servidor é passageira: tenta de novo, com espera maior.
+            if (!cancelled && !sessaoExpirou(erro)) {
+              scheduleReconnect();
+            }
           });
-      }, RECONNECT_DELAY_MS);
+      }, esperaDaTentativa(tentativas));
     }
 
     const initialToken = authToken.getAccessToken();
@@ -99,9 +134,11 @@ export function useSolicitacaoEvents() {
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
       }
+      source?.removeEventListener('open', handleOpen);
       source?.removeEventListener('solicitacao', handleSolicitacao);
       source?.removeEventListener('solicitacao_atividade', handleAtividade);
       source?.close();
+      queryClient.removeQueries({ queryKey: solicitacoesKeys.conexao() });
     };
   }, [queryClient, user]);
 }

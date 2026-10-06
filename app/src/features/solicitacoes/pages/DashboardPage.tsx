@@ -10,7 +10,6 @@ import { cn } from '@/shared/lib/cn';
 
 import { HistoricoChart } from '../components/HistoricoChart';
 import { useMetricas } from '../hooks/useMetricas';
-import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { ModelosTab } from './ModelosTab';
 import { PessoalTab } from './PessoalTab';
 import { SolicitacoesTab } from './SolicitacoesTab';
@@ -27,7 +26,6 @@ export function DashboardPage() {
   const { user } = useAuth();
   const isOperador = user?.perfil === 'OPERADOR';
   const [activeTab, setActiveTab] = useState<TabId>(isOperador ? 'pessoal' : 'solicitacoes');
-  useSolicitacaoEvents();
   const {
     data: metricas,
     isLoading: loadingMetricas,

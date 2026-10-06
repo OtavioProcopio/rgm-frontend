@@ -11,15 +11,15 @@ Prefixo: `SRC` = `app/src`.
 
 ## Parte 1 — Tempo real
 
-- [ ] T001 Criar `SRC/features/solicitacoes/lib/reconexao.test.ts`: espera de cada tentativa (3, 6, 12, 24, 30, 30 s); sessão expirada para 400, 401 e 403; falha de rede e 5xx não são sessão expirada
-- [ ] T002 Criar `SRC/features/solicitacoes/lib/reconexao.ts`
-- [ ] T003 Testes em `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: primeira abertura não atualiza nada; segunda abertura atualiza listas, detalhes, históricos e evidências; falha de rede na renovação agenda nova tentativa; espera cresce e volta ao início após sucesso; sessão expirada não agenda; estado da conexão publicado ao abrir e ao cair
-- [ ] T004 Alterar `SRC/features/solicitacoes/hooks/solicitacoesKeys.ts` (chave `conexao()`) e `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.ts`
-- [ ] T005 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: falso com conexão aberta; falso com menos de 10 s de queda; verdadeiro depois de 10 s; volta a falso quando a conexão abre
-- [ ] T006 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.ts`
-- [ ] T007 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.test.tsx`: mostra o texto quando sem atualização; região de status vazia quando há conexão; o foco não muda quando o aviso aparece
-- [ ] T008 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.tsx`
-- [ ] T009 Alterar `SRC/app/layouts/AppLayout.tsx` (abre a conexão e mostra o aviso) e retirar a abertura da conexão de `SRC/features/solicitacoes/pages/SolicitacoesPage.tsx`, `DashboardPage.tsx` e `SolicitacaoDetalhePage.tsx`, ajustando os testes dessas páginas
+- [x] T001 Criar `SRC/features/solicitacoes/lib/reconexao.test.ts`: espera de cada tentativa (3, 6, 12, 24, 30, 30 s); sessão expirada para 400, 401 e 403; falha de rede e 5xx não são sessão expirada
+- [x] T002 Criar `SRC/features/solicitacoes/lib/reconexao.ts`
+- [x] T003 Testes em `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: primeira abertura não atualiza nada; segunda abertura atualiza listas, detalhes, históricos e evidências; falha de rede na renovação agenda nova tentativa; espera cresce e volta ao início após sucesso; sessão expirada não agenda; estado da conexão publicado ao abrir e ao cair
+- [x] T004 Alterar `SRC/features/solicitacoes/hooks/solicitacoesKeys.ts` (chave `conexao()`) e `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.ts`
+- [x] T005 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: falso com conexão aberta; falso com menos de 10 s de queda; verdadeiro depois de 10 s; volta a falso quando a conexão abre
+- [x] T006 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.ts`
+- [x] T007 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.test.tsx`: mostra o texto quando sem atualização; região de status vazia quando há conexão; o foco não muda quando o aviso aparece
+- [x] T008 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.tsx`
+- [x] T009 Alterar `SRC/app/layouts/AppLayout.tsx` (abre a conexão e mostra o aviso) e retirar a abertura da conexão de `SRC/features/solicitacoes/pages/SolicitacoesPage.tsx`, `DashboardPage.tsx` e `SolicitacaoDetalhePage.tsx`, ajustando os testes dessas páginas
 
 ## Parte 2 — Limites e senha
 

@@ -14,6 +14,8 @@ import { Button } from '@/shared/components/Button/Button';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
+import { AvisoSemAtualizacao } from '@/features/solicitacoes/components/AvisoSemAtualizacao';
+import { useSolicitacaoEvents } from '@/features/solicitacoes/hooks/useSolicitacaoEvents';
 import { canAccessAdmin, canManageModelos } from '@/shared/lib/permissions';
 
 const PERFIL_LABEL: Record<PerfilUsuario, string> = {
@@ -25,6 +27,8 @@ const PERFIL_LABEL: Record<PerfilUsuario, string> = {
 
 export function AppLayout() {
   const { logout, user } = useAuth();
+  // Uma conexão de tempo real para toda a área logada: o aviso do cabeçalho vale em qualquer tela.
+  useSolicitacaoEvents();
 
   const isAdmin = canAccessAdmin(user?.perfil);
   const isGestorOrAdmin = canManageModelos(user?.perfil);
@@ -121,6 +125,8 @@ export function AppLayout() {
               </Button>
             </div>
           </div>
+
+          <AvisoSemAtualizacao />
 
           {navigation.length > 0 ? (
             <nav className="flex gap-2 overflow-x-auto border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-6 lg:hidden">
