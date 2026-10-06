@@ -99,3 +99,86 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 1 — 2026-10-06
+
+Medições feitas com a aplicação rodando contra API simulada e um servidor de eventos simulado
+(scripts e saídas em `/root/rgm/evidencias/007-frontend/`), sem backend real.
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01 | realizado | `hooks/useSolicitacaoEvents.ts:47-56` (listas, detalhes e evidências na reabertura); medição de RNF-01 |
+| RF-02 | realizado | `useSolicitacaoEvents.ts:51`; teste "primeira abertura não atualiza nada" |
+| RF-03 | realizado | `useSolicitacaoEvents.ts:117-122`; `lib/reconexao.ts:20-22` |
+| RF-04 | realizado | `lib/reconexao.ts:10-13`; `useSolicitacaoEvents.ts:49` zera as tentativas ao abrir; medido: tentativas em 3 s, 6 s e 12 s depois da queda |
+| RF-05 | realizado | `useSolicitacaoEvents.ts:120` |
+| RF-06 | realizado | `hooks/useSemAtualizacao.ts:8`; `app/layouts/AppLayout.tsx:31,129`; medido: aviso 10,4 a 10,5 s depois da queda |
+| RF-07 | realizado | `useSemAtualizacao.ts`; medido: aviso ausente depois de a conexão voltar, nas 3 rodadas |
+| RF-08 | realizado | `components/AvisoSemAtualizacao.tsx` (`role="status"` sempre montado); teste de foco |
+| RF-09 | realizado | `shared/lib/limites.ts:2-16`; esquemas de solicitação, modelo, máquina e usuário usam `.max(LIMITES.*)` |
+| RF-10 | realizado | `limites.ts:5,7`; `schemas/solicitacaoSchema.ts` (`textoLongo`, `comentarioValidacao`) |
+| RF-11 | realizado | `maxLength={LIMITES.*}` nos nove formulários e na edição do detalhe (`SolicitacaoDetalhePage.tsx:208,224`); um teste por formulário |
+| RF-12 | realizado | `limites.ts:26-32`; `Input.tsx:28-31,72`; `Textarea.tsx` (mesma lógica) |
+| RF-13 | realizado | `shared/lib/senha.ts`; `usuarioSchema.ts`, `perfilSchema.ts`, `EditarUsuarioPage.tsx` (`erroDaSenha`) |
+| RF-14 | realizado | `evidencias/components/EvidenciaList.tsx:43-55` |
+| RF-15 | realizado | `EvidenciaList.tsx:49`; teste "deve manter a evidência…" |
+| RF-16 | realizado | `SolicitacaoDetalhePage.tsx:130-135,234-244` |
+| RF-17 | realizado | `SolicitacaoDetalhePage.tsx:134` |
+| RF-18 | realizado | `actions/DialogoDaAcao.tsx:30-37,47,51`; `types/acaoProps.ts` (`onCancelar`) |
+| RF-19 | realizado | `components/SolicitacaoAcoes.tsx` e `KanbanBoard.tsx` usam `DialogoDaAcao`; nome em `DialogoDaAcao.tsx:46` |
+| RF-20 | realizado | `shared/components/ConfirmDialog/ConfirmDialog.tsx:49`; `UsuariosPage.tsx`, `DeleteUsuarioDialog.tsx`, `ModeloDetalhePage.tsx`, `GaleriaCarousel.tsx` |
+| RF-21 | realizado | `ConfirmDialog.tsx:54-56` (desistir é o primeiro controle); `Dialog.tsx` foca o primeiro |
+| RF-22 | realizado | teste "deve desistir em vez de confirmar quando Enter é apertado logo ao abrir" |
+| RF-23 | realizado | `Dialog.tsx:47,73`; `DialogoDaAcao.tsx:25,48`; `ConfirmDialog.tsx:49` |
+| RF-24 | realizado | cenário da spec (diálogo de devolução): teste "deve continuar aberto com o erro e o que foi preenchido quando o envio falha" |
+| RF-25 | realizado | medição de RNF-06 |
+| RF-26 | realizado | `styles/globals.css:64-84`; medição de RNF-07 |
+| RF-27 | realizado | `auth/pages/PerfilPage.tsx` (três botões de olho), `Combobox.tsx`; medido: 0 botões sem nome em 16 telas |
+| RNF-01 | realizado | 209 ms, 265 ms e 302 ms entre a conexão voltar e a tela mostrar o título alterado durante a queda (3 rodadas) |
+| RNF-02 | realizado | `reconexao.ts:3-4` (3 s a 30 s); teste de sessão expirada não agenda tentativa |
+| RNF-03 | realizado | busca por `.max(<número>` e `maxLength=<número>` em `app/src` fora de `limites.ts`: 0 ocorrências |
+| RNF-04 | realizado | busca por `min(6`, `min(8`, `length < 6` em `app/src`: 0 ocorrências fora de `senha.ts` |
+| RNF-05 | realizado | `reconexao.ts`, `limites.ts` e `senha.ts` com 100% de linha no relatório de cobertura |
+| RNF-06 | realizado | 0 de 261 controles abaixo de 44 px em 16 telas, em 390 px com ponteiro de toque (caixa de seleção medida pelo rótulo); antes: 33 |
+| RNF-07 | realizado | 0 de 249 controles com contraste abaixo de 3:1 em cada tema; menor valor medido 4,94:1 |
+| RNF-08 | realizado | `package.json` e `package-lock.json` sem alteração desde `4a29131` |
+| RNF-09 | realizado | nenhuma chamada nova à API; a reconexão usa só a abertura da conexão do navegador |
+
+`make validate`: verde. Lint com 0 erros e 1 aviso que já existia (`NovaSolicitacaoPage.tsx`,
+`react-hooks/incompatible-library`); 126 arquivos e 985 testes passando; cobertura de 99,77%
+de instruções, 99,47% de ramos, 100% de funções e 99,74% de linhas; build concluído.
+
+Cenários de aceite: os 39 têm teste de módulo ou de componente, exceto os de layout (área de
+toque em px, contraste do foco) e o de tempo até a tela refletir, provados por medição.
+
+Capturas (T035): 32 de depois (8 estados em 1440 px e 390 px, claro e escuro) e 20 de antes
+(os 5 estados que já existiam em `4a29131`), em `/root/rgm/evidencias/007-frontend/capturas/`.
+
+Desvios e excesso:
+
+- `ModeloForm.tsx`: o campo "Observações" trocou o `textarea` próprio pelo `Textarea`
+  compartilhado, para ganhar limite, contador e mensagem de erro. Muda a aparência do campo;
+  a spec deixa fora de escopo mudar o conteúdo dos formulários de administração.
+- `limites.ts` ganhou `mensagemDeRestantes` (singular e plural do contador), que o plano não
+  listava.
+- `ConfirmDialog` passou a aceitar `message` com marcação, para o `DeleteUsuarioDialog`
+  manter o nome em negrito; durante a exclusão o botão mostra "Aguarde..." em vez de
+  "Excluindo...".
+- `PerfilPage.tsx`: o texto de exemplo do campo dizia "Mínimo de 6 caracteres"; passou a usar
+  a constante.
+- Arquivos alterados que o plano não listava, para RNF-06 e RNF-07 fecharem em zero:
+  `globals.css` (contorno de foco em `select`, caixa de seleção e botão de opção; cor por
+  `--foco`), `LoginPage.tsx` (cor do contorno no cartão branco com tema escuro) e opções do
+  `Combobox`.
+- Confirmações de administração (desativar usuário, excluir usuário, desativar e ativar
+  modelo): quando o envio falha, a confirmação fecha e o erro aparece na página, como já era.
+  O cenário de RF-24 cobre o diálogo de ação; não foi alterado aqui.
+- `DialogoDaAcao`: depois de uma ação feita com foto não enviada, Esc no aviso ainda pergunta
+  se descarta, porque o formulário foi marcado como alterado. O envio da foto depois da ação
+  não conta como envio em andamento para o bloqueio do diálogo.
+- Achado fora da feature: `make typecheck` roda `tsc --noEmit` sobre um `tsconfig.json` sem
+  arquivos e não verifica nada; os tipos só são checados no `tsc -b` do build. Nesta rodada
+  a verificação foi feita com `tsc --noEmit -p tsconfig.app.json`.
+
+Veredito: convergido
+Tarefas acrescentadas: nenhuma
