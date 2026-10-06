@@ -1,4 +1,4 @@
 {
-  "active": "specs/006-card-confiavel-e-controles-acessiveis",
-  "title": "Card confiável e controles acessíveis"
+  "active": "specs/008-testes-em-app-tests",
+  "title": "Testes em app/tests espelhando o caminho"
 }
