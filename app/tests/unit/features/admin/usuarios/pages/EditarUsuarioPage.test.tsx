@@ -1,12 +1,17 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
 
+import { useRedefinirSenhaUsuario } from '@/features/admin/usuarios/hooks/useRedefinirSenhaUsuario';
+import { useUsuario } from '@/features/admin/usuarios/hooks/useUsuario';
 import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
+import { MENSAGEM_DA_SENHA, TAMANHO_MINIMO_DA_SENHA } from '@/shared/lib/senha';
 
 vi.mock('@/features/admin/usuarios/hooks/useUsuario', () => ({
   useUsuario: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
@@ -21,7 +26,9 @@ vi.mock('@/features/admin/usuarios/hooks/useAlterarPerfilUsuario', () => ({
   useAlterarPerfilUsuario: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
-  usePerfil: vi.fn().mockReturnValue({ data: { nome: 'Admin', email: 'a@a.com', perfil: 'ADMINISTRADOR' } }),
+  usePerfil: vi
+    .fn()
+    .mockReturnValue({ data: { nome: 'Admin', email: 'a@a.com', perfil: 'ADMINISTRADOR' } }),
 }));
 vi.mock('@/features/admin/usuarios/components/UsuarioForm', () => ({
   UsuarioForm: () => <div data-testid="usuario-form" />,
@@ -47,5 +54,58 @@ describe('EditarUsuarioPage', () => {
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/usuarios/1'] });
     const { container } = render(<EditarUsuarioPage />, { wrapper: AppWrapper });
     expect(within(container).getByText('Editar usuário')).toBeDefined();
+  });
+});
+
+describe('EditarUsuarioPage — redefinição de senha', () => {
+  const ID_DO_USUARIO = '1';
+
+  /** Abre a página do usuário carregado e devolve a função que redefine a senha. */
+  function abrirPagina() {
+    const redefinir = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useUsuario).mockReturnValue({
+      data: { id: ID_DO_USUARIO, nome: 'João', email: 'j@j.com', perfil: 'OPERADOR', ativo: true },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useUsuario>);
+    vi.mocked(useRedefinirSenhaUsuario).mockReturnValue({
+      mutateAsync: redefinir,
+      isPending: false,
+    } as unknown as ReturnType<typeof useRedefinirSenhaUsuario>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: [`/usuarios/${ID_DO_USUARIO}`] });
+    render(
+      <Routes>
+        <Route path="/usuarios/:id" element={<EditarUsuarioPage />} />
+      </Routes>,
+      { wrapper: AppWrapper },
+    );
+    return redefinir;
+  }
+
+  it('deve recusar a redefinição com a mensagem única quando a senha tem um caractere a menos que o mínimo', async () => {
+    // Arrange
+    const redefinir = abrirPagina();
+    const senhaCurta = 'a'.repeat(TAMANHO_MINIMO_DA_SENHA - 1);
+
+    // Act
+    await userEvent.type(screen.getByLabelText('Nova Senha'), senhaCurta);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Senha' }));
+
+    // Assert
+    expect(screen.getByText(MENSAGEM_DA_SENHA)).toBeDefined();
+    expect(redefinir).not.toHaveBeenCalled();
+  });
+
+  it('deve redefinir a senha quando ela tem o tamanho mínimo', async () => {
+    // Arrange
+    const redefinir = abrirPagina();
+    const novaSenha = 'a'.repeat(TAMANHO_MINIMO_DA_SENHA);
+
+    // Act
+    await userEvent.type(screen.getByLabelText('Nova Senha'), novaSenha);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Senha' }));
+
+    // Assert
+    expect(redefinir).toHaveBeenCalledWith({ id: ID_DO_USUARIO, novaSenha });
   });
 });

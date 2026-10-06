@@ -7,6 +7,7 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { erroDaSenha } from '@/shared/lib/senha';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 
 import { UsuarioForm } from '../components/UsuarioForm';
@@ -69,8 +70,9 @@ export function EditarUsuarioPage() {
     e.preventDefault();
     if (!id || !novaSenha.trim()) return;
 
-    if (novaSenha.length < 6) {
-      setSenhaErro('A nova senha deve ter no mínimo 6 caracteres.');
+    const erroDaNovaSenha = erroDaSenha(novaSenha);
+    if (erroDaNovaSenha) {
+      setSenhaErro(erroDaNovaSenha);
       return;
     }
 

@@ -30,7 +30,7 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 - [x] T014 [P] Testes e alteração de `SRC/features/admin/usuarios/schemas/usuarioSchema.ts` (nome 255, e-mail 255, senha pela regra única) e `SRC/features/auth/schemas/perfilSchema.ts` (senha pela regra única)
 - [x] T015 Testes e alteração de `SRC/shared/components/Input/Input.tsx` e `SRC/shared/components/Textarea/Textarea.tsx`: contador aparece a partir de 90% do `maxLength`, some abaixo disso, não existe sem `maxLength`, e é associado ao campo
 - [x] T016 Passar `maxLength` com a constante nos campos de texto de `SRC/features/solicitacoes/pages/NovaSolicitacaoPage.tsx`, `SRC/features/solicitacoes/components/ComentarioForm.tsx`, `TriagemModal.tsx`, `DevolucaoModal.tsx`, `EncerramentoModal.tsx`, `EnviarValidacaoModal.tsx`, `SRC/features/admin/modelos/components/ModeloForm.tsx`, `SRC/features/admin/maquinas/components/MaquinaForm.tsx` e `SRC/features/admin/usuarios/components/UsuarioForm.tsx`, com um teste por formulário provando o limite no campo
-- [ ] T017 Teste e alteração de `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`: redefinição recusa 7 caracteres com a mensagem única
+- [x] T017 Teste e alteração de `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`: redefinição recusa 7 caracteres com a mensagem única
 
 ## Parte 3 — Diálogo
 

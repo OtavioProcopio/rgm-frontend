@@ -7,6 +7,7 @@ import { useAlterarSenha } from '@/features/auth/hooks/useAlterarSenha';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useMetricas } from '@/features/solicitacoes/hooks/useMetricas';
 import { alterarSenhaSchema, type AlterarSenhaFormData } from '@/features/auth/schemas/perfilSchema';
+import { TAMANHO_MINIMO_DA_SENHA } from '@/shared/lib/senha';
 import { ApiError } from '@/shared/api/apiError';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
@@ -199,7 +200,7 @@ export function PerfilPage() {
               <Input
                 label="Nova Senha"
                 type={showNovaSenha ? 'text' : 'password'}
-                placeholder="Mínimo de 6 caracteres"
+                placeholder={`Mínimo de ${TAMANHO_MINIMO_DA_SENHA} caracteres`}
                 error={errors.novaSenha?.message}
                 disabled={isSubmitting}
                 {...register('novaSenha')}
