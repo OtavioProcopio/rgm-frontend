@@ -8,23 +8,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { EnviarValidacaoModal } from '@/features/solicitacoes/components/EnviarValidacaoModal';
+import { LIMITES } from '@/shared/lib/limites';
 
 afterEach(cleanup);
 
 describe('EnviarValidacaoModal', () => {
   it('requires an evidence upload before enabling submit by default', async () => {
     const { AppWrapper } = createAppWrapper();
-    render(
-      <EnviarValidacaoModal solicitacaoId="s1" onCancel={vi.fn()} onConfirm={vi.fn()} />,
-      { wrapper: AppWrapper },
-    );
+    render(<EnviarValidacaoModal solicitacaoId="s1" onCancel={vi.fn()} onConfirm={vi.fn()} />, {
+      wrapper: AppWrapper,
+    });
 
     await userEvent.type(
       screen.getByLabelText(/descrição do serviço realizado/i),
       'Servico realizado conforme solicitado',
     );
 
-    const submit = screen.getByRole('button', { name: /enviar para validação/i }) as HTMLButtonElement;
+    const submit = screen.getByRole('button', {
+      name: /enviar para validação/i,
+    }) as HTMLButtonElement;
     expect(submit.disabled).toBe(true);
   });
 
@@ -55,11 +57,30 @@ describe('EnviarValidacaoModal', () => {
 
     await userEvent.type(screen.getByLabelText(/comentário/i), 'Modelo pronto para validação');
 
-    const submit = screen.getByRole('button', { name: /enviar para validação/i }) as HTMLButtonElement;
+    const submit = screen.getByRole('button', {
+      name: /enviar para validação/i,
+    }) as HTMLButtonElement;
     expect(submit.disabled).toBe(false);
 
     await userEvent.click(submit);
     expect(onConfirm).toHaveBeenCalled();
     expect(onConfirm.mock.calls[0][0]).toEqual({ comentario: 'Modelo pronto para validação' });
+  });
+});
+
+describe('EnviarValidacaoModal — limite de texto', () => {
+  it('deve limitar o comentário ao tamanho que a API aceita no envio para validação', () => {
+    // Arrange
+    const esperado = LIMITES.comentarioValidacao;
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<EnviarValidacaoModal solicitacaoId="s1" onCancel={vi.fn()} onConfirm={vi.fn()} />, {
+      wrapper: AppWrapper,
+    });
+    const campo = screen.getByLabelText(/descrição do serviço realizado/i) as HTMLTextAreaElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

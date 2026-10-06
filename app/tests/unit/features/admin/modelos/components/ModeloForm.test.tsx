@@ -6,12 +6,22 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ModeloForm } from '@/features/admin/modelos/components/ModeloForm';
+import { LIMITES } from '@/shared/lib/limites';
 
 const baseMockModelo = {
-  id: '1', codigo: 'M01', descricao: 'Desc', maquinaId: 'm1',
-  ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '',
-  maquina: 'Injetora', observacoes: null, versao: 1,
-  temPendenciaAberta: false, tipo: null,
+  id: '1',
+  codigo: 'M01',
+  descricao: 'Desc',
+  maquinaId: 'm1',
+  ativo: true,
+  fotoCapaUrl: null,
+  criadoEm: '',
+  atualizadoEm: '',
+  maquina: 'Injetora',
+  observacoes: null,
+  versao: 1,
+  temPendenciaAberta: false,
+  tipo: null,
 };
 
 vi.mock('@/features/admin/modelos/hooks/useMaquinas', () => ({
@@ -81,5 +91,32 @@ describe('ModeloForm', () => {
     expect(
       within(select).getByRole('option', { name: /prensa antiga.*fora do catálogo/i }),
     ).toBeDefined();
+  });
+});
+
+describe('ModeloForm — limite de texto', () => {
+  it.each([
+    ['create', /código/i, 'modeloCodigo'],
+    ['create', /descrição/i, 'modeloDescricao'],
+    ['create', /observações/i, 'textoLongo'],
+    ['edit', /código/i, 'modeloCodigo'],
+    ['edit', /descrição/i, 'modeloDescricao'],
+    ['edit', /observações/i, 'textoLongo'],
+  ] as const)('deve limitar o campo no modo %s quando o rótulo é %s', (modo, rotulo, limite) => {
+    // Arrange
+    const esperado = LIMITES[limite];
+
+    // Act
+    const { container } = render(
+      modo === 'create' ? (
+        <ModeloForm mode="create" onSubmit={vi.fn()} />
+      ) : (
+        <ModeloForm mode="edit" modelo={baseMockModelo} onSubmit={vi.fn()} />
+      ),
+    );
+    const campo = within(container).getByLabelText(rotulo) as HTMLInputElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

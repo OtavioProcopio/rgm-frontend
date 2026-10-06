@@ -6,6 +6,7 @@ import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUpl
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 
 import {
   enviarParaValidacaoSchema,
@@ -64,9 +65,7 @@ export function EnviarValidacaoModal({
 
   return (
     <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm dark:border-blue-900/60 dark:bg-blue-950/30">
-      <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-        Enviar para validação
-      </h3>
+      <h3 className="font-semibold text-blue-900 dark:text-blue-100">Enviar para validação</h3>
       <p className="mt-1 text-blue-800 dark:text-blue-200">
         {evidenciaObrigatoria
           ? 'Descreva o serviço realizado e anexe uma foto como evidência.'
@@ -79,6 +78,7 @@ export function EnviarValidacaoModal({
           placeholder="Descreva o que foi feito para resolver o problema..."
           error={errors.comentario?.message}
           disabled={evidenciaObrigatoria && evidenciaAnexada}
+          maxLength={LIMITES.comentarioValidacao}
           {...register('comentario')}
         />
 
@@ -99,10 +99,7 @@ export function EnviarValidacaoModal({
             </p>
           ) : (
             <>
-              <EvidenciaUploader
-                isPending={uploadEvidencia.isPending}
-                onUpload={handleUpload}
-              />
+              <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
               {evidenciaObrigatoria ? (
                 <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
                   Preencha a descrição antes de anexar a foto.

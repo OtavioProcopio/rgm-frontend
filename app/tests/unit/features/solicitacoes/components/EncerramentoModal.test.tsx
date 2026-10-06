@@ -5,14 +5,13 @@ import { cleanup, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EncerramentoModal } from '@/features/solicitacoes/components/EncerramentoModal';
+import { LIMITES } from '@/shared/lib/limites';
 
 afterEach(cleanup);
 
 describe('EncerramentoModal', () => {
   it('renders encerrar title when podeConcluir', () => {
-    const { container } = render(
-      <EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />,
-    );
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
     expect(within(container).getByText(/encerrar solicitação/i)).toBeDefined();
   });
 
@@ -25,17 +24,13 @@ describe('EncerramentoModal', () => {
   });
 
   it('renders radio options when podeConcluir', () => {
-    const { container } = render(
-      <EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />,
-    );
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
     const radios = container.querySelectorAll('input[type="radio"]');
     expect(radios.length).toBe(2);
   });
 
   it('renders textarea for comentário', () => {
-    const { container } = render(
-      <EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />,
-    );
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
     expect(within(container).getByLabelText(/comentário final/i)).toBeDefined();
   });
 
@@ -44,5 +39,21 @@ describe('EncerramentoModal', () => {
       <EncerramentoModal isPending onCancel={vi.fn()} onConfirm={vi.fn()} />,
     );
     expect(within(container).getByText(/encerrando/i)).toBeDefined();
+  });
+});
+
+describe('EncerramentoModal — limite de texto', () => {
+  it('deve limitar o comentário final ao tamanho que a API grava', () => {
+    // Arrange
+    const esperado = LIMITES.textoLongo;
+
+    // Act
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
+    const campo = within(container).getByLabelText(
+      /comentário final|motivo do cancelamento/i,
+    ) as HTMLTextAreaElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

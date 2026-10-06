@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
@@ -78,6 +79,7 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
           label={concluir ? 'Comentário final' : 'Motivo do cancelamento'}
           placeholder={concluir ? 'Descreva o resultado...' : 'Descreva o motivo...'}
           error={errors.comentario?.message}
+          maxLength={LIMITES.textoLongo}
           {...register('comentario')}
         />
         {concluir ? (

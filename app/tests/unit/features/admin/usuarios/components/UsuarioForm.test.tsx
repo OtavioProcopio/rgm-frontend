@@ -5,6 +5,7 @@ import { cleanup, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { UsuarioForm } from '@/features/admin/usuarios/components/UsuarioForm';
+import { LIMITES } from '@/shared/lib/limites';
 
 const baseUsuario = {
   id: '1',
@@ -46,9 +47,7 @@ describe('UsuarioForm (create)', () => {
   });
 
   it('shows submitting state', () => {
-    const { container } = render(
-      <UsuarioForm mode="create" onSubmit={vi.fn()} isSubmitting />,
-    );
+    const { container } = render(<UsuarioForm mode="create" onSubmit={vi.fn()} isSubmitting />);
     expect(within(container).getByText(/salvando/i)).toBeDefined();
   });
 });
@@ -93,5 +92,30 @@ describe('UsuarioForm (edit)', () => {
       <UsuarioForm mode="edit" usuario={{ ...baseUsuario, ativo: false }} onSubmit={vi.fn()} />,
     );
     expect(within(container).getByText('Inativo')).toBeDefined();
+  });
+});
+
+describe('UsuarioForm — limite de texto', () => {
+  it.each([
+    ['create', /nome/i, 'usuarioNome'],
+    ['create', /e-mail/i, 'usuarioEmail'],
+    ['edit', /nome/i, 'usuarioNome'],
+    ['edit', /e-mail/i, 'usuarioEmail'],
+  ] as const)('deve limitar o campo no modo %s quando o rótulo é %s', (modo, rotulo, limite) => {
+    // Arrange
+    const esperado = LIMITES[limite];
+
+    // Act
+    const { container } = render(
+      modo === 'create' ? (
+        <UsuarioForm mode="create" onSubmit={vi.fn()} />
+      ) : (
+        <UsuarioForm mode="edit" usuario={baseUsuario} onSubmit={vi.fn()} />
+      ),
+    );
+    const campo = within(container).getByLabelText(rotulo) as HTMLInputElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

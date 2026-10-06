@@ -4,6 +4,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
+import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 
 import { useMaquinaOptions } from '../hooks/useMaquinaOptions';
 import {
@@ -38,10 +40,7 @@ export function ModeloForm(props: ModeloFormProps) {
   return <CriarModeloForm {...props} />;
 }
 
-function CriarModeloForm({
-  isSubmitting,
-  onSubmit,
-}: Extract<ModeloFormProps, { mode: 'create' }>) {
+function CriarModeloForm({ isSubmitting, onSubmit }: Extract<ModeloFormProps, { mode: 'create' }>) {
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions();
 
   const {
@@ -70,6 +69,7 @@ function CriarModeloForm({
           label="Código"
           error={errors.codigo?.message}
           disabled={isSubmitting}
+          maxLength={LIMITES.modeloCodigo}
           {...register('codigo')}
         />
         <Controller
@@ -98,9 +98,17 @@ function CriarModeloForm({
         label="Descrição"
         error={errors.descricao?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.modeloDescricao}
         {...register('descricao')}
       />
-      <TextArea label="Observações" disabled={isSubmitting} register={register('observacoes')} />
+      <Textarea
+        label="Observações"
+        rows={4}
+        error={errors.observacoes?.message}
+        disabled={isSubmitting}
+        maxLength={LIMITES.textoLongo}
+        {...register('observacoes')}
+      />
 
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Salvando...' : 'Salvar modelo'}
@@ -114,9 +122,7 @@ function EditarModeloForm({
   modelo,
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'edit' }>) {
-  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
-    modelo.maquina,
-  );
+  const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(modelo.maquina);
 
   const {
     control,
@@ -152,6 +158,7 @@ function EditarModeloForm({
           label="Código"
           error={errors.codigo?.message}
           disabled={isSubmitting}
+          maxLength={LIMITES.modeloCodigo}
           {...register('codigo')}
         />
         <Controller
@@ -180,34 +187,20 @@ function EditarModeloForm({
         label="Descrição"
         error={errors.descricao?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.modeloDescricao}
         {...register('descricao')}
       />
-      <TextArea label="Observações" disabled={isSubmitting} register={register('observacoes')} />
+      <Textarea
+        label="Observações"
+        rows={4}
+        error={errors.observacoes?.message}
+        disabled={isSubmitting}
+        maxLength={LIMITES.textoLongo}
+        {...register('observacoes')}
+      />
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Salvando...' : 'Salvar modelo'}
       </Button>
     </form>
-  );
-}
-
-function TextArea({
-  disabled,
-  label,
-  register,
-}: {
-  disabled?: boolean;
-  label: string;
-  register: object;
-}) {
-  return (
-    <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-      <span>{label}</span>
-      <textarea
-        rows={4}
-        disabled={disabled}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors focus:border-sky-600 focus:ring-2 focus:ring-sky-600/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-        {...register}
-      />
-    </label>
   );
 }

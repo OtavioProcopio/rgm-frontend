@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { LIMITES } from '@/shared/lib/limites';
 
 import {
   criarUsuarioSchema,
@@ -90,6 +91,7 @@ function CriarUsuarioForm({
         label="Nome"
         error={errors.nome?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.usuarioNome}
         {...register('nome')}
       />
 
@@ -127,6 +129,7 @@ function CriarUsuarioForm({
             type="email"
             error={errors.email?.message}
             disabled={isSubmitting}
+            maxLength={LIMITES.usuarioEmail}
             {...register('email')}
           />
           <Input
@@ -177,6 +180,7 @@ function EditarUsuarioForm({
         label="Nome"
         error={errors.nome?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.usuarioNome}
         {...register('nome')}
       />
       <Input
@@ -184,6 +188,7 @@ function EditarUsuarioForm({
         type="email"
         error={errors.email?.message}
         disabled={isSubmitting || usuario.perfil === 'EXTERNO'}
+        maxLength={LIMITES.usuarioEmail}
         {...register('email')}
       />
 
