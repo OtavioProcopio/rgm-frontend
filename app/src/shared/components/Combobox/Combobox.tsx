@@ -83,13 +83,14 @@ export function Combobox({
           value={isOpen ? search : (selectedOption ? selectedOption.label : search)}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${comboboxId}-erro` : undefined}
           onFocus={() => {
             setIsOpen(true);
             setSearch(''); // Limpa para mostrar todas as opções ao focar
           }}
           onChange={(e) => setSearch(e.target.value)}
           className={cn(
-            'h-11 w-full rounded-md border border-gray-300 bg-white pl-10 pr-10 text-sm text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10',
+            'h-11 w-full rounded-md border border-gray-300 bg-white pl-10 pr-10 text-sm pointer-coarse:pr-24 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10',
             'dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400 dark:focus:ring-sky-400/10',
             error &&
               'border-red-500 focus:border-red-500 focus:ring-red-500/10 dark:border-red-400 dark:focus:border-red-400',
@@ -102,7 +103,7 @@ export function Combobox({
         </div>
 
         {/* Botão de Limpar / Chevron à Direita */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1 pointer-coarse:gap-0 pointer-coarse:pr-0">
           {value ? (
             <button
               type="button"
@@ -112,7 +113,7 @@ export function Combobox({
                 setSearch('');
                 setIsOpen(false);
               }}
-              className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
+              className="inline-flex items-center justify-center p-1 rounded-full text-slate-400 pointer-coarse:min-h-11 pointer-coarse:min-w-11 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
             >
               <X size={14} />
             </button>
@@ -120,7 +121,7 @@ export function Combobox({
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
+            className="inline-flex items-center justify-center p-1 rounded-full text-slate-400 pointer-coarse:min-h-11 pointer-coarse:min-w-11 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
           >
             <ChevronDown
               size={16}
@@ -171,7 +172,11 @@ export function Combobox({
         </div>
       )}
 
-      {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
+      {error ? (
+        <p id={`${comboboxId}-erro`} className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

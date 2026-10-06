@@ -56,7 +56,7 @@ export function SolicitacaoResumo({ solicitacao, modelo }: Props) {
           </p>
           <Link
             to={`/app/modelos/${modelo.id}`}
-            className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+            className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline pointer-coarse:min-h-11 dark:text-sky-400"
           >
             {modelo.codigo} — {modelo.descricao}
           </Link>

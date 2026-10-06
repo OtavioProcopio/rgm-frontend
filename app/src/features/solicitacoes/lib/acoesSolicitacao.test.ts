@@ -6,6 +6,7 @@ import {
   acoesPermitidas,
   botoesDeAcao,
   proximoStatus,
+  rotuloDaAcao,
   type AcaoSolicitacao,
   type AtorSolicitacao,
 } from './acoesSolicitacao';
@@ -230,5 +231,22 @@ describe('botoesDeAcao', () => {
 
     // Assert
     expect(botoes).toEqual([]);
+  });
+});
+
+describe('rotuloDaAcao', () => {
+  it.each<[AcaoSolicitacao, string]>([
+    ['TRIAR', 'Triar'],
+    ['ALTERAR_RESPONSAVEIS', 'Alterar responsáveis'],
+    ['ENVIAR_VALIDACAO', 'Enviar para validação'],
+    ['DEVOLVER', 'Devolver'],
+    ['ENCERRAR', 'Encerrar'],
+    ['CANCELAR', 'Cancelar'],
+  ])('deve nomear a ação %s como "%s"', (acao, esperado) => {
+    // Act
+    const rotulo = rotuloDaAcao(acao);
+
+    // Assert
+    expect(rotulo).toBe(esperado);
   });
 });

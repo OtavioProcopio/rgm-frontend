@@ -32,4 +32,21 @@ describe('Textarea', () => {
     expect(container.querySelector('p')).toBeNull();
     expect(container.querySelector('textarea')!.getAttribute('aria-invalid')).toBe('false');
   });
+
+  it('deve associar a mensagem de erro ao campo quando há erro', () => {
+    const { container } = render(<Textarea label="Descrição" error="Campo inválido." />);
+
+    const campo = container.querySelector('textarea')!;
+    const descricao = container.ownerDocument.getElementById(
+      campo.getAttribute('aria-describedby')!,
+    );
+
+    expect(descricao?.textContent).toBe('Campo inválido.');
+  });
+
+  it('deve deixar o campo sem descrição associada quando não há erro', () => {
+    const { container } = render(<Textarea label="Descrição" />);
+
+    expect(container.querySelector('textarea')!.hasAttribute('aria-describedby')).toBe(false);
+  });
 });

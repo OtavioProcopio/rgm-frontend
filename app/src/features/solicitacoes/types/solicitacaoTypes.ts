@@ -33,6 +33,13 @@ export type Solicitacao = {
   concluidaEm: string | null;
   canceladaEm: string | null;
   responsavelIds: string[];
+  /** Prazo de SLA calculado pela API a partir da abertura. Ausente sem prioridade e em eventos. */
+  prazoLimite?: string | null;
+  /** Negativo quando o prazo já venceu; nulo em solicitação encerrada. */
+  tempoRestanteSegundos?: number | null;
+  /** Em aberto: prazo vencido. Concluída: concluída depois do prazo. Cancelada: sempre falso. */
+  atrasada?: boolean;
+  tempoResolucaoSegundos?: number | null;
   /** Só vem no detalhe, a partir da v1.6.0 do backend. Ausente em listagens e eventos. */
   acoesPermitidas?: string[] | null;
 };

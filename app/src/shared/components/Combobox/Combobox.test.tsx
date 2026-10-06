@@ -234,4 +234,31 @@ describe('Combobox', () => {
 
     expect(screen.getByText('Campo obrigatório')).toBeDefined();
   });
+
+  it('deve associar a mensagem de erro ao campo quando há erro', () => {
+    const { container } = render(
+      <Combobox
+        label="Modelo"
+        value=""
+        onChange={vi.fn()}
+        options={mockOptions}
+        error="Campo obrigatório"
+      />
+    );
+
+    const campo = container.querySelector('input')!;
+    const descricao = container.ownerDocument.getElementById(
+      campo.getAttribute('aria-describedby')!,
+    );
+
+    expect(descricao?.textContent).toBe('Campo obrigatório');
+  });
+
+  it('deve deixar o campo sem descrição associada quando não há erro', () => {
+    const { container } = render(
+      <Combobox label="Modelo" value="" onChange={vi.fn()} options={mockOptions} />
+    );
+
+    expect(container.querySelector('input')!.hasAttribute('aria-describedby')).toBe(false);
+  });
 });

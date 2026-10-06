@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { ArrowRightCircle, ExternalLink, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
 
+import { acaoDoMovimento, proximoStatus, rotuloDaAcao } from '../lib/acoesSolicitacao';
+import { idadeEmDias, situacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
 import type { Solicitacao, TipoSolicitacao } from '../types/solicitacaoTypes';
 import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 
@@ -47,54 +50,31 @@ const PRIORITY_BORDER: Record<string, string> = {
   BAIXA: 'border-l-slate-300 dark:border-l-slate-600',
 };
 
-const SLA_HOURS: Record<string, number> = {
-  URGENTE: 4,
-  ALTA: 24,
-  MEDIA: 72,
-  BAIXA: 168,
+const TOM_DO_PRAZO: Record<TomDoPrazo, string> = {
+  atraso: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  atencao: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  neutro: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+  ok: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
 };
 
-function SlaBadge({
-  atualizadaEm,
-  prioridade,
-}: {
-  atualizadaEm: string;
-  prioridade: string | null;
-}) {
-  const [now] = useState(() => Date.now());
-  if (!prioridade) return null;
-  const slaHours = SLA_HOURS[prioridade];
-  if (!slaHours) return null;
-  const hoursElapsed = (now - new Date(atualizadaEm).getTime()) / 3_600_000;
-  const pct = Math.min(hoursElapsed / slaHours, 1);
-  if (pct < 0.5) return null;
-  const isOver = pct >= 1;
-  const isNear = pct >= 0.75;
+function PrazoBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: number }) {
+  const situacao = situacaoDoPrazo(solicitacao, agora);
+  if (!situacao) return null;
   return (
     <span
       className={cn(
-        'shrink-0 rounded px-1 py-0.5 text-xs font-semibold tabular-nums',
-        isOver
-          ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-          : isNear
-            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
+        'shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums',
+        TOM_DO_PRAZO[situacao.tom],
       )}
-      title={
-        isOver
-          ? `SLA excedido (meta: ${slaHours}h)`
-          : `${Math.round(pct * 100)}% do SLA (meta: ${slaHours}h)`
-      }
     >
-      {isOver ? '⚠ SLA' : `${Math.round(pct * 100)}%`}
+      {situacao.rotulo}
     </span>
   );
 }
 
-function AgeBadge({ criadaEm }: { criadaEm: string }) {
-  const [now] = useState(() => Date.now());
-  const days = Math.floor((now - new Date(criadaEm).getTime()) / 86_400_000);
-  if (days === 0) return null;
+function AgeBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: number }) {
+  const days = idadeEmDias(solicitacao, agora);
+  if (!days) return null;
   return (
     <span
       className={cn(
@@ -103,7 +83,7 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
           ? 'text-red-600 dark:text-red-400'
           : days > 3
             ? 'text-amber-600 dark:text-amber-400'
-            : 'text-slate-400 dark:text-slate-500',
+            : 'text-slate-500 dark:text-slate-400',
       )}
       title={`Aberta há ${days} dias`}
     >
@@ -112,9 +92,22 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
   );
 }
 
+/** Área de toque de 44 px em tela de toque; no computador o card continua denso. */
+const CONTROLE_DO_CARD =
+  'inline-flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors pointer-coarse:min-h-11 pointer-coarse:min-w-11';
+
+/** Nome da ação que avançar o card representa, para o botão dizer o que faz. */
+function rotuloDeAvancar(solicitacao: Solicitacao): string {
+  const proximo = proximoStatus(solicitacao.status);
+  const acao = proximo ? acaoDoMovimento(solicitacao.status, proximo) : null;
+  return acao ? rotuloDaAcao(acao) : 'Avançar para a próxima etapa';
+}
+
 export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, onAdvance }: Props) {
   const tipo = TIPO_CONFIG[solicitacao.tipo];
   const { Icon } = tipo;
+  const [agora] = useState(() => Date.now());
+  const avancar = rotuloDeAvancar(solicitacao);
   const criadaEmFormatada = new Date(solicitacao.criadaEm).toLocaleDateString('pt-BR');
   const borderClass = solicitacao.prioridade
     ? PRIORITY_BORDER[solicitacao.prioridade]
@@ -137,7 +130,7 @@ export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, 
     >
       <div className="p-3">
         {/* Tipo + age */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium',
@@ -151,11 +144,11 @@ export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, 
             <time
               dateTime={solicitacao.criadaEm}
               title={`Aberta em ${criadaEmFormatada}`}
-              className="text-xs text-slate-400 dark:text-slate-500"
+              className="text-xs text-slate-500 dark:text-slate-400"
             >
               {criadaEmFormatada}
             </time>
-            <AgeBadge criadaEm={solicitacao.criadaEm} />
+            <AgeBadge solicitacao={solicitacao} agora={agora} />
           </div>
         </div>
 
@@ -172,41 +165,45 @@ export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, 
         )}
 
         {/* Rodapé: prioridade + SLA + link */}
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {solicitacao.prioridade ? (
               <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
             ) : (
-              <span className="text-xs text-slate-300 dark:text-slate-600">Sem prioridade</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Sem prioridade</span>
             )}
-            <SlaBadge
-              atualizadaEm={solicitacao.atualizadaEm}
-              prioridade={solicitacao.prioridade}
-            />
+            <PrazoBadge solicitacao={solicitacao} agora={agora} />
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {canAdvance ? (
               <button
                 type="button"
-                title="Avançar para a próxima etapa"
-                aria-label="Avançar para a próxima etapa"
+                title={avancar}
+                aria-label={avancar}
                 onClick={(e) => {
                   e.stopPropagation();
                   onAdvance(solicitacao);
                 }}
-                className="flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className={cn(
+                  CONTROLE_DO_CARD,
+                  'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40',
+                )}
               >
-                <ArrowRightCircle size={12} />
+                <ArrowRightCircle size={14} aria-hidden />
               </button>
             ) : null}
-            <a
-              href={`/app/solicitacoes/${solicitacao.id}`}
+            <Link
+              to={`/app/solicitacoes/${solicitacao.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-sky-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:bg-slate-700 dark:text-sky-400 dark:hover:bg-sky-900/30"
+              aria-label={`Ver solicitação: ${solicitacao.titulo}`}
+              className={cn(
+                CONTROLE_DO_CARD,
+                'bg-slate-50 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:bg-slate-700 dark:text-sky-300 dark:hover:bg-sky-900/30',
+              )}
             >
               Ver
-              <ExternalLink size={10} />
-            </a>
+              <ExternalLink size={10} aria-hidden />
+            </Link>
           </div>
         </div>
       </div>

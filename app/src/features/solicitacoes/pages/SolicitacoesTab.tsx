@@ -229,7 +229,7 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
           icon={AlertTriangle}
           label="Em atraso"
           value={agingCount}
-          subtext="abertos há +7 dias"
+          subtext="fora do prazo de SLA"
           gradient={agingCount > 0 ? 'rose' : 'slate'}
         />
       </div>

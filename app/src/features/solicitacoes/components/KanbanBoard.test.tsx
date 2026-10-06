@@ -230,4 +230,34 @@ describe('KanbanBoard', () => {
     expect(within(container).queryByRole('list', { name: 'Responsáveis disponíveis' })).toBeNull();
     expect(within(container).queryByLabelText('Comentário final')).toBeNull();
   });
+
+  it('deve abrir a ação num diálogo modal com o nome da ação e da solicitação quando o card é avançado', async () => {
+    // Arrange
+    await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['eu'] }));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+
+    // Assert
+    const dialogo = within(container).getByRole('dialog', {
+      name: 'Enviar para validação: Trocar correia',
+    });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve fechar o diálogo da ação quando Esc é apertado', async () => {
+    // Arrange
+    await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['eu'] }));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(within(container).queryByRole('dialog')).toBeNull();
+  });
 });
