@@ -185,7 +185,7 @@ export function EditarUsuarioPage() {
                 <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
                   <span>Perfil</span>
                   <select
-                    className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white disabled:opacity-50"
+                    className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white disabled:opacity-50"
                     value={novoPerfil}
                     onChange={(e) => setNovoPerfil(e.target.value as PerfilUsuario)}
                     disabled={alterarPerfil.isPending || isMe}
@@ -253,7 +253,7 @@ export function EditarUsuarioPage() {
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   disabled={redefinirSenha.isPending}
-                  className="h-10 text-sm"
+                  className="h-10 text-sm pointer-coarse:h-11"
                   labelClassName="text-sm font-medium"
                 />
 

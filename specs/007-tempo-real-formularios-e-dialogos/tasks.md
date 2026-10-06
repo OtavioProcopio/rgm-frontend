@@ -53,8 +53,8 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 ## Parte 5 — Toque e foco
 
-- [ ] T031 Alterar a área de toque em `SRC/features/solicitacoes/pages/DashboardPage.tsx`, `SRC/features/solicitacoes/components/HistoricoChart.tsx`, `SRC/features/modelos/components/ModeloCard.tsx`, `SRC/features/admin/usuarios/components/UsuariosFilters.tsx`, `SRC/features/admin/usuarios/components/UsuarioForm.tsx`, `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`, `SRC/features/admin/modelos/components/ModeloActionsMenu.tsx`, `SRC/features/admin/modelos/pages/NovoModeloPage.tsx`, `SRC/features/admin/modelos/pages/EditarModeloPage.tsx`, `SRC/features/solicitacoes/components/TriagemModal.tsx` e `SRC/features/solicitacoes/components/AlterarResponsaveisModal.tsx`
-- [ ] T032 Testes e alteração de `SRC/features/auth/pages/PerfilPage.tsx` e `SRC/shared/components/Combobox/Combobox.tsx`: botões só de ícone com nome acessível e área de toque
+- [x] T031 Alterar a área de toque em `SRC/features/solicitacoes/pages/DashboardPage.tsx`, `SRC/features/solicitacoes/components/HistoricoChart.tsx`, `SRC/features/modelos/components/ModeloCard.tsx`, `SRC/features/admin/usuarios/components/UsuariosFilters.tsx`, `SRC/features/admin/usuarios/components/UsuarioForm.tsx`, `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`, `SRC/features/admin/modelos/components/ModeloActionsMenu.tsx`, `SRC/features/admin/modelos/pages/NovoModeloPage.tsx`, `SRC/features/admin/modelos/pages/EditarModeloPage.tsx`, `SRC/features/solicitacoes/components/TriagemModal.tsx` e `SRC/features/solicitacoes/components/AlterarResponsaveisModal.tsx`
+- [x] T032 Testes e alteração de `SRC/features/auth/pages/PerfilPage.tsx` e `SRC/shared/components/Combobox/Combobox.tsx`: botões só de ícone com nome acessível e área de toque
 - [ ] T033 Medir RNF-06 (área de toque) e RNF-07 (contraste do foco) em todas as telas de RF-25, corrigir o que a medição ainda apontar e registrar na convergência
 
 ## Integração

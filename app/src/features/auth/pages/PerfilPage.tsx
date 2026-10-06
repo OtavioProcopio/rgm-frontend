@@ -185,11 +185,14 @@ export function PerfilPage() {
                 placeholder="Sua senha atual"
                 error={errors.senhaAtual?.message}
                 disabled={isSubmitting}
+                className="pr-11"
                 {...register('senhaAtual')}
               />
               <button
                 type="button"
-                className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                aria-label={showSenhaAtual ? 'Ocultar a senha atual' : 'Mostrar a senha atual'}
+                aria-pressed={showSenhaAtual}
+                className="absolute right-0 top-7 inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 onClick={() => setShowSenhaAtual(!showSenhaAtual)}
               >
                 {showSenhaAtual ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -203,11 +206,14 @@ export function PerfilPage() {
                 placeholder={`Mínimo de ${TAMANHO_MINIMO_DA_SENHA} caracteres`}
                 error={errors.novaSenha?.message}
                 disabled={isSubmitting}
+                className="pr-11"
                 {...register('novaSenha')}
               />
               <button
                 type="button"
-                className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                aria-label={showNovaSenha ? 'Ocultar a nova senha' : 'Mostrar a nova senha'}
+                aria-pressed={showNovaSenha}
+                className="absolute right-0 top-7 inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 onClick={() => setShowNovaSenha(!showNovaSenha)}
               >
                 {showNovaSenha ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -221,11 +227,14 @@ export function PerfilPage() {
                 placeholder="Repita a nova senha"
                 error={errors.confirmarNovaSenha?.message}
                 disabled={isSubmitting}
+                className="pr-11"
                 {...register('confirmarNovaSenha')}
               />
               <button
                 type="button"
-                className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                aria-label={showConfirmarNovaSenha ? 'Ocultar a confirmação da nova senha' : 'Mostrar a confirmação da nova senha'}
+                aria-pressed={showConfirmarNovaSenha}
+                className="absolute right-0 top-7 inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 onClick={() => setShowConfirmarNovaSenha(!showConfirmarNovaSenha)}
               >
                 {showConfirmarNovaSenha ? <EyeOff size={18} /> : <Eye size={18} />}

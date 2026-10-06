@@ -22,7 +22,7 @@ export function UsuariosFilters({
           onChange={(event) =>
             onPerfilChange(event.target.value ? (event.target.value as PerfilUsuario) : undefined)
           }
-          className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
         >
           <option value="">Todos</option>
           <option value="ADMINISTRADOR">Administrador</option>
@@ -44,7 +44,7 @@ export function UsuariosFilters({
 
             onAtivoChange(event.target.value === 'true');
           }}
-          className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
         >
           <option value="">Todos</option>
           <option value="true">Ativos</option>

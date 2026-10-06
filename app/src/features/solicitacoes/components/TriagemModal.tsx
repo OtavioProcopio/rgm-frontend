@@ -73,7 +73,7 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
           ) : (
             <div className="space-y-2">
               {usuarios.map((u) => (
-                <label key={u.id} className="flex cursor-pointer items-center gap-2">
+                <label key={u.id} className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11">
                   <input
                     type="checkbox"
                     value={u.id}

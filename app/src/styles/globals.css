@@ -58,13 +58,27 @@ input {
 
 /*
  * Foco do teclado visível em todo controle, nos dois temas. `:focus-visible` não dispara
- * em clique nem em toque. Campos de texto têm o próprio anel de foco.
+ * em clique nem em toque. Campos de texto têm o próprio anel de foco. A cor vem de `--foco`
+ * para que uma superfície que não acompanha o tema (o cartão branco do login) possa trocá-la.
  */
-:where(a, button, summary, [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
-  outline: 2px solid var(--color-sky-600);
-  outline-offset: 2px;
+:root {
+  --foco: var(--color-sky-600);
 }
 
-.dark :where(a, button, summary, [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
-  outline-color: var(--color-sky-400);
+.dark {
+  --foco: var(--color-sky-400);
+}
+
+:where(
+    a,
+    button,
+    select,
+    summary,
+    input[type='checkbox'],
+    input[type='radio'],
+    [role='tab'],
+    [tabindex]:not([tabindex='-1'])
+  ):focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
 }

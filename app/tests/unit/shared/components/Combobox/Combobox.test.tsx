@@ -261,4 +261,44 @@ describe('Combobox', () => {
 
     expect(container.querySelector('input')!.hasAttribute('aria-describedby')).toBe(false);
   });
+
+  it('deve dar nome ao botão que limpa a seleção quando há valor selecionado', () => {
+    // Act
+    render(<Combobox label="Modelo" value="1" onChange={vi.fn()} options={mockOptions} />);
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Limpar seleção' })).toBeDefined();
+  });
+
+  it('deve dizer que mostra as opções quando a lista está fechada', () => {
+    // Act
+    render(<Combobox label="Modelo" value="" onChange={vi.fn()} options={mockOptions} />);
+
+    // Assert
+    const botao = screen.getByRole('button', { name: 'Mostrar opções' });
+    expect(botao.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('deve dizer que oculta as opções quando a lista está aberta', async () => {
+    // Arrange
+    render(<Combobox label="Modelo" value="" onChange={vi.fn()} options={mockOptions} />);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar opções' }));
+
+    // Assert
+    const botao = screen.getByRole('button', { name: 'Ocultar opções' });
+    expect(botao.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('deve deixar todo botão só de ícone com nome acessível e área de toque', () => {
+    // Act
+    render(<Combobox label="Modelo" value="1" onChange={vi.fn()} options={mockOptions} />);
+
+    // Assert
+    const botoes = screen.getAllByRole('button');
+    expect(botoes.every((botao) => botao.getAttribute('aria-label'))).toBe(true);
+    expect(botoes.every((botao) => botao.className.includes('pointer-coarse:min-h-11'))).toBe(true);
+    expect(botoes.every((botao) => botao.className.includes('pointer-coarse:min-w-11'))).toBe(true);
+  });
 });

@@ -66,7 +66,7 @@ export function NovoModeloPage({ backPath }: Props) {
       ) : null}
       <ModeloForm mode="create" isSubmitting={criarModelo.isPending} onSubmit={handleSubmit} />
       <div className="mt-4">
-        <Link to={resolvedBackPath} className="text-sm text-slate-500 hover:underline">
+        <Link to={resolvedBackPath} className="inline-flex items-center text-sm text-slate-500 hover:underline pointer-coarse:min-h-11">
           ← Voltar para modelos
         </Link>
       </div>

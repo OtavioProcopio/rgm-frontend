@@ -111,7 +111,7 @@ function CriarUsuarioForm({
           </select>
         </label>
 
-        <label className="flex items-center gap-2 self-end rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <label className="flex min-h-11 items-center gap-2 self-end rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
           <input type="checkbox" disabled={isSubmitting} {...register('ativo')} />
           Usuário ativo
         </label>

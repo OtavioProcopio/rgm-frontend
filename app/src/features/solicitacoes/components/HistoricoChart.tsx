@@ -36,7 +36,7 @@ export function HistoricoChart() {
               type="button"
               onClick={() => setDias(p.dias)}
               className={cn(
-                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors pointer-coarse:min-h-11',
                 dias === p.dias
                   ? 'bg-sky-600 text-white'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
