@@ -23,11 +23,11 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 ## Parte 2 — Limites e senha
 
-- [ ] T010 [P] Criar `TST/shared/lib/limites.test.ts` e `SRC/shared/lib/limites.ts`: constantes, mensagem de limite e `caracteresRestantes` (nulo abaixo de 90%; fronteira em 229 e 230 de 255)
-- [ ] T011 [P] Criar `TST/shared/lib/senha.test.ts` e `SRC/shared/lib/senha.ts`: 7 caracteres recusa, 8 aceita, mensagem única
-- [ ] T012 Testes e alteração de `SRC/features/solicitacoes/schemas/solicitacaoSchema.ts`: título 255 aceita e 256 recusa; descrição 2.000 e 2.001; código pretendido 50; máquina pretendida 100; comentário, motivo e comentário final 2.000; `editarSolicitacaoSchema`
-- [ ] T013 [P] Testes e alteração de `SRC/features/admin/modelos/schemas/modeloSchema.ts` (código 100, descrição 255, máquina 255, observações 2.000) e `SRC/features/admin/maquinas/schemas/maquinaSchema.ts` (nome 255)
-- [ ] T014 [P] Testes e alteração de `SRC/features/admin/usuarios/schemas/usuarioSchema.ts` (nome 255, e-mail 255, senha pela regra única) e `SRC/features/auth/schemas/perfilSchema.ts` (senha pela regra única)
+- [x] T010 [P] Criar `TST/shared/lib/limites.test.ts` e `SRC/shared/lib/limites.ts`: constantes, mensagem de limite e `caracteresRestantes` (nulo abaixo de 90%; fronteira em 229 e 230 de 255)
+- [x] T011 [P] Criar `TST/shared/lib/senha.test.ts` e `SRC/shared/lib/senha.ts`: 7 caracteres recusa, 8 aceita, mensagem única
+- [x] T012 Testes e alteração de `SRC/features/solicitacoes/schemas/solicitacaoSchema.ts`: título 255 aceita e 256 recusa; descrição 2.000 e 2.001; código pretendido 50; máquina pretendida 100; comentário, motivo e comentário final 2.000; `editarSolicitacaoSchema`
+- [x] T013 [P] Testes e alteração de `SRC/features/admin/modelos/schemas/modeloSchema.ts` (código 100, descrição 255, máquina 255, observações 2.000) e `SRC/features/admin/maquinas/schemas/maquinaSchema.ts` (nome 255)
+- [x] T014 [P] Testes e alteração de `SRC/features/admin/usuarios/schemas/usuarioSchema.ts` (nome 255, e-mail 255, senha pela regra única) e `SRC/features/auth/schemas/perfilSchema.ts` (senha pela regra única)
 - [ ] T015 Testes e alteração de `SRC/shared/components/Input/Input.tsx` e `SRC/shared/components/Textarea/Textarea.tsx`: contador aparece a partir de 90% do `maxLength`, some abaixo disso, não existe sem `maxLength`, e é associado ao campo
 - [ ] T016 Passar `maxLength` com a constante nos campos de texto de `SRC/features/solicitacoes/pages/NovaSolicitacaoPage.tsx`, `SRC/features/solicitacoes/components/ComentarioForm.tsx`, `TriagemModal.tsx`, `DevolucaoModal.tsx`, `EncerramentoModal.tsx`, `EnviarValidacaoModal.tsx`, `SRC/features/admin/modelos/components/ModeloForm.tsx`, `SRC/features/admin/maquinas/components/MaquinaForm.tsx` e `SRC/features/admin/usuarios/components/UsuarioForm.tsx`, com um teste por formulário provando o limite no campo
 - [ ] T017 Teste e alteração de `SRC/features/admin/usuarios/pages/EditarUsuarioPage.tsx`: redefinição recusa 7 caracteres com a mensagem única

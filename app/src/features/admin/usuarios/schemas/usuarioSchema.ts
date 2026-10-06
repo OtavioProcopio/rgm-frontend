@@ -1,11 +1,23 @@
 import { z } from 'zod';
 
+import { LIMITES, mensagemDeLimite } from '@/shared/lib/limites';
+import { erroDaSenha } from '@/shared/lib/senha';
+
+const nomeDoUsuario = z
+  .string()
+  .min(2, 'Nome deve ter pelo menos 2 caracteres.')
+  .max(LIMITES.usuarioNome, mensagemDeLimite(LIMITES.usuarioNome));
+const emailDoUsuario = z
+  .string()
+  .max(LIMITES.usuarioEmail, mensagemDeLimite(LIMITES.usuarioEmail))
+  .email('E-mail inválido.');
+
 export const perfilUsuarioSchema = z.enum(['OPERADOR', 'GESTOR', 'ADMINISTRADOR', 'EXTERNO']);
 
 export const criarUsuarioSchema = z
   .object({
-    nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
-    email: z.string().email('E-mail inválido.').optional().or(z.literal('')),
+    nome: nomeDoUsuario,
+    email: emailDoUsuario.optional().or(z.literal('')),
     senha: z.string().optional(),
     perfil: perfilUsuarioSchema,
     ativo: z.boolean(),
@@ -20,19 +32,16 @@ export const criarUsuarioSchema = z
         });
       }
 
-      if (!data.senha || data.senha.length < 6) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['senha'],
-          message: 'Senha deve ter pelo menos 6 caracteres.',
-        });
+      const erro = erroDaSenha(data.senha ?? '');
+      if (erro) {
+        ctx.addIssue({ code: 'custom', path: ['senha'], message: erro });
       }
     }
   });
 
 export const editarUsuarioSchema = z.object({
-  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
-  email: z.string().email('E-mail inválido.'),
+  nome: nomeDoUsuario,
+  email: emailDoUsuario,
 });
 
 export type CriarUsuarioFormData = z.infer<typeof criarUsuarioSchema>;
