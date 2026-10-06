@@ -43,7 +43,7 @@ Byte Union é de pastas e de onde mora a regra.
 | `features/*/components`, `features/*/pages`, `app/layouts`, `shared/components` | `adapters/presenters` | páginas concentram busca, permissão e mutação (`SolicitacaoDetalhePage.tsx`, 548 linhas) |
 | `features/*/schemas`, `features/*/types`, `features/*/lib`, `shared/lib` | `core/domain` | `lib/` mistura rótulo de tela com regra |
 | `shared/config`, `shared/lib/theme.ts`, `app/providers` | `infra/tools` e `infra/init` | renomeação |
-| testes ao lado do arquivo (`X.test.tsx`) | `app/tests/unit/<caminho espelhado>` | 96 arquivos a mover; `vitest.config.ts` e imports relativos |
+| testes ao lado do arquivo (`X.test.tsx`) | `app/tests/unit/<caminho espelhado>` | **feito em 2026-10-06 (spec 008):** 119 testes em `app/tests/unit`, utilitários em `app/tests/support`, ponta a ponta em `app/tests/e2e` |
 
 Acoplamento entre features: `features/solicitacoes` importa `features/admin` (API de
 usuários em `KanbanBoard.tsx:5` e `SolicitacaoDetalhePage.tsx:41`; hooks de modelos e
@@ -61,7 +61,7 @@ máquinas), `features/evidencias` e `features/auth`.
 | `make test` | `test` (watch) e `test-run` | `test` não é headless |
 | `make cover` | `coverage` | limite de 95% em `app/vitest.config.ts:48-53` |
 | `make it` | não há | |
-| `make bdd` | não há alvo; `npm run e2e` (Playwright, 9 specs em `app/e2e/`) exige backend no ar | |
+| `make bdd` | não há alvo; `npm run e2e` (Playwright, 9 specs em `app/tests/e2e/`) exige backend no ar | |
 | `make validate` | `validate`: lint → typecheck → cobertura → build | roda headless; é o que a CI repete em `.github/workflows/ci.yml` |
 | `make run` | `dev` | nome |
 
@@ -76,9 +76,9 @@ e não há `.nvmrc` nem `engines`.
   `components/` de feature, todos os `hooks/`, as `*Api.ts`, layouts, providers e rotas.
   O número acima vale para `schemas/`, `lib/`, `shared/components` e pouco mais. Os testes
   de página e de componente existem e rodam, mas não entram na conta.
-- **Padrão:** Vitest com Testing Library, teste ao lado do arquivo, nome em inglês
+- **Padrão:** Vitest com Testing Library, teste em `app/tests/unit` espelhando o caminho dentro de `app/src` (desde a spec 008), nome em inglês
   (`it('renders the upload button')`), sem blocos Arrange/Act/Assert marcados.
-- **E2E:** 9 specs Playwright em `app/e2e/`; não rodam na CI.
+- **E2E:** 9 specs Playwright em `app/tests/e2e/`; não rodam na CI.
 
 ## 6. Riscos
 

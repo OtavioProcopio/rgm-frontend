@@ -5,12 +5,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@tests': path.resolve(__dirname, './tests'),
     },
   },
   test: {
     environment: 'jsdom',
     globals: true,
-    exclude: ['node_modules', 'dist', 'e2e/**'],
+    exclude: ['node_modules', 'dist', 'tests/e2e/**'],
     env: {
       VITE_API_BASE_URL: 'http://localhost:8080/api',
     },
@@ -23,8 +24,6 @@ export default defineConfig({
         'src/main.tsx',
         'src/app/router.tsx',
         'src/**/*.d.ts',
-        'src/**/*.test.{ts,tsx}',
-        'src/**/*.spec.{ts,tsx}',
         'src/shared/lib/cn.ts',
         // arquivos de só tipos — sem código executável
         'src/shared/types/**',
@@ -32,8 +31,6 @@ export default defineConfig({
         // API files — dependem de fetch/HTTP, testados via mocks nos hooks
         'src/shared/api/httpClient.ts',
         'src/**/api/**Api.ts',
-        // test utils — não são código da app
-        'src/test-utils/**',
         // providers, layouts, rotas e páginas testados por integração E2E
         'src/app/providers/**',
         'src/app/layouts/**',

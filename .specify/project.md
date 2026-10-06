@@ -31,11 +31,16 @@ responde por uma camada Byte Union:
 | `features/*/schemas`, `features/*/types`, `features/*/lib`, `shared/lib`, `shared/types` | `core/domain` |
 | `shared/config`, `app/providers`, `app/routes` | `infra` |
 
-O teste fica ao lado do arquivo que ele prova (`X.tsx` e `X.test.tsx`), e o contrato de
-operação é o `Makefile` da raiz.
+Os testes moram em `app/tests/`, fora de `app/src`: testes de unidade e de componente em
+`app/tests/unit/`, no mesmo caminho que o arquivo testado tem dentro de `app/src`
+(`app/src/shared/lib/x.ts` é provado por `app/tests/unit/shared/lib/x.test.ts`); utilitários
+de teste em `app/tests/support/`; roteiros de ponta a ponta em `app/tests/e2e/`. O contrato
+de operação é o `Makefile` da raiz.
 
-**Proíbe:** criar pasta com a nomenclatura Byte Union (`adapters`, `core`, `infra`,
-`tests/unit`) ao lado das existentes enquanto a migração não for decidida numa spec própria;
+**Proíbe:** criar arquivo de teste dentro de `app/src` ou ao lado do código; importar de
+`app/tests` em código de produção; criar pasta com a nomenclatura Byte Union (`adapters`,
+`core`, `infra`) ao lado das existentes enquanto a migração do código não for decidida numa
+spec própria;
 chamar `fetch` fora de `shared/api/httpClient.ts`; e importar `*Api.ts` em componente ou
 página nova — componente fala com hook.
 
@@ -88,3 +93,4 @@ comando ou skill de OpenSpec no repositório.
 | Versão | Data | O que mudou |
 |---|---|---|
 | 1.0.0 | 2026-10-05 | ratificação inicial |
+| 2.0.0 | 2026-10-06 | Princípio 7: o teste deixa de ficar ao lado do arquivo e passa a morar em `app/tests/`, espelhando o caminho (spec 008) |
