@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { LIMITES, caracteresRestantes, mensagemDeLimite } from '@/shared/lib/limites';
+import {
+  LIMITES,
+  caracteresRestantes,
+  mensagemDeLimite,
+  mensagemDeRestantes,
+} from '@/shared/lib/limites';
 
 describe('LIMITES', () => {
   it.each([
@@ -81,5 +86,31 @@ describe('caracteresRestantes', () => {
 
     // Assert
     expect(restantes).toBe(0);
+  });
+});
+
+describe('mensagemDeRestantes', () => {
+  it('deve usar o plural quando restam vários caracteres', () => {
+    // Act
+    const mensagem = mensagemDeRestantes(25);
+
+    // Assert
+    expect(mensagem).toBe('Restam 25 caracteres');
+  });
+
+  it('deve usar o singular quando resta um caractere', () => {
+    // Act
+    const mensagem = mensagemDeRestantes(1);
+
+    // Assert
+    expect(mensagem).toBe('Resta 1 caractere');
+  });
+
+  it('deve usar o plural quando não resta nenhum caractere', () => {
+    // Act
+    const mensagem = mensagemDeRestantes(0);
+
+    // Assert
+    expect(mensagem).toBe('Restam 0 caracteres');
   });
 });

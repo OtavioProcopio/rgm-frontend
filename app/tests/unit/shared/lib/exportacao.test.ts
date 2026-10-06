@@ -17,7 +17,9 @@ describe('baixarArquivo', () => {
     URL.createObjectURL = vi.fn().mockReturnValue(endereco);
     URL.revokeObjectURL = vi.fn();
     const baixados: { href: string; nome: string | null }[] = [];
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
       baixados.push({ href: this.href, nome: this.getAttribute('download') });
     });
 

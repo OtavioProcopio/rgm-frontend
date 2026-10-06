@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { nomesDosTipos, TIPOS_DE_EVIDENCIA, TIPOS_DE_IMAGEM, validarArquivo } from '@/shared/lib/arquivoPermitido';
+import {
+  nomesDosTipos,
+  TIPOS_DE_EVIDENCIA,
+  TIPOS_DE_IMAGEM,
+  validarArquivo,
+} from '@/shared/lib/arquivoPermitido';
 
 const MB = 1024 * 1024;
 
@@ -35,7 +40,9 @@ describe('validarArquivo', () => {
     const erro = validarArquivo(executavel);
 
     // Assert
-    expect(erro).toBe('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG, GIF, WebP, PDF e MP4.');
+    expect(erro).toBe(
+      'Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG, GIF, WebP, PDF e MP4.',
+    );
   });
 
   it('deve aceitar quando o arquivo é um MP4 de 5 MB', () => {

@@ -30,3 +30,7 @@ export function caracteresRestantes(tamanho: number, limite: number): number | n
   }
   return Math.max(limite - tamanho, 0);
 }
+
+export function mensagemDeRestantes(restantes: number): string {
+  return restantes === 1 ? 'Resta 1 caractere' : `Restam ${restantes} caracteres`;
+}
