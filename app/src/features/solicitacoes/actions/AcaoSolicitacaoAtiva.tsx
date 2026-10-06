@@ -19,7 +19,7 @@ const COMPONENTE_DA_ACAO: Record<AcaoSolicitacao, (props: AcaoProps) => React.JS
 type Props = AcaoProps & { acao: AcaoSolicitacao };
 
 /** Formulário da ação escolhida; o mesmo para o quadro e para o detalhe. */
-export function AcaoSolicitacaoAtiva({ acao, solicitacao, onClose }: Props) {
+export function AcaoSolicitacaoAtiva({ acao, solicitacao, onClose, onCancelar }: Props) {
   const Acao = COMPONENTE_DA_ACAO[acao];
-  return <Acao solicitacao={solicitacao} onClose={onClose} />;
+  return <Acao solicitacao={solicitacao} onClose={onClose} onCancelar={onCancelar} />;
 }

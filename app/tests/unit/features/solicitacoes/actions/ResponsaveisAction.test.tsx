@@ -31,15 +31,17 @@ vi.mock('@/features/admin/usuarios/hooks/useResponsaveisDisponiveis', () => ({
 
 function montar() {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
   render(
     <ResponsaveisAction
       solicitacao={criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['op'] })}
       onClose={onClose}
+      onCancelar={onCancelar}
     />,
     { wrapper: QueryWrapper },
   );
-  return { onClose };
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -53,8 +55,12 @@ describe('ResponsaveisAction', () => {
     montar();
 
     // Assert
-    expect((screen.getByRole('checkbox', { name: 'Olga Operadora' }) as HTMLInputElement).checked).toBe(true);
-    expect((screen.getByRole('checkbox', { name: 'Gil Gestor' }) as HTMLInputElement).checked).toBe(false);
+    expect(
+      (screen.getByRole('checkbox', { name: 'Olga Operadora' }) as HTMLInputElement).checked,
+    ).toBe(true);
+    expect((screen.getByRole('checkbox', { name: 'Gil Gestor' }) as HTMLInputElement).checked).toBe(
+      false,
+    );
   });
 
   it('deve salvar a nova lista e fechar quando a alteração é confirmada', async () => {
@@ -85,15 +91,16 @@ describe('ResponsaveisAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem salvar quando o formulário é cancelado', async () => {
+  it('deve avisar a desistência sem salvar quando o formulário é cancelado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
     // Assert
     expect(alterar).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

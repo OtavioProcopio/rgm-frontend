@@ -8,7 +8,7 @@ import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
-export function TriarAction({ solicitacao, onClose }: AcaoProps) {
+export function TriarAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
   const triar = useTriarSolicitacao(solicitacao.id);
   const { responsaveis } = useResponsaveisDisponiveis();
   const { erro, aviso, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
@@ -20,7 +20,7 @@ export function TriarAction({ solicitacao, onClose }: AcaoProps) {
       <TriagemModal
         isPending={triar.isPending}
         usuarios={responsaveis}
-        onCancel={onClose}
+        onCancel={onCancelar}
         onConfirm={(data, foto, nota) =>
           executar(() => triar.mutateAsync(data), {
             file: foto,

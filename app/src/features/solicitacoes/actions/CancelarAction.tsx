@@ -4,7 +4,7 @@ import { useExecutarAcao } from '../hooks/useExecutarAcao';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
-export function CancelarAction({ solicitacao, onClose }: AcaoProps) {
+export function CancelarAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
   const cancelar = useCancelarSolicitacao(solicitacao.id);
   const { erro, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
@@ -13,7 +13,7 @@ export function CancelarAction({ solicitacao, onClose }: AcaoProps) {
       <EncerramentoModal
         isPending={cancelar.isPending}
         podeConcluir={false}
-        onCancel={onClose}
+        onCancel={onCancelar}
         onConfirm={(data) => executar(() => cancelar.mutateAsync({ motivo: data.comentario }))}
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />

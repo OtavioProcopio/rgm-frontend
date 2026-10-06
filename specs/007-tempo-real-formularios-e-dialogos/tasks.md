@@ -38,11 +38,11 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 - [x] T019 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: `bloqueado`, controles ocultos, fundo opaco
 - [x] T020 Testes em `TST/shared/components/ConfirmDialog/ConfirmDialog.test.tsx`: é diálogo modal com o título como nome; foco inicial em "Cancelar"; Enter ao abrir não confirma; Esc cancela; durante o envio Esc não fecha; `cancelLabel`
 - [x] T021 Alterar `SRC/shared/components/ConfirmDialog/ConfirmDialog.tsx`
-- [ ] T022 Criar `TST/features/solicitacoes/actions/DialogoDaAcao.test.tsx`: nome com a ação e a solicitação; Esc sem nada preenchido fecha; Esc com algo preenchido pergunta; "Continuar editando" mantém o texto; "Descartar" fecha; "Cancelar" do formulário com algo preenchido pergunta; durante o envio Esc e clique fora não fecham; falha no envio mantém o diálogo, o erro e o texto; ação concluída fecha sem perguntar
-- [ ] T023 Alterar `SRC/features/solicitacoes/types/acaoProps.ts` (`onCancelar`) e criar `SRC/features/solicitacoes/actions/DialogoDaAcao.tsx`
-- [ ] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste de cada um em `TST`
-- [ ] T025 Testes e alteração de `SRC/features/solicitacoes/components/KanbanBoard.tsx`: usa `DialogoDaAcao`
-- [ ] T026 Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoAcoes.tsx`: a ação do detalhe abre em diálogo modal com o mesmo nome do quadro; Esc fecha e o foco volta ao botão
+- [x] T022 Criar `TST/features/solicitacoes/actions/DialogoDaAcao.test.tsx`: nome com a ação e a solicitação; Esc sem nada preenchido fecha; Esc com algo preenchido pergunta; "Continuar editando" mantém o texto; "Descartar" fecha; "Cancelar" do formulário com algo preenchido pergunta; durante o envio Esc e clique fora não fecham; falha no envio mantém o diálogo, o erro e o texto; ação concluída fecha sem perguntar
+- [x] T023 Alterar `SRC/features/solicitacoes/types/acaoProps.ts` (`onCancelar`) e criar `SRC/features/solicitacoes/actions/DialogoDaAcao.tsx`
+- [x] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste de cada um em `TST`
+- [x] T025 Testes e alteração de `SRC/features/solicitacoes/components/KanbanBoard.tsx`: usa `DialogoDaAcao`
+- [x] T026 Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoAcoes.tsx`: a ação do detalhe abre em diálogo modal com o mesmo nome do quadro; Esc fecha e o foco volta ao botão
 - [ ] T027 [P] Testes e alteração de `SRC/features/admin/usuarios/pages/UsuariosPage.tsx` e `SRC/features/admin/usuarios/components/DeleteUsuarioDialog.tsx`: desativar e excluir abrem como diálogo modal; foco inicial em desistir
 - [ ] T028 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx` e `SRC/features/admin/modelos/components/GaleriaCarousel.tsx`: desativar, ativar e remover foto abrem como diálogo modal; Esc na confirmação da galeria não fecha a galeria
 

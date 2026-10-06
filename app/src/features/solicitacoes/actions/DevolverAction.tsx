@@ -7,7 +7,7 @@ import { acaoFeitaSemFoto } from '../lib/solicitacaoMessages';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
-export function DevolverAction({ solicitacao, onClose }: AcaoProps) {
+export function DevolverAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
   const devolver = useDevolverSolicitacao(solicitacao.id);
   const { erro, aviso, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
@@ -17,7 +17,7 @@ export function DevolverAction({ solicitacao, onClose }: AcaoProps) {
     <>
       <DevolucaoModal
         isPending={devolver.isPending}
-        onCancel={onClose}
+        onCancel={onCancelar}
         onConfirm={(data, foto) =>
           executar(() => devolver.mutateAsync(data), {
             file: foto,

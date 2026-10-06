@@ -2,14 +2,14 @@ import { useState } from 'react';
 
 import { Button } from '@/shared/components/Button/Button';
 
-import { AcaoSolicitacaoAtiva } from '../actions/AcaoSolicitacaoAtiva';
+import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import { useAcoesPermitidas } from '../hooks/useAcoesPermitidas';
 import { botoesDeAcao, type AcaoSolicitacao } from '../lib/acoesSolicitacao';
 import type { Solicitacao } from '../types/solicitacaoTypes';
 
 type Props = { solicitacao: Solicitacao };
 
-/** Ações que o usuário pode executar sobre a solicitação, com o formulário da ação aberta. */
+/** Ações que o usuário pode executar sobre a solicitação; a ação escolhida abre em diálogo. */
 export function SolicitacaoAcoes({ solicitacao }: Props) {
   const acoesDe = useAcoesPermitidas();
   const [acaoAberta, setAcaoAberta] = useState<AcaoSolicitacao | null>(null);
@@ -36,7 +36,7 @@ export function SolicitacaoAcoes({ solicitacao }: Props) {
         ))}
       </div>
       {acaoAberta ? (
-        <AcaoSolicitacaoAtiva
+        <DialogoDaAcao
           acao={acaoAberta}
           solicitacao={solicitacao}
           onClose={() => setAcaoAberta(null)}

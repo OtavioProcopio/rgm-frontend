@@ -31,20 +31,34 @@ vi.mock('@/features/solicitacoes/components/DevolucaoModal', () => ({
     onConfirm: (data: unknown, foto: File | null) => void;
   }) => (
     <form aria-label="Devolução">
-      <button type="button" onClick={() => onConfirm(dados, foto)}>Confirmar com foto</button>
-      <button type="button" onClick={() => onConfirm(dados, null)}>Confirmar</button>
-      <button type="button" onClick={onCancel}>Fechar</button>
+      <button type="button" onClick={() => onConfirm(dados, foto)}>
+        Confirmar com foto
+      </button>
+      <button type="button" onClick={() => onConfirm(dados, null)}>
+        Confirmar
+      </button>
+      <button type="button" onClick={onCancel}>
+        Fechar
+      </button>
     </form>
   ),
 }));
 
 function montar() {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
-  render(<DevolverAction solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })} onClose={onClose} />, {
-    wrapper: QueryWrapper,
-  });
-  return { onClose };
+  render(
+    <DevolverAction
+      solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })}
+      onClose={onClose}
+      onCancelar={onCancelar}
+    />,
+    {
+      wrapper: QueryWrapper,
+    },
+  );
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -82,16 +96,17 @@ describe('DevolverAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem devolver quando o formulário é cancelado', async () => {
+  it('deve avisar a desistência sem devolver quando o formulário é cancelado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     // Assert
     expect(devolver).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('deve avisar que a solicitação foi devolvida e a foto não foi enviada, sem fechar, quando o envio da foto falha', async () => {

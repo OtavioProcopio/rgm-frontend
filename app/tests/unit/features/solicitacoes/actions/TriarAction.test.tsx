@@ -23,7 +23,10 @@ vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
   evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
 }));
 vi.mock('@/features/admin/usuarios/hooks/useResponsaveisDisponiveis', () => ({
-  useResponsaveisDisponiveis: () => ({ responsaveis: [{ id: 'op', nome: 'Olga Operadora' }], isLoading: false }),
+  useResponsaveisDisponiveis: () => ({
+    responsaveis: [{ id: 'op', nome: 'Olga Operadora' }],
+    isLoading: false,
+  }),
 }));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   TriagemModal: ({
@@ -39,19 +42,31 @@ vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
       {usuarios.map((u) => (
         <span key={u.id}>{u.nome}</span>
       ))}
-      <button type="button" onClick={() => onConfirm(dados, null, '')}>Confirmar</button>
-      <button type="button" onClick={() => onConfirm(dados, foto, 'usar gabarito')}>Confirmar com foto</button>
-      <button type="button" onClick={() => onConfirm(dados, foto, '')}>Confirmar com foto sem nota</button>
-      <button type="button" onClick={onCancel}>Fechar</button>
+      <button type="button" onClick={() => onConfirm(dados, null, '')}>
+        Confirmar
+      </button>
+      <button type="button" onClick={() => onConfirm(dados, foto, 'usar gabarito')}>
+        Confirmar com foto
+      </button>
+      <button type="button" onClick={() => onConfirm(dados, foto, '')}>
+        Confirmar com foto sem nota
+      </button>
+      <button type="button" onClick={onCancel}>
+        Fechar
+      </button>
     </form>
   ),
 }));
 
 function montar() {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
-  render(<TriarAction solicitacao={criarSolicitacao()} onClose={onClose} />, { wrapper: QueryWrapper });
-  return { onClose };
+  render(
+    <TriarAction solicitacao={criarSolicitacao()} onClose={onClose} onCancelar={onCancelar} />,
+    { wrapper: QueryWrapper },
+  );
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -92,7 +107,10 @@ describe('TriarAction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
 
     // Assert
-    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'INSTRUCAO_SERVICO', descricao: 'usar gabarito' });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, {
+      tipo: 'INSTRUCAO_SERVICO',
+      descricao: 'usar gabarito',
+    });
   });
 
   it('deve anexar a foto sem descrição quando a nota está vazia', async () => {
@@ -105,7 +123,10 @@ describe('TriarAction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto sem nota' }));
 
     // Assert
-    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'INSTRUCAO_SERVICO', descricao: undefined });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, {
+      tipo: 'INSTRUCAO_SERVICO',
+      descricao: undefined,
+    });
   });
 
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa a triagem', async () => {
@@ -123,16 +144,17 @@ describe('TriarAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem triar quando o formulário é cancelado', async () => {
+  it('deve avisar a desistência sem triar quando o formulário é cancelado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     // Assert
     expect(triar).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('deve avisar que a solicitação foi triada e a foto não foi enviada, sem fechar, quando o envio da foto falha', async () => {

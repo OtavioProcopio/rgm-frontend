@@ -1,21 +1,15 @@
 import { useState } from 'react';
 
 import { useAuth } from '@/app/providers/authContext';
-import { Dialog } from '@/shared/components/Dialog/Dialog';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
 
-import { AcaoSolicitacaoAtiva } from '../actions/AcaoSolicitacaoAtiva';
+import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import { useAcoesPermitidas } from '../hooks/useAcoesPermitidas';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
-import {
-  acaoDoMovimento,
-  proximoStatus,
-  rotuloDaAcao,
-  type AcaoSolicitacao,
-} from '../lib/acoesSolicitacao';
+import { acaoDoMovimento, proximoStatus, type AcaoSolicitacao } from '../lib/acoesSolicitacao';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { COLUMNS, TAB_ACCENT } from './kanbanColunas';
@@ -30,7 +24,11 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
   const isOperador = user?.perfil === 'OPERADOR';
   const acoesDe = useAcoesPermitidas();
 
-  const { data: solicitacoes = [], isLoading, error } = useKanbanSolicitacoes(modeloId, {
+  const {
+    data: solicitacoes = [],
+    isLoading,
+    error,
+  } = useKanbanSolicitacoes(modeloId, {
     dataInicio,
     dataFim,
   });
@@ -178,16 +176,11 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
 
       {/* ── Diálogo da ação ── */}
       {acaoPendente && (
-        <Dialog
-          titulo={`${rotuloDaAcao(acaoPendente.acao)}: ${acaoPendente.card.titulo}`}
+        <DialogoDaAcao
+          acao={acaoPendente.acao}
+          solicitacao={acaoPendente.card}
           onClose={() => setAcaoPendente(null)}
-        >
-          <AcaoSolicitacaoAtiva
-            acao={acaoPendente.acao}
-            solicitacao={acaoPendente.card}
-            onClose={() => setAcaoPendente(null)}
-          />
-        </Dialog>
+        />
       )}
     </div>
   );

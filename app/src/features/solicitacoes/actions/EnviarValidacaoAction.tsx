@@ -4,7 +4,7 @@ import { useExecutarAcao } from '../hooks/useExecutarAcao';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
-export function EnviarValidacaoAction({ solicitacao, onClose }: AcaoProps) {
+export function EnviarValidacaoAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
   const enviar = useEnviarParaValidacao(solicitacao.id);
   const { erro, atualizadaPorOutro, executar } = useExecutarAcao(solicitacao.id, onClose);
 
@@ -14,7 +14,7 @@ export function EnviarValidacaoAction({ solicitacao, onClose }: AcaoProps) {
         solicitacaoId={solicitacao.id}
         isPending={enviar.isPending}
         evidenciaObrigatoria={solicitacao.tipo !== 'CRIACAO'}
-        onCancel={onClose}
+        onCancel={onCancelar}
         onConfirm={(data) => executar(() => enviar.mutateAsync(data.comentario))}
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
