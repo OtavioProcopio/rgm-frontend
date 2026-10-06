@@ -2,10 +2,12 @@
 
 > Descreve **como**. Deriva da spec e da constituição; não introduz requisito novo.
 
-> **Layout e testes:** o repositório ainda está no layout legado (`app/src/features/...`, teste
-> ao lado do arquivo), registrado em `.specify/memory/as-is.md`. Este plano segue esse
-> layout, como as features 001 a 006. Não há `app/tests/bdd/` nem alvo `make bdd`: cada
-> cenário da spec vira um teste de módulo ou de componente, no arquivo indicado.
+> **Layout e testes:** o código segue no layout legado (`app/src/features/...`), registrado em
+> `.specify/memory/as-is.md`. Os testes moram em `app/tests/unit/`, no mesmo caminho que o
+> arquivo testado tem em `app/src` (Princípio 7, versão 2.0.0, spec 008). Este plano foi
+> escrito antes dessa mudança: onde a coluna de teste diz "ao lado", leia-se o caminho
+> espelhado em `app/tests/unit/`. Não há `app/tests/bdd/` nem alvo `make bdd`: cada cenário
+> da spec vira um teste de módulo ou de componente, no arquivo indicado.
 
 > **Medição feita antes do plano (2026-10-06, API simulada, 390 px com ponteiro de toque):**
 > 26 controles abaixo de 44 px e 3 botões de ícone sem nome nas telas de RF-25. Os arquivos

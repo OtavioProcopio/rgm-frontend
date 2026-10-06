@@ -7,24 +7,24 @@
 > O repositório não tem `app/tests/bdd/` (ver `plan.md`): cada cenário da spec é um teste no
 > arquivo indicado, com o nome do cenário.
 
-Prefixo: `SRC` = `app/src`.
+Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o arquivo testado tem em `app/src` (Princípio 7, versão 2.0.0). Onde uma tarefa diz "testes e alteração de `SRC/x/Y.tsx`", o teste é `TST/x/Y.test.tsx`.
 
 ## Parte 1 — Tempo real
 
-- [x] T001 Criar `SRC/features/solicitacoes/lib/reconexao.test.ts`: espera de cada tentativa (3, 6, 12, 24, 30, 30 s); sessão expirada para 400, 401 e 403; falha de rede e 5xx não são sessão expirada
+- [x] T001 Criar `TST/features/solicitacoes/lib/reconexao.test.ts`: espera de cada tentativa (3, 6, 12, 24, 30, 30 s); sessão expirada para 400, 401 e 403; falha de rede e 5xx não são sessão expirada
 - [x] T002 Criar `SRC/features/solicitacoes/lib/reconexao.ts`
-- [x] T003 Testes em `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: primeira abertura não atualiza nada; segunda abertura atualiza listas, detalhes, históricos e evidências; falha de rede na renovação agenda nova tentativa; espera cresce e volta ao início após sucesso; sessão expirada não agenda; estado da conexão publicado ao abrir e ao cair
+- [x] T003 Testes em `TST/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: primeira abertura não atualiza nada; segunda abertura atualiza listas, detalhes, históricos e evidências; falha de rede na renovação agenda nova tentativa; espera cresce e volta ao início após sucesso; sessão expirada não agenda; estado da conexão publicado ao abrir e ao cair
 - [x] T004 Alterar `SRC/features/solicitacoes/hooks/solicitacoesKeys.ts` (chave `conexao()`) e `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.ts`
-- [x] T005 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: falso com conexão aberta; falso com menos de 10 s de queda; verdadeiro depois de 10 s; volta a falso quando a conexão abre
+- [x] T005 Criar `TST/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: falso com conexão aberta; falso com menos de 10 s de queda; verdadeiro depois de 10 s; volta a falso quando a conexão abre
 - [x] T006 Criar `SRC/features/solicitacoes/hooks/useSemAtualizacao.ts`
-- [x] T007 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.test.tsx`: mostra o texto quando sem atualização; região de status vazia quando há conexão; o foco não muda quando o aviso aparece
+- [x] T007 Criar `TST/features/solicitacoes/components/AvisoSemAtualizacao.test.tsx`: mostra o texto quando sem atualização; região de status vazia quando há conexão; o foco não muda quando o aviso aparece
 - [x] T008 Criar `SRC/features/solicitacoes/components/AvisoSemAtualizacao.tsx`
 - [x] T009 Alterar `SRC/app/layouts/AppLayout.tsx` (abre a conexão e mostra o aviso) e retirar a abertura da conexão de `SRC/features/solicitacoes/pages/SolicitacoesPage.tsx`, `DashboardPage.tsx` e `SolicitacaoDetalhePage.tsx`, ajustando os testes dessas páginas
 
 ## Parte 2 — Limites e senha
 
-- [ ] T010 [P] Criar `SRC/shared/lib/limites.test.ts` e `SRC/shared/lib/limites.ts`: constantes, mensagem de limite e `caracteresRestantes` (nulo abaixo de 90%; fronteira em 229 e 230 de 255)
-- [ ] T011 [P] Criar `SRC/shared/lib/senha.test.ts` e `SRC/shared/lib/senha.ts`: 7 caracteres recusa, 8 aceita, mensagem única
+- [ ] T010 [P] Criar `TST/shared/lib/limites.test.ts` e `SRC/shared/lib/limites.ts`: constantes, mensagem de limite e `caracteresRestantes` (nulo abaixo de 90%; fronteira em 229 e 230 de 255)
+- [ ] T011 [P] Criar `TST/shared/lib/senha.test.ts` e `SRC/shared/lib/senha.ts`: 7 caracteres recusa, 8 aceita, mensagem única
 - [ ] T012 Testes e alteração de `SRC/features/solicitacoes/schemas/solicitacaoSchema.ts`: título 255 aceita e 256 recusa; descrição 2.000 e 2.001; código pretendido 50; máquina pretendida 100; comentário, motivo e comentário final 2.000; `editarSolicitacaoSchema`
 - [ ] T013 [P] Testes e alteração de `SRC/features/admin/modelos/schemas/modeloSchema.ts` (código 100, descrição 255, máquina 255, observações 2.000) e `SRC/features/admin/maquinas/schemas/maquinaSchema.ts` (nome 255)
 - [ ] T014 [P] Testes e alteração de `SRC/features/admin/usuarios/schemas/usuarioSchema.ts` (nome 255, e-mail 255, senha pela regra única) e `SRC/features/auth/schemas/perfilSchema.ts` (senha pela regra única)
@@ -34,13 +34,13 @@ Prefixo: `SRC` = `app/src`.
 
 ## Parte 3 — Diálogo
 
-- [ ] T018 Testes em `SRC/shared/components/Dialog/Dialog.test.tsx`: bloqueado ignora Esc; bloqueado ignora clique fora; controle dentro de elemento oculto fica fora do ciclo de Tab
+- [ ] T018 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: bloqueado ignora Esc; bloqueado ignora clique fora; controle dentro de elemento oculto fica fora do ciclo de Tab
 - [ ] T019 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: `bloqueado`, controles ocultos, fundo opaco
-- [ ] T020 Testes em `SRC/shared/components/ConfirmDialog/ConfirmDialog.test.tsx`: é diálogo modal com o título como nome; foco inicial em "Cancelar"; Enter ao abrir não confirma; Esc cancela; durante o envio Esc não fecha; `cancelLabel`
+- [ ] T020 Testes em `TST/shared/components/ConfirmDialog/ConfirmDialog.test.tsx`: é diálogo modal com o título como nome; foco inicial em "Cancelar"; Enter ao abrir não confirma; Esc cancela; durante o envio Esc não fecha; `cancelLabel`
 - [ ] T021 Alterar `SRC/shared/components/ConfirmDialog/ConfirmDialog.tsx`
-- [ ] T022 Criar `SRC/features/solicitacoes/actions/DialogoDaAcao.test.tsx`: nome com a ação e a solicitação; Esc sem nada preenchido fecha; Esc com algo preenchido pergunta; "Continuar editando" mantém o texto; "Descartar" fecha; "Cancelar" do formulário com algo preenchido pergunta; durante o envio Esc e clique fora não fecham; falha no envio mantém o diálogo, o erro e o texto; ação concluída fecha sem perguntar
+- [ ] T022 Criar `TST/features/solicitacoes/actions/DialogoDaAcao.test.tsx`: nome com a ação e a solicitação; Esc sem nada preenchido fecha; Esc com algo preenchido pergunta; "Continuar editando" mantém o texto; "Descartar" fecha; "Cancelar" do formulário com algo preenchido pergunta; durante o envio Esc e clique fora não fecham; falha no envio mantém o diálogo, o erro e o texto; ação concluída fecha sem perguntar
 - [ ] T023 Alterar `SRC/features/solicitacoes/types/acaoProps.ts` (`onCancelar`) e criar `SRC/features/solicitacoes/actions/DialogoDaAcao.tsx`
-- [ ] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste ao lado de cada um
+- [ ] T024 Alterar `SRC/features/solicitacoes/actions/AcaoSolicitacaoAtiva.tsx`, `TriarAction.tsx`, `ResponsaveisAction.tsx`, `EnviarValidacaoAction.tsx`, `DevolverAction.tsx`, `EncerrarAction.tsx` e `CancelarAction.tsx`: desistir chama `onCancelar`; ajustar o teste de cada um em `TST`
 - [ ] T025 Testes e alteração de `SRC/features/solicitacoes/components/KanbanBoard.tsx`: usa `DialogoDaAcao`
 - [ ] T026 Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoAcoes.tsx`: a ação do detalhe abre em diálogo modal com o mesmo nome do quadro; Esc fecha e o foco volta ao botão
 - [ ] T027 [P] Testes e alteração de `SRC/features/admin/usuarios/pages/UsuariosPage.tsx` e `SRC/features/admin/usuarios/components/DeleteUsuarioDialog.tsx`: desativar e excluir abrem como diálogo modal; foco inicial em desistir
