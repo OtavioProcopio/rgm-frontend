@@ -48,8 +48,8 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`, com o mesmo caminho que o
 
 ## Parte 4 — Confirmações
 
-- [ ] T029 Testes e alteração de `SRC/features/evidencias/components/EvidenciaList.tsx`: excluir pede confirmação citando o arquivo; confirmar exclui; desistir mantém
-- [ ] T030 Testes e alteração de `SRC/features/solicitacoes/pages/SolicitacaoDetalhePage.tsx`: campos da edição com `maxLength`; edição validada pelo esquema; cancelar com alteração pergunta; confirmar descarta; cancelar sem alteração fecha direto
+- [x] T029 Testes e alteração de `SRC/features/evidencias/components/EvidenciaList.tsx`: excluir pede confirmação citando o arquivo; confirmar exclui; desistir mantém
+- [x] T030 Testes e alteração de `SRC/features/solicitacoes/pages/SolicitacaoDetalhePage.tsx`: campos da edição com `maxLength`; edição validada pelo esquema; cancelar com alteração pergunta; confirmar descarta; cancelar sem alteração fecha direto
 
 ## Parte 5 — Toque e foco
 

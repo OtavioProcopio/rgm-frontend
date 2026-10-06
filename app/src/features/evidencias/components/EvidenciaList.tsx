@@ -1,3 +1,6 @@
+import { useState } from 'react';
+
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 
@@ -12,6 +15,10 @@ type Props = {
 };
 
 export function EvidenciaList({ evidencias, isLoading, onDelete, isDeleting }: Props) {
+  const [idParaExcluir, setIdParaExcluir] = useState<string | null>(null);
+  // Some da lista (excluída por outro usuário) fecha a pergunta junto.
+  const paraExcluir = evidencias.find((evidencia) => evidencia.id === idParaExcluir);
+
   if (isLoading) return <LoadingState title="Carregando evidências..." />;
 
   if (evidencias.length === 0) {
@@ -29,10 +36,23 @@ export function EvidenciaList({ evidencias, isLoading, onDelete, isDeleting }: P
         <EvidenciaPreview
           key={evidencia.id}
           evidencia={evidencia}
-          onDelete={onDelete}
+          onDelete={onDelete ? setIdParaExcluir : undefined}
           isDeleting={isDeleting}
         />
       ))}
+      {paraExcluir ? (
+        <ConfirmDialog
+          title="Excluir evidência"
+          message={`A evidência "${paraExcluir.nomeArquivo}" será excluída. Não há como desfazer.`}
+          confirmLabel="Excluir"
+          variant="danger"
+          onCancel={() => setIdParaExcluir(null)}
+          onConfirm={() => {
+            onDelete?.(paraExcluir.id);
+            setIdParaExcluir(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

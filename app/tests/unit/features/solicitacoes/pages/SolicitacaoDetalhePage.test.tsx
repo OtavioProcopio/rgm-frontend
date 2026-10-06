@@ -9,6 +9,9 @@ import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
+import { useEditarSolicitacao } from '@/features/solicitacoes/hooks/useEditarSolicitacao';
+import { useSolicitacao } from '@/features/solicitacoes/hooks/useSolicitacao';
+import { LIMITES } from '@/shared/lib/limites';
 
 vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   solicitacoesApi: {
@@ -382,5 +385,149 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByText('Gil Gestor')).toBeDefined();
     expect(within(container).queryByText('Ana Administradora')).toBeNull();
     expect(within(container).queryByText('Ivo Inativo')).toBeNull();
+  });
+});
+
+describe('SolicitacaoDetalhePage — edição', () => {
+  const PERGUNTA = 'Descartar alterações?';
+
+  /** O cabeçalho vem antes das ações, que também têm um "Cancelar" (o da solicitação). */
+  function botaoCancelarEdicao(tela: ReturnType<typeof within>) {
+    return tela.getAllByRole('button', { name: 'Cancelar' })[0];
+  }
+
+  /** Abre a solicitação como gestor, entra na edição e devolve a função que salva. */
+  async function abrirEdicao() {
+    const editar = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    vi.mocked(useEditarSolicitacao).mockReturnValue({
+      mutateAsync: editar,
+      isPending: false,
+    } as unknown as ReturnType<typeof useEditarSolicitacao>);
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+    await userEvent.click(within(container).getByRole('button', { name: 'Editar' }));
+    const tela = within(container);
+    return { editar, tela };
+  }
+
+  it.each([
+    ['Título', 'solicitacaoTitulo'],
+    ['Descrição', 'textoLongo'],
+  ] as const)('deve limitar o campo %s ao tamanho que a API grava', async (rotulo, limite) => {
+    // Arrange
+    const esperado = LIMITES[limite];
+
+    // Act
+    const { tela } = await abrirEdicao();
+    const campo = tela.getByLabelText(rotulo) as HTMLInputElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
+  });
+
+  it('deve recusar a edição com a mensagem do esquema quando o título fica só com espaços', async () => {
+    // Arrange
+    const { editar, tela } = await abrirEdicao();
+    await userEvent.clear(tela.getByLabelText('Título'));
+    await userEvent.type(tela.getByLabelText('Título'), '   ');
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(tela.getByText('Título obrigatório')).toBeDefined();
+    expect(editar).not.toHaveBeenCalled();
+  });
+
+  it('deve recusar a edição com a mensagem do esquema quando a descrição fica vazia', async () => {
+    // Arrange
+    const { editar, tela } = await abrirEdicao();
+    await userEvent.clear(tela.getByLabelText('Descrição'));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(tela.getByText('Descrição obrigatória')).toBeDefined();
+    expect(editar).not.toHaveBeenCalled();
+  });
+
+  it('deve salvar o título e a descrição sem espaços nas pontas quando a edição é válida', async () => {
+    // Arrange
+    const novoTitulo = 'Reparo na Máquina B';
+    const { editar, tela } = await abrirEdicao();
+    await userEvent.clear(tela.getByLabelText('Título'));
+    await userEvent.type(tela.getByLabelText('Título'), `  ${novoTitulo}  `);
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(editar).toHaveBeenCalledWith({ titulo: novoTitulo, descricao: mockSolicitacao.descricao });
+  });
+
+  it('deve fechar a edição sem perguntar quando cancelar é acionado sem alteração', async () => {
+    // Arrange
+    const { tela } = await abrirEdicao();
+
+    // Act
+    await userEvent.click(botaoCancelarEdicao(tela));
+
+    // Assert
+    expect(tela.queryByText(PERGUNTA)).toBeNull();
+    expect(tela.queryByLabelText('Título')).toBeNull();
+  });
+
+  it('deve perguntar antes de descartar quando cancelar é acionado com alteração não salva', async () => {
+    // Arrange
+    const { tela } = await abrirEdicao();
+    await userEvent.type(tela.getByLabelText('Descrição'), ' com detalhe');
+
+    // Act
+    await userEvent.click(botaoCancelarEdicao(tela));
+
+    // Assert
+    expect(tela.getByRole('dialog', { name: PERGUNTA })).toBeDefined();
+    expect(tela.getByLabelText('Título')).toBeDefined();
+  });
+
+  it('deve manter a alteração quando o usuário escolhe continuar editando', async () => {
+    // Arrange
+    const acrescimo = ' com detalhe';
+    const { tela } = await abrirEdicao();
+    await userEvent.type(tela.getByLabelText('Descrição'), acrescimo);
+    await userEvent.click(botaoCancelarEdicao(tela));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Continuar editando' }));
+
+    // Assert
+    expect(tela.queryByRole('dialog')).toBeNull();
+    expect((tela.getByLabelText('Descrição') as HTMLTextAreaElement).value).toBe(
+      `${mockSolicitacao.descricao}${acrescimo}`,
+    );
+  });
+
+  it('deve fechar a edição sem salvar quando o usuário confirma o descarte', async () => {
+    // Arrange
+    const { editar, tela } = await abrirEdicao();
+    await userEvent.type(tela.getByLabelText('Descrição'), ' com detalhe');
+    await userEvent.click(botaoCancelarEdicao(tela));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Descartar' }));
+
+    // Assert
+    expect(tela.queryByRole('dialog')).toBeNull();
+    expect(tela.queryByLabelText('Título')).toBeNull();
+    expect(editar).not.toHaveBeenCalled();
   });
 });
