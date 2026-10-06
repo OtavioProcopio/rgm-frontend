@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "nginxConf.test.ts"]
+  "include": ["vite.config.ts", "tests/unit/nginxConf.test.ts"]
 }
