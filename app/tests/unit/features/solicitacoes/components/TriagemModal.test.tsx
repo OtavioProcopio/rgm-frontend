@@ -2,9 +2,11 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TriagemModal } from '@/features/solicitacoes/components/TriagemModal';
+import { LIMITES } from '@/shared/lib/limites';
 
 afterEach(cleanup);
 
@@ -26,7 +28,10 @@ describe('TriagemModal', () => {
   });
 
   it('renders usuario checkboxes', () => {
-    const usuarios = [{ id: 'u1', nome: 'João' }, { id: 'u2', nome: 'Maria' }];
+    const usuarios = [
+      { id: 'u1', nome: 'João' },
+      { id: 'u2', nome: 'Maria' },
+    ];
     const { container } = render(
       <TriagemModal usuarios={usuarios} onCancel={vi.fn()} onConfirm={vi.fn()} />,
     );
@@ -47,5 +52,23 @@ describe('TriagemModal', () => {
       <TriagemModal usuarios={[]} isPending onCancel={vi.fn()} onConfirm={vi.fn()} />,
     );
     expect(within(container).getByText('Triando...')).toBeDefined();
+  });
+});
+
+describe('TriagemModal — limite de texto', () => {
+  it('deve limitar a observação da foto ao tamanho que a API grava', async () => {
+    // Arrange
+    const esperado = LIMITES.textoLongo;
+    const foto = new File(['x'], 'servico.png', { type: 'image/png' });
+    const { container } = render(
+      <TriagemModal usuarios={[]} onCancel={vi.fn()} onConfirm={vi.fn()} />,
+    );
+
+    // Act
+    await userEvent.upload(within(container).getByLabelText('Arquivo de evidência'), foto);
+    const campo = (await within(container).findByLabelText(/observação/i)) as HTMLTextAreaElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

@@ -1,4 +1,4 @@
 {
-  "active": "specs/008-testes-em-app-tests",
-  "title": "Testes em app/tests espelhando o caminho"
+  "active": "specs/007-tempo-real-formularios-e-dialogos",
+  "title": "Tempo real que se recupera, formulários que previnem erro e diálogos em toda a aplicação"
 }

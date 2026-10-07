@@ -38,24 +38,41 @@ vi.mock('@/features/solicitacoes/components/EncerramentoModal', () => ({
     onConfirm: (data: { concluir: boolean; comentario: string }, foto: File | null) => void;
   }) => (
     <form aria-label={podeConcluir ? 'Encerramento' : 'Cancelamento'}>
-      <button type="button" disabled={isPending} onClick={() => onConfirm({ concluir: true, comentario: 'Peça aprovada' }, foto)}>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => onConfirm({ concluir: true, comentario: 'Peça aprovada' }, foto)}
+      >
         Concluir
       </button>
-      <button type="button" onClick={() => onConfirm({ concluir: false, comentario: 'Pedido duplicado' }, null)}>
+      <button
+        type="button"
+        onClick={() => onConfirm({ concluir: false, comentario: 'Pedido duplicado' }, null)}
+      >
         Cancelar solicitação
       </button>
-      <button type="button" onClick={onCancel}>Fechar</button>
+      <button type="button" onClick={onCancel}>
+        Fechar
+      </button>
     </form>
   ),
 }));
 
 function montar() {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
-  render(<EncerrarAction solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })} onClose={onClose} />, {
-    wrapper: QueryWrapper,
-  });
-  return { onClose };
+  render(
+    <EncerrarAction
+      solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })}
+      onClose={onClose}
+      onCancelar={onCancelar}
+    />,
+    {
+      wrapper: QueryWrapper,
+    },
+  );
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -88,7 +105,10 @@ describe('EncerrarAction', () => {
 
     // Assert
     expect(ordem).toEqual(['foto', 'conclusão']);
-    expect(anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'CONCLUSAO', descricao: 'Peça aprovada' });
+    expect(anexar).toHaveBeenCalledWith('s1', foto, {
+      tipo: 'CONCLUSAO',
+      descricao: 'Peça aprovada',
+    });
     expect(encerrar).toHaveBeenCalledWith({ concluir: true, comentario: 'Peça aprovada' });
     expect(cancelar).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -141,15 +161,16 @@ describe('EncerrarAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem encerrar quando o formulário é cancelado', async () => {
+  it('deve avisar a desistência sem encerrar quando o formulário é cancelado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     // Assert
     expect(encerrar).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

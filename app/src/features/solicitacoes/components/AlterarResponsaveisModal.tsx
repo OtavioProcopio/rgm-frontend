@@ -40,7 +40,7 @@ export function AlterarResponsaveisModal({
           </p>
         ) : (
           usuarios.map((u) => (
-            <label key={u.id} className="flex cursor-pointer items-center gap-2">
+            <label key={u.id} className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11">
               <input
                 type="checkbox"
                 checked={selecionados.includes(u.id)}

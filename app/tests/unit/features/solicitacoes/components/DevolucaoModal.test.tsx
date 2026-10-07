@@ -5,6 +5,7 @@ import { cleanup, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevolucaoModal } from '@/features/solicitacoes/components/DevolucaoModal';
+import { LIMITES } from '@/shared/lib/limites';
 
 afterEach(cleanup);
 
@@ -28,7 +29,23 @@ describe('DevolucaoModal', () => {
   });
 
   it('shows devolvendo when pending', () => {
-    const { container } = render(<DevolucaoModal isPending onCancel={vi.fn()} onConfirm={vi.fn()} />);
+    const { container } = render(
+      <DevolucaoModal isPending onCancel={vi.fn()} onConfirm={vi.fn()} />,
+    );
     expect(within(container).getByText('Devolvendo...')).toBeDefined();
+  });
+});
+
+describe('DevolucaoModal — limite de texto', () => {
+  it('deve limitar o motivo ao tamanho que a API grava', () => {
+    // Arrange
+    const esperado = LIMITES.textoLongo;
+
+    // Act
+    const { container } = render(<DevolucaoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
+    const campo = within(container).getByLabelText(/motivo da devolução/i) as HTMLTextAreaElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

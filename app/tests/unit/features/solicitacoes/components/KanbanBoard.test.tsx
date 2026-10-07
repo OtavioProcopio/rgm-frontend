@@ -260,4 +260,20 @@ describe('KanbanBoard', () => {
     // Assert
     expect(within(container).queryByRole('dialog')).toBeNull();
   });
+
+  it('deve perguntar antes de descartar quando Esc é apertado com algo preenchido no diálogo da ação', async () => {
+    // Arrange
+    await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['eu'] }));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    const dialogo = within(container).getByRole('dialog');
+    await userEvent.type(within(dialogo).getByRole('textbox'), 'Correia trocada');
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(within(dialogo).getByText('Descartar o que foi preenchido?')).toBeDefined();
+  });
 });

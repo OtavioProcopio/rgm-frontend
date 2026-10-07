@@ -12,6 +12,7 @@ import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
 import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolicitacao';
 
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
+import { LIMITES } from '@/shared/lib/limites';
 
 vi.mock('@/features/solicitacoes/hooks/useAbrirSolicitacao', () => ({
   useAbrirSolicitacao: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
@@ -19,7 +20,10 @@ vi.mock('@/features/solicitacoes/hooks/useAbrirSolicitacao', () => ({
 
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({
-    data: { content: [{ id: '1', codigo: 'MD-1', descricao: 'Modelo 1', maquina: 'M-1' }], totalElements: 1 },
+    data: {
+      content: [{ id: '1', codigo: 'MD-1', descricao: 'Modelo 1', maquina: 'M-1' }],
+      totalElements: 1,
+    },
     isLoading: false,
     error: null,
   }),
@@ -41,7 +45,9 @@ vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
 afterEach(() => {
   cleanup();
   vi.mocked(evidenciasApi.anexar).mockReset();
-  vi.mocked(evidenciasApi.anexar).mockResolvedValue({} as Awaited<ReturnType<typeof evidenciasApi.anexar>>);
+  vi.mocked(evidenciasApi.anexar).mockResolvedValue(
+    {} as Awaited<ReturnType<typeof evidenciasApi.anexar>>,
+  );
 });
 
 const foto = new File(['hello'], 'problema.png', { type: 'image/png' });
@@ -105,19 +111,22 @@ describe('NovaSolicitacaoPage', () => {
 
     await userEvent.type(screen.getByLabelText(/título/i), 'Título de teste');
     await userEvent.type(screen.getByLabelText(/descrição/i), 'Descrição de teste');
-    
+
     // Simula a seleção de modelo no Combobox
     const comboboxInput = screen.getByLabelText(/modelo/i);
     fireEvent.focus(comboboxInput);
-    
+
     // Clica na opção
     const option = screen.getByText('MD-1 - Modelo 1');
     fireEvent.click(option);
 
     // Simula o upload de arquivo
     const file = new File(['hello'], 'test.png', { type: 'image/png' });
-    const fileInput = screen.getByLabelText(/modelo/i).closest('form')?.querySelector('input[type="file"]') as HTMLInputElement;
-    
+    const fileInput = screen
+      .getByLabelText(/modelo/i)
+      .closest('form')
+      ?.querySelector('input[type="file"]') as HTMLInputElement;
+
     // Adiciona o arquivo no input
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -263,7 +272,47 @@ describe('NovaSolicitacaoPage', () => {
     await userEvent.upload(screen.getByLabelText('Foto do problema'), pdf, { applyAccept: false });
 
     // Assert
-    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.')).toBeDefined();
+    expect(
+      screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.'),
+    ).toBeDefined();
     expect(screen.queryByText('laudo.pdf')).toBeNull();
   });
+});
+
+describe('NovaSolicitacaoPage — limite de texto', () => {
+  it.each([
+    [/título/i, 'solicitacaoTitulo'],
+    [/descrição/i, 'textoLongo'],
+  ] as const)('deve limitar o campo quando o rótulo é %s', (rotulo, limite) => {
+    // Arrange
+    const esperado = LIMITES[limite];
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+    const campo = screen.getByLabelText(rotulo) as HTMLInputElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
+  });
+
+  it.each([
+    [/código do modelo/i, 'modeloPretendidoCodigo'],
+    [/observações/i, 'textoLongo'],
+  ] as const)(
+    'deve limitar o campo do modelo pretendido quando o rótulo é %s',
+    async (rotulo, limite) => {
+      // Arrange
+      const esperado = LIMITES[limite];
+      const { AppWrapper } = createAppWrapper();
+      render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'CRIACAO');
+      const campo = screen.getByLabelText(rotulo) as HTMLInputElement;
+
+      // Assert
+      expect(campo.maxLength).toBe(esperado);
+    },
+  );
 });

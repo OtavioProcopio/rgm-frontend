@@ -5,6 +5,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { evidenciasKeys } from '@/features/evidencias/hooks/evidenciasKeys';
+import { ApiError } from '@/shared/api/apiError';
 import { MockEventSource } from '@tests/support/mockEventSource';
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
@@ -268,5 +269,215 @@ describe('useSolicitacaoEvents — eventos recebidos', () => {
 
     // Assert
     expect(invalidar).not.toHaveBeenCalled();
+  });
+});
+
+describe('useSolicitacaoEvents — reconexão', () => {
+  function conectar() {
+    vi.useFakeTimers();
+    localStorage.setItem('rgm.accessToken', 'token-abc');
+    mockUseAuth.mockReturnValue({ user: { nome: 'Ge', perfil: 'GESTOR' } });
+    mockRefreshAccessToken.mockResolvedValue(undefined);
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    const { unmount } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
+    return { queryClient, invalidar, unmount };
+  }
+
+  function ultima() {
+    return MockEventSource.instances[MockEventSource.instances.length - 1];
+  }
+
+  function derrubar() {
+    ultima().readyState = MockEventSource.CLOSED;
+    ultima().triggerError();
+  }
+
+  it('deve não atualizar nenhuma consulta quando a conexão abre pela primeira vez', () => {
+    // Arrange
+    const { invalidar } = conectar();
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(invalidar).not.toHaveBeenCalled();
+  });
+
+  it('deve atualizar as listas quando a conexão volta depois de cair', async () => {
+    // Arrange
+    const { invalidar } = conectar();
+    ultima().emit('open');
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve atualizar os detalhes e os históricos abertos quando a conexão volta depois de cair', async () => {
+    // Arrange
+    const { invalidar } = conectar();
+    ultima().emit('open');
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.details() });
+  });
+
+  it('deve atualizar as evidências quando a conexão volta depois de cair', async () => {
+    // Arrange
+    const { invalidar } = conectar();
+    ultima().emit('open');
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: evidenciasKeys.all });
+  });
+
+  it('deve atualizar as consultas quando o navegador reabre a mesma conexão sozinho', () => {
+    // Arrange
+    const { invalidar } = conectar();
+    ultima().emit('open');
+    ultima().readyState = MockEventSource.CONNECTING;
+    ultima().triggerError();
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve tentar de novo quando a renovação da sessão falha por falta de rede', async () => {
+    // Arrange
+    conectar();
+    mockRefreshAccessToken.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(6_000);
+
+    // Assert
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(2);
+    expect(MockEventSource.instances).toHaveLength(2);
+  });
+
+  it('deve esperar mais a cada falha seguida da renovação', async () => {
+    // Arrange
+    conectar();
+    mockRefreshAccessToken.mockRejectedValue(new TypeError('Failed to fetch'));
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(5_999);
+
+    // Assert
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve voltar à espera inicial quando a conexão cai de novo depois de restabelecida', async () => {
+    // Arrange
+    conectar();
+    mockRefreshAccessToken.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    derrubar();
+    await vi.advanceTimersByTimeAsync(9_000);
+    ultima().emit('open');
+    mockRefreshAccessToken.mockClear();
+    derrubar();
+
+    // Act
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Assert
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve parar de tentar quando a renovação é recusada por sessão expirada', async () => {
+    // Arrange
+    conectar();
+    mockRefreshAccessToken.mockRejectedValue(new ApiError({ status: 401, message: 'Sessão expirada.' }));
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    // Assert
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it('deve publicar a conexão como aberta quando ela abre', () => {
+    // Arrange
+    const { queryClient } = conectar();
+    vi.setSystemTime(new Date('2026-10-06T12:00:00Z'));
+
+    // Act
+    ultima().emit('open');
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toEqual({
+      aberta: true,
+      desde: Date.parse('2026-10-06T12:00:00Z'),
+    });
+  });
+
+  it('deve publicar a conexão como fechada, com o instante da queda, quando ela cai', () => {
+    // Arrange
+    const { queryClient } = conectar();
+    ultima().emit('open');
+    vi.setSystemTime(new Date('2026-10-06T12:00:05Z'));
+
+    // Act
+    derrubar();
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toEqual({
+      aberta: false,
+      desde: Date.parse('2026-10-06T12:00:05Z'),
+    });
+  });
+
+  it('deve manter o instante da primeira queda quando as tentativas seguintes também falham', async () => {
+    // Arrange
+    const { queryClient } = conectar();
+    vi.setSystemTime(new Date('2026-10-06T12:00:00Z'));
+    derrubar();
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    // Act
+    derrubar();
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toEqual({
+      aberta: false,
+      desde: Date.parse('2026-10-06T12:00:00Z'),
+    });
+  });
+
+  it('deve esquecer o estado da conexão quando a tela é desmontada', () => {
+    // Arrange
+    const { queryClient, unmount } = conectar();
+    ultima().emit('open');
+
+    // Act
+    unmount();
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 
 import { comentarioSchema, type ComentarioFormData } from '../schemas/solicitacaoSchema';
 
@@ -32,6 +33,7 @@ export function ComentarioForm({ isPending, onSubmit }: Props) {
         label="Novo comentário"
         placeholder="Escreva um comentário..."
         error={errors.comentario?.message}
+        maxLength={LIMITES.textoLongo}
         {...register('comentario')}
       />
       <Button type="submit" disabled={isPending}>

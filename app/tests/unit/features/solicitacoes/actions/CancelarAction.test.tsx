@@ -33,22 +33,35 @@ vi.mock('@/features/solicitacoes/components/EncerramentoModal', () => ({
     onConfirm: (data: { concluir: boolean; comentario: string }, foto: File | null) => void;
   }) => (
     <form aria-label={podeConcluir ? 'Encerramento' : 'Cancelamento'}>
-      <button type="button" disabled={isPending} onClick={() => onConfirm({ concluir: true, comentario: 'Peça aprovada' }, foto)}>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => onConfirm({ concluir: true, comentario: 'Peça aprovada' }, foto)}
+      >
         Concluir
       </button>
-      <button type="button" onClick={() => onConfirm({ concluir: false, comentario: 'Pedido duplicado' }, null)}>
+      <button
+        type="button"
+        onClick={() => onConfirm({ concluir: false, comentario: 'Pedido duplicado' }, null)}
+      >
         Cancelar solicitação
       </button>
-      <button type="button" onClick={onCancel}>Fechar</button>
+      <button type="button" onClick={onCancel}>
+        Fechar
+      </button>
     </form>
   ),
 }));
 
 function montar() {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
-  render(<CancelarAction solicitacao={criarSolicitacao()} onClose={onClose} />, { wrapper: QueryWrapper });
-  return { onClose };
+  render(
+    <CancelarAction solicitacao={criarSolicitacao()} onClose={onClose} onCancelar={onCancelar} />,
+    { wrapper: QueryWrapper },
+  );
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -80,7 +93,10 @@ describe('CancelarAction', () => {
 
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa o cancelamento', async () => {
     // Arrange
-    const recusa = new ApiError({ status: 403, message: 'Você não pode cancelar esta solicitação.' });
+    const recusa = new ApiError({
+      status: 403,
+      message: 'Você não pode cancelar esta solicitação.',
+    });
     cancelar.mockRejectedValue(recusa);
     const { onClose } = montar();
 
@@ -92,15 +108,16 @@ describe('CancelarAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem cancelar quando o formulário é fechado', async () => {
+  it('deve avisar a desistência sem cancelar quando o formulário é fechado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     // Assert
     expect(cancelar).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

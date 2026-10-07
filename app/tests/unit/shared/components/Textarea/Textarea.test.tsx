@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 
@@ -48,5 +48,121 @@ describe('Textarea', () => {
     const { container } = render(<Textarea label="Descrição" />);
 
     expect(container.querySelector('textarea')!.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  describe('contador de caracteres', () => {
+    const LIMITE = 20;
+    const INICIO_DO_AVISO = LIMITE * 0.9;
+
+    function descricoesDoCampo(campo: Element): string[] {
+      return (campo.getAttribute('aria-describedby') ?? '')
+        .split(' ')
+        .filter(Boolean)
+        .map((id) => campo.ownerDocument.getElementById(id)?.textContent ?? '');
+    }
+
+    it('deve mostrar quantos caracteres restam quando o texto chega a 90% do limite', () => {
+      // Arrange
+      const { container } = render(<Textarea label="Descrição" maxLength={LIMITE} />);
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(INICIO_DO_AVISO) } });
+
+      // Assert
+      expect(
+        within(container).getByText(`Restam ${LIMITE - INICIO_DO_AVISO} caracteres`),
+      ).toBeDefined();
+    });
+
+    it('deve usar o singular quando resta um caractere', () => {
+      // Arrange
+      const { container } = render(<Textarea label="Descrição" maxLength={LIMITE} />);
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(LIMITE - 1) } });
+
+      // Assert
+      expect(within(container).getByText('Resta 1 caractere')).toBeDefined();
+    });
+
+    it('deve esconder o contador quando o texto fica abaixo de 90% do limite', () => {
+      // Arrange
+      const { container } = render(<Textarea label="Descrição" maxLength={LIMITE} />);
+      const campo = container.querySelector('textarea')!;
+      fireEvent.change(campo, { target: { value: 'a'.repeat(INICIO_DO_AVISO) } });
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(INICIO_DO_AVISO - 1) } });
+
+      // Assert
+      expect(within(container).queryByText(/^Resta/)).toBeNull();
+    });
+
+    it('deve ficar sem contador quando o campo não tem limite', () => {
+      // Arrange
+      const { container } = render(<Textarea label="Descrição" />);
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(LIMITE) } });
+
+      // Assert
+      expect(within(container).queryByText(/^Resta/)).toBeNull();
+    });
+
+    it('deve contar o valor recebido quando o campo é controlado', () => {
+      // Arrange
+      const valor = 'a'.repeat(LIMITE);
+
+      // Act
+      const { container } = render(
+        <Textarea label="Descrição" maxLength={LIMITE} value={valor} onChange={() => undefined} />,
+      );
+
+      // Assert
+      expect(within(container).getByText('Restam 0 caracteres')).toBeDefined();
+    });
+
+    it('deve associar o contador ao campo quando ele aparece', () => {
+      // Arrange
+      const { container } = render(<Textarea label="Descrição" maxLength={LIMITE} />);
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(INICIO_DO_AVISO) } });
+
+      // Assert
+      expect(descricoesDoCampo(campo)).toEqual([`Restam ${LIMITE - INICIO_DO_AVISO} caracteres`]);
+    });
+
+    it('deve associar o erro e o contador ao campo quando os dois aparecem', () => {
+      // Arrange
+      const erro = 'Campo inválido.';
+      const { container } = render(<Textarea label="Descrição" maxLength={LIMITE} error={erro} />);
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a'.repeat(LIMITE) } });
+
+      // Assert
+      expect(descricoesDoCampo(campo)).toEqual([erro, 'Restam 0 caracteres']);
+    });
+
+    it('deve repassar a digitação a quem usa o campo quando há limite', () => {
+      // Arrange
+      const onChange = vi.fn();
+      const { container } = render(
+        <Textarea label="Descrição" maxLength={LIMITE} onChange={onChange} />,
+      );
+      const campo = container.querySelector('textarea')!;
+
+      // Act
+      fireEvent.change(campo, { target: { value: 'a' } });
+
+      // Assert
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
   });
 });

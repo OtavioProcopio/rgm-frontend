@@ -10,7 +10,6 @@ import { cn } from '@/shared/lib/cn';
 
 import { HistoricoChart } from '../components/HistoricoChart';
 import { useMetricas } from '../hooks/useMetricas';
-import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { ModelosTab } from './ModelosTab';
 import { PessoalTab } from './PessoalTab';
 import { SolicitacoesTab } from './SolicitacoesTab';
@@ -27,7 +26,6 @@ export function DashboardPage() {
   const { user } = useAuth();
   const isOperador = user?.perfil === 'OPERADOR';
   const [activeTab, setActiveTab] = useState<TabId>(isOperador ? 'pessoal' : 'solicitacoes');
-  useSolicitacaoEvents();
   const {
     data: metricas,
     isLoading: loadingMetricas,
@@ -67,7 +65,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
+                '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                 activeTab === tab.id
                   ? 'border-sky-600 text-sky-700 dark:border-sky-400 dark:text-sky-300'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',

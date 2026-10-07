@@ -201,4 +201,72 @@ describe('Dialog', () => {
     // Assert
     expect(document.body.style.overflow).toBe('auto');
   });
+
+  it('deve continuar aberto quando Esc é apertado com o diálogo bloqueado', async () => {
+    // Arrange
+    const onClose = vi.fn();
+    render(
+      <Dialog titulo="Triar: Trocar correia" onClose={onClose} bloqueado>
+        <button type="button">Primeiro</button>
+      </Dialog>,
+    );
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve continuar aberto quando o clique é fora com o diálogo bloqueado', async () => {
+    // Arrange
+    const onClose = vi.fn();
+    render(
+      <Dialog titulo="Triar: Trocar correia" onClose={onClose} bloqueado>
+        <button type="button">Primeiro</button>
+      </Dialog>,
+    );
+    const fundo = screen.getByRole('dialog').parentElement!;
+
+    // Act
+    await userEvent.click(fundo);
+
+    // Assert
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve levar o foco ao primeiro controle visível quando o primeiro está em elemento oculto', () => {
+    // Act
+    render(
+      <Dialog titulo="Descartar" onClose={vi.fn()}>
+        <div hidden>
+          <button type="button">Oculto</button>
+        </div>
+        <button type="button">Visível</button>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Visível' }));
+  });
+
+  it('deve pular o controle em elemento oculto quando Tab é apertado no último visível', async () => {
+    // Arrange
+    render(
+      <Dialog titulo="Descartar" onClose={vi.fn()}>
+        <button type="button">Primeiro</button>
+        <button type="button">Último</button>
+        <div hidden>
+          <button type="button">Oculto</button>
+        </div>
+      </Dialog>,
+    );
+    screen.getByRole('button', { name: 'Último' }).focus();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+  });
 });

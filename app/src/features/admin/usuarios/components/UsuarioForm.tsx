@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { LIMITES } from '@/shared/lib/limites';
 
 import {
   criarUsuarioSchema,
@@ -90,6 +91,7 @@ function CriarUsuarioForm({
         label="Nome"
         error={errors.nome?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.usuarioNome}
         {...register('nome')}
       />
 
@@ -109,7 +111,7 @@ function CriarUsuarioForm({
           </select>
         </label>
 
-        <label className="flex items-center gap-2 self-end rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <label className="flex min-h-11 items-center gap-2 self-end rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
           <input type="checkbox" disabled={isSubmitting} {...register('ativo')} />
           Usuário ativo
         </label>
@@ -127,6 +129,7 @@ function CriarUsuarioForm({
             type="email"
             error={errors.email?.message}
             disabled={isSubmitting}
+            maxLength={LIMITES.usuarioEmail}
             {...register('email')}
           />
           <Input
@@ -177,6 +180,7 @@ function EditarUsuarioForm({
         label="Nome"
         error={errors.nome?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.usuarioNome}
         {...register('nome')}
       />
       <Input
@@ -184,6 +188,7 @@ function EditarUsuarioForm({
         type="email"
         error={errors.email?.message}
         disabled={isSubmitting || usuario.perfil === 'EXTERNO'}
+        maxLength={LIMITES.usuarioEmail}
         {...register('email')}
       />
 

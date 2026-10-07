@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
@@ -27,7 +28,11 @@ const prioridadeOptions = [
 
 export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
   const [foto, setFoto] = useState<File | null>(null);
-  const { register, handleSubmit, formState: { errors } } = useForm<DevolverSolicitacaoFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DevolverSolicitacaoFormData>({
     resolver: zodResolver(devolverSolicitacaoSchema),
   });
 
@@ -46,6 +51,7 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
           label="Motivo da devolução *"
           placeholder="Descreva o motivo da devolução..."
           error={errors.motivo?.message}
+          maxLength={LIMITES.textoLongo}
           {...register('motivo')}
         />
         <Select
@@ -60,9 +66,7 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
           </p>
           <EvidenciaUploader onUpload={setFoto} />
           {foto ? (
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Anexado: {foto.name}
-            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Anexado: {foto.name}</p>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">

@@ -105,6 +105,32 @@ describe('SolicitacaoAcoes', () => {
     expect(screen.queryByLabelText('Motivo da devolução *')).toBeNull();
   });
 
+  it('deve abrir a ação em diálogo modal com o nome da ação e da solicitação quando o botão é acionado', async () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_VALIDACAO' });
+    montar(solicitacao, gestor);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Devolver' }));
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: `Devolver: ${solicitacao.titulo}` });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve fechar o diálogo e devolver o foco ao botão da ação quando Esc é apertado', async () => {
+    // Arrange
+    montar(criarSolicitacao({ status: 'EM_VALIDACAO' }), gestor);
+    await userEvent.click(screen.getByRole('button', { name: 'Devolver' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Devolver' }));
+  });
+
   it('deve manter a ação aberta quando a solicitação muda de status e a ação deixa de ser permitida', async () => {
     // Arrange
     const { AppWrapper } = createAppWrapper({ user: gestor });

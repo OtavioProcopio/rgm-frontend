@@ -55,10 +55,8 @@ export function GaleriaCarousel({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (showConfirmRemover) {
-        if (event.key === 'Escape') setShowConfirmRemover(false);
-        return;
-      }
+      // Com a confirmação aberta, o teclado é dela.
+      if (showConfirmRemover) return;
       if (event.key === 'Escape') onClose();
       if (event.key === 'ArrowLeft' && fotos.length > 1) goPrev();
       if (event.key === 'ArrowRight' && fotos.length > 1) goNext();
@@ -116,26 +114,18 @@ export function GaleriaCarousel({
       ) : null}
 
       {showConfirmRemover ? (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
-          onClick={() => setShowConfirmRemover(false)}
-        >
-          <div className="w-full max-w-sm" onClick={(event) => event.stopPropagation()}>
-            <ConfirmDialog
-              title="Remover foto"
-              message="Esta foto será removida permanentemente da galeria. Deseja continuar?"
-              confirmLabel="Remover"
-              variant="danger"
-              isPending={isRemoving}
-              onCancel={() => setShowConfirmRemover(false)}
-              onConfirm={() => {
-                onRemover(foto.id);
-                setShowConfirmRemover(false);
-              }}
-            />
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Remover foto"
+          message="Esta foto será removida permanentemente da galeria. Deseja continuar?"
+          confirmLabel="Remover"
+          variant="danger"
+          isPending={isRemoving}
+          onCancel={() => setShowConfirmRemover(false)}
+          onConfirm={() => {
+            onRemover(foto.id);
+            setShowConfirmRemover(false);
+          }}
+        />
       ) : null}
     </div>
   );
@@ -191,7 +181,10 @@ function CarouselPhotoPanel({
             />
           ) : (
             <>
-              <p className="min-w-0 truncate text-base font-medium text-white" title={foto.identificacao}>
+              <p
+                className="min-w-0 truncate text-base font-medium text-white"
+                title={foto.identificacao}
+              >
                 {foto.identificacao}
               </p>
               {foto.principal ? (
@@ -214,7 +207,11 @@ function CarouselPhotoPanel({
                 >
                   <Check size={16} />
                 </CarouselIconButton>
-                <CarouselIconButton label="Cancelar edição" disabled={isSaving} onClick={() => setEditing(false)}>
+                <CarouselIconButton
+                  label="Cancelar edição"
+                  disabled={isSaving}
+                  onClick={() => setEditing(false)}
+                >
                   <X size={16} />
                 </CarouselIconButton>
               </>
@@ -224,7 +221,11 @@ function CarouselPhotoPanel({
                   <Pencil size={16} />
                 </CarouselIconButton>
                 {!foto.principal ? (
-                  <CarouselIconButton label="Definir capa" disabled={isSaving} onClick={onDefinirCapa}>
+                  <CarouselIconButton
+                    label="Definir capa"
+                    disabled={isSaving}
+                    onClick={onDefinirCapa}
+                  >
                     <Star size={16} />
                   </CarouselIconButton>
                 ) : null}

@@ -157,4 +157,44 @@ describe('GaleriaCarousel', () => {
     renderCarousel({ fotos: [], onClose });
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('deve abrir a confirmação de remover como diálogo modal com o foco em Cancelar', async () => {
+    // Arrange
+    const { container } = renderCarousel();
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: /remover foto/i }));
+
+    // Assert
+    const dialogo = within(container).getByRole('dialog', { name: 'Remover foto' });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+    expect(document.activeElement).toBe(within(dialogo).getByRole('button', { name: 'Cancelar' }));
+  });
+
+  it('deve fechar só a confirmação quando Esc é apertado com ela aberta', async () => {
+    // Arrange
+    const onClose = vi.fn();
+    const { container } = renderCarousel({ onClose });
+    await userEvent.click(within(container).getByRole('button', { name: /remover foto/i }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(within(container).queryByRole('dialog', { name: 'Remover foto' })).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve manter a foto atual quando a seta é apertada com a confirmação aberta', async () => {
+    // Arrange
+    const { container } = renderCarousel();
+    await userEvent.click(within(container).getByRole('button', { name: /remover foto/i }));
+
+    // Act
+    await userEvent.keyboard('{ArrowRight}');
+
+    // Assert
+    expect(within(container).getByRole('dialog', { name: /galeria de fotos/i })).toBeDefined();
+    expect(within(container).getByText('1 / 2')).toBeDefined();
+  });
 });

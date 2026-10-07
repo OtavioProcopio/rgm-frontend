@@ -108,28 +108,24 @@ export function UsuariosPage() {
       ) : null}
 
       {selectedForDesativar ? (
-        <div className="mb-4">
-          <ConfirmDialog
-            title="Desativar usuário"
-            message={`Deseja desativar ${selectedForDesativar.nome}? O usuário perderá acesso ao sistema.`}
-            confirmLabel="Desativar"
-            variant="danger"
-            isPending={desativarUsuario.isPending}
-            onCancel={() => setSelectedForDesativar(null)}
-            onConfirm={handleConfirmDesativar}
-          />
-        </div>
+        <ConfirmDialog
+          title="Desativar usuário"
+          message={`Deseja desativar ${selectedForDesativar.nome}? O usuário perderá acesso ao sistema.`}
+          confirmLabel="Desativar"
+          variant="danger"
+          isPending={desativarUsuario.isPending}
+          onCancel={() => setSelectedForDesativar(null)}
+          onConfirm={handleConfirmDesativar}
+        />
       ) : null}
 
       {selectedForDelete ? (
-        <div className="mb-4">
-          <DeleteUsuarioDialog
-            usuario={selectedForDelete}
-            isDeleting={excluirUsuario.isPending}
-            onCancel={() => setSelectedForDelete(null)}
-            onConfirm={handleExcluir}
-          />
-        </div>
+        <DeleteUsuarioDialog
+          usuario={selectedForDelete}
+          isDeleting={excluirUsuario.isPending}
+          onCancel={() => setSelectedForDelete(null)}
+          onConfirm={handleExcluir}
+        />
       ) : null}
 
       {isLoading ? <LoadingState title="Carregando usuários..." /> : null}

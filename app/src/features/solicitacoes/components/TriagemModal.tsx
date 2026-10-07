@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
@@ -72,7 +73,7 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
           ) : (
             <div className="space-y-2">
               {usuarios.map((u) => (
-                <label key={u.id} className="flex cursor-pointer items-center gap-2">
+                <label key={u.id} className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11">
                   <input
                     type="checkbox"
                     value={u.id}
@@ -97,15 +98,14 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
           </p>
           <EvidenciaUploader onUpload={setFoto} />
           {foto ? (
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Anexado: {foto.name}
-            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Anexado: {foto.name}</p>
           ) : null}
           {foto ? (
             <div className="mt-2">
               <Textarea
                 label="Observação (opcional)"
                 placeholder="Detalhe o que precisa ser feito..."
+                maxLength={LIMITES.textoLongo}
                 value={nota}
                 onChange={(e) => setNota(e.target.value)}
               />

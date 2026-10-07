@@ -39,7 +39,7 @@ export function LoginPage() {
   }
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/10 dark:border-slate-700 sm:p-8">
+    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/10 [--foco:var(--color-sky-600)] dark:border-slate-700 sm:p-8">
       <div className="mb-8 text-center">
         <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
         <h1 className="mt-6 text-3xl font-semibold text-slate-950">Rei Auto Parts</h1>

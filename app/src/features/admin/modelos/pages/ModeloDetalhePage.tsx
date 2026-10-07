@@ -112,30 +112,27 @@ export function ModeloDetalhePage() {
           <ErrorState title="Operação não concluída" description={actionError} />
         </div>
       ) : null}
-      {showConfirm ? (
-        <div className="mb-4">
-          {showConfirm === 'desativar' ? (
-            <ConfirmDialog
-              title="Desativar modelo"
-              message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
-              confirmLabel="Desativar"
-              variant="danger"
-              isPending={isMutating}
-              onCancel={() => setShowConfirm(null)}
-              onConfirm={handleConfirmAction}
-            />
-          ) : (
-            <ConfirmDialog
-              title="Ativar modelo"
-              message={`Deseja ativar o modelo ${modelo?.codigo}?`}
-              confirmLabel="Ativar"
-              variant="warning"
-              isPending={isMutating}
-              onCancel={() => setShowConfirm(null)}
-              onConfirm={handleConfirmAction}
-            />
-          )}
-        </div>
+      {showConfirm === 'desativar' ? (
+        <ConfirmDialog
+          title="Desativar modelo"
+          message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+          confirmLabel="Desativar"
+          variant="danger"
+          isPending={isMutating}
+          onCancel={() => setShowConfirm(null)}
+          onConfirm={handleConfirmAction}
+        />
+      ) : null}
+      {showConfirm === 'ativar' ? (
+        <ConfirmDialog
+          title="Ativar modelo"
+          message={`Deseja ativar o modelo ${modelo?.codigo}?`}
+          confirmLabel="Ativar"
+          variant="warning"
+          isPending={isMutating}
+          onCancel={() => setShowConfirm(null)}
+          onConfirm={handleConfirmAction}
+        />
       ) : null}
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
@@ -152,18 +149,12 @@ export function ModeloDetalhePage() {
             </div>
             <p className="mt-3 text-slate-700 dark:text-slate-200">{modelo.descricao}</p>
             <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-              <Detail
-                label="Máquina / Encaixe"
-                value={modelo.maquina}
-              />
+              <Detail label="Máquina / Encaixe" value={modelo.maquina} />
               <Detail
                 label="Tipo do Modelo"
                 value={modelo.tipo ? TIPO_MODELO_LABELS[modelo.tipo] : 'Não definido'}
               />
-              <Detail
-                label="Pendência aberta"
-                value={modelo.temPendenciaAberta ? 'Sim' : 'Não'}
-              />
+              <Detail label="Pendência aberta" value={modelo.temPendenciaAberta ? 'Sim' : 'Não'} />
               <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
               <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
             </dl>
@@ -193,9 +184,12 @@ export function ModeloDetalhePage() {
             <ModeloDashboard solicitacoes={solicitacoesCompletas?.content ?? []} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Eventos do Modelo</h2>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+              Eventos do Modelo
+            </h2>
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções concluídas neste modelo.
+              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções
+              concluídas neste modelo.
             </p>
             <EventosModeloList eventos={eventosData ?? []} />
           </div>
@@ -204,7 +198,8 @@ export function ModeloDetalhePage() {
               Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
             </h2>
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já encerrados) vinculados a este modelo.
+              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já
+              encerrados) vinculados a este modelo.
             </p>
             {solicitacoesPage?.content?.length ? (
               <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
@@ -253,7 +248,9 @@ function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
       <KpiCard
         label="Tempo médio de resolução"
-        value={tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'}
+        value={
+          tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'
+        }
         color="slate"
       />
       <KpiCard
@@ -283,7 +280,8 @@ function calcularMetricasDeTempo(solicitacoes: Solicitacao[]) {
   let somaIntervalos = 0;
   for (let i = 1; i < concluidas.length; i++) {
     somaIntervalos +=
-      (new Date(concluidas[i].criadaEm).getTime() - new Date(concluidas[i - 1].criadaEm).getTime()) /
+      (new Date(concluidas[i].criadaEm).getTime() -
+        new Date(concluidas[i - 1].criadaEm).getTime()) /
       1000;
   }
   const intervaloMedioSegundos = somaIntervalos / (concluidas.length - 1);
@@ -313,9 +311,7 @@ function KpiCard({
     blue: 'text-sky-600 dark:text-sky-400',
   };
   return (
-    <div
-      className={`rounded-md border bg-white p-4 dark:bg-slate-900 ${colorMap[color]}`}
-    >
+    <div className={`rounded-md border bg-white p-4 dark:bg-slate-900 ${colorMap[color]}`}>
       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
       <p className={`mt-1 text-2xl font-bold ${valueColorMap[color]}`}>{value}</p>
     </div>

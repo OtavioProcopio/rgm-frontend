@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { MaquinaForm } from '@/features/admin/maquinas/components/MaquinaForm';
+import { LIMITES } from '@/shared/lib/limites';
 
 afterEach(cleanup);
 
@@ -36,7 +37,23 @@ describe('MaquinaForm', () => {
   });
 
   it('shows a custom submit label', () => {
-    const { container } = render(<MaquinaForm submitLabel="Salvar alterações" onSubmit={vi.fn()} />);
+    const { container } = render(
+      <MaquinaForm submitLabel="Salvar alterações" onSubmit={vi.fn()} />,
+    );
     expect(within(container).getByRole('button', { name: 'Salvar alterações' })).toBeDefined();
+  });
+});
+
+describe('MaquinaForm — limite de texto', () => {
+  it('deve limitar o nome ao tamanho que a API grava', () => {
+    // Arrange
+    const esperado = LIMITES.maquinaNome;
+
+    // Act
+    const { container } = render(<MaquinaForm onSubmit={vi.fn()} />);
+    const campo = within(container).getByLabelText(/nome da máquina/i) as HTMLTextAreaElement;
+
+    // Assert
+    expect(campo.maxLength).toBe(esperado);
   });
 });

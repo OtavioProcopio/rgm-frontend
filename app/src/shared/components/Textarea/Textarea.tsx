@@ -1,15 +1,38 @@
-import { useId, type TextareaHTMLAttributes } from 'react';
+import { useId, useState, type ChangeEvent, type TextareaHTMLAttributes } from 'react';
 
 import { cn } from '@/shared/lib/cn';
+import { caracteresRestantes, mensagemDeRestantes } from '@/shared/lib/limites';
 
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   error?: string;
 };
 
-export function Textarea({ className, error, id, label, ...props }: TextareaProps) {
+export function Textarea({
+  className,
+  error,
+  id,
+  label,
+  maxLength,
+  onChange,
+  value,
+  ...props
+}: TextareaProps) {
   const generatedId = useId();
   const textareaId = id ?? generatedId;
+  // Campo não controlado: o tamanho é acompanhado pela digitação.
+  const [tamanhoDigitado, setTamanhoDigitado] = useState(0);
+  const tamanho = typeof value === 'string' ? value.length : tamanhoDigitado;
+  const restantes = maxLength === undefined ? null : caracteresRestantes(tamanho, maxLength);
+  const descricoes = [
+    error ? `${textareaId}-erro` : null,
+    restantes === null ? null : `${textareaId}-contador`,
+  ].filter(Boolean);
+
+  function aoDigitar(evento: ChangeEvent<HTMLTextAreaElement>) {
+    setTamanhoDigitado(evento.target.value.length);
+    onChange?.(evento);
+  }
 
   return (
     <div className="space-y-2">
@@ -22,7 +45,10 @@ export function Textarea({ className, error, id, label, ...props }: TextareaProp
       <textarea
         id={textareaId}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${textareaId}-erro` : undefined}
+        aria-describedby={descricoes.length > 0 ? descricoes.join(' ') : undefined}
+        maxLength={maxLength}
+        value={value}
+        onChange={aoDigitar}
         className={cn(
           'min-h-[100px] w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-950 outline-none transition-colors placeholder:text-gray-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/40',
           'dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400 dark:focus:ring-sky-400/50',
@@ -37,6 +63,11 @@ export function Textarea({ className, error, id, label, ...props }: TextareaProp
           {error}
         </p>
       ) : null}
+      {restantes === null ? null : (
+        <p id={`${textareaId}-contador`} className="text-xs text-slate-600 dark:text-slate-400">
+          {mensagemDeRestantes(restantes)}
+        </p>
+      )}
     </div>
   );
 }

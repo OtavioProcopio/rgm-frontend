@@ -48,7 +48,7 @@ export function ModeloCard({ modelo, linkBase = '/app/modelos' }: Props) {
         </div>
         <Link
           to={`${linkBase}/${modelo.id}`}
-          className="mt-auto pt-3 text-xs font-medium text-sky-600 transition-colors hover:text-sky-700 hover:underline dark:text-sky-400 dark:hover:text-sky-300"
+          className="mt-auto inline-flex items-end pt-3 text-xs font-medium pointer-coarse:min-h-11 text-sky-600 transition-colors hover:text-sky-700 hover:underline dark:text-sky-400 dark:hover:text-sky-300"
         >
           Ver detalhes →
         </Link>

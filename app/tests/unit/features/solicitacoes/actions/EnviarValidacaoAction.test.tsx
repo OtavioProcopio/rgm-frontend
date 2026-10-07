@@ -33,20 +33,29 @@ vi.mock('@/features/solicitacoes/components/EnviarValidacaoModal', () => ({
   }) => (
     <form aria-label={`Envio de ${solicitacaoId}`}>
       <p>{evidenciaObrigatoria ? 'Evidência obrigatória' : 'Evidência opcional'}</p>
-      <button type="button" onClick={() => onConfirm({ comentario: 'Correia trocada' })}>Confirmar</button>
-      <button type="button" onClick={onCancel}>Fechar</button>
+      <button type="button" onClick={() => onConfirm({ comentario: 'Correia trocada' })}>
+        Confirmar
+      </button>
+      <button type="button" onClick={onCancel}>
+        Fechar
+      </button>
     </form>
   ),
 }));
 
 function montar(tipo: 'REPARO' | 'CRIACAO' = 'REPARO') {
   const onClose = vi.fn();
+  const onCancelar = vi.fn();
   const { QueryWrapper } = createQueryWrapper();
   render(
-    <EnviarValidacaoAction solicitacao={criarSolicitacao({ status: 'EM_ANDAMENTO', tipo })} onClose={onClose} />,
+    <EnviarValidacaoAction
+      solicitacao={criarSolicitacao({ status: 'EM_ANDAMENTO', tipo })}
+      onClose={onClose}
+      onCancelar={onCancelar}
+    />,
     { wrapper: QueryWrapper },
   );
-  return { onClose };
+  return { onClose, onCancelar };
 }
 
 afterEach(() => {
@@ -87,7 +96,10 @@ describe('EnviarValidacaoAction', () => {
 
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa o envio', async () => {
     // Arrange
-    const recusa = new ApiError({ status: 422, message: 'Anexe ao menos uma evidência de serviço.' });
+    const recusa = new ApiError({
+      status: 422,
+      message: 'Anexe ao menos uma evidência de serviço.',
+    });
     enviar.mockRejectedValue(recusa);
     const { onClose } = montar();
 
@@ -99,15 +111,16 @@ describe('EnviarValidacaoAction', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deve fechar sem enviar quando o formulário é cancelado', async () => {
+  it('deve avisar a desistência sem enviar quando o formulário é cancelado', async () => {
     // Arrange
-    const { onClose } = montar();
+    const { onClose, onCancelar } = montar();
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     // Assert
     expect(enviar).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCancelar).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

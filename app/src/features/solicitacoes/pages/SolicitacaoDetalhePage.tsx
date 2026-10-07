@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -15,15 +16,17 @@ import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
 import { useAtividades } from '../hooks/useAtividades';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
-import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
 import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
+import { editarSolicitacaoSchema } from '../schemas/solicitacaoSchema';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { Input } from '@/shared/components/Input/Input';
+import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
@@ -38,8 +41,8 @@ export function SolicitacaoDetalhePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitulo, setEditTitulo] = useState('');
   const [editDescricao, setEditDescricao] = useState('');
-
-  useSolicitacaoEvents();
+  const [errosDaEdicao, setErrosDaEdicao] = useState<{ titulo?: string; descricao?: string }>({});
+  const [confirmandoDescarte, setConfirmandoDescarte] = useState(false);
 
   const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
   const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
@@ -80,7 +83,9 @@ export function SolicitacaoDetalhePage() {
     }
   }
 
-  const isTerminal = solicitacao ? (solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA') : false;
+  const isTerminal = solicitacao
+    ? solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA'
+    : false;
 
   const canEdit =
     solicitacao &&
@@ -93,23 +98,39 @@ export function SolicitacaoDetalhePage() {
   const canAnexarEvidencia =
     !isTerminal &&
     (canManage ||
-      (user?.perfil === 'OPERADOR' && (isResponsavel || solicitacao?.abertaPorUsuarioId === profile?.id)));
+      (user?.perfil === 'OPERADOR' &&
+        (isResponsavel || solicitacao?.abertaPorUsuarioId === profile?.id)));
 
   async function handleSaveEdit() {
-    if (!editTitulo.trim() || !editDescricao.trim()) {
-      setActionError('Título e descrição são obrigatórios.');
+    const validacao = editarSolicitacaoSchema.safeParse({
+      titulo: editTitulo,
+      descricao: editDescricao,
+    });
+    if (!validacao.success) {
+      const erros = validacao.error.flatten().fieldErrors;
+      setErrosDaEdicao({ titulo: erros.titulo?.[0], descricao: erros.descricao?.[0] });
       return;
     }
+    setErrosDaEdicao({});
     setActionError(null);
     try {
-      await editar.mutateAsync({
-        titulo: editTitulo.trim(),
-        descricao: editDescricao.trim(),
-      });
+      await editar.mutateAsync(validacao.data);
       setIsEditing(false);
     } catch (err) {
       setActionError(getSolicitacaoErrorMessage(err));
     }
+  }
+
+  function fecharEdicao() {
+    setConfirmandoDescarte(false);
+    setErrosDaEdicao({});
+    setIsEditing(false);
+  }
+
+  function handleCancelEdit() {
+    const alterada = editTitulo !== solicitacao?.titulo || editDescricao !== solicitacao?.descricao;
+    if (alterada) setConfirmandoDescarte(true);
+    else fecharEdicao();
   }
 
   if (isLoading) return <LoadingState title="Carregando solicitação..." />;
@@ -128,22 +149,21 @@ export function SolicitacaoDetalhePage() {
     <section className="space-y-6">
       <PageHeader
         title={isEditing ? 'Editar solicitação' : solicitacao.titulo}
-        description={isEditing ? 'Atualize o título e a descrição da solicitação.' : `Aberta em ${criadaEm}`}
+        description={
+          isEditing ? 'Atualize o título e a descrição da solicitação.' : `Aberta em ${criadaEm}`
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             {isEditing ? (
               <>
-                <Button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  disabled={editar.isPending}
-                >
+                <Button type="button" onClick={handleSaveEdit} disabled={editar.isPending}>
                   {editar.isPending ? 'Salvando...' : 'Salvar'}
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEdit}
+                  disabled={editar.isPending}
                 >
                   Cancelar
                 </Button>
@@ -162,7 +182,11 @@ export function SolicitacaoDetalhePage() {
                     Editar
                   </Button>
                 )}
-                <Button type="button" variant="secondary" onClick={() => navigate('/app/solicitacoes')}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate('/app/solicitacoes')}
+                >
                   Voltar
                 </Button>
               </>
@@ -180,35 +204,44 @@ export function SolicitacaoDetalhePage() {
             label="Título"
             value={editTitulo}
             onChange={(e) => setEditTitulo(e.target.value)}
+            error={errosDaEdicao.titulo}
+            maxLength={LIMITES.solicitacaoTitulo}
             disabled={editar.isPending}
             required
           />
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Tipo
-            </label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Tipo</label>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {tipoLabel[solicitacao.tipo]}{' '}
               <span className="text-xs">(não pode ser alterado após a abertura)</span>
             </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Descrição
-            </label>
-            <textarea
-              className="flex min-h-[100px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
-              value={editDescricao}
-              onChange={(e) => setEditDescricao(e.target.value)}
-              disabled={editar.isPending}
-              required
-              rows={4}
-            />
-          </div>
+          <Textarea
+            label="Descrição"
+            value={editDescricao}
+            onChange={(e) => setEditDescricao(e.target.value)}
+            error={errosDaEdicao.descricao}
+            maxLength={LIMITES.textoLongo}
+            disabled={editar.isPending}
+            required
+            rows={4}
+          />
         </div>
       ) : (
         <SolicitacaoResumo solicitacao={solicitacao} modelo={modelo} />
       )}
+
+      {confirmandoDescarte ? (
+        <ConfirmDialog
+          title="Descartar alterações?"
+          message="O título e a descrição voltam a ser o que estava salvo."
+          cancelLabel="Continuar editando"
+          confirmLabel="Descartar"
+          variant="warning"
+          onCancel={() => setConfirmandoDescarte(false)}
+          onConfirm={fecharEdicao}
+        />
+      ) : null}
 
       <SolicitacaoAcoes solicitacao={solicitacao} />
 

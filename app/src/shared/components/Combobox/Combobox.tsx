@@ -107,6 +107,7 @@ export function Combobox({
           {value ? (
             <button
               type="button"
+              aria-label="Limpar seleção"
               onClick={(e) => {
                 e.stopPropagation();
                 onChange('');
@@ -120,6 +121,8 @@ export function Combobox({
           ) : null}
           <button
             type="button"
+            aria-label={isOpen ? 'Ocultar opções' : 'Mostrar opções'}
+            aria-expanded={isOpen}
             onClick={() => setIsOpen((prev) => !prev)}
             className="inline-flex items-center justify-center p-1 rounded-full text-slate-400 pointer-coarse:min-h-11 pointer-coarse:min-w-11 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
           >
@@ -150,7 +153,7 @@ export function Combobox({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    'w-full px-4 py-2 text-left text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-900',
+                    'w-full px-4 py-2 text-left text-sm transition-colors pointer-coarse:min-h-11 hover:bg-slate-50 dark:hover:bg-slate-900',
                     'flex flex-col gap-0.5 border-b border-slate-100/50 last:border-0 dark:border-slate-900/50',
                     isSelected && 'bg-slate-100 font-semibold text-slate-900 dark:bg-slate-900 dark:text-white'
                   )}

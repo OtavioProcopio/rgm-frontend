@@ -16,8 +16,14 @@ import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { Combobox } from '@/shared/components/Combobox/Combobox';
 import { AvisoFotoNaoEnviada } from '@/features/evidencias/components/AvisoFotoNaoEnviada';
 import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
-import { nomesDosTipos, TAMANHO_MAXIMO_MB, TIPOS_DE_IMAGEM, validarArquivo } from '@/shared/lib/arquivoPermitido';
+import {
+  nomesDosTipos,
+  TAMANHO_MAXIMO_MB,
+  TIPOS_DE_IMAGEM,
+  validarArquivo,
+} from '@/shared/lib/arquivoPermitido';
 import { canAbrirSolicitacaoCriacao } from '@/shared/lib/permissions';
+import { LIMITES } from '@/shared/lib/limites';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
 import { acaoFeitaSemFoto, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
@@ -84,11 +90,12 @@ export function NovaSolicitacaoPage() {
     ativo: true,
   });
 
-  const modeloOptions = modelosPage?.content.map((m) => ({
-    value: m.id,
-    label: `${m.codigo} - ${m.descricao}`,
-    subLabel: m.maquina,
-  })) ?? [];
+  const modeloOptions =
+    modelosPage?.content.map((m) => ({
+      value: m.id,
+      label: `${m.codigo} - ${m.descricao}`,
+      subLabel: m.maquina,
+    })) ?? [];
 
   const { options: maquinaOptions, isLoading: isLoadingMaquinas } = useMaquinaOptions();
 
@@ -197,17 +204,19 @@ export function NovaSolicitacaoPage() {
           placeholder="Descreva brevemente o problema"
           error={errors.titulo?.message}
           disabled={isPending}
+          maxLength={LIMITES.solicitacaoTitulo}
           {...register('titulo')}
         />
-        
+
         <Textarea
           label="Descrição"
           placeholder="Detalhe o problema encontrado..."
           error={errors.descricao?.message}
           disabled={isPending}
+          maxLength={LIMITES.textoLongo}
           {...register('descricao')}
         />
-        
+
         <Select
           label="Tipo"
           options={tipoOptions}
@@ -216,18 +225,19 @@ export function NovaSolicitacaoPage() {
           disabled={isPending}
           {...register('tipo')}
         />
-        
+
         {isCriacao ? (
           <div className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              O modelo ainda não existe — ele será criado automaticamente quando esta
-              solicitação for concluída, com os dados abaixo.
+              O modelo ainda não existe — ele será criado automaticamente quando esta solicitação
+              for concluída, com os dados abaixo.
             </p>
             <Input
               label="Código do modelo"
               placeholder="Ex.: MOD-042"
               error={errors.modeloCodigo?.message}
               disabled={isPending}
+              maxLength={LIMITES.modeloPretendidoCodigo}
               {...register('modeloCodigo')}
             />
             <Select
@@ -243,6 +253,7 @@ export function NovaSolicitacaoPage() {
               placeholder="Detalhes adicionais sobre o modelo pretendido..."
               error={errors.modeloObservacoes?.message}
               disabled={isPending}
+              maxLength={LIMITES.textoLongo}
               {...register('modeloObservacoes')}
             />
           </div>
@@ -253,7 +264,11 @@ export function NovaSolicitacaoPage() {
             render={({ field }) => (
               <Combobox
                 label="Modelo"
-                placeholder={isLoadingModelos ? 'Carregando modelos...' : 'Selecione ou digite para filtrar o modelo...'}
+                placeholder={
+                  isLoadingModelos
+                    ? 'Carregando modelos...'
+                    : 'Selecione ou digite para filtrar o modelo...'
+                }
                 options={modeloOptions}
                 value={field.value ?? ''}
                 onChange={field.onChange}
@@ -268,7 +283,7 @@ export function NovaSolicitacaoPage() {
           <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">
             Foto do problema (Opcional)
           </span>
-          
+
           <input
             ref={fileInputRef}
             type="file"
@@ -339,10 +354,7 @@ export function NovaSolicitacaoPage() {
           >
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending}
-          >
+          <Button type="submit" disabled={isPending}>
             {isPending ? 'Enviando...' : 'Abrir solicitação'}
           </Button>
         </div>

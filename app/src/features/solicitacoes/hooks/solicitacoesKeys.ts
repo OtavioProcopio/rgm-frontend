@@ -9,6 +9,8 @@ export const solicitacoesKeys = {
   atividades: (id: string) => [...solicitacoesKeys.detail(id), 'atividades'] as const,
   /** Marca local, sem consulta: conta os eventos de mudança recebidos para a solicitação. */
   atualizacao: (id: string) => [...solicitacoesKeys.all, 'atualizacao', id] as const,
+  /** Estado local, sem consulta: se a conexão de tempo real está aberta e desde quando. */
+  conexao: () => [...solicitacoesKeys.all, 'conexao'] as const,
   metricasPorModelo: (filters: MetricasPorModeloFilters) =>
     [...solicitacoesKeys.all, 'metricas-por-modelo', filters] as const,
 };
