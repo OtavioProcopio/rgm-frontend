@@ -6,6 +6,10 @@
 Origem: OtavioProcopio/rgm-frontend#114 (prioridade alta). É pré-requisito de
 OtavioProcopio/rgm-backend#89, que vai limitar o tamanho máximo de página na API.
 
+Escrita em 2026-10-05 e ainda não implementada (sem plano nem tarefas). Revista em
+2026-10-07 contra o código de `develop`; o que mudou está na seção
+**Adequação de 2026-10-07**, no fim.
+
 ## Problema
 
 Várias telas pedem "tudo de uma vez" à API, com um tamanho de página alto:
@@ -18,6 +22,8 @@ Várias telas pedem "tudo de uma vez" à API, com um tamanho de página alto:
 - o painel de modelos busca todos os modelos (tamanho de página igual ao total) para contar
   pendências e modelos por máquina;
 - a ficha do modelo busca todas as solicitações dele para montar o mini-painel.
+
+Conferido de novo em 2026-10-07: as sete buscas continuam como descrito.
 
 Com pouco volume funciona. Conforme os dados crescem, a tela fica lenta e, pior, o que passa
 do limite **some sem aviso**: um card além do 200º não aparece no quadro, um modelo além do
@@ -36,6 +42,10 @@ item, carregando mais ou buscando, e sabe quando há mais do que está vendo.
 - Rolagem infinita automática; carregar mais é uma ação do usuário.
 - Mudar os indicadores do painel além de como são contados.
 - O limite de tamanho de página no backend (OtavioProcopio/rgm-backend#89).
+- O texto do quadro vazio do operador e a marca de relação no card (especificação 009,
+  OtavioProcopio/rgm-frontend#122). Esta feature só mantém os dois funcionando com a
+  carga por coluna (RF-16).
+- Redesenho do card, do detalhe e dos estados de carregamento (#126, #129, #130).
 
 ## Personas e cenários de uso
 
@@ -63,6 +73,8 @@ item, carregando mais ou buscando, e sabe quando há mais do que está vendo.
 | RF-13 | O painel de modelos deve receber da API as contagens (total, ativos, inativos, com pendência aberta e por máquina), sem trazer a lista de modelos | obrigatório |
 | RF-14 | O mini-painel da ficha do modelo deve receber da API o resumo das solicitações do modelo (total, abertas, concluídas, tempo médio de resolução e intervalo médio entre solicitações), sem trazer a lista de solicitações | obrigatório |
 | RF-12 | Uma ação sobre um card, ou um evento de tempo real, deve atualizar as colunas afetadas mantendo os blocos já carregados | obrigatório |
+| RF-15 | Quando a conexão de tempo real volta depois de uma queda, o quadro deve se atualizar mantendo, em cada coluna, a quantidade de blocos já carregada (acrescentado em 2026-10-07; a atualização na reconexão veio da especificação 007) | obrigatório |
+| RF-16 | O quadro vazio do operador (especificação 009) deve aparecer quando o total de todas as colunas for zero, e não enquanto alguma coluna ainda estiver carregando (acrescentado em 2026-10-07) | obrigatório |
 
 ## Requisitos não funcionais
 
@@ -71,6 +83,8 @@ item, carregando mais ou buscando, e sabe quando há mais do que está vendo.
 | RNF-01 | Carga inicial do quadro | no máximo 5 requisições de listagem (uma por coluna), cada uma com 20 itens |
 | RNF-02 | Busca de modelo | a busca só é disparada 300 ms depois da última tecla |
 | RNF-03 | Tamanho de página | maior `size` enviado à API em todo o código de produção: 100 |
+| RNF-04 | Área de toque e foco dos controles novos ("Carregar mais", paginação da aba pessoal, seletor de modelo) | no mínimo 44 px em cada dimensão em 390 px de largura, e contorno de foco com contraste de 3:1 nos dois temas (critério das especificações 006 e 007; acrescentado em 2026-10-07) |
+| RNF-05 | Cobertura | no mínimo 95% de linha em cada arquivo alterado (acrescentado em 2026-10-07) |
 
 ## Critérios de aceite
 
@@ -130,6 +144,24 @@ Funcionalidade: Paginação real nas listas
     Quando envio um deles para validação
     Então a coluna "Em Andamento" mostra 39 cards
     E o card aparece em "Em Validação"
+
+  Cenário: Reconexão mantém o que foi carregado
+    Dado que a coluna "Em Andamento" mostra 40 cards
+    E a conexão de tempo real caiu
+    Quando a conexão volta
+    Então a coluna "Em Andamento" continua mostrando 40 cards, já atualizados
+
+  Cenário: Quadro vazio do operador só depois de carregar
+    Dado que sou operador e não abri nem recebi nenhuma solicitação
+    Quando abro o quadro
+    Então vejo o quadro vazio do operador depois que todas as colunas responderam
+    Mas não o vejo enquanto alguma coluna ainda carrega
+
+  Cenário: Operador com solicitação em uma coluna só
+    Dado que sou operador e tenho 1 solicitação em "A Fazer" e nenhuma nas outras colunas
+    Quando abro o quadro
+    Então vejo as cinco colunas
+    Mas não vejo o quadro vazio do operador
 ```
 
 ## Ambiguidades
@@ -164,6 +196,38 @@ Nenhuma em aberto. Decisões registradas em 2026-10-05:
   nome fica para uma issue de backend.
 - **Tamanho dos blocos:** 20 no quadro (issue); 10 na aba pessoal e 20 opções no seletor,
   definidos aqui por serem listas curtas de consulta.
+
+## Adequação de 2026-10-07
+
+A especificação ficou parada enquanto as features 006, 007 e 008 e três PRs do backend eram
+entregues. O que mudou em volta dela:
+
+- **Contrato com o backend, entregue.** As quatro adições de que esta feature depende estão
+  em `develop` do backend desde 2026-10-06 (OtavioProcopio/rgm-backend#95, especificação 007
+  de lá): filtro `emAberto` na listagem de solicitações e no relatório; data de cancelamento
+  considerada no filtro por data de encerramento; resumo de modelos; resumo das solicitações
+  de um modelo. Elas saíram num PR próprio, antes da rgm-backend#89, e não junto com ela
+  como as decisões de 2026-10-05 previam. A rgm-backend#89 continua aberta, esperando este
+  frontend.
+- **Ordem de publicação, mantida.** Nenhuma dessas adições existe na v1.5.0 em produção. O
+  backend vai ao ar antes, na v1.6.0.
+- **Visibilidade do operador.** Desde OtavioProcopio/rgm-backend#112 o operador recebe as
+  solicitações que abriu, além das atribuídas. Nada muda nos requisitos daqui: "abertas por
+  mim" (RF-07) passa a ter mais itens, o que reforça a paginação. A especificação 009 troca
+  o texto do quadro vazio do operador e marca a relação no card; daí o RF-16.
+- **Tempo real que se recupera** (especificação 007). A aplicação agora busca tudo de novo
+  quando a conexão volta. Com colunas carregadas em blocos, isso não pode devolver cada
+  coluna ao primeiro bloco; daí o RF-15.
+- **Toque e foco** (especificações 006 e 007). O critério de 44 px e de foco visível vale
+  para a aplicação inteira; os controles que esta feature cria entram nele (RNF-04).
+- **Testes** (especificação 008). Os testes desta feature nascem em `app/tests/unit`, no
+  caminho espelhado, e os roteiros de ponta a ponta em `app/tests/e2e`.
+- **Diálogos** (especificações 006 e 007). As ações do card abrem no diálogo modal; o RF-12
+  vale para a ação confirmada nele.
+
+Pendente para seguir: o checklist de requisitos ainda não foi revisto; faltam `/bu:plan`,
+`/bu:checklist`, `/bu:tasks` e `/bu:analyze`. RF-15, RF-16, RNF-04 e RNF-05 foram
+acrescentados nesta revisão e precisam do aceite do usuário.
 
 ## Métricas de sucesso
 
