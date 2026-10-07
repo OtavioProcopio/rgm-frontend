@@ -47,7 +47,7 @@ testado tem em `app/src`.
 
 - [x] T022 Roteiro de medição com API simulada: trocar a senha, executar 10 ações sem ir à tela de entrada (RNF-01) e medir o tempo até a conexão de tempo real reabrir (RNF-02); registrar o resultado na convergência
 - [x] T023 Conferir `openspec/specs/` e acrescentar a linha desta feature à tabela de `openspec/README.md` se algum comportamento descrito lá mudou
-- [x] T024 Cobertura por arquivo alterado em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
+- [x] T024 Cobertura por arquivo alterado em 95% ou mais (`make coverage`) e `package.json` sem dependência nova. **Medido só em 3 dos 11 arquivos de produção** (`credenciaisDaTroca.ts`, `relacaoDoOperador.ts` e `EmptyState.tsx`, os três em 100%): os outros 8 são hooks, componentes de feature, páginas, provedor e arquivo de API, que `app/vitest.config.ts` exclui da medição desde antes desta feature. Eles têm teste espelhado, mas sem número de cobertura
 - [x] T025 `make validate` verde
 
 ## Rastreabilidade

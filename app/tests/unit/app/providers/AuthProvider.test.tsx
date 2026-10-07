@@ -61,7 +61,7 @@ describe('AuthProvider — renovarCredenciais', () => {
     expect(result.current.versaoDaSessao).toBe(2);
   });
 
-  it('deve manter o usuário autenticado quando as credenciais são renovadas', () => {
+  it('deve manter os dados do usuário da sessão quando as credenciais são renovadas', () => {
     // Arrange
     authToken.setTokens('acesso-antigo', 'renovacao-antiga');
     authToken.setUser({ nome: 'Ana', perfil: 'OPERADOR' });

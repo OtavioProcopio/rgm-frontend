@@ -1,4 +1,6 @@
-export type PerfilUsuario = 'OPERADOR' | 'GESTOR' | 'ADMINISTRADOR' | 'EXTERNO';
+import type { Usuario } from '@/features/admin/usuarios/types/usuarioTypes';
+
+export type PerfilUsuario ='OPERADOR' | 'GESTOR' | 'ADMINISTRADOR' | 'EXTERNO';
 
 export type LoginRequest = {
   email: string;
@@ -31,14 +33,7 @@ export type Credenciais = {
  * Resposta da troca da própria senha: os dados do usuário e, a partir do backend que invalida
  * as sessões na troca, as credenciais novas da sessão que trocou.
  */
-export type SenhaAlteradaResponse = {
-  id: string;
-  nome: string;
-  email: string | null;
-  perfil: PerfilUsuario;
-  ativo: boolean;
-  criadoEm: string;
-  atualizadoEm: string;
+export type SenhaAlteradaResponse = Usuario & {
   token?: string | null;
   refreshToken?: string | null;
 };

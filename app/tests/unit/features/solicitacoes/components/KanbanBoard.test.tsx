@@ -338,11 +338,21 @@ describe('KanbanBoard — quadro do operador', () => {
 
       // Assert
       expect(within(container).getByText('Nenhuma solicitação para este filtro')).toBeDefined();
-      expect(
-        within(container).queryByText('Você ainda não abriu nem recebeu solicitações'),
-      ).toBeNull();
     },
   );
+
+  it('deve não usar o texto de quem não tem nenhuma solicitação quando o filtro é que não encontra', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(OPERADOR, { modeloId: 'm-9' });
+
+    // Assert
+    expect(
+      within(container).queryByText('Você ainda não abriu nem recebeu solicitações'),
+    ).toBeNull();
+  });
 
   it('deve pedir para limpar o filtro uma vez quando "Limpar filtro" é acionado', async () => {
     // Arrange
@@ -403,7 +413,7 @@ describe('KanbanBoard — quadro do operador', () => {
     expect(within(container).getAllByTestId('relacao-s1')[0].textContent).toBe('não calculada');
   });
 
-  it('deve mostrar as colunas, e não o quadro vazio do operador, quando o gestor não tem solicitações', async () => {
+  it('deve mostrar as colunas quando o gestor não tem solicitações', async () => {
     // Arrange
     await quadroCom([]);
 
@@ -412,6 +422,16 @@ describe('KanbanBoard — quadro do operador', () => {
 
     // Assert
     expect(within(container).getAllByText('Soltar em A Fazer').length).toBeGreaterThan(0);
+  });
+
+  it('deve não mostrar o quadro vazio do operador quando o gestor não tem solicitações', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(GESTOR);
+
+    // Assert
     expect(
       within(container).queryByText('Você ainda não abriu nem recebeu solicitações'),
     ).toBeNull();

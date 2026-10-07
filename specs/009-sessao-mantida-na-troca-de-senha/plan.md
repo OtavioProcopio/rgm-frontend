@@ -123,7 +123,7 @@ Nenhum. Sem alvo novo no `Makefile`, sem serviço novo, sem variável de ambient
 | Risco | Probabilidade | Mitigação |
 |---|---|---|
 | A API derruba a conexão antes de a resposta chegar; o navegador tenta reconectar sozinho com a credencial antiga e recebe 401 | média | o efeito refeito fecha essa conexão e abre outra; o temporizador de reconexão pendente é cancelado na limpeza do efeito, que já existe. Teste cobre a ordem "queda, depois versão nova" |
-| Refazer o efeito zera o contador de aberturas, e a primeira abertura depois da troca não atualiza as listas | baixa | o intervalo sem conexão é de milissegundos; se a medição mostrar perda, o contador sai do efeito |
+| Refazer o efeito zeraria o contador de aberturas, e a primeira abertura depois da troca não atualizaria as listas | eliminado | apontado pela revisão em 2026-10-07: o contador saiu do efeito, e a conexão reaberta pela troca atualiza listas, detalhes e evidências como qualquer reconexão |
 | Publicar este frontend com backend v1.5.0: o quadro vazio do operador diria "não abriu nem recebeu" a quem abriu e não vê | baixa | RNF-05: backend antes, na v1.6.0; nota no PR |
 | `usePerfil` ainda carregando quando o quadro desenha: card sem marca por um instante | alta, sem impacto | sem id a função devolve `null`; a marca aparece quando o perfil chega |
 | Teste novo do provedor mexe em `window.location` | baixa | o teste cobre só `renovarCredenciais` e `versaoDaSessao`; login e saída não são tocados |

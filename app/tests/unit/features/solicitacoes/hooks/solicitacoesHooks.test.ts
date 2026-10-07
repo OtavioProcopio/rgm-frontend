@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 
+import { solicitacoesApi } from '@/features/solicitacoes/api/solicitacoesApi';
 import { solicitacoesKeys } from '@/features/solicitacoes/hooks/solicitacoesKeys';
 import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolicitacao';
 import { useAtividades } from '@/features/solicitacoes/hooks/useAtividades';
@@ -163,14 +164,25 @@ describe('useAbrirSolicitacao', () => {
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
   });
 
-  it('deve usar para o quadro uma consulta que pertence às listas atualizadas na abertura', () => {
+  it('deve buscar de novo as solicitações do quadro quando uma solicitação é aberta', async () => {
     // Arrange
-    const chaveDoQuadro = solicitacoesKeys.list({ page: 0, size: 200 });
+    const { QueryWrapper } = createQueryWrapper();
+    const { result } = renderHook(
+      () => ({ quadro: useKanbanSolicitacoes(), abrir: useAbrirSolicitacao() }),
+      { wrapper: QueryWrapper },
+    );
+    await waitFor(() => expect(result.current.quadro.isSuccess).toBe(true));
+    const buscasAntes = vi.mocked(solicitacoesApi.listar).mock.calls.length;
+    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
 
     // Act
-    const prefixo = chaveDoQuadro.slice(0, solicitacoesKeys.lists().length);
+    await result.current.abrir.mutateAsync(
+      nova as Parameters<typeof result.current.abrir.mutateAsync>[0],
+    );
 
     // Assert
-    expect(prefixo).toEqual(solicitacoesKeys.lists());
+    await waitFor(() =>
+      expect(vi.mocked(solicitacoesApi.listar).mock.calls.length).toBe(buscasAntes + 1),
+    );
   });
 });

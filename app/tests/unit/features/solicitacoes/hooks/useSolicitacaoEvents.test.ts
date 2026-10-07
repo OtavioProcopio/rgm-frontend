@@ -494,7 +494,8 @@ describe('useSolicitacaoEvents — troca de credenciais', () => {
     const { rerender } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
     const antiga = MockEventSource.instances[0];
     antiga.emit('open');
-    return { queryClient, rerender, antiga };
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    return { queryClient, rerender, antiga, invalidar };
   }
 
   function trocarCredenciais(rerender: () => void) {
@@ -583,6 +584,33 @@ describe('useSolicitacaoEvents — troca de credenciais', () => {
 
     // Assert
     expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toMatchObject({ aberta: true });
+  });
+
+  it.each([
+    ['as listas', () => solicitacoesKeys.lists()],
+    ['os detalhes e os históricos', () => solicitacoesKeys.details()],
+    ['as evidências', () => evidenciasKeys.all],
+  ])('deve atualizar %s quando a conexão nova abre depois da troca', (_nome, chave) => {
+    // Arrange
+    const { rerender, invalidar } = conectar();
+    trocarCredenciais(rerender);
+
+    // Act
+    MockEventSource.instances[1].emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: chave() });
+  });
+
+  it('deve não atualizar nenhuma consulta antes de a conexão nova abrir', () => {
+    // Arrange
+    const { rerender, invalidar } = conectar();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(invalidar).not.toHaveBeenCalled();
   });
 
   it('deve deixar a conexão sem estado de queda entre fechar a antiga e abrir a nova', () => {

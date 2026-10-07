@@ -334,22 +334,26 @@ describe('KanbanCard — relação do operador', () => {
     );
   }
 
-  it('deve mostrar "Aberta por você", sem "Atribuída a você", quando o operador abriu a solicitação', () => {
+  it.each([
+    ['ABERTA', 'Aberta por você'],
+    ['ATRIBUIDA', 'Atribuída a você'],
+  ] as const)('deve mostrar, com a relação %s, a marca "%s"', (relacao, marca) => {
     // Act
-    const { container } = render(cardComRelacao('ABERTA'));
+    const { container } = render(cardComRelacao(relacao));
 
     // Assert
-    expect(within(container).getByText('Aberta por você')).toBeDefined();
-    expect(within(container).queryByText('Atribuída a você')).toBeNull();
+    expect(within(container).getByText(marca)).toBeDefined();
   });
 
-  it('deve mostrar "Atribuída a você", sem "Aberta por você", quando a solicitação está com o operador', () => {
+  it.each([
+    ['ABERTA', 'Atribuída a você'],
+    ['ATRIBUIDA', 'Aberta por você'],
+  ] as const)('deve não mostrar, com a relação %s, a marca "%s"', (relacao, marca) => {
     // Act
-    const { container } = render(cardComRelacao('ATRIBUIDA'));
+    const { container } = render(cardComRelacao(relacao));
 
     // Assert
-    expect(within(container).getByText('Atribuída a você')).toBeDefined();
-    expect(within(container).queryByText('Aberta por você')).toBeNull();
+    expect(within(container).queryByText(marca)).toBeNull();
   });
 
   it.each([[undefined], [null]])(
@@ -359,8 +363,7 @@ describe('KanbanCard — relação do operador', () => {
       const { container } = render(cardComRelacao(relacao));
 
       // Assert
-      expect(within(container).queryByText('Aberta por você')).toBeNull();
-      expect(within(container).queryByText('Atribuída a você')).toBeNull();
+      expect(within(container).queryByText(/por você|a você/)).toBeNull();
     },
   );
 });
