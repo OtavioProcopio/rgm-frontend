@@ -1,4 +1,4 @@
 {
-  "active": "specs/005-paginacao-real-nas-listas",
-  "title": "Paginação real nas listas"
+  "active": "specs/010-sistema-de-design-e-tema-tokens",
+  "title": "Sistema de design e tema: tokens de cor semânticos, componentes base e tema que segue o sistema"
 }
