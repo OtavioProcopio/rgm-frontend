@@ -70,7 +70,7 @@ passam a falar um vocabulário visual só, legível no claro e no escuro.
 - Mudar a cor da marca ou criar identidade nova: o azul atual continua sendo a cor de
   destaque.
 - Tipografia, espaçamento, raios e sombras como tokens: esta especificação trata de cor.
-- Redesenhar o logo. [NECESSITA ESCLARECIMENTO: ver Ambiguidades, item 2]
+- Redesenhar o logo ou criar uma versão dele para fundo escuro.
 - Tema por usuário guardado no servidor: a escolha continua guardada no navegador.
 - Tabelas com ordenação, filtro ou paginação novas: a peça de tabela só unifica a aparência.
 - Trocar os rótulos dos valores da API por outros textos: o dicionário reúne os que já
@@ -93,7 +93,7 @@ passam a falar um vocabulário visual só, legível no claro e no escuro.
 |---|---|---|
 | RF-01 | A interface deve ter um conjunto único de cores por papel, definido uma vez para o tema claro e uma vez para o escuro: fundo da aplicação, superfície, superfície elevada, borda, texto, texto secundário, destaque (marca), perigo, alerta, sucesso e informação | obrigatório |
 | RF-02 | As peças base compartilhadas (botão, campo de texto, área de texto, seletor, seletor com busca, diálogo, confirmação, paginação, cabeçalho de página e os estados de carregamento, vazio e erro) devem usar somente as cores por papel | obrigatório |
-| RF-03 | [NECESSITA ESCLARECIMENTO: as telas e os componentes de cada área (as 16 telas, 76 arquivos) passam todos para as cores por papel nesta entrega, ou só as peças base e as telas mais usadas, ficando o resto para as próximas especificações visuais? A issue #116 diz "migrar os componentes aos poucos"; o pedido foi "especificação completa".] | obrigatório |
+| RF-03 | Todas as 16 telas e todos os componentes de cada área devem usar somente as cores por papel: nenhuma cor é escrita direto numa tela | obrigatório |
 | RF-04 | Trocar o valor de uma cor por papel deve mudar essa cor em todos os lugares que a usam, nos dois temas, sem editar tela nenhuma | obrigatório |
 
 ### Peças base
@@ -114,10 +114,10 @@ passam a falar um vocabulário visual só, legível no claro e no escuro.
 | RF-11 | Na primeira visita, sem escolha guardada, a opção deve ser Sistema: a aplicação usa o tema claro ou escuro conforme a preferência do sistema do usuário | obrigatório |
 | RF-12 | Com a opção Sistema, quando o usuário muda a preferência do sistema com a aplicação aberta, a aplicação deve acompanhar sem recarregar | obrigatório |
 | RF-13 | A opção escolhida deve valer nas visitas seguintes, no mesmo navegador | obrigatório |
-| RF-14 | [NECESSITA ESCLARECIMENTO: quem já usou a aplicação tem "escuro" guardado, mas porque a aplicação forçou, não porque escolheu. Na primeira visita depois desta entrega, esses usuários continuam no escuro ou passam para Sistema?] | obrigatório |
-| RF-15 | O controle de tema deve dizer qual das três opções está ativa e permitir trocar por teclado e por leitor de tela. [NECESSITA ESCLARECIMENTO: onde fica e como é o controle? Hoje é um botão de dois estados no cabeçalho e na tela de entrada.] | obrigatório |
+| RF-14 | Quem já usou a aplicação e tem "escuro" guardado deve passar para a opção Sistema, uma única vez, na primeira visita depois desta entrega, porque o escuro foi imposto e não escolhido; quem tem "claro" guardado escolheu, e continua no claro | obrigatório |
+| RF-15 | O controle de tema deve ser um botão no cabeçalho e na tela de entrada, onde está hoje, que abre um menu com as três opções e marca a ativa; deve funcionar por teclado e por leitor de tela, e o menu fecha com Esc e ao escolher | obrigatório |
 | RF-16 | O tema deve estar aplicado antes de a primeira tela aparecer: o usuário não vê a tela no tema errado e depois a troca | obrigatório |
-| RF-17 | O logo deve ser legível nos dois temas, na barra lateral e na tela de entrada. [NECESSITA ESCLARECIMENTO: ver Ambiguidades, item 2] | obrigatório |
+| RF-17 | O logo deve ser legível nos dois temas, na barra lateral e na tela de entrada: no tema escuro, o logo atual fica sobre uma placa clara | obrigatório |
 | RF-18 | A tela de entrada deve seguir o tema escolhido: cartão, campos e textos no tema claro quando o tema é claro e no escuro quando é escuro | obrigatório |
 | RF-19 | A cor da barra do navegador no celular deve acompanhar o tema em uso | desejável |
 
@@ -127,7 +127,7 @@ passam a falar um vocabulário visual só, legível no claro e no escuro.
 |---|---|---|
 | RF-20 | Os cabeçalhos das colunas do quadro devem ser neutros, com a etapa identificada pelo nome e por um ponto de cor; as abas das colunas no celular seguem a mesma regra | obrigatório |
 | RF-21 | Prioridade e prazo (atrasada, perto de vencer, no prazo) devem continuar com cor própria, e devem ser os elementos de maior destaque de cor no card | obrigatório |
-| RF-22 | [NECESSITA ESCLARECIMENTO: além de prioridade e prazo, o que mais mantém cor própria? Hoje o tipo da solicitação (Reparo laranja, Inspeção azul, Reengenharia violeta, Criação verde) e o status também têm cores. A issue #128 diz "cor reservada para significado: prioridade e atraso".] | obrigatório |
+| RF-22 | Além de prioridade e prazo, só o status mantém cor própria, pelos papéis: concluída é sucesso, cancelada é perigo, em validação é alerta, em andamento é informação e a fazer é neutro. O tipo da solicitação passa a selo neutro com ícone e texto. Os indicadores do painel ficam neutros, com cor só no ícone | obrigatório |
 | RF-23 | Nenhuma informação deve ser transmitida só por cor: todo elemento colorido que informa algo tem também texto ou ícone | obrigatório |
 
 ## Requisitos não funcionais
@@ -136,11 +136,11 @@ passam a falar um vocabulário visual só, legível no claro e no escuro.
 |---|---|---|
 | RNF-01 | Contraste de texto | no mínimo 4,5:1 para texto normal e 3:1 para texto grande (a partir de 24 px, ou 18,66 px em negrito), em 100% dos textos das 16 telas, nos dois temas |
 | RNF-02 | Contraste de borda de campo, de ícone que informa e do contorno de foco | no mínimo 3:1 contra o fundo vizinho, nas 16 telas, nos dois temas |
-| RNF-03 | Cores escritas fora do conjunto por papel | 0 usos nos arquivos cobertos por RF-02 e pelo que RF-03 decidir; a contagem de 2026-10-07 é 1.594 em 76 arquivos |
-| RNF-04 | Guarda contra regressão | 1 verificação automática que falha quando uma cor fora do conjunto por papel aparece nos arquivos já migrados |
+| RNF-03 | Cores escritas fora do conjunto por papel | 0 usos em todo o código de produção; a contagem de 2026-10-07 é 1.594 em 76 arquivos |
+| RNF-04 | Guarda contra regressão | 1 verificação automática que falha quando uma cor fora do conjunto por papel aparece em qualquer arquivo de produção |
 | RNF-05 | Uma definição por papel | 1 valor por papel e por tema; 0 papéis definidos em mais de um lugar |
 | RNF-06 | Um rótulo por valor da API | 1 definição para cada valor dos sete conjuntos de RF-09 |
-| RNF-07 | Disposição preservada | 0 controles com mudança de posição ou de tamanho maior que 2 px, comparando antes e depois, nas 16 telas, em 1440 px e em 390 px, exceto os elementos de RF-15, RF-17, RF-18 e RF-20 |
+| RNF-07 | Disposição preservada | 0 controles com mudança de posição ou de tamanho maior que 2 px, comparando antes e depois, nas 16 telas, em 1440 px e em 390 px, exceto os elementos de RF-15, RF-17, RF-18, RF-20 e RF-22 |
 | RNF-08 | Área de toque e foco | 0 controles com menos de 44 px em 390 px com toque; contorno de foco visível em todo controle (critério das especificações 006 e 007 mantido) |
 | RNF-09 | Tema sem piscar | 0 quadros com o tema errado no carregamento, medido em 5 carregamentos por tema |
 | RNF-10 | Troca de tema | a tela inteira muda em até 200 ms depois da escolha, sem recarregar |
@@ -325,24 +325,94 @@ Funcionalidade: Sistema de design e tema
     Dado um card sem prioridade, no tema claro
     Quando olho o texto "Sem prioridade"
     Então o contraste dele contra o fundo do card é de no mínimo 4,5:1
-```
 
-Os cenários de RF-03, RF-14 e RF-22 entram depois do esclarecimento.
+  # Respostas do esclarecimento
+
+  Cenário: Nenhuma tela escreve cor
+    Dado todo o código de produção da interface
+    Quando a verificação de cores é executada
+    Então ela não encontra nenhuma cor fora do conjunto por papel
+
+  Cenário: Cor nova fora do conjunto é barrada
+    Dado uma tela que passa a usar uma cor escrita direto
+    Quando a verificação de cores é executada
+    Então ela falha e aponta o arquivo
+
+  Cenário: Quem tinha o escuro imposto passa para Sistema
+    Dado que usei a aplicação antes desta entrega e tenho "escuro" guardado
+    E o meu sistema está em modo claro
+    Quando abro a aplicação pela primeira vez depois da entrega
+    Então vejo o tema claro
+    E a opção de tema ativa é "Sistema"
+
+  Cenário: A passagem para Sistema acontece uma vez só
+    Dado que passei para "Sistema" na primeira visita depois da entrega
+    E depois escolhi o tema "Escuro"
+    Quando abro a aplicação de novo
+    Então vejo o tema escuro
+    E a opção de tema ativa é "Escuro"
+
+  Cenário: Quem escolheu o claro continua no claro
+    Dado que usei a aplicação antes desta entrega e tenho "claro" guardado
+    E o meu sistema está em modo escuro
+    Quando abro a aplicação pela primeira vez depois da entrega
+    Então vejo o tema claro
+    E a opção de tema ativa é "Claro"
+
+  Cenário: Menu de tema mostra as três opções
+    Dado a aplicação aberta com a opção de tema "Sistema"
+    Quando aciono o botão de tema
+    Então vejo as opções "Sistema", "Claro" e "Escuro"
+    E "Sistema" está marcada como ativa
+
+  Cenário: Menu de tema fecha com Esc
+    Dado o menu de tema aberto
+    Quando aperto Esc
+    Então o menu fecha
+    E o foco volta ao botão de tema
+
+  Cenário: Logo sobre placa clara no tema escuro
+    Dado o tema escuro
+    Quando vejo a barra lateral
+    Então o logo está sobre uma placa clara
+    Mas no tema claro não há placa
+
+  Esquema do Cenário: Status mantém cor pelo papel
+    Dado uma solicitação com status "<status>"
+    Quando vejo o selo de status
+    Então ele está na variação <variacao>
+
+    Exemplos:
+      | status        | variacao   |
+      | A fazer       | neutro     |
+      | Em andamento  | informação |
+      | Em validação  | alerta     |
+      | Concluída     | sucesso    |
+      | Cancelada     | perigo     |
+
+  Esquema do Cenário: Tipo da solicitação é neutro
+    Dado um card do tipo "<tipo>"
+    Quando olho o selo de tipo
+    Então ele está na variação neutro
+    E mostra um ícone e o texto "<tipo>"
+
+    Exemplos:
+      | tipo              |
+      | Reparo            |
+      | Inspeção          |
+      | Reengenharia      |
+      | Criação de modelo |
+
+  Cenário: Indicadores do painel são neutros
+    Dado o painel aberto
+    Quando olho os indicadores
+    Então todos têm o mesmo fundo neutro
+    E só o ícone de cada um tem cor
+```
 
 ## Ambiguidades
 
-1. **RF-03, alcance da migração:** `[NECESSITA ESCLARECIMENTO: todas as 16 telas e os 76
-   arquivos passam para as cores por papel nesta entrega, ou só as peças base e parte das
-   telas?]` É a decisão que define o tamanho da feature: são 1.594 usos.
-2. **RF-17, logo no tema escuro:** `[NECESSITA ESCLARECIMENTO: existe ou vai existir uma
-   versão do logo para fundo escuro, ou a solução é uma placa clara atrás do logo atual?]`
-   A issue aceita as duas; a primeira depende de um arquivo que o repositório não tem.
-3. **RF-14, quem já tem "escuro" guardado:** `[NECESSITA ESCLARECIMENTO: continua no escuro
-   ou passa para Sistema na primeira visita depois da entrega?]`
-4. **RF-15, controle de tema:** `[NECESSITA ESCLARECIMENTO: onde fica e como é o controle
-   das três opções?]`
-5. **RF-22, o que mantém cor própria:** `[NECESSITA ESCLARECIMENTO: tipo da solicitação e
-   status mantêm cor, ou só prioridade e prazo?]`
+Nenhuma em aberto; as respostas estão em **Esclarecimentos**.
 
 Já decidido, sem pergunta:
 
@@ -365,3 +435,13 @@ Já decidido, sem pergunta:
 - Nenhum relato de "abriu escuro e eu uso claro".
 - A medição de contraste das 16 telas passa nos dois temas e fica guardada como referência
   para as próximas especificações visuais.
+
+## Esclarecimentos
+
+| Pergunta | Resposta do usuário | Data |
+|---|---|---|
+| RF-03: quanto das 16 telas e dos 76 arquivos passa para as cores por papel nesta entrega? | Tudo: as 16 telas | 2026-10-07 |
+| RF-17: como o logo fica legível no tema escuro? | Placa clara atrás do logo atual | 2026-10-07 |
+| RF-14: quem já tem "escuro" guardado continua no escuro ou passa para Sistema? | Passa para Sistema, uma vez; quem tinha escolhido o claro continua no claro | 2026-10-07 |
+| RF-15: onde fica e como é o controle das três opções de tema? | Botão no cabeçalho (e na tela de entrada) que abre um menu com as três opções | 2026-10-07 |
+| RF-22: além de prioridade e prazo, o que mantém cor própria? | Prioridade, prazo e status. Tipo vira selo neutro com ícone e texto; indicadores do painel ficam neutros, com cor só no ícone | 2026-10-07 |
