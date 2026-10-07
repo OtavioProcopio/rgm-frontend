@@ -116,3 +116,91 @@ describe('PerfilPage — botões de mostrar senha', () => {
     expect(semTexto.every((botao) => botao.getAttribute('aria-label'))).toBe(true);
   });
 });
+
+describe('PerfilPage — troca de senha', () => {
+  async function trocarSenha(alterarSenha: (dados: unknown) => Promise<unknown>) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { useAlterarSenha } = await import('@/features/auth/hooks/useAlterarSenha');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR' },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    vi.mocked(useAlterarSenha).mockReturnValue({
+      mutateAsync: alterarSenha,
+      isPending: false,
+    } as unknown as ReturnType<typeof useAlterarSenha>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/app/perfil'] });
+    render(<PerfilPage />, { wrapper: AppWrapper });
+
+    await userEvent.type(screen.getByLabelText('Senha Atual'), 'senha-antiga');
+    await userEvent.type(screen.getByLabelText('Nova Senha'), 'senha-nova-1');
+    await userEvent.type(screen.getByLabelText('Confirmar Nova Senha'), 'senha-nova-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Atualizar Senha' }));
+  }
+
+  it('deve mostrar o sucesso quando a troca de senha dá certo', async () => {
+    // Arrange
+    const alterarSenha = vi.fn().mockResolvedValue({ token: 'acesso-novo', refreshToken: 'renovacao-nova' });
+
+    // Act
+    await trocarSenha(alterarSenha);
+
+    // Assert
+    expect(await screen.findByText('Senha alterada com sucesso!')).toBeDefined();
+  });
+
+  it('deve continuar na tela de perfil quando a troca de senha dá certo', async () => {
+    // Arrange
+    const alterarSenha = vi.fn().mockResolvedValue({ token: 'acesso-novo', refreshToken: 'renovacao-nova' });
+
+    // Act
+    await trocarSenha(alterarSenha);
+
+    // Assert
+    await screen.findByText('Senha alterada com sucesso!');
+    expect(screen.getByRole('button', { name: 'Atualizar Senha' })).toBeDefined();
+  });
+
+  it('deve mostrar o sucesso quando a API responde à troca sem credenciais novas', async () => {
+    // Arrange
+    const alterarSenha = vi.fn().mockResolvedValue({ nome: 'Otávio' });
+
+    // Act
+    await trocarSenha(alterarSenha);
+
+    // Assert
+    expect(await screen.findByText('Senha alterada com sucesso!')).toBeDefined();
+  });
+
+  it('deve mostrar o erro, sem a mensagem de sucesso, quando a API recusa a troca', async () => {
+    // Arrange
+    const { ApiError } = await import('@/shared/api/apiError');
+    const alterarSenha = vi
+      .fn()
+      .mockRejectedValue(new ApiError({ status: 400, message: 'Senha atual incorreta' }));
+
+    // Act
+    await trocarSenha(alterarSenha);
+
+    // Assert
+    expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+    expect(screen.queryByText('Senha alterada com sucesso!')).toBeNull();
+  });
+
+  it('deve enviar a senha atual e a nova uma vez quando o formulário é confirmado', async () => {
+    // Arrange
+    const alterarSenha = vi.fn().mockResolvedValue({});
+
+    // Act
+    await trocarSenha(alterarSenha);
+
+    // Assert
+    await screen.findByText('Senha alterada com sucesso!');
+    expect(alterarSenha).toHaveBeenCalledTimes(1);
+    expect(alterarSenha).toHaveBeenCalledWith({
+      senhaAtual: 'senha-antiga',
+      novaSenha: 'senha-nova-1',
+    });
+  });
+});

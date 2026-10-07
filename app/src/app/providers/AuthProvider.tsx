@@ -8,6 +8,7 @@ import { getDefaultRoute } from '@/shared/lib/permissions';
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<AuthUser | null>(() => authToken.getUser<AuthUser>());
+  const [versaoDaSessao, setVersaoDaSessao] = useState(0);
 
   const login = useCallback(async (data: LoginRequest) => {
     const response = await authApi.login(data);
@@ -28,14 +29,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     window.location.assign('/login');
   }, []);
 
+  const renovarCredenciais = useCallback((token: string, refreshToken: string) => {
+    authToken.setTokens(token, refreshToken);
+    setVersaoDaSessao((versao) => versao + 1);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: Boolean(user && authToken.getAccessToken()),
       login,
       logout,
+      renovarCredenciais,
+      versaoDaSessao,
     }),
-    [login, logout, user],
+    [login, logout, renovarCredenciais, user, versaoDaSessao],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

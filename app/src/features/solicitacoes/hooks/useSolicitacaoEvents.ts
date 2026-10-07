@@ -21,7 +21,7 @@ export type EstadoDaConexao = { aberta: boolean; desde: number };
 
 export function useSolicitacaoEvents() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, versaoDaSessao } = useAuth();
 
   useEffect(() => {
     if (!user) {
@@ -140,5 +140,8 @@ export function useSolicitacaoEvents() {
       source?.close();
       queryClient.removeQueries({ queryKey: solicitacoesKeys.conexao() });
     };
-  }, [queryClient, user]);
+    // `versaoDaSessao` muda quando as credenciais são trocadas sem novo login (troca da própria
+    // senha). A API encerra a conexão antiga; refazer o efeito reabre com a credencial nova,
+    // sem esperar a queda ser percebida.
+  }, [queryClient, user, versaoDaSessao]);
 }

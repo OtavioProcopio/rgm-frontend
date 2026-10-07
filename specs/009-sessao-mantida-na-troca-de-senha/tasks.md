@@ -15,22 +15,22 @@ testado tem em `app/src`.
 
 ## Fase 1 — Domínio
 
-- [ ] T001 [P] Criar `TST/features/auth/lib/credenciaisDaTroca.test.ts`: devolve o par quando a resposta traz `token` e `refreshToken`; nulo sem `token`; nulo sem `refreshToken`; nulo com texto vazio
-- [ ] T002 [P] Alterar `SRC/features/auth/types/authTypes.ts` (tipo `SenhaAlteradaResponse`) e criar `SRC/features/auth/lib/credenciaisDaTroca.ts`
-- [ ] T003 [P] Criar `TST/features/solicitacoes/lib/relacaoDoOperador.test.ts`: atribuída quando é responsável e não abriu; atribuída quando abriu e é responsável; aberta quando abriu e não é responsável; nulo quando não abriu nem é responsável; nulo sem id do usuário; rótulo de cada relação
-- [ ] T004 [P] Criar `SRC/features/solicitacoes/lib/relacaoDoOperador.ts`
+- [x] T001 [P] Criar `TST/features/auth/lib/credenciaisDaTroca.test.ts`: devolve o par quando a resposta traz `token` e `refreshToken`; nulo sem `token`; nulo sem `refreshToken`; nulo com texto vazio
+- [x] T002 [P] Alterar `SRC/features/auth/types/authTypes.ts` (tipo `SenhaAlteradaResponse`) e criar `SRC/features/auth/lib/credenciaisDaTroca.ts`
+- [x] T003 [P] Criar `TST/features/solicitacoes/lib/relacaoDoOperador.test.ts`: atribuída quando é responsável e não abriu; atribuída quando abriu e é responsável; aberta quando abriu e não é responsável; nulo quando não abriu nem é responsável; nulo sem id do usuário; rótulo de cada relação
+- [x] T004 [P] Criar `SRC/features/solicitacoes/lib/relacaoDoOperador.ts`
 
 ## Fase 2 — Sessão mantida na troca de senha
 
-- [ ] T005 Criar `TST/app/providers/AuthProvider.test.tsx`: `renovarCredenciais` grava as duas credenciais; `renovarCredenciais` sobe `versaoDaSessao` em 1; `versaoDaSessao` começa em 0
-- [ ] T006 Alterar `SRC/app/providers/authContext.ts` e `SRC/app/providers/AuthProvider.tsx`: `renovarCredenciais` e `versaoDaSessao`
-- [ ] T007 Alterar `SRC/features/auth/api/perfilApi.ts`: `alterarSenha` devolve `SenhaAlteradaResponse`
-- [ ] T008 Testes em `TST/features/auth/hooks/authHooks.test.ts`: troca com credenciais na resposta chama `renovarCredenciais` com o par; resposta sem credenciais não chama; troca recusada não chama
-- [ ] T009 Alterar `SRC/features/auth/hooks/useAlterarSenha.ts`
-- [ ] T010 Testes em `TST/features/auth/pages/PerfilPage.test.tsx`: depois da troca a tela de perfil continua visível com "Senha alterada com sucesso!"; resposta sem credenciais também mostra o sucesso; troca recusada mostra o erro
-- [ ] T011 Testes em `TST/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: quando `versaoDaSessao` muda, a conexão anterior é fechada e outra é aberta com a credencial nova; a ordem "conexão cai, depois versão muda" termina com uma conexão só, a nova; temporizador de reconexão pendente não abre segunda conexão
-- [ ] T012 Alterar `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.ts`: `versaoDaSessao` nas dependências do efeito
-- [ ] T013 Teste em `TST/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: conexão que fecha e reabre antes de 10 s não produz aviso
+- [x] T005 Criar `TST/app/providers/AuthProvider.test.tsx`: `renovarCredenciais` grava as duas credenciais; `renovarCredenciais` sobe `versaoDaSessao` em 1; `versaoDaSessao` começa em 0
+- [x] T006 Alterar `SRC/app/providers/authContext.ts` e `SRC/app/providers/AuthProvider.tsx`: `renovarCredenciais` e `versaoDaSessao`
+- [x] T007 Alterar `SRC/features/auth/api/perfilApi.ts`: `alterarSenha` devolve `SenhaAlteradaResponse`
+- [x] T008 Testes em `TST/features/auth/hooks/authHooks.test.ts`: troca com credenciais na resposta chama `renovarCredenciais` com o par; resposta sem credenciais não chama; troca recusada não chama
+- [x] T009 Alterar `SRC/features/auth/hooks/useAlterarSenha.ts`
+- [x] T010 Testes em `TST/features/auth/pages/PerfilPage.test.tsx`: depois da troca a tela de perfil continua visível com "Senha alterada com sucesso!"; resposta sem credenciais também mostra o sucesso; troca recusada mostra o erro
+- [x] T011 Testes em `TST/features/solicitacoes/hooks/useSolicitacaoEvents.test.ts`: quando `versaoDaSessao` muda, a conexão anterior é fechada e outra é aberta com a credencial nova; a ordem "conexão cai, depois versão muda" termina com uma conexão só, a nova; temporizador de reconexão pendente não abre segunda conexão
+- [x] T012 Alterar `SRC/features/solicitacoes/hooks/useSolicitacaoEvents.ts`: `versaoDaSessao` nas dependências do efeito
+- [x] T013 Teste em `TST/features/solicitacoes/hooks/useSemAtualizacao.test.ts`: conexão que fecha e reabre antes de 10 s não produz aviso (já existia desde a feature 007: "deve não avisar quando a conexão cai e volta antes de 10 segundos"; nenhum teste novo)
 
 ## Fase 3 — Quadro do operador
 
