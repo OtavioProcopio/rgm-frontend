@@ -138,7 +138,10 @@ CSS).
 
 ### Parte 4 — Migração das telas (RF-03, RF-20 a RF-23)
 
-Cada linha é uma área, com arquivos que nenhuma outra linha toca. Em todas: trocar as cores
+Cada linha é uma área, com arquivos que nenhuma outra linha toca; os layouts e a tela de
+entrada (Parte 2) formam mais uma área, `layouts-e-entrada`. Para cada área há uma tarefa de
+teste (apaga a pendência da guarda, ajusta os testes espelhados e os vê falhar) e, depois,
+uma de migração. Em todas: trocar as cores
 pela tabela de conversão, adotar `Badge`, `Card` e `Table` onde houver selo, moldura de
 cartão ou tabela, e importar rótulos de `rotulos.ts`. O teste é a guarda com a área
 acrescentada, mais os testes espelhados dos arquivos, ajustados onde citam cor.
@@ -146,12 +149,12 @@ acrescentada, mais os testes espelhados dos arquivos, ajustados onde citam cor.
 | Área | Arquivos de produção | Particularidades |
 |---|---|---|
 | A — quadro e card | `SRC/features/solicitacoes/components/`: `KanbanBoard`, `KanbanColumn`, `KanbanCard`, `kanbanColunas.ts`, `SolicitacaoCard`, `SolicitacaoStatusBadge`, `SolicitacaoPrioridadeBadge` | RF-20 (cabeçalho neutro com ponto), RF-21, RF-22 (tipo neutro; status pelo papel) |
-| B — detalhe e ações | `SRC/features/solicitacoes/components/`: `SolicitacaoResumo`, `SolicitacaoTimeline`, `SolicitacaoAcoes`, `AvisoSemAtualizacao`, `HistoricoChart`, `SeletorDeModelo`, `SolicitacaoFilters`, os cinco `*Modal`; `SRC/features/solicitacoes/actions/` | cores do gráfico pelos papéis |
+| B — detalhe e ações | `SRC/features/solicitacoes/components/`: `SolicitacaoResumo`, `SolicitacaoTimeline`, `SolicitacaoAcoes`, `AvisoSemAtualizacao`, `HistoricoChart`, `SeletorDeModelo`, `SolicitacaoFilters`, os cinco `*Modal`; `SRC/features/solicitacoes/actions/`; `SRC/features/solicitacoes/lib/solicitacaoMessages.ts` | cores do gráfico pelos papéis; os rótulos de `solicitacaoMessages.ts` passam a vir de `rotulos.ts` |
 | C — páginas de solicitações | `SRC/features/solicitacoes/pages/`: `SolicitacoesPage`, `SolicitacaoDetalhePage`, `NovaSolicitacaoPage`, `DashboardPage`, `PessoalTab` | — |
 | D — painel | `SRC/features/solicitacoes/pages/`: `SolicitacoesTab`, `ModelosTab`, `DashboardKpiCard` | RF-22 (indicadores neutros, cor no ícone); duas tabelas |
 | E — administração de modelos | `SRC/features/admin/modelos/` (13 arquivos) | RF-08 (três sobreposições no `Dialog`); uma tabela |
 | F — administração de usuários | `SRC/features/admin/usuarios/` (7 arquivos) | uma tabela; dois selos |
-| G — máquinas, cartão da administração e modelos | `SRC/features/admin/maquinas/`, `SRC/features/admin/components/`, `SRC/features/modelos/` | uma tabela; um selo |
+| G — máquinas, cartão da administração e modelos | `SRC/features/admin/maquinas/`, `SRC/features/admin/components/`, `SRC/features/admin/pages/`, `SRC/features/modelos/` | uma tabela; um selo |
 | H — perfil, evidências e rotas | `SRC/features/auth/pages/PerfilPage.tsx`, `SRC/features/evidencias/`, `SRC/app/routes/` | `PerfilPage` é o arquivo com mais cores (152) |
 
 ### Fechamento
