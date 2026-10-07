@@ -97,3 +97,71 @@ testado tem em `app/src`.
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 1 — 2026-10-07
+
+Caminhos relativos a `app/src/`; testes em `app/tests/unit/`, no caminho espelhado.
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01 | realizado | `features/auth/lib/credenciaisDaTroca.ts:8`; `app/providers/AuthProvider.tsx:32` (`renovarCredenciais`); `features/auth/hooks/useAlterarSenha.ts:16`. Teste da página com hook e provedor reais confere as duas credenciais guardadas |
+| RF-02 | realizado | teste "deve continuar na rota do perfil quando a troca de senha dá certo" em `PerfilPage.test.tsx`, com rota de entrada montada; medição: 10 de 10 ações sem ir à tela de entrada, 3 rodadas |
+| RF-03 | realizado | `features/solicitacoes/hooks/useSolicitacaoEvents.ts:148` (efeito depende de `versaoDaSessao`); 10 testes em "troca de credenciais"; medição: conexão reaberta em 72 a 90 ms |
+| RF-04 | realizado | `features/auth/types/authTypes.ts:37` (credenciais opcionais); `credenciaisDaTroca` devolve nulo; teste da página mantém a credencial em uso |
+| RF-05 | realizado | `renovarCredenciais` só é chamado no sucesso; testes do hook e da página com a API recusando |
+| RF-06 | realizado | `features/solicitacoes/components/KanbanBoard.tsx:111`; `shared/components/EmptyState/EmptyState.tsx:7` (`action`); captura `quadro-vazio-*.png` |
+| RF-07 | realizado | `features/solicitacoes/lib/relacaoDoOperador.ts:15`; `KanbanBoard.tsx:37`; `KanbanCard.tsx:167`; captura `quadro-com-marcas-1440.png` com 2 "Aberta por você" e 2 "Atribuída a você" |
+| RF-08 | realizado | `KanbanBoard.tsx:37`: a relação só é calculada para operador; teste do gestor |
+| RF-09 | realizado | `features/solicitacoes/hooks/useAbrirSolicitacao.ts:12`, sem mudança de código; teste novo monta a consulta do quadro e confere que ela é refeita quando a solicitação é aberta |
+| RF-10 | realizado | `features/solicitacoes/pages/PessoalTab.tsx:73`, sem mudança de código; testes novos com solicitações abertas pelo operador e atribuídas a outro |
+| RF-11 | realizado | mesma tela, sem mudança de código; teste confere o indicador "Abertas por mim" e que as três consultas não restringem por responsável. O cenário da spec foi corrigido: a tela não exibe a contagem de concluídas, ela a usa no indicador |
+| RF-12 | realizado | `KanbanBoard.tsx:98`; `features/solicitacoes/pages/SolicitacoesPage.tsx:122` zera modelo e período; testes para os dois; captura `filtro-sem-resultado-*.png` |
+| RNF-01 | realizado | medição com API simulada: 0 idas à tela de entrada em 10 ações, 3 rodadas |
+| RNF-02 | realizado | medição: 83, 90 e 72 ms depois da troca, sem aviso de "sem atualização automática"; limite de 3 s |
+| RNF-03 | parcial | medido só em 3 dos 13 arquivos de produção alterados (`credenciaisDaTroca.ts`, `relacaoDoOperador.ts`, `EmptyState.tsx`, os três em 100%). Os outros 10 são hooks, componentes de feature, páginas, provedor, tipos e arquivo de API, excluídos da medição por `app/vitest.config.ts` desde antes desta feature |
+| RNF-04 | realizado | `app/package.json` e `app/package-lock.json` sem mudança |
+| RNF-05 | pendente da entrega | a nota de ordem de publicação entra no PR |
+| RNF-06 | realizado | `relacaoDoOperador.ts` é a única definição; o card só recebe o resultado |
+
+Veredito: convergido
+
+Tarefas acrescentadas: nenhuma
+
+- **`make validate`:** verde. Lint com 0 erros e 1 aviso em `NovaSolicitacaoPage.tsx:83`,
+  arquivo fora desta feature; 129 arquivos de teste, 1064 testes; cobertura do conjunto
+  medido de 99,75% de linha; build ok. O alvo `typecheck` do `make validate` não verifica
+  nada (`tsconfig.json` sem arquivos); os tipos foram conferidos à parte com
+  `tsc --noEmit -p tsconfig.app.json`, sem erros, e pelo build.
+- **Medição** (`/root/rgm/evidencias/009-frontend/`, API simulada que invalida as
+  credenciais antigas e derruba o tempo real na troca): antes desta feature, 0 de 10 ações,
+  1 ida à tela de entrada e conexão não restabelecida em 20 s, nas 3 rodadas; depois, 10 de
+  10, 0 idas e conexão de volta em menos de 100 ms.
+- **`/bu:review`:** reprovou a primeira entrega com 10 achados, corrigidos no commit
+  `dfb4d4b`. Os principais: o teste de "continua na tela de perfil" passava com qualquer
+  implementação e foi refeito com o hook, o provedor e uma rota de entrada reais; o teste de
+  RF-09 comparava a chave consigo mesma e passou a exercitar a consulta do quadro; limpar o
+  filtro de modelo não tinha teste; a conexão reaberta pela troca não atualizava as
+  consultas (evento perdido no intervalo), e o contador de aberturas saiu do efeito. A
+  revisão não foi rodada de novo depois das correções; a conferência foi pelos gates e pela
+  medição repetida.
+- **Excesso, fora do que os requisitos pedem:**
+  - O quadro vazio com filtro e o sem filtro ganharam uma frase de descrição, além do
+    título pedido.
+  - A conexão reaberta pela troca de senha atualiza listas, detalhes e evidências (veio do
+    achado 6 da revisão; a spec só pedia reabrir).
+- **Desvios do processo:**
+  - Sem cenários em `app/tests/bdd` (desvio herdado): cada cenário é um teste de unidade ou
+    de componente.
+  - Checklists liberados pelo usuário sem revisão item a item.
+  - As tarefas `[P]` foram executadas em sequência, sem subagentes.
+  - Teste e implementação foram escritos juntos; os testes não foram vistos falhando antes
+    do código, com exceção dos que falharam por erro do próprio teste.
+  - Parte das edições em arquivos existentes foi feita por script no shell, sem passar pela
+    trava de estrutura do plugin; os arquivos novos foram criados pelo caminho normal.
+  - Durante a implementação o `vitest` e o `tsc` foram chamados direto para rodar só os
+    arquivos alterados; o repositório não tem alvo de `make` para um caminho. O veredito
+    final veio de `make validate`.
+  - O commit de adequação da especificação 005 está nesta branch.
+- **Não verificado:** nada foi exercitado contra o backend real. O comportamento da troca
+  de senha e do tempo real foi medido com API e servidor de eventos simulados, escritos a
+  partir do contrato do rgm-backend#112. A marca do card não foi medida quanto a contraste.
