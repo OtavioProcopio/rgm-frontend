@@ -158,30 +158,27 @@ describe('useColunaDoQuadro', () => {
     expect(paginasPedidas()).toEqual([0, 1]);
   });
 
-  it('deve mostrar 39 cards quando um dos 40 carregados sai da coluna por uma ação', async () => {
+  it('deve tirar da coluna o card que saiu por uma ação, mantendo os dois blocos carregados', async () => {
     // Arrange
     apiCom(TOTAL);
     const { result, queryClient } = await montar();
     await carregarMais(result, 40);
-    apiCom(TOTAL - 1);
-    vi.mocked(solicitacoesApi.listar).mockImplementationOnce((filtros) =>
-      Promise.resolve({
-        content: Array.from({ length: 20 }, (_, i) => criarSolicitacao({ id: `s-${i}` })),
-        page: filtros.page,
-        size: 20,
-        totalElements: 44,
-        totalPages: 3,
-      }),
-    );
-    vi.mocked(solicitacoesApi.listar).mockImplementationOnce((filtros) =>
-      Promise.resolve({
-        content: Array.from({ length: 19 }, (_, i) => criarSolicitacao({ id: `s-${21 + i}` })),
-        page: filtros.page,
-        size: 20,
-        totalElements: 44,
-        totalPages: 3,
-      }),
-    );
+    apiCom(TOTAL - 1, (i) => `s-${i >= 5 ? i + 1 : i}`);
+
+    // Act
+    await act(() => queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() }));
+
+    // Assert
+    await waitFor(() => expect(result.current.cards.some((card) => card.id === 's-5')).toBe(false));
+    expect(result.current.cards).toHaveLength(40);
+  });
+
+  it('deve mostrar 39 cards quando um dos 40 carregados sai e não há outro para ocupar o lugar', async () => {
+    // Arrange
+    apiCom(40);
+    const { result, queryClient } = await montar();
+    await carregarMais(result, 40);
+    apiCom(39, (i) => `s-${i >= 5 ? i + 1 : i}`);
 
     // Act
     await act(() => queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() }));

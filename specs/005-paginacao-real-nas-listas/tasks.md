@@ -50,9 +50,9 @@ testado tem em `app/src`.
 
 - [x] T019 Criar `TST/tamanhoDePagina.test.ts`: nenhum `size` literal acima de 100 nem calculado em `app/src` (RNF-03, RF-11)
 - [x] T020 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
-- [ ] T021 Rodar a feature contra o backend de `develop`: carga inicial do quadro com 5 listagens de 20 (RNF-01); coluna com 45 mostra 20, depois 40 (cenários da spec); encerradas de 10 e de 60 dias; busca de modelo; área de toque e foco de "Carregar mais", paginação e seletor em 390 px (RNF-04). Registrar na convergência
-- [ ] T022 Cobertura dos arquivos medidos em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
-- [ ] T023 `make validate` verde
+- [x] T021 Rodar a feature contra o backend de `develop`: carga inicial do quadro com 5 listagens de 20 (RNF-01); coluna com 45 mostra 20, depois 40 (cenários da spec); encerradas de 10 e de 60 dias; busca de modelo; área de toque e foco de "Carregar mais", paginação e seletor em 390 px (RNF-04). Registrar na convergência
+- [x] T022 Cobertura dos arquivos medidos em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
+- [x] T023 `make validate` verde
 
 ## Rastreabilidade
 
