@@ -111,7 +111,8 @@ CSS).
 |---|---|---|---|
 | core/domain | `SRC/shared/lib/contraste.ts` | criar: `contraste`, `luminancia` | `TST/shared/lib/contraste.test.ts` (criar) |
 | infra | `SRC/styles/globals.css` | alterar: papéis nos dois temas, `@theme`, remoção da paleta genérica e das redefinições de `sky` e `slate` | `TST/styles/papeisDeCor.test.ts` (criar): todo papel tem valor nos dois temas e uma definição só; pares texto/fundo cumprem 4,5:1 e 3:1 |
-| — | `TST/coresPorPapel.test.ts` | criar: a guarda, por área migrada | é o próprio teste |
+| — | `TST/coresPorPapel.test.ts` | criar: a guarda de cores, por área migrada | é o próprio teste |
+| — | `TST/rotulosUnicos.test.ts` | criar: a guarda de rótulos (RNF-06), com as mesmas áreas e pendências da guarda de cores | é o próprio teste |
 
 ### Parte 2 — Tema (RF-10 a RF-19)
 

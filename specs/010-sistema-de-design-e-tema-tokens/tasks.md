@@ -39,7 +39,7 @@ arquivo.
 
 - [ ] T008 Criar `TST/styles/papeisDeCor.test.ts`: todo papel da lista do plano tem valor no tema claro e no escuro; nenhum papel é definido mais de uma vez por tema; cada par texto/fundo (`fg`, `fg-muted` e `accent` sobre `canvas`, `surface`, `surface-raised` e `surface-muted`; `on-accent` sobre `accent`; `on-solid` sobre `danger`, `success` e `warning`; `*-fg` sobre o `*-soft` correspondente) tem no mínimo 4,5:1 nos dois temas; `line-strong` e o contorno de foco têm no mínimo 3:1 sobre as superfícies; `logo-plate` é transparente no claro
 - [ ] T009 Alterar `SRC/styles/globals.css`: valores dos papéis nos dois temas e bloco `@theme` que os expõe. A paleta genérica e as redefinições de `sky` e `slate` continuam nesta tarefa, para as telas ainda não migradas (saem em T053)
-- [ ] T010 Criar `TST/coresPorPapel.test.ts` e a pasta `TST/coresPorPapel.pendentes/` com um arquivo por área (`pecas-base`, `layouts-e-entrada`, `area-a` a `area-h`): a guarda acha cor de família genérica, variante `dark:` de cor e cor em hexadecimal; aponta arquivo e trecho; não confere área com pendência; todo arquivo de produção que não pertence a nenhuma das áreas é conferido desde já (hoje nenhum deles escreve cor). Pronto quando passa com todas as áreas pendentes e falha ao apagar uma pendência qualquer (reposta em seguida)
+- [ ] T010 Criar `TST/coresPorPapel.test.ts` e a pasta `TST/coresPorPapel.pendentes/` com um arquivo por área (`pecas-base`, `layouts-e-entrada`, `area-a` a `area-h`): a guarda acha cor de família genérica, variante `dark:` de cor e cor em hexadecimal; aponta arquivo e trecho; não confere área com pendência; todo arquivo de produção que não pertence a nenhuma das áreas é conferido desde já (hoje nenhum deles escreve cor). Criar também `TST/rotulosUnicos.test.ts`, que usa as mesmas pendências: nas áreas sem pendência, nenhum arquivo de produção define rótulo de valor da API (status, tipo e prioridade da solicitação, perfil, tipo do modelo, de evidência e de atividade) fora de `SRC/shared/lib/rotulos.ts` (RNF-06). Pronto quando as duas guardas passam com todas as áreas pendentes e falham ao apagar uma pendência qualquer (reposta em seguida)
 
 ## Fase 3 — Tema e peças base
 
@@ -62,12 +62,18 @@ arquivo.
 - [ ] T027 Apagar `TST/coresPorPapel.pendentes/pecas-base.txt`, ver a guarda falhar e ajustar, para o resultado esperado, os testes de `TST/shared/components/` que citam cor (Button, ConfirmDialog e os demais que a guarda apontar)
 - [ ] T028 Migrar para os papéis as peças de `SRC/shared/components/`: Button, Input, Textarea, Select, Combobox, Dialog, ConfirmDialog, Pagination, PageHeader, EmptyState, ErrorState, LoadingState, ExportarPdfButton e ThemeToggle
 
-## Fase 4 — Testes das telas
+## Fase 4 — Telas
 
-Em todas as tarefas desta fase: apagar a pendência da área, rodar a guarda e vê-la falhar
-com a lista de arquivos e trechos; escrever ou ajustar, nos testes espelhados dos arquivos
-da área, o que a migração precisa provar (listado em cada tarefa) e o que hoje cita cor;
-ver esses testes falharem pelo motivo certo. Nenhum arquivo de `app/src` é alterado aqui.
+A fase tem dois blocos: primeiro os testes de todas as áreas (T029 a T037), depois a
+migração de todas (T038 a T046). A fase só termina, verde, depois do segundo bloco.
+
+### Testes das áreas
+
+Em todas as tarefas deste bloco: apagar a pendência da área, rodar as guardas e vê-las
+falhar com a lista de arquivos e trechos; escrever ou ajustar, nos testes espelhados dos
+arquivos da área, o que a migração precisa provar (listado em cada tarefa) e o que hoje
+cita cor; ver esses testes falharem pelo motivo certo. Nenhum arquivo de `app/src` é
+alterado aqui.
 
 - [ ] T029 [P] Testes da área `layouts-e-entrada` (`TST/app/layouts/`, `TST/features/auth/pages/LoginPage.test.tsx`): o logo aparece na barra lateral e na tela de entrada; o controle de tema aparece nos dois; a tela de entrada não desfaz as cores dos campos; o cartão da entrada usa a superfície do tema
 - [ ] T030 [P] Testes da área `area-a`, quadro e card (`TST/features/solicitacoes/components/` de `KanbanBoard`, `KanbanColumn`, `KanbanCard`, `SolicitacaoCard`, `SolicitacaoStatusBadge`, `SolicitacaoPrioridadeBadge`): os cinco cabeçalhos têm o mesmo fundo neutro, o nome da etapa e um ponto de cor; as abas do celular idem; selo de status na variação do papel (cinco status); selo de prioridade com texto; selo de tipo neutro com ícone e texto (quatro tipos); selo de prazo com texto; "Sem prioridade" usa o texto secundário
@@ -79,11 +85,12 @@ ver esses testes falharem pelo motivo certo. Nenhum arquivo de `app/src` é alte
 - [ ] T036 [P] Testes da área `area-g`, máquinas, cartão da administração e modelos (`TST/features/admin/maquinas/`, `TST/features/admin/pages/`, `TST/features/modelos/`; criar `TST/features/admin/components/AdminCard.test.tsx`, que não existe): a tabela usa a peça de tabela; selo de situação da máquina pelo papel; o cartão da administração usa a peça de cartão
 - [ ] T037 [P] Testes da área `area-h`, perfil, evidências e rotas (`TST/features/auth/pages/PerfilPage.test.tsx`, `TST/features/evidencias/`, `TST/app/routes/`): os avisos de sucesso e de erro da troca de senha usam os papéis de sucesso e de perigo, com texto
 
-## Fase 5 — Migração das telas
+### Migração das áreas
 
-Em todas as tarefas desta fase: trocar as cores pela tabela **Conversão de cores** do plano;
-usar `Badge`, `Card` e `Table` onde houver selo, moldura de cartão ou tabela; importar
-rótulos de `SRC/shared/lib/rotulos.ts`; terminar com a guarda e os testes da área verdes.
+Em todas as tarefas deste bloco: trocar as cores pela tabela **Conversão de cores** do
+plano; usar `Badge`, `Card` e `Table` onde houver selo, moldura de cartão ou tabela;
+importar rótulos de `SRC/shared/lib/rotulos.ts`; terminar com as guardas e os testes da
+área verdes.
 Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, sem criar papel.
 
 - [ ] T038 [P] Migrar a área `layouts-e-entrada`: `SRC/app/layouts/AppLayout.tsx`, `SRC/app/layouts/PublicLayout.tsx` e `SRC/features/auth/pages/LoginPage.tsx`, com `Logo` e o controle de tema
@@ -96,12 +103,12 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 - [ ] T045 [P] Migrar a área `area-g`: `SRC/features/admin/maquinas/`, `SRC/features/admin/components/`, `SRC/features/admin/pages/` e `SRC/features/modelos/`
 - [ ] T046 [P] Migrar a área `area-h`: `SRC/features/auth/pages/PerfilPage.tsx`, `SRC/features/evidencias/` e `SRC/app/routes/`
 
-## Fase 6 — Integração e fechamento
+## Fase 5 — Integração e fechamento
 
-- [ ] T047 Teste em `TST/coresPorPapel.test.ts`: sem a pasta de pendências, a guarda confere todo o código de produção; uma cor genérica plantada num texto de exemplo é apontada com o arquivo
-- [ ] T048 Remover `TST/coresPorPapel.pendentes/` (deve estar vazia) e simplificar `TST/coresPorPapel.test.ts` para conferir todo o código de produção
-- [ ] T049 Teste em `TST/shared/lib/rotulos.test.ts`: nenhum rótulo de valor da API é definido no código de produção fora de `SRC/shared/lib/rotulos.ts` (RNF-06)
-- [ ] T050 Corrigir o que T049 apontar, nos arquivos indicados por ele
+- [ ] T047 Teste em `TST/coresPorPapel.test.ts`: a guarda não aceita mais área pendente (falha se a pasta de pendências existir) e confere todo o código de produção; uma cor genérica plantada num texto de exemplo é apontada com o arquivo
+- [ ] T048 Simplificar `TST/coresPorPapel.test.ts` para conferir todo o código de produção, sem o mecanismo de pendências
+- [ ] T049 Teste em `TST/rotulosUnicos.test.ts`: a guarda não aceita mais área pendente e confere todo o código de produção; um rótulo de valor da API plantado num texto de exemplo é apontado com o arquivo
+- [ ] T050 Simplificar `TST/rotulosUnicos.test.ts`, sem o mecanismo de pendências, e remover a pasta `TST/coresPorPapel.pendentes/`, que deve estar vazia
 - [ ] T051 Teste em `TST/styles/papeisDeCor.test.ts`: só os papéis, branco, preto e transparente existem como cor; não há redefinição de `sky` nem de `slate`
 - [ ] T052 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [ ] T053 Alterar `SRC/styles/globals.css`: remover a paleta genérica do `@theme` e as redefinições de `sky` e `slate`
@@ -142,7 +149,7 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 | RNF-03 | T047, T048 |
 | RNF-04 | T010, T047, T048 |
 | RNF-05 | T008, T051, T053 |
-| RNF-06 | T049, T050 |
+| RNF-06 | T010, T049, T050 |
 | RNF-07 | T054 |
 | RNF-08 | T015, T054 |
 | RNF-09 | T013, T054 |
@@ -190,7 +197,7 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 
 ## Casos sem papel adequado
 
-> Registrados pelas tarefas de migração, para decisão. Vazio até a Fase 5.
+> Registrados pelas tarefas de migração, para decisão. Vazio até a Fase 4.
 
 ## Convergence
 
