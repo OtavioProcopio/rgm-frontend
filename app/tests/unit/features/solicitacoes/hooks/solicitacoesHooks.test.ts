@@ -48,13 +48,6 @@ vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => {
   };
 });
 
-const mockSolicitacao = {
-  id: 's1', titulo: 'Reparo', descricao: 'Desc', tipo: 'REPARO' as const, status: 'A_FAZER' as const,
-  prioridade: null, modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
-  criadaEm: '2024-01-01T00:00:00Z', atualizadaEm: '2024-01-01T00:00:00Z',
-  concluidaEm: null, canceladaEm: null, responsavelIds: [],
-};
-
 afterEach(() => vi.clearAllMocks());
 
 describe('useSolicitacoes', () => {

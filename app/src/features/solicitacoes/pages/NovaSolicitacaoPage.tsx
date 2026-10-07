@@ -6,14 +6,13 @@ import { Camera, X } from 'lucide-react';
 
 import { useAuth } from '@/app/providers/authContext';
 import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { Input } from '@/shared/components/Input/Input';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
-import { Combobox } from '@/shared/components/Combobox/Combobox';
+import { SeletorDeModelo } from '@/features/solicitacoes/components/SeletorDeModelo';
 import { AvisoFotoNaoEnviada } from '@/features/evidencias/components/AvisoFotoNaoEnviada';
 import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
 import {
@@ -82,20 +81,6 @@ export function NovaSolicitacaoPage() {
 
   const tipoSelecionado = watch('tipo');
   const isCriacao = tipoSelecionado === 'CRIACAO';
-
-  // Busca TODOS os modelos ativos (limite alto para abranger centenas)
-  const { data: modelosPage, isLoading: isLoadingModelos } = useModelos({
-    page: 0,
-    size: 1000,
-    ativo: true,
-  });
-
-  const modeloOptions =
-    modelosPage?.content.map((m) => ({
-      value: m.id,
-      label: `${m.codigo} - ${m.descricao}`,
-      subLabel: m.maquina,
-    })) ?? [];
 
   const { options: maquinaOptions, isLoading: isLoadingMaquinas } = useMaquinaOptions();
 
@@ -262,14 +247,8 @@ export function NovaSolicitacaoPage() {
             control={control}
             name="modeloId"
             render={({ field }) => (
-              <Combobox
+              <SeletorDeModelo
                 label="Modelo"
-                placeholder={
-                  isLoadingModelos
-                    ? 'Carregando modelos...'
-                    : 'Selecione ou digite para filtrar o modelo...'
-                }
-                options={modeloOptions}
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.modeloId?.message}

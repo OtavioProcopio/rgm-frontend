@@ -34,11 +34,11 @@ testado tem em `app/src`.
 
 ## Fase 4 — Seletor de modelo
 
-- [ ] T011 Testes e alteração de `SRC/shared/components/Combobox/Combobox.tsx`: com `onSearchChange`, digitar avisa o termo e as opções recebidas não são filtradas na tela; com `selectedOption`, o campo mostra o rótulo dele mesmo fora das opções; fechar sem escolher mantém o selecionado; `loading` mostra "Buscando..."; sem as propriedades novas o comportamento atual se mantém
-- [ ] T012 Criar `TST/features/admin/modelos/hooks/useBuscaDeModelos.test.ts` e `SRC/features/admin/modelos/hooks/useBuscaDeModelos.ts`: não busca antes de 300 ms da última tecla; busca por `codigo`, só ativos, 20 itens; termo vazio busca os 20 primeiros
-- [ ] T013 Criar `TST/features/solicitacoes/components/SeletorDeModelo.test.tsx` e `SRC/features/solicitacoes/components/SeletorDeModelo.tsx`: opções vêm da busca; o modelo selecionado aparece mesmo fora da busca atual; escolher chama `onChange` com o id; limpar chama com vazio
-- [ ] T014 [P] Testes e alteração de `SRC/features/solicitacoes/pages/NovaSolicitacaoPage.tsx`: usa o seletor com busca; não pede mais de 20 modelos; abre com o modelo da URL selecionado
-- [ ] T015 [P] Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoFilters.tsx`: filtro de modelo com busca; escolher um modelo filtra a lista e volta à primeira página; limpar remove o filtro
+- [x] T011 Testes e alteração de `SRC/shared/components/Combobox/Combobox.tsx`: com `onSearchChange`, digitar avisa o termo e as opções recebidas não são filtradas na tela; com `selectedOption`, o campo mostra o rótulo dele mesmo fora das opções; fechar sem escolher mantém o selecionado; `loading` mostra "Buscando..."; sem as propriedades novas o comportamento atual se mantém
+- [x] T012 Criar `TST/features/admin/modelos/hooks/useBuscaDeModelos.test.ts` e `SRC/features/admin/modelos/hooks/useBuscaDeModelos.ts`: não busca antes de 300 ms da última tecla; busca por `codigo`, só ativos, 20 itens; termo vazio busca os 20 primeiros
+- [x] T013 Criar `TST/features/solicitacoes/components/SeletorDeModelo.test.tsx` e `SRC/features/solicitacoes/components/SeletorDeModelo.tsx`: opções vêm da busca; o modelo selecionado aparece mesmo fora da busca atual; escolher chama `onChange` com o id; limpar chama com vazio
+- [x] T014 [P] Testes e alteração de `SRC/features/solicitacoes/pages/NovaSolicitacaoPage.tsx`: usa o seletor com busca; não pede mais de 20 modelos; abre com o modelo da URL selecionado
+- [x] T015 [P] Testes e alteração de `SRC/features/solicitacoes/components/SolicitacaoFilters.tsx`: filtro de modelo com busca; escolher um modelo filtra a lista e volta à primeira página; limpar remove o filtro
 
 ## Fase 5 — Resumos de modelos
 
