@@ -101,3 +101,84 @@ testado tem em `app/src`.
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 1 — 2026-10-07
+
+Caminhos relativos a `app/src/`; testes em `app/tests/unit/`, no caminho espelhado. "Medição
+real" é o roteiro `/root/rgm/evidencias/integracao-2026-10-07/integra005.cjs`, com frontend
+e backend de `develop` no ar e banco PostgreSQL de desenvolvimento.
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01 | realizado | `features/solicitacoes/lib/filtrosDaColuna.ts:32` (bloco de 20); `features/solicitacoes/hooks/useColunaDoQuadro.ts:41`. Medição real: coluna com 232 mostra 20 cards |
+| RF-02 | realizado | `useColunaDoQuadro.ts:52` (página seguinte); `features/solicitacoes/components/KanbanColumn.tsx:144` ("Carregar mais (20 de 232)"). Medição real: 20, depois 40 |
+| RF-03 | realizado | `KanbanColumn.tsx:79` e `KanbanBoard.tsx:151` (abas do celular) mostram o total da API. Medição real: contador igual ao total da API |
+| RF-04 | realizado | `filtrosDaColuna.ts:18`; aviso em `KanbanBoard.tsx:133`. Medição real: concluída há 10 dias aparece, a de 60 não, e a coluna diz "Últimos 30 dias" |
+| RF-05 | realizado | mesma função: com período, sem `tipoData` nem `dataInicio`. Medição real: com período de 70 a 55 dias atrás, a de 60 dias aparece e o aviso some |
+| RF-06 | realizado | `filtrosDaColuna` repassa modelo e período às cinco colunas; teste por coluna |
+| RF-07 | realizado | `features/solicitacoes/pages/PessoalTab.tsx:114`. Medição real: 10 de 25, "Página 1 de 3", maior tamanho pedido 10 |
+| RF-08 | realizado | `shared/components/Combobox/Combobox.tsx:24`; `features/admin/modelos/hooks/useBuscaDeModelos.ts:15`; `features/solicitacoes/components/SeletorDeModelo.tsx`. Medição real: 1 busca para 10 teclas, `size=20`, 10 opções |
+| RF-09 | realizado | `SeletorDeModelo.tsx:42` (rótulo vem de `useModelo`). Medição real: abrir com `?modeloId=` mostra o modelo, que não estava entre as 20 primeiras opções |
+| RF-10 | realizado | `features/solicitacoes/pages/SolicitacoesTab.tsx:49`. Medição real: 4 contagens em aberto, maior tamanho pedido 5 |
+| RF-11 | realizado | maior `size` em `app/src`: 100 (`useResponsaveisDisponiveis`, mantido pela spec). Medição real em 12 telas: maior tamanho pedido 50 |
+| RF-12 | realizado | chave da coluna debaixo de `lists()` (`features/solicitacoes/hooks/solicitacoesKeys.ts:11`). Medição real: cancelar um card com 40 carregados mantém 40 na tela e o contador cai de 232 para 231, por evento de tempo real |
+| RF-13 | realizado | `features/solicitacoes/pages/ModelosTab.tsx:27`. Medição real: total igual ao da API, 0 listagens de modelos |
+| RF-14 | realizado | `features/admin/modelos/pages/ModeloDetalhePage.tsx:42`. Medição real: total e abertas iguais aos da API, só 50 solicitações pedidas (histórico) |
+| RF-15 | realizado | a reconexão invalida `lists()` (feature 007) e a coluna refaz os blocos carregados; provado no teste do hook ("deve buscar de novo os dois blocos carregados..."). Não medido com queda de conexão real |
+| RF-16 | realizado | `KanbanBoard.tsx:109`: soma dos totais, depois de todas as colunas responderem; testes de carregamento e de coluna única |
+| RNF-01 | realizado | medição real: 5 listagens na abertura do quadro, uma por status, todas `page=0&size=20` |
+| RNF-02 | realizado | `useBuscaDeModelos.ts` com espera de 300 ms; testes em 299 ms e 300 ms |
+| RNF-03 | realizado | `tests/unit/tamanhoDePagina.test.ts` confere números e constantes; maior valor 100 |
+| RNF-04 | realizado | medição real em 390 px com toque: "Carregar mais" 296x44, "Próxima" 96x44, "Anterior" 97x44, campo do seletor 316x44, opção 314x83; foco de "Carregar mais" com contorno sólido de 2 px. Contraste do contorno não medido |
+| RNF-05 | parcial | medido só em `lib/filtrosDaColuna.ts` e `shared/components/Combobox/Combobox.tsx`, os dois em 100%. Hooks, componentes de feature e páginas alterados estão fora da medição por `app/vitest.config.ts` desde antes desta feature |
+
+Veredito: convergido
+
+Tarefas acrescentadas: nenhuma
+
+- **`make validate`:** verde. Lint com 0 erros e 1 aviso em `NovaSolicitacaoPage.tsx`, linha
+  que esta feature não alterou; 137 arquivos de teste, 1213 testes; cobertura do conjunto
+  medido de 99,76% de linha; build ok. Tipos conferidos à parte com
+  `tsc --noEmit -p tsconfig.app.json`, sem erros.
+- **Medição real:** 14 de 14 verificações passaram, repetidas depois das correções da
+  revisão.
+- **`/bu:review`:** reprovou a primeira entrega com 12 achados, corrigidos no commit
+  `d128aaf`. Três eram defeitos: a lista da aba pessoal ficava vazia e sem paginação quando
+  a página aberta deixava de existir; erro ou carregamento do resumo do modelo apareciam
+  como indicadores zerados; e uma falha ao buscar um bloco seguinte trocava o quadro
+  inteiro pela tela de erro. Os demais eram testes que passavam com a implementação errada,
+  `useColunasDoQuadro` sem teste, testes antigos tocados fora do padrão, a guarda de
+  tamanho de página que não enxergava constantes, e um arquivo de estado de ferramenta
+  versionado por engano (`app/.claude/.bu-state.json`, retirado e ignorado). A revisão não
+  foi rodada de novo depois das correções.
+- **Mudou em relação ao plano** (plano e tarefas atualizados): o hook do resumo das
+  solicitações do modelo foi para `features/solicitacoes/hooks`, com chave debaixo das
+  listas de solicitações, para ser atualizado pelas mesmas ações e eventos; falha em
+  "Carregar mais" passou a ser tratada na coluna.
+- **Excesso, fora do que os requisitos pedem:**
+  - Aviso e nova tentativa na coluna quando "Carregar mais" falha.
+  - Mensagens de carregamento e de erro no mini-painel da ficha do modelo.
+  - A aba pessoal volta sozinha para a última página existente.
+  - Remoção de `useKanbanSolicitacoes` e de `useDashboardData`, este sem uso em tela
+    nenhuma.
+- **Mudança de comportamento a avisar:** os dois tempos do mini-painel do modelo passam a
+  ser os da API (resolução a partir de 1 concluída; intervalo entre todas as solicitações).
+- **Em aberto, para decisão do usuário:**
+  - Operador que só tem encerradas há mais de 30 dias vê "Você ainda não abriu nem recebeu
+    solicitações" (registrado na spec).
+  - A API devolve da mais antiga para a mais nova: numa coluna com mais de 20, as
+    solicitações novas ficam depois do "Carregar mais". Vale para a issue do card e do
+    quadro (#129) ou para um parâmetro de ordenação no backend.
+- **Desvios do processo:**
+  - Sem cenários em `app/tests/bdd` (desvio herdado).
+  - Checklist não revisto item a item; o usuário mandou implementar.
+  - Tarefas `[P]` executadas em sequência, sem subagentes.
+  - Teste e implementação escritos juntos; os testes não foram vistos falhando antes do
+    código.
+  - Parte das edições em arquivos existentes foi feita por script no shell, sem passar pela
+    trava de estrutura do plugin.
+  - `vitest` e `tsc` chamados direto para rodar só os arquivos alterados durante a
+    implementação; o veredito final veio de `make validate`.
+- **Não verificado:** reconexão do tempo real com colunas em blocos contra o backend real;
+  contraste do contorno de foco; a suíte e2e do repositório não foi rodada de novo depois
+  desta feature.
