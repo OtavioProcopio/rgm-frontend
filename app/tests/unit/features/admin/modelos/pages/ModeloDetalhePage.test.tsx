@@ -25,6 +25,9 @@ vi.mock('@/features/admin/modelos/hooks/useEventosModelo', () => ({
 vi.mock('@/features/solicitacoes/hooks/useSolicitacoes', () => ({
   useSolicitacoes: vi.fn().mockReturnValue({ data: undefined }),
 }));
+vi.mock('@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo', () => ({
+  useResumoDasSolicitacoesDoModelo: vi.fn().mockReturnValue({ data: undefined }),
+}));
 vi.mock('@/features/admin/modelos/hooks/useDesativarModelo', () => ({
   useDesativarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
@@ -54,22 +57,6 @@ const modelo = {
   atualizadoEm: '2026-01-01T00:00:00Z',
 };
 
-const solicitacaoConcluida = (over: Record<string, unknown>) => ({
-  id: 's1',
-  titulo: 'Reparo',
-  descricao: '',
-  tipo: 'REPARO',
-  status: 'CONCLUIDA',
-  prioridade: 'MEDIA',
-  modeloId: '1',
-  abertaPorUsuarioId: 'u1',
-  comentarioFinal: null,
-  atualizadaEm: '2026-01-01T00:00:00Z',
-  canceladaEm: null,
-  responsavelIds: [],
-  ...over,
-});
-
 describe('ModeloDetalhePage (admin)', () => {
   it('shows loading state', () => {
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
@@ -90,69 +77,83 @@ describe('ModeloDetalhePage (admin)', () => {
     expect(within(container).getByText(/não foi possível/i)).toBeDefined();
   });
 
-  it('computes time metrics client-side when there are 2+ concluidas', async () => {
+  async function abrirComResumo(resumo: Record<string, unknown> | undefined) {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    const { useResumoDasSolicitacoesDoModelo } = await import(
+      '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo'
+    );
     vi.mocked(useModelo).mockReturnValue({
       data: modelo,
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useModelo>);
-
-    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockClear();
     vi.mocked(useSolicitacoes).mockReturnValue({
-      data: {
-        content: [
-          solicitacaoConcluida({
-            id: 's1',
-            criadaEm: '2026-01-01T00:00:00Z',
-            concluidaEm: '2026-01-01T01:00:00Z',
-          }),
-          solicitacaoConcluida({
-            id: 's2',
-            criadaEm: '2026-01-03T00:00:00Z',
-            concluidaEm: '2026-01-03T02:00:00Z',
-          }),
-        ],
-        totalElements: 2,
-      },
+      data: { content: [], totalElements: 0 },
     } as unknown as ReturnType<typeof useSolicitacoes>);
-
+    vi.mocked(useResumoDasSolicitacoesDoModelo).mockReturnValue({
+      data: resumo,
+    } as unknown as ReturnType<typeof useResumoDasSolicitacoesDoModelo>);
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
     const { container } = render(<ModeloDetalhePage />, { wrapper: AppWrapper });
+    return { container, useSolicitacoes: vi.mocked(useSolicitacoes) };
+  }
 
-    expect(within(container).getByText('Tempo médio de resolução')).toBeDefined();
-    expect(within(container).getByText('2h')).toBeDefined();
-    expect(within(container).getByText('Intervalo médio entre solicitações')).toBeDefined();
-    expect(within(container).getByText('2d 0h')).toBeDefined();
+  const RESUMO = {
+    total: 40,
+    emAberto: 6,
+    concluidas: 30,
+    canceladas: 4,
+    tempoMedioResolucaoSegundos: 7200,
+    intervaloMedioSegundos: 172800,
+  };
+
+  it.each([
+    ['Total', '40'],
+    ['Abertas', '6'],
+    ['Concluídas', '30'],
+    ['Taxa de sucesso', '75%'],
+    ['Tempo médio de resolução', '2h'],
+    ['Intervalo médio entre solicitações', '2d 0h'],
+  ])('deve mostrar em "%s" o valor %s vindo do resumo da API', async (rotulo, valor) => {
+    // Act
+    const { container } = await abrirComResumo(RESUMO);
+
+    // Assert
+    const cartao = within(container).getByText(rotulo).parentElement as HTMLElement;
+    expect(within(cartao).getByText(valor)).toBeDefined();
   });
 
-  it('shows placeholder when fewer than 2 concluidas', async () => {
-    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
-    vi.mocked(useModelo).mockReturnValue({
-      data: modelo,
-      isLoading: false,
-      error: null,
-    } as unknown as ReturnType<typeof useModelo>);
+  it('deve mostrar "—" nos dois tempos quando o resumo não traz tempo', async () => {
+    // Act
+    const { container } = await abrirComResumo({
+      ...RESUMO,
+      tempoMedioResolucaoSegundos: null,
+      intervaloMedioSegundos: null,
+    });
 
-    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
-    vi.mocked(useSolicitacoes).mockReturnValue({
-      data: {
-        content: [
-          solicitacaoConcluida({
-            id: 's1',
-            criadaEm: '2026-01-01T00:00:00Z',
-            concluidaEm: '2026-01-01T01:00:00Z',
-          }),
-        ],
-        totalElements: 1,
-      },
-    } as unknown as ReturnType<typeof useSolicitacoes>);
+    // Assert
+    expect(within(container).getAllByText('—')).toHaveLength(2);
+  });
 
-    const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
-    const { container } = render(<ModeloDetalhePage />, { wrapper: AppWrapper });
+  it('deve mostrar taxa de sucesso de 0% quando o modelo não tem solicitações', async () => {
+    // Act
+    const { container } = await abrirComResumo({ ...RESUMO, total: 0, concluidas: 0 });
 
-    const kpiCards = within(container).getAllByText('—');
-    expect(kpiCards.length).toBe(2);
+    // Assert
+    expect(within(container).getByText('0%')).toBeDefined();
+  });
+
+  it('deve pedir só as 50 solicitações do histórico, e não a lista inteira do modelo', async () => {
+    // Act
+    const { useSolicitacoes } = await abrirComResumo(RESUMO);
+
+    // Assert
+    expect(useSolicitacoes.mock.calls.map(([filtros]) => filtros.size)).toEqual(
+      expect.arrayContaining([50]),
+    );
+    expect(Math.max(...useSolicitacoes.mock.calls.map(([filtros]) => filtros.size))).toBe(50);
   });
 });
 

@@ -42,14 +42,14 @@ testado tem em `app/src`.
 
 ## Fase 5 — Resumos de modelos
 
-- [ ] T016 Alterar `SRC/features/admin/modelos/types/modeloTypes.ts`, `SRC/features/admin/modelos/api/modelosApi.ts` e `SRC/features/admin/modelos/hooks/modelosKeys.ts`; criar `TST/features/admin/modelos/hooks/resumosDeModelos.test.ts`, `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts` e `SRC/features/admin/modelos/hooks/useResumoDasSolicitacoesDoModelo.ts`: cada hook chama o endpoint uma vez e devolve o resumo; o da ficha não busca sem id
-- [ ] T017 [P] Testes e alteração de `SRC/features/solicitacoes/pages/ModelosTab.tsx`: total, ativos, inativos, com pendência e quantidade por máquina vêm do resumo; a tela não lista modelos para contar
-- [ ] T018 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx`: total, abertas, concluídas, taxa de sucesso e os dois tempos vêm do resumo; tempo ausente mostra "—"; a tela só pede as 50 solicitações do histórico
+- [x] T016 Alterar `SRC/features/admin/modelos/types/modeloTypes.ts`, `SRC/features/admin/modelos/api/modelosApi.ts` e `SRC/features/admin/modelos/hooks/modelosKeys.ts`; criar `TST/features/admin/modelos/hooks/resumosDeModelos.test.ts`, `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts` e `SRC/features/admin/modelos/hooks/useResumoDasSolicitacoesDoModelo.ts`: cada hook chama o endpoint uma vez e devolve o resumo; o da ficha não busca sem id
+- [x] T017 [P] Testes e alteração de `SRC/features/solicitacoes/pages/ModelosTab.tsx`: total, ativos, inativos, com pendência e quantidade por máquina vêm do resumo; a tela não lista modelos para contar
+- [x] T018 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx`: total, abertas, concluídas, taxa de sucesso e os dois tempos vêm do resumo; tempo ausente mostra "—"; a tela só pede as 50 solicitações do histórico
 
 ## Fase 6 — Integração e fechamento
 
-- [ ] T019 Criar `TST/tamanhoDePagina.test.ts`: nenhum `size` literal acima de 100 nem calculado em `app/src` (RNF-03, RF-11)
-- [ ] T020 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
+- [x] T019 Criar `TST/tamanhoDePagina.test.ts`: nenhum `size` literal acima de 100 nem calculado em `app/src` (RNF-03, RF-11)
+- [x] T020 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [ ] T021 Rodar a feature contra o backend de `develop`: carga inicial do quadro com 5 listagens de 20 (RNF-01); coluna com 45 mostra 20, depois 40 (cenários da spec); encerradas de 10 e de 60 dias; busca de modelo; área de toque e foco de "Carregar mais", paginação e seletor em 390 px (RNF-04). Registrar na convergência
 - [ ] T022 Cobertura dos arquivos medidos em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
 - [ ] T023 `make validate` verde

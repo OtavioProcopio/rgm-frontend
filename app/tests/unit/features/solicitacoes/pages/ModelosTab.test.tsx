@@ -8,8 +8,8 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { ModelosTab } from '@/features/solicitacoes/pages/ModelosTab';
 
-vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
-  useModelos: vi.fn(),
+vi.mock('@/features/admin/modelos/hooks/useResumoDeModelos', () => ({
+  useResumoDeModelos: vi.fn(),
 }));
 
 vi.mock('@/features/solicitacoes/hooks/useMetricasPorModelo', () => ({
@@ -24,21 +24,6 @@ vi.mock('react-router', async (importOriginal) => {
 
 afterEach(cleanup);
 
-const modelo = (over: Record<string, unknown>) => ({
-  id: 'm1',
-  codigo: 'M01',
-  versao: 1,
-  descricao: 'Molde',
-  observacoes: null,
-  fotoCapaUrl: null,
-  ativo: true,
-  maquina: 'Prensa PH-200',
-  temPendenciaAberta: false,
-  criadoEm: '2026-01-01T00:00:00Z',
-  atualizadoEm: '2026-01-01T00:00:00Z',
-  ...over,
-});
-
 async function mockRanking(overrides: Record<string, unknown> = {}) {
   const { useMetricasPorModelo } = await import('@/features/solicitacoes/hooks/useMetricasPorModelo');
   vi.mocked(useMetricasPorModelo).mockReturnValue({
@@ -49,14 +34,25 @@ async function mockRanking(overrides: Record<string, unknown> = {}) {
   } as unknown as ReturnType<typeof useMetricasPorModelo>);
 }
 
+const RESUMO = {
+  total: 12,
+  ativos: 9,
+  inativos: 3,
+  comPendenciaAberta: 4,
+  porMaquina: [
+    { maquina: 'Torno T-10', quantidade: 5 },
+    { maquina: 'Prensa PH-200', quantidade: 7 },
+  ],
+};
+
 describe('ModelosTab', () => {
   it('renders loading state', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
 
     const { AppWrapper } = createAppWrapper();
@@ -65,18 +61,12 @@ describe('ModelosTab', () => {
   });
 
   it('renders stats and machine grouping', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: {
-        content: [
-          modelo({ id: 'm1', ativo: true, temPendenciaAberta: true }),
-          modelo({ id: 'm2', ativo: false, maquina: 'Torno T-10' }),
-        ],
-        totalElements: 2,
-      },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
 
     const { AppWrapper } = createAppWrapper();
@@ -87,15 +77,12 @@ describe('ModelosTab', () => {
   });
 
   it('navigates to filtered solicitacoes when a machine row is clicked', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: {
-        content: [modelo({ id: 'm1', maquina: 'Prensa PH-200' })],
-        totalElements: 1,
-      },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
     mockNavigate.mockClear();
 
@@ -107,15 +94,12 @@ describe('ModelosTab', () => {
   });
 
   it('navigates to filtered solicitacoes when Enter is pressed on a machine row', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: {
-        content: [modelo({ id: 'm1', maquina: 'Prensa PH-200' })],
-        totalElements: 1,
-      },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
     mockNavigate.mockClear();
 
@@ -127,12 +111,12 @@ describe('ModelosTab', () => {
   });
 
   it('renders error state', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: true,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
 
     const { AppWrapper } = createAppWrapper();
@@ -141,12 +125,12 @@ describe('ModelosTab', () => {
   });
 
   it('renders ranking table with sortable headers', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: { content: [], totalElements: 0 },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking({
       data: {
         content: [
@@ -170,12 +154,12 @@ describe('ModelosTab', () => {
   });
 
   it('renders empty state when ranking has no modelos with enough data', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: { content: [], totalElements: 0 },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     await mockRanking();
 
     const { AppWrapper } = createAppWrapper();
@@ -184,12 +168,12 @@ describe('ModelosTab', () => {
   });
 
   it('toggles sort direction when clicking the same header twice', async () => {
-    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
-    vi.mocked(useModelos).mockReturnValue({
-      data: { content: [], totalElements: 0 },
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof useModelos>);
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
     const { useMetricasPorModelo } = await import('@/features/solicitacoes/hooks/useMetricasPorModelo');
     const mockHook = vi.mocked(useMetricasPorModelo).mockReturnValue({
       data: {
@@ -217,5 +201,43 @@ describe('ModelosTab', () => {
       expect.objectContaining({ sort: 'INTERVALO', dir: 'desc' }),
     );
     expect(container).toBeDefined();
+  });
+});
+
+describe('ModelosTab — contagens pelo resumo da API', () => {
+  async function abrir() {
+    const { useResumoDeModelos } = await import('@/features/admin/modelos/hooks/useResumoDeModelos');
+    vi.mocked(useResumoDeModelos).mockReturnValue({
+      data: RESUMO,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useResumoDeModelos>);
+    await mockRanking();
+    const { AppWrapper } = createAppWrapper();
+    return render(<ModelosTab />, { wrapper: AppWrapper });
+  }
+
+  it.each([
+    ['total', '12'],
+    ['ativos', '9'],
+    ['inativos', '3'],
+    ['com pendência aberta', '4'],
+  ])('deve mostrar o número de modelos %s que o resumo traz', async (_nome, valor) => {
+    // Act
+    const { container } = await abrir();
+
+    // Assert
+    expect(within(container).getByText(valor)).toBeDefined();
+  });
+
+  it('deve mostrar a quantidade de modelos de cada máquina, da maior para a menor', async () => {
+    // Act
+    const { container } = await abrir();
+
+    // Assert
+    const linhas = within(container)
+      .getAllByRole('button', { name: /^Ver solicitações da máquina/ })
+      .map((linha) => linha.textContent);
+    expect(linhas).toEqual(['Prensa PH-2007', 'Torno T-105']);
   });
 });

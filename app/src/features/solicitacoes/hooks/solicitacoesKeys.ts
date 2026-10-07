@@ -10,6 +10,9 @@ export const solicitacoesKeys = {
    */
   coluna: (filters: SolicitacoesFilters) =>
     [...solicitacoesKeys.lists(), 'coluna', filters] as const,
+  /** Resumo das solicitações de um modelo; debaixo de `lists()` pelo mesmo motivo da coluna. */
+  resumoDoModelo: (modeloId: string) =>
+    [...solicitacoesKeys.lists(), 'resumo-do-modelo', modeloId] as const,
   details: () => [...solicitacoesKeys.all, 'detail'] as const,
   detail: (id: string) => [...solicitacoesKeys.details(), id] as const,
   atividades: (id: string) => [...solicitacoesKeys.detail(id), 'atividades'] as const,

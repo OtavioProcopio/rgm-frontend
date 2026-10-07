@@ -49,6 +49,25 @@ export type ModelosFilters = {
   descricao?: string;
 };
 
+/** Contagens do cadastro de modelos, calculadas pela API. */
+export type ResumoDeModelos = {
+  total: number;
+  ativos: number;
+  inativos: number;
+  comPendenciaAberta: number;
+  porMaquina: Array<{ maquina: string; quantidade: number }>;
+};
+
+/** Resumo das solicitações de um modelo, calculado pela API. */
+export type ResumoDasSolicitacoesDoModelo = {
+  total: number;
+  emAberto: number;
+  concluidas: number;
+  canceladas: number;
+  tempoMedioResolucaoSegundos: number | null;
+  intervaloMedioSegundos: number | null;
+};
+
 export type CriarModeloRequest = {
   codigo: string;
   descricao: string;
