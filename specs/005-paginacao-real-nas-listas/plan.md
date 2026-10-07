@@ -28,7 +28,7 @@ Prefixos: `SRC` = `app/src`, `TST` = `app/tests/unit`.
 | Contador da coluna | `totalElements` do primeiro bloco | quantidade de cards carregados | RF-03; a faixa de abas do celular usa o mesmo total |
 | "Carregar mais" | botão no fim da coluna, visível enquanto houver próximo bloco, desabilitado e com "Carregando..." durante a busca | rolagem infinita automática | fora de escopo na spec; RF-02 |
 | Quadro vazio do operador | só depois de as cinco colunas responderem, com a soma dos totais igual a zero; enquanto alguma carrega, vale o estado de carregamento | decidir pela primeira coluna que responder | RF-16 |
-| Erro de uma coluna | qualquer coluna com erro mostra o erro do quadro, como hoje | erro por coluna | mantém o comportamento atual; estados por coluna ficam para a #126 |
+| Erro de uma coluna | falha na primeira carga de qualquer coluna mostra o erro do quadro, como hoje; falha ao buscar um bloco seguinte mantém os cards na tela e avisa na coluna, com "Carregar mais" disponível para tentar de novo | derrubar o quadro em qualquer falha | apontado pela revisão: uma oscilação de rede no terceiro bloco não pode trocar as cinco colunas por uma tela de erro sem saída |
 | Hook antigo do quadro | `useKanbanSolicitacoes` é removido; `useDashboardData`, que só ele usava e que nenhuma tela usa, é removido junto | manter com `size` menor | RNF-03: não pode sobrar `size` 200 em código de produção; código sem uso não fica |
 | Aba pessoal | duas consultas com `emAberto=true`, 10 por página, cada lista com sua página e o componente `Pagination` existente | carregar 100 e filtrar na tela (hoje) | RF-07 |
 | Indicadores da aba pessoal | "Abertas por mim" e "Sou responsável" passam a ser o `totalElements` das duas consultas em aberto; "Concluídas por mim" continua na contagem por status | manter as quatro contagens auxiliares | duas chamadas a menos; o número é o mesmo |
@@ -38,7 +38,7 @@ Prefixos: `SRC` = `app/src`, `TST` = `app/tests/unit`.
 | Filtro de modelo da lista | troca o `select` com 100 modelos pelo mesmo `Combobox` com busca | manter o `select` | RF-08 |
 | Prioridades do painel | quatro contagens (`emAberto=true`, `prioridade`, `size=1`), lendo `totalElements` | somar itens de três listas de 1000 (hoje) | RF-10 |
 | Painel de modelos | `GET /modelos/resumo` num hook `useResumoDeModelos`; saem as quatro consultas atuais | — | RF-13 |
-| Mini-painel da ficha | `GET /modelos/{id}/solicitacoes/resumo` num hook `useResumoDasSolicitacoesDoModelo`; o cálculo local de tempos sai | — | RF-14 |
+| Mini-painel da ficha | `GET /modelos/{id}/solicitacoes/resumo` num hook `useResumoDasSolicitacoesDoModelo`, em `features/solicitacoes/hooks`, com chave debaixo de `solicitacoesKeys.lists()`; o cálculo local de tempos sai | hook em `features/admin/modelos/hooks` com chave de modelo (primeira versão deste plano, trocada na implementação) | RF-14; o resumo muda quando uma solicitação muda, então precisa ser atualizado pelas mesmas ações e eventos que atualizam as listas de solicitações |
 | Tempos do mini-painel | passam a ser os da API: tempo de resolução a partir de 1 concluída e intervalo entre todas as solicitações do modelo (hoje a tela exige 2 concluídas e mede só entre elas) | manter o cálculo local | é a regra do ranking e da ficha em PDF, decidida na especificação 007 do backend; sem a lista, a tela não tem como calcular |
 | Histórico da ficha do modelo | continua com os 50 mais antigos, como hoje | paginar | não é pedido; `size` 50 respeita RF-11 |
 | Responsáveis | `useResponsaveisDisponiveis` continua com 100 | — | fora de escopo na spec |
@@ -91,8 +91,9 @@ separado para o contador e o "Carregar mais").
 |---|---|---|---|
 | core/domain | `SRC/features/admin/modelos/types/modeloTypes.ts` | alterar: `ResumoDeModelos`, `ResumoDasSolicitacoesDoModelo` | — (só tipos) |
 | clients | `SRC/features/admin/modelos/api/modelosApi.ts` | alterar: `obterResumo`, `obterResumoDasSolicitacoes` | — (fora da medição; coberto pelos hooks) |
-| presenters | `SRC/features/admin/modelos/hooks/modelosKeys.ts` | alterar: chaves `resumo()` e `resumoDasSolicitacoes(id)` | pelos testes dos hooks |
-| presenters | `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts`, `useResumoDasSolicitacoesDoModelo.ts` | criar | `TST/features/admin/modelos/hooks/resumosDeModelos.test.ts` (criar) |
+| presenters | `SRC/features/admin/modelos/hooks/modelosKeys.ts` | alterar: chave `resumo()`, debaixo de `lists()` | pelo teste do hook |
+| presenters | `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts` | criar | `TST/features/admin/modelos/hooks/useResumoDeModelos.test.ts` (criar) |
+| presenters | `SRC/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo.ts` e chave `resumoDoModelo(id)` em `solicitacoesKeys.ts` | criar | `TST/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo.test.ts` (criar) |
 | presenters | `SRC/features/solicitacoes/pages/ModelosTab.tsx` | alterar: usa o resumo | `TST/features/solicitacoes/pages/ModelosTab.test.tsx` |
 | presenters | `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx` | alterar: mini-painel pelo resumo; sai o cálculo local | `TST/features/admin/modelos/pages/ModeloDetalhePage.test.tsx` |
 

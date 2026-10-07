@@ -35,7 +35,11 @@ export function ModeloDetalhePage() {
     { modeloId: id, page: 0, size: 50 },
     { enabled: !!id },
   );
-  const { data: resumoDasSolicitacoes } = useResumoDasSolicitacoesDoModelo(id);
+  const {
+    data: resumoDasSolicitacoes,
+    isLoading: carregandoResumo,
+    isError: erroNoResumo,
+  } = useResumoDasSolicitacoesDoModelo(id);
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
   const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
@@ -174,7 +178,17 @@ export function ModeloDetalhePage() {
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
               Indicadores consolidados de todos os chamados vinculados a este modelo.
             </p>
-            <ModeloDashboard resumo={resumoDasSolicitacoes} />
+            {erroNoResumo ? (
+              <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+                Não foi possível carregar o resumo das solicitações deste modelo.
+              </p>
+            ) : carregandoResumo || !resumoDasSolicitacoes ? (
+              <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+                Carregando o resumo das solicitações...
+              </p>
+            ) : (
+              <ModeloDashboard resumo={resumoDasSolicitacoes} />
+            )}
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
@@ -222,17 +236,14 @@ export function ModeloDetalhePage() {
   );
 }
 
-function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo | undefined }) {
-  const total = resumo?.total ?? 0;
-  const concluidas = resumo?.concluidas ?? 0;
+function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo }) {
+  const { total, concluidas, tempoMedioResolucaoSegundos, intervaloMedioSegundos } = resumo;
   const taxaSucesso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
-  const tempoMedioResolucaoSegundos = resumo?.tempoMedioResolucaoSegundos ?? null;
-  const intervaloMedioSegundos = resumo?.intervaloMedioSegundos ?? null;
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard label="Total" value={total} color="slate" />
-      <KpiCard label="Abertas" value={resumo?.emAberto ?? 0} color="amber" />
+      <KpiCard label="Abertas" value={resumo.emAberto} color="amber" />
       <KpiCard label="Concluídas" value={concluidas} color="green" />
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
       <KpiCard

@@ -203,6 +203,14 @@ Nenhuma em aberto. Decisões registradas em 2026-10-05:
 - **Tamanho dos blocos:** 20 no quadro (issue); 10 na aba pessoal e 20 opções no seletor,
   definidos aqui por serem listas curtas de consulta.
 
+### Em aberto, achado pela revisão em 2026-10-07
+
+- **Operador que só tem encerradas antigas:** sem filtro, o quadro soma zero (as encerradas
+  de mais de 30 dias ficam fora) e mostra "Você ainda não abriu nem recebeu solicitações",
+  o que não é verdade para ele. Segue a letra do RF-16. Decisão pendente do usuário: manter,
+  ou mostrar as colunas vazias com o aviso "Últimos 30 dias" quando o operador tiver
+  encerradas fora do recorte (custa uma contagem a mais na abertura do quadro).
+
 ## Adequação de 2026-10-07
 
 A especificação ficou parada enquanto as features 006, 007 e 008 e três PRs do backend eram

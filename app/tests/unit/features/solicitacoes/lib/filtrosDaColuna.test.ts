@@ -83,6 +83,20 @@ describe('filtrosDaColuna', () => {
     },
   );
 
+  it.each([
+    ['início', { criadaEmInicio: '2026-08-01T00:00:00Z' }],
+    ['fim', { criadaEmFim: '2026-08-31T23:59:59Z' }],
+  ])(
+    'deve não mandar a data dos 30 dias, que a API usaria no lugar do período, quando o %s foi escolhido',
+    (_nome, periodo) => {
+      // Act
+      const filtros = filtrosDaColuna('CANCELADA', periodo, TRINTA_DIAS_ATRAS, 0);
+
+      // Assert
+      expect(filtros).not.toHaveProperty('dataInicio');
+    },
+  );
+
   it.each(ABERTAS)('deve nunca limitar por data de conclusão a coluna em aberto %s', (status) => {
     // Act
     const filtros = filtrosDaColuna(status, {}, TRINTA_DIAS_ATRAS, 0);

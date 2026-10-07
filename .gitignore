@@ -65,3 +65,4 @@ app/cypress/screenshots/
 /.specify/memory/constitution.md
 /CLAUDE.md
 /.claude/.bu-state.json
+/app/.claude/

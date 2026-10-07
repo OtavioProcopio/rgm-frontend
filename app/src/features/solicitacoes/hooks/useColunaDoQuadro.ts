@@ -13,7 +13,10 @@ export type ColunaDoQuadro = {
   temMais: boolean;
   carregando: boolean;
   carregandoMais: boolean;
+  /** Falha na primeira carga da coluna: não há o que mostrar. */
   erro: unknown;
+  /** Falha ao buscar o bloco seguinte: os cards já carregados continuam na tela. */
+  falhouAoCarregarMais: boolean;
   carregarMais: () => void;
 };
 
@@ -63,7 +66,8 @@ export function useColunaDoQuadro(
     temMais: consulta.hasNextPage,
     carregando: consulta.isLoading,
     carregandoMais: consulta.isFetchingNextPage,
-    erro: consulta.error,
+    erro: consulta.data ? null : consulta.error,
+    falhouAoCarregarMais: consulta.isFetchNextPageError,
     carregarMais: () => {
       void consulta.fetchNextPage();
     },

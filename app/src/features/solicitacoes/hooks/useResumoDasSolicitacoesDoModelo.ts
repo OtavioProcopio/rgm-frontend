@@ -7,7 +7,7 @@ import { solicitacoesKeys } from './solicitacoesKeys';
 /** Resumo das solicitações de um modelo, sem trazer a lista delas. */
 export function useResumoDasSolicitacoesDoModelo(modeloId?: string | null) {
   return useQuery({
-    queryKey: modeloId ? solicitacoesKeys.resumoDoModelo(modeloId) : solicitacoesKeys.lists(),
+    queryKey: solicitacoesKeys.resumoDoModelo(modeloId ?? ''),
     queryFn: () => modelosApi.obterResumoDasSolicitacoes(modeloId ?? ''),
     enabled: Boolean(modeloId),
   });

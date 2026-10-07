@@ -42,7 +42,7 @@ testado tem em `app/src`.
 
 ## Fase 5 — Resumos de modelos
 
-- [x] T016 Alterar `SRC/features/admin/modelos/types/modeloTypes.ts`, `SRC/features/admin/modelos/api/modelosApi.ts` e `SRC/features/admin/modelos/hooks/modelosKeys.ts`; criar `TST/features/admin/modelos/hooks/resumosDeModelos.test.ts`, `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts` e `SRC/features/admin/modelos/hooks/useResumoDasSolicitacoesDoModelo.ts`: cada hook chama o endpoint uma vez e devolve o resumo; o da ficha não busca sem id
+- [x] T016 Alterar `SRC/features/admin/modelos/types/modeloTypes.ts`, `SRC/features/admin/modelos/api/modelosApi.ts` e `SRC/features/admin/modelos/hooks/modelosKeys.ts`; criar `SRC/features/admin/modelos/hooks/useResumoDeModelos.ts` e `SRC/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo.ts`, cada um com o teste espelhado (o segundo mudou de pasta na implementação; ver `plan.md`): cada hook chama o endpoint uma vez e devolve o resumo; o da ficha não busca sem id
 - [x] T017 [P] Testes e alteração de `SRC/features/solicitacoes/pages/ModelosTab.tsx`: total, ativos, inativos, com pendência e quantidade por máquina vêm do resumo; a tela não lista modelos para contar
 - [x] T018 [P] Testes e alteração de `SRC/features/admin/modelos/pages/ModeloDetalhePage.tsx`: total, abertas, concluídas, taxa de sucesso e os dois tempos vêm do resumo; tempo ausente mostra "—"; a tela só pede as 50 solicitações do histórico
 
@@ -51,7 +51,7 @@ testado tem em `app/src`.
 - [x] T019 Criar `TST/tamanhoDePagina.test.ts`: nenhum `size` literal acima de 100 nem calculado em `app/src` (RNF-03, RF-11)
 - [x] T020 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [x] T021 Rodar a feature contra o backend de `develop`: carga inicial do quadro com 5 listagens de 20 (RNF-01); coluna com 45 mostra 20, depois 40 (cenários da spec); encerradas de 10 e de 60 dias; busca de modelo; área de toque e foco de "Carregar mais", paginação e seletor em 390 px (RNF-04). Registrar na convergência
-- [x] T022 Cobertura dos arquivos medidos em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
+- [x] T022 Cobertura dos arquivos medidos em 95% ou mais (`make coverage`) e `package.json` sem dependência nova. **Medido só em `lib/filtrosDaColuna.ts` e `shared/components/Combobox/Combobox.tsx`, os dois em 100%**: hooks, componentes de feature e páginas alterados estão fora da medição por `app/vitest.config.ts` desde antes desta feature; têm teste espelhado, sem número de cobertura
 - [x] T023 `make validate` verde
 
 ## Rastreabilidade

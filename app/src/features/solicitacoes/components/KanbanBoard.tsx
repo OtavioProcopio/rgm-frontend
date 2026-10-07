@@ -128,6 +128,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
       total: coluna.total,
       temMais: coluna.temMais,
       carregandoMais: coluna.carregandoMais,
+      falhouAoCarregarMais: coluna.falhouAoCarregarMais,
       onCarregarMais: coluna.carregarMais,
       aviso: colunaLimitadaAos30Dias(status, filtrosDoQuadro) ? 'Últimos 30 dias' : undefined,
     };

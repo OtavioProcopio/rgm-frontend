@@ -7,7 +7,7 @@ import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
 import type { PageResponse } from '@/shared/types/page';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
@@ -77,6 +77,14 @@ function ListaPaginada({
   dados: PageResponse<Solicitacao> | undefined;
   onPagina: (pagina: number) => void;
 }) {
+  // A lista encolhe por ação ou por evento de tempo real: se a página atual deixou de
+  // existir, volta para a última que existe.
+  const ultimaPagina = Math.max((dados?.totalPages ?? 1) - 1, 0);
+  const paginaSumiu = dados !== undefined && dados.page > ultimaPagina;
+  useEffect(() => {
+    if (paginaSumiu) onPagina(ultimaPagina);
+  }, [paginaSumiu, ultimaPagina, onPagina]);
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
       <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{titulo}</h2>

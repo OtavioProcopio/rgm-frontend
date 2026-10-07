@@ -48,8 +48,8 @@ const solicitacao = {
 afterEach(cleanup);
 
 describe('KanbanColumn', () => {
-  it('renders column label in desktop view', () => {
-    const { container } = render(
+  function colunaBasica(extra: Partial<Parameters<typeof KanbanColumn>[0]> = {}) {
+    return (
       <KanbanColumn
         config={config}
         cards={[]}
@@ -62,87 +62,41 @@ describe('KanbanColumn', () => {
         onDragOver={vi.fn()}
         onDrop={vi.fn()}
         onAdvance={vi.fn()}
-      />,
+        {...extra}
+      />
     );
+  }
+
+  it('deve mostrar o nome da coluna no computador', () => {
+    // Act
+    const { container } = render(colunaBasica());
+
+    // Assert
     expect(within(container).getByText('A Fazer')).toBeDefined();
   });
 
-  it('renders empty state when no cards', () => {
-    const { container } = render(
-      <KanbanColumn
-        config={config}
-        cards={[]}
-        total={0}
-        isDropTarget={false}
-        isInvalidDrop={false}
-        canDragCard={() => true}
-        canAdvanceCard={() => false}
-        onDragStart={vi.fn()}
-        onDragOver={vi.fn()}
-        onDrop={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
+  it('deve dizer que não há solicitação quando a coluna está vazia', () => {
+    // Act
+    const { container } = render(colunaBasica());
+
+    // Assert
     expect(within(container).getByText(/nenhuma solicitação/i)).toBeDefined();
   });
 
-  it('renders cards when present', () => {
-    const { container } = render(
-      <KanbanColumn
-        config={config}
-        cards={[solicitacao]}
-        total={1}
-        isDropTarget={false}
-        isInvalidDrop={false}
-        canDragCard={() => true}
-        canAdvanceCard={() => false}
-        onDragStart={vi.fn()}
-        onDragOver={vi.fn()}
-        onDrop={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByTestId('kanban-card')).toBeDefined();
-    expect(within(container).getByText('Card Title')).toBeDefined();
+  it('deve mostrar o card de cada solicitação recebida', () => {
+    // Act
+    const { container } = render(colunaBasica({ cards: [solicitacao], total: 1 }));
+
+    // Assert
+    expect(within(container).getByTestId('kanban-card').textContent).toBe('Card Title');
   });
 
-  it('does not show header in mobile view', () => {
-    const { container } = render(
-      <KanbanColumn
-        config={config}
-        cards={[]}
-        total={0}
-        isDropTarget={false}
-        isInvalidDrop={false}
-        mobileView
-        canDragCard={() => true}
-        canAdvanceCard={() => false}
-        onDragStart={vi.fn()}
-        onDragOver={vi.fn()}
-        onDrop={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
+  it('deve não mostrar o nome da coluna no celular, onde as abas já o mostram', () => {
+    // Act
+    const { container } = render(colunaBasica({ mobileView: true }));
+
+    // Assert
     expect(within(container).queryByText('A Fazer')).toBeNull();
-  });
-
-  it('shows card count', () => {
-    const { container } = render(
-      <KanbanColumn
-        config={config}
-        cards={[solicitacao, { ...solicitacao, id: '2' }]}
-        total={2}
-        isDropTarget={false}
-        isInvalidDrop={false}
-        canDragCard={() => true}
-        canAdvanceCard={() => false}
-        onDragStart={vi.fn()}
-        onDragOver={vi.fn()}
-        onDrop={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText('2')).toBeDefined();
   });
 
   function coluna(relacaoDe?: Parameters<typeof KanbanColumn>[0]['relacaoDe']) {
@@ -265,5 +219,31 @@ describe('KanbanColumn', () => {
 
     // Assert
     expect(within(container).queryByText('Últimos 30 dias')).toBeNull();
+  });
+
+  it('deve avisar na coluna quando a busca do próximo bloco falha', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: true, falhouAoCarregarMais: true }));
+
+    // Assert
+    expect(within(container).getByRole('alert').textContent).toBe(
+      'Não foi possível carregar mais solicitações. Tente de novo.',
+    );
+  });
+
+  it('deve manter "Carregar mais" disponível para nova tentativa quando a busca do próximo bloco falha', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: true, falhouAoCarregarMais: true }));
+
+    // Assert
+    expect(within(container).getByRole('button', { name: /Carregar mais/ })).toBeDefined();
+  });
+
+  it('deve não avisar de falha quando a busca do próximo bloco não falhou', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: true }));
+
+    // Assert
+    expect(within(container).queryByRole('alert')).toBeNull();
   });
 });

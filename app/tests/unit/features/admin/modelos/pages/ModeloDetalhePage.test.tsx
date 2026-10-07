@@ -77,7 +77,10 @@ describe('ModeloDetalhePage (admin)', () => {
     expect(within(container).getByText(/não foi possível/i)).toBeDefined();
   });
 
-  async function abrirComResumo(resumo: Record<string, unknown> | undefined) {
+  async function abrirComResumo(
+    resumo: Record<string, unknown> | undefined,
+    estadoDoResumo: { isLoading?: boolean; isError?: boolean } = {},
+  ) {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
     const { useResumoDasSolicitacoesDoModelo } = await import(
@@ -94,6 +97,9 @@ describe('ModeloDetalhePage (admin)', () => {
     } as unknown as ReturnType<typeof useSolicitacoes>);
     vi.mocked(useResumoDasSolicitacoesDoModelo).mockReturnValue({
       data: resumo,
+      isLoading: false,
+      isError: false,
+      ...estadoDoResumo,
     } as unknown as ReturnType<typeof useResumoDasSolicitacoesDoModelo>);
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
     const { container } = render(<ModeloDetalhePage />, { wrapper: AppWrapper });
@@ -143,6 +149,34 @@ describe('ModeloDetalhePage (admin)', () => {
 
     // Assert
     expect(within(container).getByText('0%')).toBeDefined();
+  });
+
+  it('deve avisar que o resumo não pôde ser carregado quando a API falha', async () => {
+    // Act
+    const { container } = await abrirComResumo(undefined, { isError: true });
+
+    // Assert
+    expect(within(container).getByRole('alert').textContent).toBe(
+      'Não foi possível carregar o resumo das solicitações deste modelo.',
+    );
+  });
+
+  it('deve não mostrar indicadores zerados quando o resumo falha', async () => {
+    // Act
+    const { container } = await abrirComResumo(undefined, { isError: true });
+
+    // Assert
+    expect(within(container).queryByText('Taxa de sucesso')).toBeNull();
+  });
+
+  it('deve dizer que o resumo está carregando, sem indicadores, enquanto a API não responde', async () => {
+    // Act
+    const { container } = await abrirComResumo(undefined, { isLoading: true });
+
+    // Assert
+    expect(within(container).getByRole('status').textContent).toBe(
+      'Carregando o resumo das solicitações...',
+    );
   });
 
   it('deve pedir só as 50 solicitações do histórico, e não a lista inteira do modelo', async () => {

@@ -87,7 +87,6 @@ const STATUS: StatusSolicitacao[] = ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO', 
 
 type Coluna = ReturnType<typeof useColunasDoQuadro>[StatusSolicitacao];
 
-/** As cinco colunas como o hook as entrega, a partir de uma lista de solicitações. */
 function colunasCom(
   solicitacoes: Solicitacao[],
   porStatus: Partial<Record<StatusSolicitacao, Partial<Coluna>>> = {},
@@ -102,6 +101,7 @@ function colunasCom(
         carregando: false,
         carregandoMais: false,
         erro: null,
+        falhouAoCarregarMais: false,
         carregarMais: vi.fn(),
         ...porStatus[status],
       };
@@ -124,38 +124,44 @@ async function carregarQuadroCom(solicitacao: Solicitacao) {
 }
 
 describe('KanbanBoard', () => {
-  it('shows loading state', () => {
+  it('deve mostrar o carregamento enquanto alguma coluna ainda carrega', () => {
+    // Arrange
     const { AppWrapper } = createAppWrapper();
+
+    // Act
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    expect(within(container).getByText(/carregando/i)).toBeDefined();
+
+    // Assert
+    expect(within(container).getByText('Carregando quadro...')).toBeDefined();
   });
 
-  it('renders kanban columns when data is loaded', async () => {
-    const { useColunasDoQuadro } = await import('@/features/solicitacoes/hooks/useColunaDoQuadro');
+  it('deve mostrar as cinco colunas quando todas responderam', () => {
+    // Arrange
     vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([]));
-
     const { AppWrapper } = createAppWrapper();
+
+    // Act
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    expect(within(container).getByText('A Fazer')).toBeDefined();
-    expect(within(container).getByText('Em Andamento')).toBeDefined();
+
+    // Assert
+    const abas = within(container)
+      .getAllByRole('button', { name: /^0\s*(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada)$/ })
+      .map((aba) => aba.textContent);
+    expect(abas).toHaveLength(5);
   });
 
-  it('renders normal columns for OPERADOR when there are assigned solicitacoes', async () => {
-    const { useColunasDoQuadro } = await import('@/features/solicitacoes/hooks/useColunaDoQuadro');
-    vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([
-        {
-          id: 's1', titulo: 'T', status: 'A_FAZER', tipo: 'REPARO', prioridade: null,
-          descricao: '', modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
-          criadaEm: new Date().toISOString(), atualizadaEm: new Date().toISOString(),
-          concluidaEm: null, canceladaEm: null, responsavelIds: [],
-        },
-      ]));
-
+  it('deve mostrar as colunas ao operador que tem solicitação', () => {
+    // Arrange
+    vi.mocked(useColunasDoQuadro).mockReturnValue(
+      colunasCom([criarSolicitacao({ id: 's1', status: 'A_FAZER' })]),
+    );
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+
+    // Act
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    expect(within(container).getByText('A Fazer')).toBeDefined();
-    expect(within(container).getByText('Em Andamento')).toBeDefined();
-    expect(within(container).queryByText('Nenhuma solicitação atribuída a você')).toBeNull();
+
+    // Assert
+    expect(within(container).getByRole('button', { name: /^1\s*A Fazer$/ })).toBeDefined();
   });
 
   it('deve listar os responsáveis disponíveis no modal de triagem quando o gestor avança um card de A Fazer', async () => {
@@ -581,7 +587,18 @@ describe('KanbanBoard — colunas em blocos', () => {
     });
   });
 
-  it('deve mostrar o carregamento, e não o quadro vazio do operador, enquanto alguma coluna ainda carrega', () => {
+  it('deve mostrar o carregamento ao operador enquanto alguma coluna ainda carrega', () => {
+    // Arrange
+    const colunas = colunasCom([], { CANCELADA: { carregando: true } });
+
+    // Act
+    const { container } = montar(colunas, OPERADOR);
+
+    // Assert
+    expect(within(container).getByText('Carregando quadro...')).toBeDefined();
+  });
+
+  it('deve não mostrar o quadro vazio do operador enquanto alguma coluna ainda carrega', () => {
     // Arrange
     const colunas = colunasCom([], { CANCELADA: { carregando: true } });
 
@@ -624,5 +641,43 @@ describe('KanbanBoard — colunas em blocos', () => {
 
     // Assert
     expect(within(container).getByText('Erro ao carregar solicitações')).toBeDefined();
+  });
+
+  it('deve entregar às colunas o início do dia de 30 dias atrás', () => {
+    // Arrange
+    const esperado = new Date(
+      (Math.floor(Date.now() / 86_400_000) - 30) * 86_400_000,
+    ).toISOString();
+
+    // Act
+    montar(colunasCom([]));
+
+    // Assert
+    expect(vi.mocked(useColunasDoQuadro).mock.lastCall?.[1]).toBe(esperado);
+  });
+
+  it('deve entregar às colunas o mesmo instante dos 30 dias a cada vez que o quadro é desenhado', () => {
+    // Arrange
+    const { rerender } = montar(colunasCom([]));
+
+    // Act
+    rerender(<KanbanBoard />);
+
+    // Assert
+    const instantes = vi.mocked(useColunasDoQuadro).mock.calls.slice(-2).map(([, inicio]) => inicio);
+    expect(instantes[0]).toBe(instantes[1]);
+  });
+
+  it('deve manter as colunas na tela, com o aviso na coluna, quando carregar mais falha', () => {
+    // Arrange
+    const colunas = colunasCom(emAndamento(20), {
+      EM_ANDAMENTO: { total: 45, temMais: true, falhouAoCarregarMais: true },
+    });
+
+    // Act
+    const { container } = montar(colunas);
+
+    // Assert
+    expect(within(container).queryByText('Erro ao carregar solicitações')).toBeNull();
   });
 });

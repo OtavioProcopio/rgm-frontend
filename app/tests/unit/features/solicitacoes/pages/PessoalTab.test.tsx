@@ -1,9 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { act, cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
 
@@ -70,24 +70,36 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
   const EU = 'op-1';
   const OUTRO = 'op-2';
 
-  /** 25 em aberto abertas pelo operador (nenhuma com ele) e 3 sob responsabilidade dele. */
-  const minhas = Array.from({ length: 25 }, (_, i) =>
-    solicitacao({
-      id: `a-${i}`,
-      titulo: `Abri ${String(i + 1).padStart(2, '0')}`,
-      abertaPorUsuarioId: EU,
-      responsavelIds: i % 2 ? [OUTRO] : [],
-    }),
-  );
-  const comigo = Array.from({ length: 3 }, (_, i) =>
-    solicitacao({
-      id: `r-${i}`,
-      titulo: `Comigo ${i + 1}`,
-      abertaPorUsuarioId: OUTRO,
-      status: 'EM_ANDAMENTO',
-      responsavelIds: [EU],
-    }),
-  );
+  const minhas: Solicitacao[] = [];
+  const comigo: Solicitacao[] = [];
+  let clienteAtual: ReturnType<typeof createAppWrapper>['queryClient'];
+  const queryClient = () => clienteAtual;
+
+  beforeEach(() => {
+    minhas.length = 0;
+    comigo.length = 0;
+    for (let i = 0; i < 25; i += 1) {
+      minhas.push(
+        solicitacao({
+          id: `a-${i}`,
+          titulo: `Abri ${String(i + 1).padStart(2, '0')}`,
+          abertaPorUsuarioId: EU,
+          responsavelIds: i % 2 ? [OUTRO] : [],
+        }),
+      );
+    }
+    for (let i = 0; i < 13; i += 1) {
+      comigo.push(
+        solicitacao({
+          id: `r-${i}`,
+          titulo: `Comigo ${String(i + 1).padStart(2, '0')}`,
+          abertaPorUsuarioId: OUTRO,
+          status: 'EM_ANDAMENTO',
+          responsavelIds: [EU],
+        }),
+      );
+    }
+  });
 
   const pagina = (itens: Solicitacao[], page: number, size: number): PageResponse<Solicitacao> => ({
     content: itens.slice(page * size, page * size + size),
@@ -112,7 +124,10 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
       if (filtros.abertaPorUsuarioId) return Promise.resolve(pagina(minhas, filtros.page, filtros.size));
       return Promise.resolve(pagina(comigo, filtros.page, filtros.size));
     });
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    const { AppWrapper, queryClient: cliente } = createAppWrapper({
+      user: { nome: 'Op', perfil: 'OPERADOR' },
+    });
+    clienteAtual = cliente;
     const tela = render(<PessoalTab />, { wrapper: AppWrapper });
     await tela.findByRole('heading', { name: 'Minhas solicitações abertas' });
     return { tela, listar: vi.mocked(solicitacoesApi.listar) };
@@ -164,6 +179,9 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
   });
 
   it('deve não mostrar paginação na lista que cabe em uma página', async () => {
+    // Arrange
+    comigo.length = 3;
+
     // Act
     const { tela } = await abrirAba();
 
@@ -176,7 +194,7 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
     const { tela } = await abrirAba();
 
     // Act
-    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
 
     // Assert
     expect(await tela.findByRole('link', { name: /Abri 11/ })).toBeDefined();
@@ -188,7 +206,7 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
     listar.mockClear();
 
     // Act
-    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
     await tela.findByRole('link', { name: /Abri 11/ });
 
     // Assert
@@ -205,12 +223,12 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
     expect(tela.getByText('25')).toBeDefined();
   });
 
-  it('deve contar em "Sou responsável" o total em aberto sob responsabilidade do operador', async () => {
+  it('deve contar em "Sou responsável" o total em aberto com o operador, e não os 10 da página', async () => {
     // Act
     const { tela } = await abrirAba();
 
     // Assert
-    expect(tela.getByText('3')).toBeDefined();
+    expect(tela.getByText('13')).toBeDefined();
   });
 
   it('deve contar em "Concluídas por mim" o total devolvido pela contagem de concluídas como responsável', async () => {
@@ -227,5 +245,35 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
 
     // Assert
     expect(tela.getByRole('link', { name: /Abri 02/ })).toBeDefined();
+  });
+
+  it('deve voltar para a última página que existe quando a página aberta deixa de existir', async () => {
+    // Arrange
+    const { tela } = await abrirAba();
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
+    await tela.findByRole('link', { name: /Abri 21/ });
+
+    // Act
+    minhas.length = 20;
+    await act(() => queryClient().invalidateQueries());
+
+    // Assert
+    expect(await tela.findByRole('link', { name: /Abri 11/ })).toBeDefined();
+  });
+
+  it('deve manter a paginação visível depois de voltar da página que deixou de existir', async () => {
+    // Arrange
+    const { tela } = await abrirAba();
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
+    await tela.findByRole('link', { name: /Abri 21/ });
+
+    // Act
+    minhas.length = 20;
+    await act(() => queryClient().invalidateQueries());
+
+    // Assert
+    expect(await tela.findByText(/Página 2 de 2/)).toBeDefined();
   });
 });

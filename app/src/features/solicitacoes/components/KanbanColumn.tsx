@@ -22,6 +22,7 @@ type Props = {
   total: number;
   temMais?: boolean;
   carregandoMais?: boolean;
+  falhouAoCarregarMais?: boolean;
   onCarregarMais?: () => void;
   /** Recorte aplicado à coluna, dito ao usuário (por exemplo "Últimos 30 dias"). */
   aviso?: string;
@@ -44,6 +45,7 @@ export function KanbanColumn({
   total,
   temMais = false,
   carregandoMais = false,
+  falhouAoCarregarMais = false,
   onCarregarMais,
   aviso,
   isDropTarget,
@@ -126,6 +128,11 @@ export function KanbanColumn({
             />
           ))
         )}
+        {falhouAoCarregarMais ? (
+          <p role="alert" className="px-1 text-xs font-medium text-red-700 dark:text-red-300">
+            Não foi possível carregar mais solicitações. Tente de novo.
+          </p>
+        ) : null}
         {temMais ? (
           <Button
             type="button"
