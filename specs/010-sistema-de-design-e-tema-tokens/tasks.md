@@ -28,8 +28,8 @@ arquivo.
 
 ## Fase 1 — Domínio
 
-- [ ] T002 Criar `TST/shared/lib/contraste.test.ts`: preto sobre branco dá 21:1; branco sobre branco dá 1:1; a ordem das cores não muda o resultado; um par conhecido de 4,5:1 fica na fronteira; cor em hexadecimal de 3 e de 6 dígitos; cor inválida lança erro
-- [ ] T003 Criar `SRC/shared/lib/contraste.ts`
+- [x] T002 Criar `TST/shared/lib/contraste.test.ts`: preto sobre branco dá 21:1; branco sobre branco dá 1:1; a ordem das cores não muda o resultado; um par conhecido de 4,5:1 fica na fronteira; cor em hexadecimal de 3 e de 6 dígitos; cor inválida lança erro
+- [x] T003 Criar `SRC/shared/lib/contraste.ts`
 - [ ] T004 Criar `TST/shared/lib/rotulos.test.ts`: cada valor de status, tipo e prioridade da solicitação, perfil, tipo do modelo, tipo de evidência e tipo de atividade tem rótulo; nenhum rótulo é vazio; os rótulos dos cenários "Um rótulo por valor da API" (Em validação, Criação de modelo, Alta, Gestor)
 - [ ] T005 Criar `SRC/shared/lib/rotulos.ts`
 - [ ] T006 Testes em `TST/shared/lib/theme.test.ts`: sem nada guardado a preferência é `system`; `system` resolve para claro ou escuro conforme o sistema; `light` e `dark` não seguem o sistema; "escuro" da versão antiga vira `system` uma vez; depois da passagem, escolher `dark` é mantido; "claro" da versão antiga é mantido; aplicar o tema põe ou tira a classe do documento; aplicar o tema atualiza a cor da barra do navegador; a preferência escolhida é guardada
