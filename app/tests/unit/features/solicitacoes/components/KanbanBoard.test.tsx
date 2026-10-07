@@ -25,12 +25,14 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
   KanbanColumn: ({
     config,
     cards,
+    relacaoDe,
     onAdvance,
     onDragStart,
     onDrop,
   }: {
     config: { status: string; label: string };
     cards: { id: string; titulo: string }[];
+    relacaoDe?: (card: unknown) => string | null;
     onAdvance: (card: unknown) => void;
     onDragStart: (card: unknown) => void;
     onDrop: (status: string) => void;
@@ -38,6 +40,9 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
     <div>
       {cards.map((card) => (
         <div key={card.id}>
+          <span data-testid={`relacao-${card.id}`}>
+            {relacaoDe ? (relacaoDe(card) ?? 'sem relação') : 'não calculada'}
+          </span>
           <button type="button" onClick={() => onAdvance(card)}>
             Avançar {card.titulo}
           </button>
@@ -88,18 +93,6 @@ describe('KanbanBoard', () => {
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
     expect(within(container).getByText('A Fazer')).toBeDefined();
     expect(within(container).getByText('Em Andamento')).toBeDefined();
-  });
-
-  it('shows a scoped empty state for OPERADOR with no assigned solicitacoes', async () => {
-    const { useKanbanSolicitacoes } = await import('@/features/solicitacoes/hooks/useKanbanSolicitacoes');
-    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
-      data: [], isLoading: false, error: null,
-    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
-
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
-    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    expect(within(container).getByText('Nenhuma solicitação atribuída a você')).toBeDefined();
-    expect(within(container).queryByText('A Fazer')).toBeNull();
   });
 
   it('renders normal columns for OPERADOR when there are assigned solicitacoes', async () => {
@@ -275,5 +268,152 @@ describe('KanbanBoard', () => {
 
     // Assert
     expect(within(dialogo).getByText('Descartar o que foi preenchido?')).toBeDefined();
+  });
+});
+
+describe('KanbanBoard — quadro do operador', () => {
+  const OPERADOR = { nome: 'Op', perfil: 'OPERADOR' } as const;
+  const GESTOR = { nome: 'Ge', perfil: 'GESTOR' } as const;
+
+  async function quadroCom(solicitacoes: Solicitacao[]) {
+    const { useKanbanSolicitacoes } = await import('@/features/solicitacoes/hooks/useKanbanSolicitacoes');
+    vi.mocked(useKanbanSolicitacoes).mockReturnValue({
+      data: solicitacoes, isLoading: false, error: null,
+    } as unknown as ReturnType<typeof useKanbanSolicitacoes>);
+  }
+
+  function montar(user: { nome: string; perfil: 'OPERADOR' | 'GESTOR' }, props: Parameters<typeof KanbanBoard>[0] = {}) {
+    const { AppWrapper } = createAppWrapper({ user, initialEntries: ['/app/solicitacoes'] });
+    return render(<KanbanBoard {...props} />, { wrapper: AppWrapper });
+  }
+
+  it('deve dizer que o operador ainda não abriu nem recebeu solicitações quando ele não tem nenhuma', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    expect(
+      within(container).getByText('Você ainda não abriu nem recebeu solicitações'),
+    ).toBeDefined();
+  });
+
+  it('deve não usar o texto da regra antiga quando o operador não tem nenhuma solicitação', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    expect(within(container).queryByText('Nenhuma solicitação atribuída a você')).toBeNull();
+  });
+
+  it('deve oferecer "Nova solicitação", levando à abertura, quando o operador não tem nenhuma solicitação', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    const link = within(container).getByRole('link', { name: 'Nova solicitação' });
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes/nova');
+  });
+
+  it.each([
+    ['modelo', { modeloId: 'm-9' }],
+    ['início do período', { dataInicio: '2026-10-01T00:00:00Z' }],
+    ['fim do período', { dataFim: '2026-10-07T23:59:59Z' }],
+  ])(
+    'deve dizer que não há solicitação para o filtro quando o filtro de %s não encontra nenhuma do operador',
+    async (_nome, filtro) => {
+      // Arrange
+      await quadroCom([]);
+
+      // Act
+      const { container } = montar(OPERADOR, filtro);
+
+      // Assert
+      expect(within(container).getByText('Nenhuma solicitação para este filtro')).toBeDefined();
+      expect(
+        within(container).queryByText('Você ainda não abriu nem recebeu solicitações'),
+      ).toBeNull();
+    },
+  );
+
+  it('deve pedir para limpar o filtro uma vez quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroCom([]);
+    const onLimparFiltro = vi.fn();
+    const { container } = montar(OPERADOR, { modeloId: 'm-9', onLimparFiltro });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect(onLimparFiltro).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve marcar como aberta a solicitação que o operador abriu e não recebeu', async () => {
+    // Arrange
+    await quadroCom([criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: [] })]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    expect(within(container).getAllByTestId('relacao-s1')[0].textContent).toBe('ABERTA');
+  });
+
+  it('deve marcar como atribuída a solicitação de outra pessoa que está com o operador', async () => {
+    // Arrange
+    await quadroCom([
+      criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'outro', responsavelIds: ['eu'] }),
+    ]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    expect(within(container).getAllByTestId('relacao-s1')[0].textContent).toBe('ATRIBUIDA');
+  });
+
+  it('deve marcar só como atribuída a solicitação que o operador abriu e também recebeu', async () => {
+    // Arrange
+    await quadroCom([criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] })]);
+
+    // Act
+    const { container } = montar(OPERADOR);
+
+    // Assert
+    expect(within(container).getAllByTestId('relacao-s1')[0].textContent).toBe('ATRIBUIDA');
+  });
+
+  it('deve não calcular relação para o gestor, mesmo na solicitação que ele abriu', async () => {
+    // Arrange
+    await quadroCom([criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] })]);
+
+    // Act
+    const { container } = montar(GESTOR);
+
+    // Assert
+    expect(within(container).getAllByTestId('relacao-s1')[0].textContent).toBe('não calculada');
+  });
+
+  it('deve mostrar as colunas, e não o quadro vazio do operador, quando o gestor não tem solicitações', async () => {
+    // Arrange
+    await quadroCom([]);
+
+    // Act
+    const { container } = montar(GESTOR);
+
+    // Assert
+    expect(within(container).getAllByText('Soltar em A Fazer').length).toBeGreaterThan(0);
+    expect(
+      within(container).queryByText('Você ainda não abriu nem recebeu solicitações'),
+    ).toBeNull();
   });
 });

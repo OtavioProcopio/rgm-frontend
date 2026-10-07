@@ -24,4 +24,24 @@ describe('EmptyState', () => {
     expect(within(container).queryByText(/p/i)).toBeNull();
     expect(container.querySelector('p')).toBeNull();
   });
+
+  it('deve mostrar a ação quando ela é informada', () => {
+    // Arrange
+    const acao = <button type="button">Limpar filtro</button>;
+
+    // Act
+    const { container } = render(<EmptyState title="Nenhum item" action={acao} />);
+
+    // Assert
+    expect(within(container).getByRole('button', { name: 'Limpar filtro' })).toBeDefined();
+  });
+
+  it('deve não ter controle interativo quando nenhuma ação é informada', () => {
+    // Act
+    const { container } = render(<EmptyState title="Nenhum item" description="Crie um novo." />);
+
+    // Assert
+    expect(within(container).queryByRole('button')).toBeNull();
+    expect(within(container).queryByRole('link')).toBeNull();
+  });
 });

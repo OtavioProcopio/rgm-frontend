@@ -19,7 +19,22 @@ vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   solicitacoesApi: { exportar: vi.fn().mockResolvedValue('') },
 }));
 vi.mock('@/features/solicitacoes/components/KanbanBoard', () => ({
-  KanbanBoard: () => <div data-testid="kanban-board" />,
+  KanbanBoard: ({
+    dataInicio,
+    dataFim,
+    onLimparFiltro,
+  }: {
+    dataInicio?: string;
+    dataFim?: string;
+    onLimparFiltro?: () => void;
+  }) => (
+    <div data-testid="kanban-board">
+      <span data-testid="periodo-do-quadro">{`${dataInicio ?? 'sem início'} | ${dataFim ?? 'sem fim'}`}</span>
+      <button type="button" onClick={onLimparFiltro}>
+        Limpar filtro
+      </button>
+    </div>
+  ),
 }));
 vi.mock('@/features/solicitacoes/components/SolicitacaoCard', () => ({
   SolicitacaoCard: ({ solicitacao }: { solicitacao: { titulo: string } }) => (
@@ -131,5 +146,47 @@ describe('SolicitacoesPage', () => {
     const alerta = await screen.findByRole('alert');
     expect(alerta.textContent).toBe(`Não foi possível exportar o PDF. ${recusa.message}`);
     expect(alerta.parentElement).toBe(botao.parentElement);
+  });
+});
+
+describe('SolicitacoesPage — limpar o filtro do quadro', () => {
+  async function quadroFiltradoPorPeriodo() {
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.type(screen.getByLabelText('Criada a partir de'), '2026-10-01');
+    await userEvent.type(screen.getByLabelText('Criada até'), '2026-10-07');
+  }
+
+  it('deve entregar ao quadro o período escolhido quando as datas são preenchidas', async () => {
+    // Act
+    await quadroFiltradoPorPeriodo();
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe(
+      '2026-10-01T00:00:00Z | 2026-10-07T23:59:59Z',
+    );
+  });
+
+  it('deve entregar ao quadro o período vazio quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroFiltradoPorPeriodo();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve esvaziar os campos de período quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroFiltradoPorPeriodo();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect((screen.getByLabelText('Criada a partir de') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Criada até') as HTMLInputElement).value).toBe('');
   });
 });

@@ -34,21 +34,21 @@ testado tem em `app/src`.
 
 ## Fase 3 — Quadro do operador
 
-- [ ] T014 [P] Testes e alteração de `SRC/shared/components/EmptyState/EmptyState.tsx`: mostra a ação quando recebe `action`; sem `action` não há controle interativo
-- [ ] T015 [P] Testes e alteração de `SRC/features/solicitacoes/components/KanbanCard.tsx`: mostra "Aberta por você" com relação aberta; mostra "Atribuída a você" com relação atribuída; sem relação não mostra nenhuma das duas
-- [ ] T016 Testes e alteração de `SRC/features/solicitacoes/components/KanbanColumn.tsx`: repassa ao card a relação devolvida por `relacaoDe`
-- [ ] T017 Testes em `TST/features/solicitacoes/components/KanbanBoard.test.tsx`: operador sem nenhuma vê "Você ainda não abriu nem recebeu solicitações" e o link "Nova solicitação" para a abertura; não vê o texto antigo; operador com filtro e sem resultado vê "Nenhuma solicitação para este filtro" e "Limpar filtro"; "Limpar filtro" chama `onLimparFiltro`; card aberto pelo operador mostra "Aberta por você"; card atribuído mostra "Atribuída a você"; card aberto e atribuído mostra só "Atribuída a você"; gestor não vê marca; gestor sem solicitações vê as colunas
-- [ ] T018 Alterar `SRC/features/solicitacoes/components/KanbanBoard.tsx`
-- [ ] T019 Testes e alteração de `SRC/features/solicitacoes/pages/SolicitacoesPage.tsx`: "Limpar filtro" zera modelo e período e o quadro volta a mostrar as solicitações
-- [ ] T020 [P] Teste em `TST/features/solicitacoes/hooks/solicitacoesHooks.test.ts`: abrir solicitação invalida as listas (RF-09)
-- [ ] T021 [P] Testes em `TST/features/solicitacoes/pages/PessoalTab.test.tsx`: "abertas por mim" lista as solicitações em aberto que o operador abriu, atribuídas ou não; a contagem de concluídas e a de canceladas abertas por ele vêm da consulta por "aberta por mim", sem filtro de responsável
+- [x] T014 [P] Testes e alteração de `SRC/shared/components/EmptyState/EmptyState.tsx`: mostra a ação quando recebe `action`; sem `action` não há controle interativo
+- [x] T015 [P] Testes e alteração de `SRC/features/solicitacoes/components/KanbanCard.tsx`: mostra "Aberta por você" com relação aberta; mostra "Atribuída a você" com relação atribuída; sem relação não mostra nenhuma das duas
+- [x] T016 Testes e alteração de `SRC/features/solicitacoes/components/KanbanColumn.tsx`: repassa ao card a relação devolvida por `relacaoDe`
+- [x] T017 Testes em `TST/features/solicitacoes/components/KanbanBoard.test.tsx`: operador sem nenhuma vê "Você ainda não abriu nem recebeu solicitações" e o link "Nova solicitação" para a abertura; não vê o texto antigo; operador com filtro e sem resultado vê "Nenhuma solicitação para este filtro" e "Limpar filtro"; "Limpar filtro" chama `onLimparFiltro`; card aberto pelo operador mostra "Aberta por você"; card atribuído mostra "Atribuída a você"; card aberto e atribuído mostra só "Atribuída a você"; gestor não vê marca; gestor sem solicitações vê as colunas
+- [x] T018 Alterar `SRC/features/solicitacoes/components/KanbanBoard.tsx`
+- [x] T019 Testes e alteração de `SRC/features/solicitacoes/pages/SolicitacoesPage.tsx`: "Limpar filtro" zera modelo e período e o quadro volta a mostrar as solicitações
+- [x] T020 [P] Teste em `TST/features/solicitacoes/hooks/solicitacoesHooks.test.ts`: abrir solicitação invalida as listas (RF-09)
+- [x] T021 [P] Testes em `TST/features/solicitacoes/pages/PessoalTab.test.tsx`: "abertas por mim" lista as solicitações em aberto que o operador abriu, atribuídas ou não; a contagem de concluídas e a de canceladas abertas por ele vêm da consulta por "aberta por mim", sem filtro de responsável
 
 ## Fase 4 — Integração e fechamento
 
-- [ ] T022 Roteiro de medição com API simulada: trocar a senha, executar 10 ações sem ir à tela de entrada (RNF-01) e medir o tempo até a conexão de tempo real reabrir (RNF-02); registrar o resultado na convergência
-- [ ] T023 Conferir `openspec/specs/` e acrescentar a linha desta feature à tabela de `openspec/README.md` se algum comportamento descrito lá mudou
-- [ ] T024 Cobertura por arquivo alterado em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
-- [ ] T025 `make validate` verde
+- [x] T022 Roteiro de medição com API simulada: trocar a senha, executar 10 ações sem ir à tela de entrada (RNF-01) e medir o tempo até a conexão de tempo real reabrir (RNF-02); registrar o resultado na convergência
+- [x] T023 Conferir `openspec/specs/` e acrescentar a linha desta feature à tabela de `openspec/README.md` se algum comportamento descrito lá mudou
+- [x] T024 Cobertura por arquivo alterado em 95% ou mais (`make coverage`) e `package.json` sem dependência nova
+- [x] T025 `make validate` verde
 
 ## Rastreabilidade
 

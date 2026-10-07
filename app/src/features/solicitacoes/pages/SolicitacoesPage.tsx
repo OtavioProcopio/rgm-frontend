@@ -119,6 +119,14 @@ export function SolicitacoesPage() {
             modeloId={filters.modeloId}
             dataInicio={filters.criadaEmInicio}
             dataFim={filters.criadaEmFim}
+            onLimparFiltro={() =>
+              setFilters((f) => ({
+                ...f,
+                modeloId: undefined,
+                criadaEmInicio: undefined,
+                criadaEmFim: undefined,
+              }))
+            }
           />
         </>
       ) : (

@@ -213,7 +213,7 @@ Funcionalidade: Sessão mantida na troca de senha e quadro do operador com o que
     E abri 2 solicitações já concluídas, nenhuma atribuída a mim
     Quando abro a aba pessoal
     Então "abertas por mim" lista as 3 solicitações em aberto
-    E a contagem de concluídas abertas por mim é 2
+    E o indicador "Abertas por mim" mostra 3
 ```
 
 ## Ambiguidades
@@ -226,6 +226,10 @@ Já decidido, sem pergunta:
   2026-10-05, de publicar backend e frontend juntos na v1.6.0, backend antes.
 - **Onde a marca aparece:** só no card do quadro, como diz a issue. Na aba pessoal as duas
   listas já separam o que o operador abriu do que está com ele.
+- **Cenário da aba pessoal, corrigido em 2026-10-07 durante a implementação:** a tela não
+  exibe a contagem de concluídas abertas pelo operador; ela a usa para calcular o indicador
+  "Abertas por mim" (tudo o que ele abriu menos concluídas e canceladas). O cenário passou
+  a conferir o indicador, que é o que se vê.
 - **Aba pessoal (RF-10, RF-11):** a issue pede para conferir com dados reais. Os requisitos
   dizem o resultado esperado; se a tela já chega nele só com a mudança do backend, a
   entrega é o teste que prova, sem mudança de código.

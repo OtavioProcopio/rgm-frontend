@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 
+import { solicitacoesKeys } from '@/features/solicitacoes/hooks/solicitacoesKeys';
 import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolicitacao';
 import { useAtividades } from '@/features/solicitacoes/hooks/useAtividades';
 import { useCancelarSolicitacao } from '@/features/solicitacoes/hooks/useCancelarSolicitacao';
@@ -143,5 +144,33 @@ describe('mutation hooks', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { result } = renderHook(() => (hook as (id?: string) => any)('test-id'), { wrapper: QueryWrapper });
     expect(typeof result.current.mutateAsync).toBe('function');
+  });
+});
+
+describe('useAbrirSolicitacao', () => {
+  it('deve atualizar as listas, onde o quadro busca os cards, quando a solicitação é aberta', async () => {
+    // Arrange
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(() => useAbrirSolicitacao(), { wrapper: QueryWrapper });
+    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
+
+    // Act
+    await result.current.mutateAsync(nova as Parameters<typeof result.current.mutateAsync>[0]);
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve usar para o quadro uma consulta que pertence às listas atualizadas na abertura', () => {
+    // Arrange
+    const chaveDoQuadro = solicitacoesKeys.list({ page: 0, size: 200 });
+
+    // Act
+    const prefixo = chaveDoQuadro.slice(0, solicitacoesKeys.lists().length);
+
+    // Assert
+    expect(prefixo).toEqual(solicitacoesKeys.lists());
   });
 });
