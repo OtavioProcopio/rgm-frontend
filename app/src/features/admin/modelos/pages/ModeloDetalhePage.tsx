@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { modelosApi } from '../api/modelosApi';
@@ -13,13 +13,13 @@ import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { canManageModelos } from '@/shared/lib/permissions';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
+import { useResumoDasSolicitacoesDoModelo } from '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import { formatDuracao } from '@/features/solicitacoes/lib/solicitacaoMessages';
-import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import { TIPO_MODELO_LABELS } from '../types/modeloTypes';
+import { TIPO_MODELO_LABELS, type ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
@@ -35,14 +35,11 @@ export function ModeloDetalhePage() {
     { modeloId: id, page: 0, size: 50 },
     { enabled: !!id },
   );
-  // Lista completa (tamanho = total real, nao os 50 exibidos no historico) para o
-  // mini-dashboard abaixo — evita o bug de "dados irreais" quando o modelo tem mais
-  // de 50 solicitacoes no historico.
-  const totalSolicitacoesModelo = solicitacoesPage?.totalElements ?? 0;
-  const { data: solicitacoesCompletas } = useSolicitacoes(
-    { modeloId: id, page: 0, size: Math.max(totalSolicitacoesModelo, 1) },
-    { enabled: !!id && solicitacoesPage !== undefined },
-  );
+  const {
+    data: resumoDasSolicitacoes,
+    isLoading: carregandoResumo,
+    isError: erroNoResumo,
+  } = useResumoDasSolicitacoesDoModelo(id);
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
   const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
@@ -181,7 +178,17 @@ export function ModeloDetalhePage() {
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
               Indicadores consolidados de todos os chamados vinculados a este modelo.
             </p>
-            <ModeloDashboard solicitacoes={solicitacoesCompletas?.content ?? []} />
+            {erroNoResumo ? (
+              <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+                Não foi possível carregar o resumo das solicitações deste modelo.
+              </p>
+            ) : carregandoResumo || !resumoDasSolicitacoes ? (
+              <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+                Carregando o resumo das solicitações...
+              </p>
+            ) : (
+              <ModeloDashboard resumo={resumoDasSolicitacoes} />
+            )}
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
@@ -229,21 +236,14 @@ export function ModeloDetalhePage() {
   );
 }
 
-function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
-  const total = solicitacoes.length;
-  const abertas = solicitacoes.filter((s) => !['CONCLUIDA', 'CANCELADA'].includes(s.status)).length;
-  const concluidas = solicitacoes.filter((s) => s.status === 'CONCLUIDA').length;
+function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo }) {
+  const { total, concluidas, tempoMedioResolucaoSegundos, intervaloMedioSegundos } = resumo;
   const taxaSucesso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
-
-  const { tempoMedioResolucaoSegundos, intervaloMedioSegundos } = useMemo(
-    () => calcularMetricasDeTempo(solicitacoes),
-    [solicitacoes],
-  );
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard label="Total" value={total} color="slate" />
-      <KpiCard label="Abertas" value={abertas} color="amber" />
+      <KpiCard label="Abertas" value={resumo.emAberto} color="amber" />
       <KpiCard label="Concluídas" value={concluidas} color="green" />
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
       <KpiCard
@@ -260,33 +260,6 @@ function ModeloDashboard({ solicitacoes }: { solicitacoes: Solicitacao[] }) {
       />
     </div>
   );
-}
-
-function calcularMetricasDeTempo(solicitacoes: Solicitacao[]) {
-  const concluidas = solicitacoes
-    .filter((s) => s.status === 'CONCLUIDA' && s.concluidaEm != null)
-    .sort((a, b) => new Date(a.criadaEm).getTime() - new Date(b.criadaEm).getTime());
-
-  if (concluidas.length < 2) {
-    return { tempoMedioResolucaoSegundos: null, intervaloMedioSegundos: null };
-  }
-
-  const temposResolucao = concluidas.map(
-    (s) => (new Date(s.concluidaEm as string).getTime() - new Date(s.criadaEm).getTime()) / 1000,
-  );
-  const tempoMedioResolucaoSegundos =
-    temposResolucao.reduce((acc, v) => acc + v, 0) / temposResolucao.length;
-
-  let somaIntervalos = 0;
-  for (let i = 1; i < concluidas.length; i++) {
-    somaIntervalos +=
-      (new Date(concluidas[i].criadaEm).getTime() -
-        new Date(concluidas[i - 1].criadaEm).getTime()) /
-      1000;
-  }
-  const intervaloMedioSegundos = somaIntervalos / (concluidas.length - 1);
-
-  return { tempoMedioResolucaoSegundos, intervaloMedioSegundos };
 }
 
 function KpiCard({

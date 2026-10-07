@@ -11,8 +11,9 @@ import { cn } from '@/shared/lib/cn';
 
 import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import { useAcoesPermitidas } from '../hooks/useAcoesPermitidas';
-import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
+import { useColunasDoQuadro } from '../hooks/useColunaDoQuadro';
 import { acaoDoMovimento, proximoStatus, type AcaoSolicitacao } from '../lib/acoesSolicitacao';
+import { colunaLimitadaAos30Dias, inicioDosUltimos30Dias } from '../lib/filtrosDaColuna';
 import { relacaoDoOperador } from '../lib/relacaoDoOperador';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
@@ -39,14 +40,14 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     : undefined;
   const acoesDe = useAcoesPermitidas();
 
-  const {
-    data: solicitacoes = [],
-    isLoading,
-    error,
-  } = useKanbanSolicitacoes(modeloId, {
-    dataInicio,
-    dataFim,
-  });
+  // Calculado uma vez: o instante entra na chave das consultas das colunas encerradas.
+  const [inicioDos30Dias] = useState(() => inicioDosUltimos30Dias(new Date()));
+  const filtrosDoQuadro = { modeloId, criadaEmInicio: dataInicio, criadaEmFim: dataFim };
+  const colunas = useColunasDoQuadro(filtrosDoQuadro, inicioDos30Dias);
+  const todas = COLUMNS.map((col) => colunas[col.status]);
+  const isLoading = todas.some((coluna) => coluna.carregando);
+  const error = todas.find((coluna) => coluna.erro)?.erro ?? null;
+  const totalDoQuadro = todas.reduce((soma, coluna) => soma + coluna.total, 0);
 
   const [dragging, setDragging] = useState<Solicitacao | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<StatusSolicitacao | null>(null);
@@ -92,7 +93,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
         description={getSolicitacaoErrorMessage(error)}
       />
     );
-  if (isOperador && solicitacoes.length === 0 && temFiltro) {
+  if (isOperador && totalDoQuadro === 0 && temFiltro) {
     return (
       <EmptyState
         title="Nenhuma solicitação para este filtro"
@@ -105,7 +106,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
       />
     );
   }
-  if (isOperador && solicitacoes.length === 0) {
+  if (isOperador && totalDoQuadro === 0) {
     return (
       <EmptyState
         title="Você ainda não abriu nem recebeu solicitações"
@@ -119,9 +120,19 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     );
   }
 
-  const cardsByStatus = Object.fromEntries(
-    COLUMNS.map((col) => [col.status, solicitacoes.filter((s) => s.status === col.status)]),
-  ) as Record<StatusSolicitacao, Solicitacao[]>;
+  /** Propriedades de carga que o quadro repassa à coluna de um status. */
+  function cargaDaColuna(status: StatusSolicitacao) {
+    const coluna = colunas[status];
+    return {
+      cards: coluna.cards,
+      total: coluna.total,
+      temMais: coluna.temMais,
+      carregandoMais: coluna.carregandoMais,
+      falhouAoCarregarMais: coluna.falhouAoCarregarMais,
+      onCarregarMais: coluna.carregarMais,
+      aviso: colunaLimitadaAos30Dias(status, filtrosDoQuadro) ? 'Últimos 30 dias' : undefined,
+    };
+  }
 
   const activeColumn = COLUMNS.find((c) => c.status === activeTab)!;
 
@@ -137,7 +148,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
       <div className="mb-3 lg:hidden">
         <div className="flex overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
           {COLUMNS.map((col) => {
-            const count = cardsByStatus[col.status]?.length ?? 0;
+            const count = colunas[col.status].total;
             const isActive = col.status === activeTab;
             return (
               <button
@@ -169,7 +180,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
         <div className="mt-2">
           <KanbanColumn
             config={activeColumn}
-            cards={cardsByStatus[activeTab] ?? []}
+            {...cargaDaColuna(activeTab)}
             isDropTarget={false}
             isInvalidDrop={false}
             mobileView
@@ -194,7 +205,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
             <KanbanColumn
               key={col.status}
               config={col}
-              cards={cardsByStatus[col.status] ?? []}
+              {...cargaDaColuna(col.status)}
               isDropTarget={isDropTarget}
               isInvalidDrop={isInvalidDrop}
               canDragCard={canDragCard}

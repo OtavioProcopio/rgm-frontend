@@ -1,4 +1,4 @@
 {
-  "active": "specs/009-sessao-mantida-na-troca-de-senha",
-  "title": "Sessão mantida na troca de senha e quadro do operador com o que ele abriu"
+  "active": "specs/005-paginacao-real-nas-listas",
+  "title": "Paginação real nas listas"
 }

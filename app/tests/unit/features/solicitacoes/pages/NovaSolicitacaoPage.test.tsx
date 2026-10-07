@@ -29,6 +29,10 @@ vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
   }),
 }));
 
+vi.mock('@/features/admin/modelos/hooks/useModelo', () => ({
+  useModelo: vi.fn().mockReturnValue({ data: undefined }),
+}));
+
 vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
   evidenciasApi: {
     anexar: vi.fn().mockResolvedValue({}),
@@ -315,4 +319,52 @@ describe('NovaSolicitacaoPage — limite de texto', () => {
       expect(campo.maxLength).toBe(esperado);
     },
   );
+});
+
+describe('NovaSolicitacaoPage — seletor de modelo com busca', () => {
+  it('deve pedir à API no máximo 20 modelos, e só ativos, para o seletor', async () => {
+    // Arrange
+    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+    vi.mocked(useModelos).mockClear();
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(vi.mocked(useModelos).mock.calls.map(([filtros]) => filtros)).toEqual(
+      expect.arrayContaining([{ page: 0, size: 20, ativo: true }]),
+    );
+  });
+
+  it('deve nunca pedir mais de 20 modelos de uma vez', async () => {
+    // Arrange
+    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+    vi.mocked(useModelos).mockClear();
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    // Assert
+    const tamanhos = vi.mocked(useModelos).mock.calls.map(([filtros]) => filtros.size);
+    expect(Math.max(...tamanhos)).toBe(20);
+  });
+
+  it('deve abrir com o modelo do endereço selecionado, mesmo fora das opções da busca', async () => {
+    // Arrange
+    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    vi.mocked(useModelo).mockReturnValue({
+      data: { id: 'm-999', codigo: 'MD-999', descricao: 'Caixa', maquina: 'DISA' },
+    } as unknown as ReturnType<typeof useModelo>);
+    const { AppWrapper } = createAppWrapper({
+      initialEntries: ['/app/solicitacoes/nova?modeloId=m-999'],
+    });
+
+    // Act
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect((screen.getByLabelText('Modelo') as HTMLInputElement).value).toBe('MD-999 - Caixa');
+  });
 });

@@ -1,7 +1,8 @@
 import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Select } from '@/shared/components/Select/Select';
 import { Input } from '@/shared/components/Input/Input';
+
+import { SeletorDeModelo } from './SeletorDeModelo';
 
 import type {
   PrioridadeSolicitacao,
@@ -38,11 +39,7 @@ const prioridadeOptions = [
 ];
 
 export function SolicitacaoFilters({ filters, onChange }: Props) {
-  const { data: modelosData } = useModelos({ page: 0, size: 100, ativo: true });
   const { options: maquinaOptions } = useMaquinaOptions(filters.maquina);
-
-  const modeloOptions =
-    modelosData?.content.map((m) => ({ value: m.id, label: m.codigo })) ?? [];
 
   function handleMaquinaChange(e: React.ChangeEvent<HTMLSelectElement>) {
     onChange({ ...filters, page: 0, maquina: e.target.value || undefined });
@@ -53,8 +50,8 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
     onChange({ ...filters, page: 0, status: value || undefined });
   }
 
-  function handleModeloChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    onChange({ ...filters, page: 0, modeloId: e.target.value || undefined });
+  function handleModeloChange(modeloId: string) {
+    onChange({ ...filters, page: 0, modeloId: modeloId || undefined });
   }
 
   function handleTipoChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -114,17 +111,14 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           onChange={handlePrioridadeChange}
         />
       </div>
-      {modeloOptions.length > 0 && (
-        <div className="w-full sm:w-64">
-          <Select
-            label="Modelo"
-            options={modeloOptions}
-            placeholder="Todos os modelos"
-            value={filters.modeloId ?? ''}
-            onChange={handleModeloChange}
-          />
-        </div>
-      )}
+      <div className="w-full sm:w-64">
+        <SeletorDeModelo
+          label="Modelo"
+          placeholder="Todos os modelos"
+          value={filters.modeloId ?? ''}
+          onChange={handleModeloChange}
+        />
+      </div>
       {maquinaOptions.length > 0 && (
         <div className="w-full sm:w-56">
           <Select

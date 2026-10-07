@@ -140,10 +140,16 @@ Funcionalidade: Paginação real nas listas
     Então o seletor continua mostrando "MD-120"
 
   Cenário: Ação mantém o que foi carregado
-    Dado que a coluna "Em Andamento" mostra 40 cards
+    Dado que a coluna "Em Andamento" mostra 40 de 45 cards
+    Quando envio um deles para validação
+    Então a coluna "Em Andamento" continua mostrando 40 cards, sem o que foi enviado
+    E o contador da coluna mostra 44
+    E o card aparece em "Em Validação"
+
+  Cenário: Ação na coluna sem mais cards para carregar
+    Dado que a coluna "Em Andamento" mostra os seus 40 cards
     Quando envio um deles para validação
     Então a coluna "Em Andamento" mostra 39 cards
-    E o card aparece em "Em Validação"
 
   Cenário: Reconexão mantém o que foi carregado
     Dado que a coluna "Em Andamento" mostra 40 cards
@@ -197,6 +203,14 @@ Nenhuma em aberto. Decisões registradas em 2026-10-05:
 - **Tamanho dos blocos:** 20 no quadro (issue); 10 na aba pessoal e 20 opções no seletor,
   definidos aqui por serem listas curtas de consulta.
 
+### Em aberto, achado pela revisão em 2026-10-07
+
+- **Operador que só tem encerradas antigas:** sem filtro, o quadro soma zero (as encerradas
+  de mais de 30 dias ficam fora) e mostra "Você ainda não abriu nem recebeu solicitações",
+  o que não é verdade para ele. Segue a letra do RF-16. Decisão pendente do usuário: manter,
+  ou mostrar as colunas vazias com o aviso "Últimos 30 dias" quando o operador tiver
+  encerradas fora do recorte (custa uma contagem a mais na abertura do quadro).
+
 ## Adequação de 2026-10-07
 
 A especificação ficou parada enquanto as features 006, 007 e 008 e três PRs do backend eram
@@ -224,6 +238,12 @@ entregues. O que mudou em volta dela:
   caminho espelhado, e os roteiros de ponta a ponta em `app/tests/e2e`.
 - **Diálogos** (especificações 006 e 007). As ações do card abrem no diálogo modal; o RF-12
   vale para a ação confirmada nele.
+
+Correção de cenário em 2026-10-07, durante a implementação: "Ação mantém o que foi
+carregado" dizia que a coluna com 40 cards carregados passava a mostrar 39. Com mais
+solicitações além das carregadas, os dois blocos são refeitos e o card seguinte ocupa o
+lugar: continuam 40 na tela e o contador cai em 1. Só há 39 quando não existe outro para
+entrar. O cenário foi dividido nos dois casos.
 
 Pendente para seguir: o checklist de requisitos ainda não foi revisto; faltam `/bu:plan`,
 `/bu:checklist`, `/bu:tasks` e `/bu:analyze`. RF-15, RF-16, RNF-04 e RNF-05 foram

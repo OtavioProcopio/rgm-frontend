@@ -69,6 +69,12 @@ export type SolicitacoesFilters = {
   responsavelId?: string;
   maquina?: string;
   atrasada?: boolean;
+  /** Só A Fazer, Em Andamento e Em Validação. */
+  emAberto?: boolean;
+  /** A que data `dataInicio` e `dataFim` se referem; `CONCLUSAO` cobre também o cancelamento. */
+  tipoData?: 'CRIACAO' | 'CONCLUSAO';
+  dataInicio?: string;
+  dataFim?: string;
 };
 
 export type AbrirSolicitacaoRequest = {

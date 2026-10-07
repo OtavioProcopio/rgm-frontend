@@ -1,8 +1,8 @@
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Package, XCircle } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
+import { useResumoDeModelos } from '@/features/admin/modelos/hooks/useResumoDeModelos';
 import { useAuth } from '@/app/providers/authContext';
 import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
@@ -24,56 +24,21 @@ export function ModelosTab() {
   const navigate = useNavigate();
   const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
 
-  // Contagens exatas via totalElements da paginacao — nao via .length de um array
-  // limitado a 100 itens (bug do dashboard "dados irreais": ativos/inativos/pendencias/
-  // maquina ficavam incorretos assim que o total de modelos passava de 100).
-  const { data: totalData, isLoading: loadingTotal, isError: errorTotal } = useModelos({
-    page: 0,
-    size: 1,
-  });
-  const totalElements = totalData?.totalElements ?? 0;
-  const { data: ativosData, isLoading: loadingAtivos } = useModelos({
-    page: 0,
-    size: 1,
-    ativo: true,
-  });
-  const { data: inativosData, isLoading: loadingInativos } = useModelos({
-    page: 0,
-    size: 1,
-    ativo: false,
-  });
-  // Lista completa (tamanho = total real, nao um limite arbitrario) so para derivar
-  // pendencias e a distribuicao por maquina, que nao tem endpoint agregado dedicado.
-  const { data: fullData, isLoading: loadingFull, isError: errorFull } = useModelos({
-    page: 0,
-    size: Math.max(totalElements, 1),
-  });
+  const { data: resumo, isLoading, isError } = useResumoDeModelos();
 
   function irParaSolicitacoesDaMaquina(maquina: string) {
     navigate(`/app/solicitacoes?maquina=${encodeURIComponent(maquina)}`);
   }
 
-  const stats = useMemo(() => {
-    const modelos = fullData?.content ?? [];
-    const comPendencia = modelos.filter((m) => m.temPendenciaAberta).length;
-
-    const porMaquina: Record<string, number> = {};
-    for (const m of modelos) {
-      porMaquina[m.maquina] = (porMaquina[m.maquina] ?? 0) + 1;
-    }
-    const maquinasOrdenadas = Object.entries(porMaquina).sort((a, b) => b[1] - a[1]);
-
-    return {
-      total: totalElements,
-      ativos: ativosData?.totalElements ?? 0,
-      inativos: inativosData?.totalElements ?? 0,
-      comPendencia,
-      maquinasOrdenadas,
-    };
-  }, [fullData, totalElements, ativosData, inativosData]);
-
-  const isLoading = loadingTotal || loadingAtivos || loadingInativos || loadingFull;
-  const isError = errorTotal || errorFull;
+  const stats = {
+    total: resumo?.total ?? 0,
+    ativos: resumo?.ativos ?? 0,
+    inativos: resumo?.inativos ?? 0,
+    comPendencia: resumo?.comPendenciaAberta ?? 0,
+    maquinasOrdenadas: [...(resumo?.porMaquina ?? [])]
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .map(({ maquina, quantidade }) => [maquina, quantidade] as const),
+  };
 
   if (isLoading) return <LoadingState title="Carregando estatísticas de modelos..." />;
   if (isError) {

@@ -17,6 +17,15 @@ type ComboboxProps = {
   error?: string;
   className?: string;
   id?: string;
+  /**
+   * Busca externa: quem usa recebe o termo digitado e devolve `options` já filtradas (por
+   * exemplo, buscando na API). Sem ela, o campo filtra as opções recebidas.
+   */
+  onSearchChange?: (termo: string) => void;
+  /** Opção do valor selecionado, para quando ela não está entre as `options` da busca atual. */
+  selectedOption?: ComboboxOption | null;
+  /** Busca externa em andamento. */
+  loading?: boolean;
 };
 
 export function Combobox({
@@ -28,6 +37,9 @@ export function Combobox({
   error,
   className,
   id,
+  onSearchChange,
+  selectedOption: selecionadaDeFora,
+  loading = false,
 }: ComboboxProps) {
   const generatedId = useId();
   const comboboxId = id ?? generatedId;
@@ -37,7 +49,12 @@ export function Combobox({
   const [search, setSearch] = useState('');
 
   // Encontra a opção selecionada
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedOption = selecionadaDeFora ?? options.find((opt) => opt.value === value);
+
+  function buscar(termo: string) {
+    setSearch(termo);
+    onSearchChange?.(termo);
+  }
 
   // Fecha o dropdown quando clicar fora
   useEffect(() => {
@@ -59,13 +76,15 @@ export function Combobox({
   }, [selectedOption]);
 
   // Filtra as opções com base no texto digitado
-  const filteredOptions = options.filter((opt) => {
-    const searchLower = search.toLowerCase();
-    return (
-      opt.label.toLowerCase().includes(searchLower) ||
-      (opt.subLabel && opt.subLabel.toLowerCase().includes(searchLower))
-    );
-  });
+  const filteredOptions = onSearchChange
+    ? options
+    : options.filter((opt) => {
+        const searchLower = search.toLowerCase();
+        return (
+          opt.label.toLowerCase().includes(searchLower) ||
+          (opt.subLabel && opt.subLabel.toLowerCase().includes(searchLower))
+        );
+      });
 
   return (
     <div ref={containerRef} className={cn('relative space-y-2', className)}>
@@ -86,9 +105,9 @@ export function Combobox({
           aria-describedby={error ? `${comboboxId}-erro` : undefined}
           onFocus={() => {
             setIsOpen(true);
-            setSearch(''); // Limpa para mostrar todas as opções ao focar
+            buscar(''); // Limpa para mostrar todas as opções ao focar
           }}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => buscar(e.target.value)}
           className={cn(
             'h-11 w-full rounded-md border border-gray-300 bg-white pl-10 pr-10 text-sm pointer-coarse:pr-24 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10',
             'dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400 dark:focus:ring-sky-400/10',
@@ -169,7 +188,7 @@ export function Combobox({
             })
           ) : (
             <div className="px-4 py-3 text-center text-sm text-slate-500 dark:text-slate-400">
-              Nenhum modelo encontrado
+              {loading ? 'Buscando...' : 'Nenhum modelo encontrado'}
             </div>
           )}
         </div>

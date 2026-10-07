@@ -302,3 +302,109 @@ describe('Combobox', () => {
     expect(botoes.every((botao) => botao.className.includes('pointer-coarse:min-w-11'))).toBe(true);
   });
 });
+
+describe('Combobox — busca externa', () => {
+  const DA_BUSCA = [
+    { value: '7', label: 'MD-120 - Tambor' },
+    { value: '8', label: 'MD-121 - Flange' },
+  ];
+
+  function montar(extra: Partial<Parameters<typeof Combobox>[0]> = {}) {
+    const onSearchChange = vi.fn();
+    render(
+      <div>
+        <div data-testid="fora">Fora</div>
+        <Combobox
+          label="Modelo"
+          value=""
+          onChange={vi.fn()}
+          options={DA_BUSCA}
+          onSearchChange={onSearchChange}
+          {...extra}
+        />
+      </div>,
+    );
+    return { onSearchChange, campo: screen.getByLabelText('Modelo') as HTMLInputElement };
+  }
+
+  it('deve avisar o termo digitado a quem faz a busca', async () => {
+    // Arrange
+    const { onSearchChange, campo } = montar();
+
+    // Act
+    await userEvent.type(campo, 'MD-12');
+
+    // Assert
+    expect(onSearchChange).toHaveBeenLastCalledWith('MD-12');
+  });
+
+  it('deve mostrar as opções recebidas sem filtrá-las pelo termo digitado', async () => {
+    // Arrange
+    const { campo } = montar();
+
+    // Act
+    await userEvent.type(campo, 'texto que não está em nenhuma opção');
+
+    // Assert
+    expect(screen.getAllByRole('button', { name: /^MD-12/ })).toHaveLength(2);
+  });
+
+  it('deve pedir a busca sem termo quando o campo recebe o foco', () => {
+    // Arrange
+    const { onSearchChange, campo } = montar();
+
+    // Act
+    fireEvent.focus(campo);
+
+    // Assert
+    expect(onSearchChange).toHaveBeenCalledWith('');
+  });
+
+  it('deve mostrar o rótulo do modelo selecionado mesmo quando ele não está entre as opções da busca', () => {
+    // Act
+    const { campo } = montar({
+      value: '99',
+      selectedOption: { value: '99', label: 'MD-999 - Caixa' },
+    });
+
+    // Assert
+    expect(campo.value).toBe('MD-999 - Caixa');
+  });
+
+  it('deve continuar mostrando o selecionado quando o usuário busca outra coisa e fecha sem escolher', async () => {
+    // Arrange
+    const { campo } = montar({
+      value: '99',
+      selectedOption: { value: '99', label: 'MD-999 - Caixa' },
+    });
+    await userEvent.type(campo, 'MD-12');
+
+    // Act
+    fireEvent.mouseDown(screen.getByTestId('fora'));
+
+    // Assert
+    expect(campo.value).toBe('MD-999 - Caixa');
+  });
+
+  it('deve dizer "Buscando..." quando a busca está em andamento e ainda não há opções', () => {
+    // Arrange
+    const { campo } = montar({ options: [], loading: true });
+
+    // Act
+    fireEvent.focus(campo);
+
+    // Assert
+    expect(screen.getByText('Buscando...')).toBeDefined();
+  });
+
+  it('deve dizer que nada foi encontrado quando a busca terminou sem opções', () => {
+    // Arrange
+    const { campo } = montar({ options: [], loading: false });
+
+    // Act
+    fireEvent.focus(campo);
+
+    // Assert
+    expect(screen.getByText('Nenhum modelo encontrado')).toBeDefined();
+  });
+});

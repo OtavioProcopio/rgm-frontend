@@ -1,11 +1,15 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
   useModelos: vi.fn().mockReturnValue({ data: undefined }),
+}));
+
+vi.mock('@/features/admin/modelos/hooks/useModelo', () => ({
+  useModelo: vi.fn().mockReturnValue({ data: undefined }),
 }));
 
 vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
@@ -33,16 +37,72 @@ describe('SolicitacaoFilters', () => {
     expect(within(container).getByText('Concluída')).toBeDefined();
   });
 
-  it('shows modelo filter when modelos are available', async () => {
+  async function comModelos() {
     const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({
-      data: { content: [{ id: 'm1', codigo: 'M01', descricao: '', maquina: 'X', versao: 1, observacoes: null, temPendenciaAberta: false, ativo: true, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' }], page: 0, totalPages: 1, totalElements: 1 },
+      data: { content: [{ id: 'm1', codigo: 'M01', descricao: 'Tambor', maquina: 'X' }] },
+      isFetching: false,
     } as unknown as ReturnType<typeof useModelos>);
+    return vi.mocked(useModelos);
+  }
 
+  it('deve oferecer no filtro de modelo os modelos devolvidos pela busca quando o campo recebe o foco', async () => {
+    // Arrange
+    await comModelos();
     const { container } = render(
       <SolicitacaoFilters filters={{ page: 0, size: 20 }} onChange={vi.fn()} />,
     );
-    expect(within(container).getByText('M01')).toBeDefined();
+
+    // Act
+    fireEvent.focus(within(container).getByLabelText('Modelo'));
+
+    // Assert
+    expect(within(container).getByRole('button', { name: /^M01 - Tambor/ })).toBeDefined();
+  });
+
+  it('deve buscar no máximo 20 modelos ativos para o filtro', async () => {
+    // Arrange
+    const useModelos = await comModelos();
+    useModelos.mockClear();
+
+    // Act
+    render(<SolicitacaoFilters filters={{ page: 0, size: 20 }} onChange={vi.fn()} />);
+
+    // Assert
+    expect(useModelos.mock.calls.map(([filtros]) => filtros)).toEqual([
+      { page: 0, size: 20, ativo: true },
+    ]);
+  });
+
+  it('deve filtrar pelo modelo escolhido e voltar à primeira página', async () => {
+    // Arrange
+    await comModelos();
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters filters={{ page: 3, size: 20, status: 'A_FAZER' }} onChange={onChange} />,
+    );
+    fireEvent.focus(within(container).getByLabelText('Modelo'));
+
+    // Act
+    fireEvent.click(within(container).getByRole('button', { name: /^M01 - Tambor/ }));
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ page: 0, size: 20, status: 'A_FAZER', modeloId: 'm1' });
+  });
+
+  it('deve tirar o filtro de modelo quando a seleção é limpa', async () => {
+    // Arrange
+    await comModelos();
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters filters={{ page: 2, size: 20, modeloId: 'm1' }} onChange={onChange} />,
+    );
+
+    // Act
+    fireEvent.click(within(container).getByRole('button', { name: 'Limpar seleção' }));
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ page: 0, size: 20, modeloId: undefined });
   });
 
   it('renders date filters', () => {

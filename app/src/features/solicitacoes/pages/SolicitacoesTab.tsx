@@ -25,14 +25,6 @@ function useSolicitacoesTotal(filters: SolicitacoesFilters) {
   });
 }
 
-function useSolicitacoesPorStatusAberto(status: StatusSolicitacao) {
-  return useQuery({
-    queryKey: solicitacoesKeys.list({ status, page: 0, size: 1000 }),
-    queryFn: () => solicitacoesApi.listar({ status, page: 0, size: 1000 }),
-    select: (data) => data.content,
-  });
-}
-
 /**
  * Distribuicao por tipo/prioridade e lista de atrasadas usando contagens reais do backend
  * (nao um array capado no cliente) — ver bug do dashboard "dados irreais": distribuicoes
@@ -53,18 +45,17 @@ function useDistribuicoes() {
     CRIACAO: criacao.data ?? 0,
   };
 
-  const aFazer = useSolicitacoesPorStatusAberto('A_FAZER');
-  const emAndamento = useSolicitacoesPorStatusAberto('EM_ANDAMENTO');
-  const emValidacao = useSolicitacoesPorStatusAberto('EM_VALIDACAO');
-
-  const byPrioridade: Record<string, number> = {};
-  for (const status of [aFazer, emAndamento, emValidacao]) {
-    for (const s of status.data ?? []) {
-      if (s.prioridade) {
-        byPrioridade[s.prioridade] = (byPrioridade[s.prioridade] ?? 0) + 1;
-      }
-    }
-  }
+  // Uma contagem por prioridade, só entre as solicitações em aberto.
+  const urgente = useSolicitacoesTotal({ emAberto: true, prioridade: 'URGENTE', page: 0, size: 1 });
+  const alta = useSolicitacoesTotal({ emAberto: true, prioridade: 'ALTA', page: 0, size: 1 });
+  const media = useSolicitacoesTotal({ emAberto: true, prioridade: 'MEDIA', page: 0, size: 1 });
+  const baixa = useSolicitacoesTotal({ emAberto: true, prioridade: 'BAIXA', page: 0, size: 1 });
+  const byPrioridade: Record<string, number> = {
+    URGENTE: urgente.data ?? 0,
+    ALTA: alta.data ?? 0,
+    MEDIA: media.data ?? 0,
+    BAIXA: baixa.data ?? 0,
+  };
 
   const atrasadasCount = useSolicitacoesTotal({ atrasada: true, page: 0, size: 1 });
   const atrasadasLista = useQuery({

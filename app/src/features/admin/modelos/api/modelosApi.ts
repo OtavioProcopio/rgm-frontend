@@ -7,12 +7,17 @@ import type {
   EventoModelo,
   Modelo,
   ModelosFilters,
+  ResumoDasSolicitacoesDoModelo,
+  ResumoDeModelos,
 } from '../types/modeloTypes';
 
 export const modelosApi = {
   listar: (filters: ModelosFilters) =>
     httpClient.get<PageResponse<Modelo>>('/modelos', { params: filters }),
   buscarPorId: (id: string) => httpClient.get<Modelo>(`/modelos/${id}`),
+  obterResumo: () => httpClient.get<ResumoDeModelos>('/modelos/resumo'),
+  obterResumoDasSolicitacoes: (id: string) =>
+    httpClient.get<ResumoDasSolicitacoesDoModelo>(`/modelos/${id}/solicitacoes/resumo`),
   listarEventos: (id: string) => httpClient.get<EventoModelo[]>(`/modelos/${id}/eventos`),
   criar: (payload: CriarModeloRequest) => httpClient.post<Modelo>('/modelos', payload),
   editar: (id: string, payload: EditarModeloRequest) =>
