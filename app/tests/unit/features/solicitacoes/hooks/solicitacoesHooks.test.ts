@@ -54,7 +54,6 @@ const mockSolicitacao = {
   criadaEm: '2024-01-01T00:00:00Z', atualizadaEm: '2024-01-01T00:00:00Z',
   concluidaEm: null, canceladaEm: null, responsavelIds: [],
 };
-const mockPage = { content: [mockSolicitacao], page: 0, size: 20, totalPages: 1, totalElements: 1 };
 
 afterEach(() => vi.clearAllMocks());
 

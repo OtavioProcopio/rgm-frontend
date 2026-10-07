@@ -29,8 +29,8 @@ testado tem em `app/src`.
 
 ## Fase 3 — Aba pessoal e painel
 
-- [ ] T009 [P] Testes e alteração de `SRC/features/solicitacoes/pages/PessoalTab.tsx`: as duas listas pedem `emAberto` com 10 por página; mostram 10 itens e a paginação com o total de páginas; "Próxima" pede a página seguinte só daquela lista; "Abertas por mim" e "Sou responsável" mostram o total em aberto. Ajustar os testes existentes do arquivo
-- [ ] T010 [P] Criar `TST/features/solicitacoes/pages/SolicitacoesTab.test.tsx` e alterar `SRC/features/solicitacoes/pages/SolicitacoesTab.tsx`: cada prioridade vem de uma contagem em aberto com `size` 1; a barra mostra o total da API; nenhuma consulta pede mais de 5 itens
+- [x] T009 [P] Testes e alteração de `SRC/features/solicitacoes/pages/PessoalTab.tsx`: as duas listas pedem `emAberto` com 10 por página; mostram 10 itens e a paginação com o total de páginas; "Próxima" pede a página seguinte só daquela lista; "Abertas por mim" e "Sou responsável" mostram o total em aberto. Ajustar os testes existentes do arquivo
+- [x] T010 [P] Criar `TST/features/solicitacoes/pages/SolicitacoesTab.test.tsx` e alterar `SRC/features/solicitacoes/pages/SolicitacoesTab.tsx`: cada prioridade vem de uma contagem em aberto com `size` 1; a barra mostra o total da API; nenhuma consulta pede mais de 5 itens
 
 ## Fase 4 — Seletor de modelo
 

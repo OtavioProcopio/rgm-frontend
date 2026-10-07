@@ -3,8 +3,11 @@ import { Link } from 'react-router';
 
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
+import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
-import { useQuery } from '@tanstack/react-query';
+import type { PageResponse } from '@/shared/types/page';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
@@ -19,10 +22,6 @@ const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
   CONCLUIDA: 'text-emerald-600 dark:text-emerald-400',
   CANCELADA: 'text-rose-600 dark:text-rose-400',
 };
-
-function isAberta(s: Solicitacao) {
-  return s.status !== 'CONCLUIDA' && s.status !== 'CANCELADA';
-}
 
 function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
   if (itens.length === 0) {
@@ -56,81 +55,76 @@ function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
   );
 }
 
-function useSolicitacoesTotal(filters: SolicitacoesFilters, enabled: boolean) {
+/** Solicitações por página em cada lista da aba pessoal. */
+const TAMANHO_DA_PAGINA = 10;
+
+function useListaEmAberto(filtros: SolicitacoesFilters, enabled: boolean) {
   return useQuery({
-    queryKey: solicitacoesKeys.list(filters),
-    queryFn: () => solicitacoesApi.listar(filters),
+    queryKey: solicitacoesKeys.list(filtros),
+    queryFn: () => solicitacoesApi.listar(filtros),
     enabled,
-    select: (data) => data.totalElements,
+    // Mantém a página anterior na tela enquanto a seguinte chega.
+    placeholderData: keepPreviousData,
   });
+}
+
+function ListaPaginada({
+  titulo,
+  dados,
+  onPagina,
+}: {
+  titulo: string;
+  dados: PageResponse<Solicitacao> | undefined;
+  onPagina: (pagina: number) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
+      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{titulo}</h2>
+      <ListaSolicitacoes itens={dados?.content ?? []} />
+      {dados && dados.totalPages > 1 ? (
+        <Pagination
+          page={dados.page}
+          totalPages={dados.totalPages}
+          totalElements={dados.totalElements}
+          itemLabel="solicitação(ões)"
+          onPrev={() => onPagina(dados.page - 1)}
+          onNext={() => onPagina(dados.page + 1)}
+        />
+      ) : null}
+    </div>
+  );
 }
 
 export function PessoalTab() {
   const { data: profile, isLoading: loadingPerfil } = usePerfil();
   const userId = profile?.id;
   const enabled = Boolean(userId);
+  const [paginaMinhas, setPaginaMinhas] = useState(0);
+  const [paginaResponsavel, setPaginaResponsavel] = useState(0);
 
-  const filtersMinhas: SolicitacoesFilters = { page: 0, size: 100, abertaPorUsuarioId: userId };
-  const filtersResponsavel: SolicitacoesFilters = { page: 0, size: 100, responsavelId: userId };
-
-  const { data: minhasData, isLoading: loadingMinhas } = useQuery({
-    queryKey: solicitacoesKeys.list(filtersMinhas),
-    queryFn: () => solicitacoesApi.listar(filtersMinhas),
+  const { data: minhas, isLoading: loadingMinhas } = useListaEmAberto(
+    { page: paginaMinhas, size: TAMANHO_DA_PAGINA, abertaPorUsuarioId: userId, emAberto: true },
     enabled,
+  );
+  const { data: sobMinhaResponsabilidade, isLoading: loadingResponsavel } = useListaEmAberto(
+    { page: paginaResponsavel, size: TAMANHO_DA_PAGINA, responsavelId: userId, emAberto: true },
+    enabled,
+  );
+  // Só a contagem: a lista de concluídas não é exibida.
+  const filtrosConcluidas: SolicitacoesFilters = {
+    page: 0,
+    size: 1,
+    responsavelId: userId,
+    status: 'CONCLUIDA',
+  };
+  const { data: concluidas, isLoading: loadingConcluidas } = useQuery({
+    queryKey: solicitacoesKeys.list(filtrosConcluidas),
+    queryFn: () => solicitacoesApi.listar(filtrosConcluidas),
+    enabled,
+    select: (data) => data.totalElements,
   });
 
-  const { data: responsavelData, isLoading: loadingResponsavel } = useQuery({
-    queryKey: solicitacoesKeys.list(filtersResponsavel),
-    queryFn: () => solicitacoesApi.listar(filtersResponsavel),
-    enabled,
-  });
-
-  // Contagens exatas via totalElements da paginação (não via .length de um array
-  // limitado a 100 itens) — ver issue #60: capar em memória sub-contava usuários
-  // com mais de 100 solicitações no histórico.
-  const { data: minhasConcluidas, isLoading: loadingMinhasConcluidas } = useSolicitacoesTotal(
-    { page: 0, size: 1, abertaPorUsuarioId: userId, status: 'CONCLUIDA' },
-    enabled,
-  );
-  const { data: minhasCanceladas, isLoading: loadingMinhasCanceladas } = useSolicitacoesTotal(
-    { page: 0, size: 1, abertaPorUsuarioId: userId, status: 'CANCELADA' },
-    enabled,
-  );
-  const { data: responsavelConcluidas, isLoading: loadingResponsavelConcluidas } = useSolicitacoesTotal(
-    { page: 0, size: 1, responsavelId: userId, status: 'CONCLUIDA' },
-    enabled,
-  );
-  const { data: responsavelCanceladas, isLoading: loadingResponsavelCanceladas } = useSolicitacoesTotal(
-    { page: 0, size: 1, responsavelId: userId, status: 'CANCELADA' },
-    enabled,
-  );
-
-  const minhasAbertas = (minhasData?.content ?? []).filter(isAberta);
-  const souResponsavel = (responsavelData?.content ?? []).filter(isAberta);
-
-  const minhasAbertasCount =
-    minhasData && minhasConcluidas !== undefined && minhasCanceladas !== undefined
-      ? minhasData.totalElements - minhasConcluidas - minhasCanceladas
-      : minhasAbertas.length;
-
-  const souResponsavelCount =
-    responsavelData && responsavelConcluidas !== undefined && responsavelCanceladas !== undefined
-      ? responsavelData.totalElements - responsavelConcluidas - responsavelCanceladas
-      : souResponsavel.length;
-
-  const concluidasComoResponsavelCount =
-    responsavelConcluidas ??
-    (responsavelData?.content ?? []).filter((s) => s.status === 'CONCLUIDA').length;
-
-  if (
-    loadingPerfil ||
-    loadingMinhas ||
-    loadingResponsavel ||
-    loadingMinhasConcluidas ||
-    loadingMinhasCanceladas ||
-    loadingResponsavelConcluidas ||
-    loadingResponsavelCanceladas
-  ) {
+  if (loadingPerfil || loadingMinhas || loadingResponsavel || loadingConcluidas) {
     return <LoadingState title="Carregando seu painel pessoal..." />;
   }
 
@@ -140,40 +134,37 @@ export function PessoalTab() {
         <KPICard
           icon={ClipboardList}
           label="Abertas por mim"
-          value={minhasAbertasCount}
+          value={minhas?.totalElements ?? 0}
           subtext="Em andamento"
           gradient="sky"
         />
         <KPICard
           icon={UserCheck}
           label="Sou responsável"
-          value={souResponsavelCount}
+          value={sobMinhaResponsabilidade?.totalElements ?? 0}
           subtext="Atribuídas a mim"
           gradient="amber"
         />
         <KPICard
           icon={CheckCircle2}
           label="Concluídas por mim"
-          value={concluidasComoResponsavelCount}
+          value={concluidas ?? 0}
           subtext="Como responsável"
           gradient="emerald"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Minhas solicitações abertas
-          </h2>
-          <ListaSolicitacoes itens={minhasAbertas} />
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Sob minha responsabilidade
-          </h2>
-          <ListaSolicitacoes itens={souResponsavel} />
-        </div>
+        <ListaPaginada
+          titulo="Minhas solicitações abertas"
+          dados={minhas}
+          onPagina={setPaginaMinhas}
+        />
+        <ListaPaginada
+          titulo="Sob minha responsabilidade"
+          dados={sobMinhaResponsabilidade}
+          onPagina={setPaginaResponsavel}
+        />
       </div>
     </div>
   );

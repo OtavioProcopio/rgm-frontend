@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
@@ -48,85 +49,53 @@ const emptyPage: PageResponse<Solicitacao> = {
 };
 
 describe('PessoalTab', () => {
-  it('renders loading state', async () => {
+  it('deve mostrar o carregamento enquanto o perfil não chegou', async () => {
+    // Arrange
     const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
     vi.mocked(usePerfil).mockReturnValue({
       data: undefined,
       isLoading: true,
     } as unknown as ReturnType<typeof usePerfil>);
-
     const { AppWrapper } = createAppWrapper();
+
+    // Act
     const { container } = render(<PessoalTab />, { wrapper: AppWrapper });
+
+    // Assert
     expect(within(container).getByText(/carregando/i)).toBeDefined();
-  });
-
-  it('renders personal solicitations filtered by user', async () => {
-    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
-    const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
-    vi.mocked(usePerfil).mockReturnValue({
-      data: { id: 'u1' },
-      isLoading: false,
-    } as unknown as ReturnType<typeof usePerfil>);
-
-    const minhasPage = {
-      ...emptyPage,
-      totalElements: 2,
-      content: [
-        solicitacao({ id: 's1', titulo: 'Aberta por mim', abertaPorUsuarioId: 'u1' }),
-        solicitacao({ id: 's4', titulo: 'De outro', abertaPorUsuarioId: 'u9' }),
-      ],
-    };
-    const responsavelPage = {
-      ...emptyPage,
-      totalElements: 2,
-      content: [
-        solicitacao({ id: 's2', titulo: 'Sob minha resp', abertaPorUsuarioId: 'u9', responsavelIds: ['u1'] }),
-        solicitacao({ id: 's3', titulo: 'Concluida minha', status: 'CONCLUIDA', responsavelIds: ['u1'] }),
-      ],
-    };
-
-    vi.mocked(solicitacoesApi.listar).mockImplementation((filters) => {
-      if (filters.abertaPorUsuarioId && filters.status === 'CONCLUIDA') {
-        return Promise.resolve({ ...emptyPage, totalElements: 0 });
-      }
-      if (filters.abertaPorUsuarioId && filters.status === 'CANCELADA') {
-        return Promise.resolve({ ...emptyPage, totalElements: 0 });
-      }
-      if (filters.abertaPorUsuarioId) {
-        return Promise.resolve(minhasPage);
-      }
-      if (filters.responsavelId && filters.status === 'CONCLUIDA') {
-        return Promise.resolve({ ...emptyPage, totalElements: 1 });
-      }
-      if (filters.responsavelId && filters.status === 'CANCELADA') {
-        return Promise.resolve({ ...emptyPage, totalElements: 0 });
-      }
-      return Promise.resolve(responsavelPage);
-    });
-
-    const { AppWrapper } = createAppWrapper();
-    const { findByText, getAllByText } = render(<PessoalTab />, { wrapper: AppWrapper });
-
-    expect(await findByText('Aberta por mim')).toBeDefined();
-    expect(await findByText('Sob minha resp')).toBeDefined();
-    // "Abertas por mim": totalElements (2) - concluidas (0) - canceladas (0) = 2
-    expect(getAllByText('2').length).toBeGreaterThan(0);
-    // "Concluídas por mim": vem direto da contagem por status (1), não do array truncado
-    expect(getAllByText('1').length).toBeGreaterThan(0);
   });
 });
 
-describe('PessoalTab — o que o operador abriu', () => {
+describe('PessoalTab — listas em aberto, paginadas', () => {
   const EU = 'op-1';
   const OUTRO = 'op-2';
 
-  const abertasPorMim = [
-    solicitacao({ id: 'a2', titulo: 'Abri e está com outro', abertaPorUsuarioId: EU, responsavelIds: [OUTRO] }),
-    solicitacao({ id: 'a3', titulo: 'Abri e ninguém pegou', abertaPorUsuarioId: EU }),
-    solicitacao({ id: 'a6', titulo: 'Abri e triaram para outro', abertaPorUsuarioId: EU, status: 'EM_ANDAMENTO', responsavelIds: [OUTRO] }),
-    solicitacao({ id: 'a4', titulo: 'Abri e concluíram', abertaPorUsuarioId: EU, status: 'CONCLUIDA' }),
-    solicitacao({ id: 'a5', titulo: 'Abri e concluíram também', abertaPorUsuarioId: EU, status: 'CONCLUIDA' }),
-  ];
+  /** 25 em aberto abertas pelo operador (nenhuma com ele) e 3 sob responsabilidade dele. */
+  const minhas = Array.from({ length: 25 }, (_, i) =>
+    solicitacao({
+      id: `a-${i}`,
+      titulo: `Abri ${String(i + 1).padStart(2, '0')}`,
+      abertaPorUsuarioId: EU,
+      responsavelIds: i % 2 ? [OUTRO] : [],
+    }),
+  );
+  const comigo = Array.from({ length: 3 }, (_, i) =>
+    solicitacao({
+      id: `r-${i}`,
+      titulo: `Comigo ${i + 1}`,
+      abertaPorUsuarioId: OUTRO,
+      status: 'EM_ANDAMENTO',
+      responsavelIds: [EU],
+    }),
+  );
+
+  const pagina = (itens: Solicitacao[], page: number, size: number): PageResponse<Solicitacao> => ({
+    content: itens.slice(page * size, page * size + size),
+    page,
+    size,
+    totalElements: itens.length,
+    totalPages: Math.ceil(itens.length / size),
+  });
 
   async function abrirAba() {
     const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
@@ -136,14 +105,12 @@ describe('PessoalTab — o que o operador abriu', () => {
       isLoading: false,
     } as unknown as ReturnType<typeof usePerfil>);
     vi.mocked(solicitacoesApi.listar).mockReset();
-    vi.mocked(solicitacoesApi.listar).mockImplementation((filters) => {
-      if (filters.abertaPorUsuarioId && filters.status === 'CONCLUIDA') {
-        return Promise.resolve({ ...emptyPage, totalElements: 2 });
+    vi.mocked(solicitacoesApi.listar).mockImplementation((filtros) => {
+      if (filtros.status === 'CONCLUIDA') {
+        return Promise.resolve({ ...emptyPage, totalElements: 7 });
       }
-      if (filters.abertaPorUsuarioId && !filters.status) {
-        return Promise.resolve({ ...emptyPage, totalElements: 5, content: abertasPorMim });
-      }
-      return Promise.resolve(emptyPage);
+      if (filtros.abertaPorUsuarioId) return Promise.resolve(pagina(minhas, filtros.page, filtros.size));
+      return Promise.resolve(pagina(comigo, filtros.page, filtros.size));
     });
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     const tela = render(<PessoalTab />, { wrapper: AppWrapper });
@@ -151,26 +118,94 @@ describe('PessoalTab — o que o operador abriu', () => {
     return { tela, listar: vi.mocked(solicitacoesApi.listar) };
   }
 
-  it.each([['Abri e está com outro'], ['Abri e ninguém pegou'], ['Abri e triaram para outro']])(
-    'deve listar a solicitação em aberto "%s", que o operador abriu e não está com ele',
-    async (titulo) => {
-      // Act
-      const { tela } = await abrirAba();
+  const consultas = (listar: Awaited<ReturnType<typeof abrirAba>>['listar']) =>
+    listar.mock.calls.map(([filtros]) => filtros);
 
-      // Assert
-      expect(tela.getByRole('link', { name: new RegExp(titulo) })).toBeDefined();
-    },
-  );
+  it('deve pedir à API as solicitações em aberto que o operador abriu, 10 por página, sem restringir por responsável', async () => {
+    // Act
+    const { listar } = await abrirAba();
 
-  it('deve deixar fora das listas as solicitações que o operador abriu e já foram concluídas', async () => {
+    // Assert
+    expect(consultas(listar)).toContainEqual({
+      page: 0,
+      size: 10,
+      abertaPorUsuarioId: EU,
+      emAberto: true,
+    });
+  });
+
+  it('deve pedir à API as solicitações em aberto sob responsabilidade do operador, 10 por página', async () => {
+    // Act
+    const { listar } = await abrirAba();
+
+    // Assert
+    expect(consultas(listar)).toContainEqual({
+      page: 0,
+      size: 10,
+      responsavelId: EU,
+      emAberto: true,
+    });
+  });
+
+  it('deve mostrar 10 das 25 solicitações abertas pelo operador na primeira página', async () => {
     // Act
     const { tela } = await abrirAba();
 
     // Assert
-    expect(tela.queryByRole('link', { name: /Abri e concluíram/ })).toBeNull();
+    expect(tela.getAllByRole('link', { name: /^Abri \d\d/ })).toHaveLength(10);
   });
 
-  it('deve contar em "Abertas por mim" tudo o que o operador abriu menos as concluídas e canceladas', async () => {
+  it('deve indicar 3 páginas na lista de 25 solicitações', async () => {
+    // Act
+    const { tela } = await abrirAba();
+
+    // Assert
+    expect(tela.getByText(/Página 1 de 3/)).toBeDefined();
+  });
+
+  it('deve não mostrar paginação na lista que cabe em uma página', async () => {
+    // Act
+    const { tela } = await abrirAba();
+
+    // Assert
+    expect(tela.getAllByRole('button', { name: 'Próxima' })).toHaveLength(1);
+  });
+
+  it('deve mostrar a segunda página das abertas pelo operador quando "Próxima" é acionado', async () => {
+    // Arrange
+    const { tela } = await abrirAba();
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+
+    // Assert
+    expect(await tela.findByRole('link', { name: /Abri 11/ })).toBeDefined();
+  });
+
+  it('deve pedir só a página seguinte da lista em que "Próxima" foi acionado', async () => {
+    // Arrange
+    const { tela, listar } = await abrirAba();
+    listar.mockClear();
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+    await tela.findByRole('link', { name: /Abri 11/ });
+
+    // Assert
+    expect(consultas(listar)).toEqual([
+      { page: 1, size: 10, abertaPorUsuarioId: EU, emAberto: true },
+    ]);
+  });
+
+  it('deve contar em "Abertas por mim" o total em aberto que o operador abriu, e não os 10 da página', async () => {
+    // Act
+    const { tela } = await abrirAba();
+
+    // Assert
+    expect(tela.getByText('25')).toBeDefined();
+  });
+
+  it('deve contar em "Sou responsável" o total em aberto sob responsabilidade do operador', async () => {
     // Act
     const { tela } = await abrirAba();
 
@@ -178,18 +213,19 @@ describe('PessoalTab — o que o operador abriu', () => {
     expect(tela.getByText('3')).toBeDefined();
   });
 
-  it.each([[undefined], ['CONCLUIDA'], ['CANCELADA']])(
-    'deve consultar o que o operador abriu com status %s sem restringir por responsável',
-    async (status) => {
-      // Act
-      const { listar } = await abrirAba();
+  it('deve contar em "Concluídas por mim" o total devolvido pela contagem de concluídas como responsável', async () => {
+    // Act
+    const { tela } = await abrirAba();
 
-      // Assert
-      const responsaveisPedidos = listar.mock.calls
-        .map(([filtros]) => filtros)
-        .filter((filtros) => filtros.abertaPorUsuarioId === EU && filtros.status === status)
-        .map((filtros) => filtros.responsavelId);
-      expect(responsaveisPedidos).toEqual([undefined]);
-    },
-  );
+    // Assert
+    expect(tela.getByText('7')).toBeDefined();
+  });
+
+  it('deve listar a solicitação que o operador abriu e está atribuída a outro', async () => {
+    // Act
+    const { tela } = await abrirAba();
+
+    // Assert
+    expect(tela.getByRole('link', { name: /Abri 02/ })).toBeDefined();
+  });
 });
