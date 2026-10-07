@@ -12,6 +12,8 @@ const DEFAULT_AUTH: AuthContextValue = {
   isAuthenticated: true,
   login: async () => {},
   logout: () => {},
+  renovarCredenciais: () => {},
+  versaoDaSessao: 0,
 };
 
 type AppWrapperOptions = {

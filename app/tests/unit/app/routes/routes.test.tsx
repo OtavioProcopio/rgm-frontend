@@ -19,6 +19,8 @@ const authValue = (overrides: Partial<AuthContextValue> = {}): AuthContextValue 
   isAuthenticated: true,
   login: async () => {},
   logout: () => {},
+  renovarCredenciais: () => {},
+  versaoDaSessao: 0,
   ...overrides,
 });
 

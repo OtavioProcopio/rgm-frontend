@@ -319,3 +319,51 @@ describe('KanbanCard', () => {
     expect(within(container).getByRole('button', { name: 'Enviar para validação' })).toBeDefined();
   });
 });
+
+describe('KanbanCard — relação do operador', () => {
+  function cardComRelacao(relacao?: 'ABERTA' | 'ATRIBUIDA' | null) {
+    return (
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable={false}
+        canAdvance={false}
+        relacao={relacao}
+        onDragStart={vi.fn()}
+        onAdvance={vi.fn()}
+      />
+    );
+  }
+
+  it.each([
+    ['ABERTA', 'Aberta por você'],
+    ['ATRIBUIDA', 'Atribuída a você'],
+  ] as const)('deve mostrar, com a relação %s, a marca "%s"', (relacao, marca) => {
+    // Act
+    const { container } = render(cardComRelacao(relacao));
+
+    // Assert
+    expect(within(container).getByText(marca)).toBeDefined();
+  });
+
+  it.each([
+    ['ABERTA', 'Atribuída a você'],
+    ['ATRIBUIDA', 'Aberta por você'],
+  ] as const)('deve não mostrar, com a relação %s, a marca "%s"', (relacao, marca) => {
+    // Act
+    const { container } = render(cardComRelacao(relacao));
+
+    // Assert
+    expect(within(container).queryByText(marca)).toBeNull();
+  });
+
+  it.each([[undefined], [null]])(
+    'deve não mostrar marca de relação quando a relação informada é %s',
+    (relacao) => {
+      // Act
+      const { container } = render(cardComRelacao(relacao));
+
+      // Assert
+      expect(within(container).queryByText(/por você|a você/)).toBeNull();
+    },
+  );
+});

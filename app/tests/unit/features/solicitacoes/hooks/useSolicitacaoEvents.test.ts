@@ -481,3 +481,146 @@ describe('useSolicitacaoEvents — reconexão', () => {
     expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toBeUndefined();
   });
 });
+
+describe('useSolicitacaoEvents — troca de credenciais', () => {
+  const USUARIO = { nome: 'Ana', perfil: 'OPERADOR' };
+
+  function conectar() {
+    vi.useFakeTimers();
+    localStorage.setItem('rgm.accessToken', 'acesso-antigo');
+    mockUseAuth.mockReturnValue({ user: USUARIO, versaoDaSessao: 0 });
+    mockRefreshAccessToken.mockResolvedValue(undefined);
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const { rerender } = renderHook(() => useSolicitacaoEvents(), { wrapper: QueryWrapper });
+    const antiga = MockEventSource.instances[0];
+    antiga.emit('open');
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    return { queryClient, rerender, antiga, invalidar };
+  }
+
+  function trocarCredenciais(rerender: () => void) {
+    localStorage.setItem('rgm.accessToken', 'acesso-novo');
+    mockUseAuth.mockReturnValue({ user: USUARIO, versaoDaSessao: 1 });
+    rerender();
+  }
+
+  function abertas() {
+    return MockEventSource.instances.filter(
+      (conexao) => conexao.readyState !== MockEventSource.CLOSED,
+    );
+  }
+
+  it('deve fechar a conexão anterior quando as credenciais são trocadas', () => {
+    // Arrange
+    const { rerender, antiga } = conectar();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(antiga.readyState).toBe(MockEventSource.CLOSED);
+  });
+
+  it('deve abrir outra conexão com a credencial nova, sem esperar, quando as credenciais são trocadas', () => {
+    // Arrange
+    const { rerender } = conectar();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(MockEventSource.instances).toHaveLength(2);
+    expect(MockEventSource.instances[1].url).toContain('token=acesso-novo');
+  });
+
+  it('deve manter a mesma conexão quando a tela redesenha sem troca de credenciais', () => {
+    // Arrange
+    const { rerender } = conectar();
+
+    // Act
+    rerender();
+
+    // Assert
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it('deve ficar com uma conexão só, a nova, quando a API derruba a antiga antes de as credenciais chegarem', () => {
+    // Arrange
+    const { rerender, antiga } = conectar();
+    antiga.readyState = MockEventSource.CONNECTING;
+    antiga.triggerError();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(abertas().map((conexao) => conexao.url)).toEqual([
+      expect.stringContaining('token=acesso-novo'),
+    ]);
+  });
+
+  it('deve não abrir uma segunda conexão quando havia nova tentativa agendada antes da troca', async () => {
+    // Arrange
+    const { rerender, antiga } = conectar();
+    antiga.readyState = MockEventSource.CLOSED;
+    antiga.triggerError();
+    trocarCredenciais(rerender);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    // Assert
+    expect(abertas()).toHaveLength(1);
+    expect(mockRefreshAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('deve publicar a conexão como aberta quando a conexão nova abre depois da troca', () => {
+    // Arrange
+    const { queryClient, rerender } = conectar();
+    trocarCredenciais(rerender);
+
+    // Act
+    MockEventSource.instances[1].emit('open');
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toMatchObject({ aberta: true });
+  });
+
+  it.each([
+    ['as listas', () => solicitacoesKeys.lists()],
+    ['os detalhes e os históricos', () => solicitacoesKeys.details()],
+    ['as evidências', () => evidenciasKeys.all],
+  ])('deve atualizar %s quando a conexão nova abre depois da troca', (_nome, chave) => {
+    // Arrange
+    const { rerender, invalidar } = conectar();
+    trocarCredenciais(rerender);
+
+    // Act
+    MockEventSource.instances[1].emit('open');
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: chave() });
+  });
+
+  it('deve não atualizar nenhuma consulta antes de a conexão nova abrir', () => {
+    // Arrange
+    const { rerender, invalidar } = conectar();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(invalidar).not.toHaveBeenCalled();
+  });
+
+  it('deve deixar a conexão sem estado de queda entre fechar a antiga e abrir a nova', () => {
+    // Arrange
+    const { queryClient, rerender } = conectar();
+
+    // Act
+    trocarCredenciais(rerender);
+
+    // Assert
+    expect(queryClient.getQueryData(solicitacoesKeys.conexao())).toBeUndefined();
+  });
+});

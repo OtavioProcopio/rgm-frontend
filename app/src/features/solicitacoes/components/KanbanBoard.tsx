@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
+import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
@@ -10,6 +13,7 @@ import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import { useAcoesPermitidas } from '../hooks/useAcoesPermitidas';
 import { useKanbanSolicitacoes } from '../hooks/useKanbanSolicitacoes';
 import { acaoDoMovimento, proximoStatus, type AcaoSolicitacao } from '../lib/acoesSolicitacao';
+import { relacaoDoOperador } from '../lib/relacaoDoOperador';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { COLUMNS, TAB_ACCENT } from './kanbanColunas';
@@ -17,11 +21,22 @@ import { KanbanColumn } from './KanbanColumn';
 
 type AcaoPendente = { acao: AcaoSolicitacao; card: Solicitacao };
 
-type Props = { modeloId?: string; dataInicio?: string; dataFim?: string };
+type Props = {
+  modeloId?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  onLimparFiltro?: () => void;
+};
 
-export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
+export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: Props) {
   const { user } = useAuth();
+  const { data: perfil } = usePerfil();
   const isOperador = user?.perfil === 'OPERADOR';
+  const temFiltro = Boolean(modeloId || dataInicio || dataFim);
+  // Só o operador vê a marca: gestor e administrador veem todas as solicitações.
+  const relacaoDe = isOperador
+    ? (card: Solicitacao) => relacaoDoOperador(card, perfil?.id)
+    : undefined;
   const acoesDe = useAcoesPermitidas();
 
   const {
@@ -77,11 +92,29 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
         description={getSolicitacaoErrorMessage(error)}
       />
     );
+  if (isOperador && solicitacoes.length === 0 && temFiltro) {
+    return (
+      <EmptyState
+        title="Nenhuma solicitação para este filtro"
+        description="Nenhuma das solicitações que você abriu ou recebeu corresponde ao filtro."
+        action={
+          <Button variant="secondary" onClick={onLimparFiltro}>
+            Limpar filtro
+          </Button>
+        }
+      />
+    );
+  }
   if (isOperador && solicitacoes.length === 0) {
     return (
       <EmptyState
-        title="Nenhuma solicitação atribuída a você"
-        description="Assim que uma solicitação for atribuída a você, ela aparecerá aqui."
+        title="Você ainda não abriu nem recebeu solicitações"
+        description="As solicitações que você abrir e as que forem atribuídas a você aparecem aqui."
+        action={
+          <Link to="/app/solicitacoes/nova">
+            <Button>Nova solicitação</Button>
+          </Link>
+        }
       />
     );
   }
@@ -142,6 +175,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
             mobileView
             canDragCard={canDragCard}
             canAdvanceCard={canAdvanceCard}
+            relacaoDe={relacaoDe}
             onDragStart={setDragging}
             onDragOver={setDragOverStatus}
             onDrop={handleDrop}
@@ -165,6 +199,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim }: Props) {
               isInvalidDrop={isInvalidDrop}
               canDragCard={canDragCard}
               canAdvanceCard={canAdvanceCard}
+              relacaoDe={relacaoDe}
               onDragStart={setDragging}
               onDragOver={setDragOverStatus}
               onDrop={handleDrop}

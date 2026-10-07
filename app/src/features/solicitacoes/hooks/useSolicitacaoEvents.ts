@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useAuth } from '@/app/providers/authContext';
 import { evidenciasKeys } from '@/features/evidencias/hooks/evidenciasKeys';
@@ -21,7 +21,10 @@ export type EstadoDaConexao = { aberta: boolean; desde: number };
 
 export function useSolicitacaoEvents() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, versaoDaSessao } = useAuth();
+  // Fora do efeito: a conexão reaberta por troca de credenciais também é uma reconexão, e
+  // o que mudou no intervalo precisa ser buscado.
+  const aberturas = useRef(0);
 
   useEffect(() => {
     if (!user) {
@@ -31,7 +34,6 @@ export function useSolicitacaoEvents() {
     let source: EventSource | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
-    let aberturas = 0;
     let tentativas = 0;
 
     let conexao: EstadoDaConexao | null = null;
@@ -45,10 +47,10 @@ export function useSolicitacaoEvents() {
     };
 
     const handleOpen = () => {
-      aberturas += 1;
+      aberturas.current += 1;
       tentativas = 0;
       publicarConexao(true);
-      if (aberturas === 1) return;
+      if (aberturas.current === 1) return;
       // Reconexão: o que mudou com a conexão fechada não veio por evento.
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() });
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.details() });
@@ -140,5 +142,8 @@ export function useSolicitacaoEvents() {
       source?.close();
       queryClient.removeQueries({ queryKey: solicitacoesKeys.conexao() });
     };
-  }, [queryClient, user]);
+    // `versaoDaSessao` muda quando as credenciais são trocadas sem novo login (troca da própria
+    // senha). A API encerra a conexão antiga; refazer o efeito reabre com a credencial nova,
+    // sem esperar a queda ser percebida.
+  }, [queryClient, user, versaoDaSessao]);
 }

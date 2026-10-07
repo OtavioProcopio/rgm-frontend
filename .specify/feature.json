@@ -1,4 +1,4 @@
 {
-  "active": "specs/007-tempo-real-formularios-e-dialogos",
-  "title": "Tempo real que se recupera, formulários que previnem erro e diálogos em toda a aplicação"
+  "active": "specs/009-sessao-mantida-na-troca-de-senha",
+  "title": "Sessão mantida na troca de senha e quadro do operador com o que ele abriu"
 }

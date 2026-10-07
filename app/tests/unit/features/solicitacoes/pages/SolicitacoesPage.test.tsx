@@ -19,7 +19,25 @@ vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   solicitacoesApi: { exportar: vi.fn().mockResolvedValue('') },
 }));
 vi.mock('@/features/solicitacoes/components/KanbanBoard', () => ({
-  KanbanBoard: () => <div data-testid="kanban-board" />,
+  KanbanBoard: ({
+    modeloId,
+    dataInicio,
+    dataFim,
+    onLimparFiltro,
+  }: {
+    modeloId?: string;
+    dataInicio?: string;
+    dataFim?: string;
+    onLimparFiltro?: () => void;
+  }) => (
+    <div data-testid="kanban-board">
+      <span data-testid="modelo-do-quadro">{modeloId ?? 'sem modelo'}</span>
+      <span data-testid="periodo-do-quadro">{`${dataInicio ?? 'sem início'} | ${dataFim ?? 'sem fim'}`}</span>
+      <button type="button" onClick={onLimparFiltro}>
+        Limpar filtro
+      </button>
+    </div>
+  ),
 }));
 vi.mock('@/features/solicitacoes/components/SolicitacaoCard', () => ({
   SolicitacaoCard: ({ solicitacao }: { solicitacao: { titulo: string } }) => (
@@ -27,7 +45,19 @@ vi.mock('@/features/solicitacoes/components/SolicitacaoCard', () => ({
   ),
 }));
 vi.mock('@/features/solicitacoes/components/SolicitacaoFilters', () => ({
-  SolicitacaoFilters: () => <div data-testid="solicitacao-filters" />,
+  SolicitacaoFilters: ({
+    filters,
+    onChange,
+  }: {
+    filters: object;
+    onChange: (filtros: object) => void;
+  }) => (
+    <div data-testid="solicitacao-filters">
+      <button type="button" onClick={() => onChange({ ...filters, modeloId: 'm-9' })}>
+        Filtrar pelo modelo m-9
+      </button>
+    </div>
+  ),
 }));
 
 afterEach(cleanup);
@@ -131,5 +161,74 @@ describe('SolicitacoesPage', () => {
     const alerta = await screen.findByRole('alert');
     expect(alerta.textContent).toBe(`Não foi possível exportar o PDF. ${recusa.message}`);
     expect(alerta.parentElement).toBe(botao.parentElement);
+  });
+});
+
+describe('SolicitacoesPage — limpar o filtro do quadro', () => {
+  async function quadroFiltradoPorPeriodo() {
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.type(screen.getByLabelText('Criada a partir de'), '2026-10-01');
+    await userEvent.type(screen.getByLabelText('Criada até'), '2026-10-07');
+  }
+
+  it('deve entregar ao quadro o período escolhido quando as datas são preenchidas', async () => {
+    // Act
+    await quadroFiltradoPorPeriodo();
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe(
+      '2026-10-01T00:00:00Z | 2026-10-07T23:59:59Z',
+    );
+  });
+
+  it('deve entregar ao quadro o período vazio quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroFiltradoPorPeriodo();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve esvaziar os campos de período quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroFiltradoPorPeriodo();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect((screen.getByLabelText('Criada a partir de') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Criada até') as HTMLInputElement).value).toBe('');
+  });
+
+  async function quadroFiltradoPorModelo() {
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Filtrar pelo modelo m-9' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Kanban' }));
+  }
+
+  it('deve entregar ao quadro o modelo filtrado na lista quando o usuário volta ao quadro', async () => {
+    // Act
+    await quadroFiltradoPorModelo();
+
+    // Assert
+    expect(screen.getByTestId('modelo-do-quadro').textContent).toBe('m-9');
+  });
+
+  it('deve entregar ao quadro o filtro de modelo vazio quando "Limpar filtro" é acionado', async () => {
+    // Arrange
+    await quadroFiltradoPorModelo();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Limpar filtro' }));
+
+    // Assert
+    expect(screen.getByTestId('modelo-do-quadro').textContent).toBe('sem modelo');
   });
 });

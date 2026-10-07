@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 
+import { solicitacoesApi } from '@/features/solicitacoes/api/solicitacoesApi';
+import { solicitacoesKeys } from '@/features/solicitacoes/hooks/solicitacoesKeys';
 import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolicitacao';
 import { useAtividades } from '@/features/solicitacoes/hooks/useAtividades';
 import { useCancelarSolicitacao } from '@/features/solicitacoes/hooks/useCancelarSolicitacao';
@@ -143,5 +145,44 @@ describe('mutation hooks', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { result } = renderHook(() => (hook as (id?: string) => any)('test-id'), { wrapper: QueryWrapper });
     expect(typeof result.current.mutateAsync).toBe('function');
+  });
+});
+
+describe('useAbrirSolicitacao', () => {
+  it('deve atualizar as listas, onde o quadro busca os cards, quando a solicitação é aberta', async () => {
+    // Arrange
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+    const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(() => useAbrirSolicitacao(), { wrapper: QueryWrapper });
+    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
+
+    // Act
+    await result.current.mutateAsync(nova as Parameters<typeof result.current.mutateAsync>[0]);
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
+  });
+
+  it('deve buscar de novo as solicitações do quadro quando uma solicitação é aberta', async () => {
+    // Arrange
+    const { QueryWrapper } = createQueryWrapper();
+    const { result } = renderHook(
+      () => ({ quadro: useKanbanSolicitacoes(), abrir: useAbrirSolicitacao() }),
+      { wrapper: QueryWrapper },
+    );
+    await waitFor(() => expect(result.current.quadro.isSuccess).toBe(true));
+    const buscasAntes = vi.mocked(solicitacoesApi.listar).mock.calls.length;
+    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
+
+    // Act
+    await result.current.abrir.mutateAsync(
+      nova as Parameters<typeof result.current.abrir.mutateAsync>[0],
+    );
+
+    // Assert
+    await waitFor(() =>
+      expect(vi.mocked(solicitacoesApi.listar).mock.calls.length).toBe(buscasAntes + 1),
+    );
   });
 });

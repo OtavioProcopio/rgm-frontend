@@ -2,6 +2,7 @@ import { Inbox } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
 
+import type { RelacaoDoOperador } from '../lib/relacaoDoOperador';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { KanbanCard } from './KanbanCard';
 
@@ -20,6 +21,8 @@ type Props = {
   mobileView?: boolean;
   canDragCard: (s: Solicitacao) => boolean;
   canAdvanceCard: (s: Solicitacao) => boolean;
+  /** Relação do operador com cada card; ausente para quem vê todas as solicitações. */
+  relacaoDe?: (s: Solicitacao) => RelacaoDoOperador | null;
   onDragStart: (s: Solicitacao) => void;
   onDragOver: (status: StatusSolicitacao) => void;
   onDrop: (status: StatusSolicitacao) => void;
@@ -34,6 +37,7 @@ export function KanbanColumn({
   mobileView = false,
   canDragCard,
   canAdvanceCard,
+  relacaoDe,
   onDragStart,
   onDragOver,
   onDrop,
@@ -99,6 +103,7 @@ export function KanbanColumn({
               solicitacao={s}
               isDraggable={canDragCard(s)}
               canAdvance={canAdvanceCard(s)}
+              relacao={relacaoDe?.(s)}
               onDragStart={onDragStart}
               onAdvance={onAdvance}
             />

@@ -8,8 +8,16 @@ import type { ColumnConfig } from '@/features/solicitacoes/components/KanbanColu
 import { KanbanColumn } from '@/features/solicitacoes/components/KanbanColumn';
 
 vi.mock('@/features/solicitacoes/components/KanbanCard', () => ({
-  KanbanCard: ({ solicitacao }: { solicitacao: { titulo: string } }) => (
-    <div data-testid="kanban-card">{solicitacao.titulo}</div>
+  KanbanCard: ({
+    solicitacao,
+    relacao,
+  }: {
+    solicitacao: { titulo: string };
+    relacao?: string | null;
+  }) => (
+    <div data-testid="kanban-card" data-relacao={relacao ?? 'nenhuma'}>
+      {solicitacao.titulo}
+    </div>
   ),
 }));
 
@@ -130,5 +138,44 @@ describe('KanbanColumn', () => {
       />,
     );
     expect(within(container).getByText('2')).toBeDefined();
+  });
+
+  function coluna(relacaoDe?: Parameters<typeof KanbanColumn>[0]['relacaoDe']) {
+    return (
+      <KanbanColumn
+        config={config}
+        cards={[solicitacao]}
+        isDropTarget={false}
+        isInvalidDrop={false}
+        canDragCard={() => true}
+        canAdvanceCard={() => false}
+        relacaoDe={relacaoDe}
+        onDragStart={vi.fn()}
+        onDragOver={vi.fn()}
+        onDrop={vi.fn()}
+        onAdvance={vi.fn()}
+      />
+    );
+  }
+
+  it('deve repassar ao card a relação calculada para a solicitação dele', () => {
+    // Arrange
+    const relacaoDe = vi.fn().mockReturnValue('ATRIBUIDA');
+
+    // Act
+    const { container } = render(coluna(relacaoDe));
+
+    // Assert
+    expect(relacaoDe).toHaveBeenCalledTimes(1);
+    expect(relacaoDe).toHaveBeenCalledWith(solicitacao);
+    expect(within(container).getByTestId('kanban-card').dataset.relacao).toBe('ATRIBUIDA');
+  });
+
+  it('deve deixar o card sem relação quando a coluna não recebe como calculá-la', () => {
+    // Act
+    const { container } = render(coluna());
+
+    // Assert
+    expect(within(container).getByTestId('kanban-card').dataset.relacao).toBe('nenhuma');
   });
 });

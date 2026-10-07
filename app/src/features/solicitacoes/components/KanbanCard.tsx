@@ -6,6 +6,7 @@ import { cn } from '@/shared/lib/cn';
 
 import { acaoDoMovimento, proximoStatus, rotuloDaAcao } from '../lib/acoesSolicitacao';
 import { idadeEmDias, situacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
+import { ROTULO_DA_RELACAO, type RelacaoDoOperador } from '../lib/relacaoDoOperador';
 import type { Solicitacao, TipoSolicitacao } from '../types/solicitacaoTypes';
 import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 
@@ -13,6 +14,8 @@ type Props = {
   solicitacao: Solicitacao;
   isDraggable: boolean;
   canAdvance: boolean;
+  /** Relação do operador com a solicitação; ausente para quem vê todas. */
+  relacao?: RelacaoDoOperador | null;
   onDragStart: (s: Solicitacao) => void;
   onAdvance: (s: Solicitacao) => void;
 };
@@ -103,7 +106,14 @@ function rotuloDeAvancar(solicitacao: Solicitacao): string {
   return acao ? rotuloDaAcao(acao) : 'Avançar para a próxima etapa';
 }
 
-export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, onAdvance }: Props) {
+export function KanbanCard({
+  solicitacao,
+  isDraggable,
+  canAdvance,
+  relacao,
+  onDragStart,
+  onAdvance,
+}: Props) {
   const tipo = TIPO_CONFIG[solicitacao.tipo];
   const { Icon } = tipo;
   const [agora] = useState(() => Date.now());
@@ -151,6 +161,12 @@ export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, 
             <AgeBadge solicitacao={solicitacao} agora={agora} />
           </div>
         </div>
+
+        {relacao ? (
+          <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+            {ROTULO_DA_RELACAO[relacao]}
+          </p>
+        ) : null}
 
         {/* Título */}
         <p className="mt-2 text-sm font-semibold leading-snug text-slate-900 line-clamp-2 dark:text-white">
