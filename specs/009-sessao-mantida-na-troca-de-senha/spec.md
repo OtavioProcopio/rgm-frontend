@@ -84,7 +84,7 @@ trocou, e o operador enxerga e distingue as solicitações que abriu e as que re
 |---|---|---|
 | RF-01 | Depois de trocar a própria senha com sucesso, a aplicação deve passar a usar as credenciais de acesso e de renovação devolvidas pela API, no lugar das anteriores | obrigatório |
 | RF-02 | Depois de trocar a própria senha com sucesso, o usuário deve continuar na tela de perfil, com a mensagem de sucesso, e a ação seguinte dele não deve levá-lo à tela de entrada | obrigatório |
-| RF-03 | Depois da troca, a aplicação deve voltar a receber atualizações em tempo real sem o usuário recarregar a página | obrigatório |
+| RF-03 | Assim que guarda as credenciais novas, a aplicação deve reabrir a conexão de tempo real com elas, sem esperar a queda ser percebida e sem o usuário recarregar a página | obrigatório |
 | RF-04 | Se a resposta da troca não trouxer credenciais novas (backend v1.5.0), a aplicação deve manter as credenciais que já tinha e mostrar o sucesso normalmente | obrigatório |
 | RF-05 | Se a troca falhar, as credenciais guardadas não devem mudar | obrigatório |
 
@@ -93,19 +93,19 @@ trocou, e o operador enxerga e distingue as solicitações que abriu e as que re
 | ID | Requisito | Prioridade |
 |---|---|---|
 | RF-06 | Para o operador sem nenhuma solicitação aberta por ele nem atribuída a ele, o quadro deve dizer "Você ainda não abriu nem recebeu solicitações" e oferecer a ação "Nova solicitação", que leva à abertura de solicitação | obrigatório |
-| RF-07 | Para o operador, cada card do quadro deve indicar a relação dele com a solicitação: "Aberta por você" ou "Atribuída a você". [NECESSITA ESCLARECIMENTO: quando o operador abriu a solicitação e também é responsável por ela, o card mostra as duas marcas ou só "Atribuída a você"?] | obrigatório |
+| RF-07 | Para o operador, cada card do quadro deve indicar a relação dele com a solicitação: "Atribuída a você" quando ele é responsável por ela, tenha aberto ou não; "Aberta por você" quando ele abriu e não é responsável. Uma marca só por card | obrigatório |
 | RF-08 | A marca de RF-07 não deve aparecer para gestor e administrador | obrigatório |
 | RF-09 | A solicitação que o operador acabou de abrir deve aparecer no quadro dele, em "A Fazer", quando ele volta ao quadro, sem recarregar a página | obrigatório |
 | RF-10 | Na aba pessoal do operador, "abertas por mim" deve listar toda solicitação em aberto que ele abriu, atribuída a ele ou não | obrigatório |
 | RF-11 | Na aba pessoal do operador, as contagens de concluídas e de canceladas abertas por ele devem considerar toda solicitação que ele abriu, atribuída a ele ou não | obrigatório |
-| RF-12 | [NECESSITA ESCLARECIMENTO: quando o operador tem solicitações, mas o filtro de modelo ou de período do quadro não encontra nenhuma, o quadro mostra as colunas vazias ou uma mensagem própria de "nenhuma solicitação para este filtro"? Hoje ele mostraria o texto de quem não tem nenhuma.] | obrigatório |
+| RF-12 | Quando o filtro de modelo ou de período do quadro não encontra nenhuma solicitação para o operador, o quadro deve dizer "Nenhuma solicitação para este filtro" e oferecer a ação "Limpar filtro"; o texto de RF-06 só aparece sem filtro aplicado | obrigatório |
 
 ## Requisitos não funcionais
 
 | ID | Requisito | Critério mensurável |
 |---|---|---|
 | RNF-01 | Continuidade da sessão | 0 idas à tela de entrada nas 10 ações seguintes a uma troca de senha bem-sucedida |
-| RNF-02 | Retorno do tempo real depois da troca | conexão restabelecida em até 10 segundos, sem recarregar a página |
+| RNF-02 | Retorno do tempo real depois da troca | conexão restabelecida em até 3 segundos, sem recarregar a página e sem exibir o aviso de "sem atualização automática" |
 | RNF-03 | Cobertura | no mínimo 95% de linha em cada arquivo alterado |
 | RNF-04 | Dependências | 0 dependências novas |
 | RNF-05 | Ordem de publicação | o texto de RF-06 e as marcas de RF-07 só são verdadeiros com o backend que contém OtavioProcopio/rgm-backend#112; os dois são publicados juntos na v1.6.0, backend antes (mesma ordem já decidida para a especificação 005) |
@@ -140,6 +140,7 @@ Funcionalidade: Sessão mantida na troca de senha e quadro do operador com o que
     E a API encerrou a minha conexão de tempo real
     Quando outro usuário move uma solicitação
     Então o quadro mostra a solicitação na coluna nova sem eu recarregar a página
+    Mas não vejo o aviso de que a tela está sem atualização automática
 
   Cenário: Backend sem credenciais na resposta
     Dado que a API responde à troca de senha sem credenciais novas
@@ -184,6 +185,24 @@ Funcionalidade: Sessão mantida na troca de senha e quadro do operador com o que
     Então o card dela mostra "Atribuída a você"
     Mas não mostra "Aberta por você"
 
+  Cenário: Card de solicitação que abri e recebi
+    Dado que sou operador, abri uma solicitação e sou responsável por ela
+    Quando abro o quadro
+    Então o card dela mostra "Atribuída a você"
+    Mas não mostra "Aberta por você"
+
+  Cenário: Filtro sem resultado para o operador
+    Dado que sou operador e tenho solicitações no quadro
+    Quando filtro por um modelo que não tem nenhuma solicitação minha
+    Então vejo "Nenhuma solicitação para este filtro"
+    E vejo a ação "Limpar filtro"
+    Mas não vejo "Você ainda não abriu nem recebeu solicitações"
+
+  Cenário: Limpar o filtro devolve o quadro
+    Dado que sou operador e vejo "Nenhuma solicitação para este filtro"
+    Quando aciono "Limpar filtro"
+    Então vejo as minhas solicitações no quadro
+
   Cenário: Gestor não vê a marca de relação
     Dado que sou gestor e abri uma solicitação
     Quando abro o quadro
@@ -197,15 +216,9 @@ Funcionalidade: Sessão mantida na troca de senha e quadro do operador com o que
     E a contagem de concluídas abertas por mim é 2
 ```
 
-Os cenários de RF-07 para a solicitação que o operador abriu e também recebeu, e o de RF-12,
-entram depois do esclarecimento.
-
 ## Ambiguidades
 
-1. **RF-07:** `[NECESSITA ESCLARECIMENTO: quando o operador abriu a solicitação e também é
-   responsável por ela, o card mostra as duas marcas ou só "Atribuída a você"?]`
-2. **RF-12:** `[NECESSITA ESCLARECIMENTO: com filtro de modelo ou de período sem resultado,
-   o quadro do operador mostra as colunas vazias ou uma mensagem própria do filtro?]`
+Nenhuma em aberto; as respostas estão em **Esclarecimentos**.
 
 Já decidido, sem pergunta:
 
@@ -222,3 +235,11 @@ Já decidido, sem pergunta:
 - Nenhum relato de "troquei a senha e fui deslogado" depois da v1.6.0.
 - O operador encontra no quadro a solicitação que acabou de abrir, sem perguntar ao gestor
   se ela foi registrada.
+
+## Esclarecimentos
+
+| Pergunta | Resposta do usuário | Data |
+|---|---|---|
+| RF-07: operador abriu a solicitação e também é responsável; o card mostra as duas marcas? | Só "Atribuída a você" | 2026-10-07 |
+| RF-12: filtro do quadro sem resultado para o operador mostra o quê? | Mensagem própria do filtro, com ação de limpar | 2026-10-07 |
+| RF-03: como o tempo real volta depois da troca de senha? | Reconectar na hora, ao guardar as credenciais novas | 2026-10-07 |

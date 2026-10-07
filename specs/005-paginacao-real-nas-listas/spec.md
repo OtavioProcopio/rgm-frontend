@@ -227,7 +227,7 @@ entregues. O que mudou em volta dela:
 
 Pendente para seguir: o checklist de requisitos ainda não foi revisto; faltam `/bu:plan`,
 `/bu:checklist`, `/bu:tasks` e `/bu:analyze`. RF-15, RF-16, RNF-04 e RNF-05 foram
-acrescentados nesta revisão e precisam do aceite do usuário.
+acrescentados nesta revisão e aceitos pelo usuário em 2026-10-07.
 
 ## Métricas de sucesso
 
