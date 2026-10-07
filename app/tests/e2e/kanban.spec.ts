@@ -45,7 +45,9 @@ test.describe('Fluxo Kanban — Solicitações', () => {
   }
 
   async function selecionarModeloNoCombobox(page: import('@playwright/test').Page) {
+    // O seletor busca na API pelo código: digita o código para o modelo do teste aparecer.
     await page.getByLabel('Modelo', { exact: true }).click();
+    await page.getByLabel('Modelo', { exact: true }).pressSequentially(modeloCodigo);
     await page.getByRole('button', { name: new RegExp(`${modeloCodigo} - ${modeloDescricao}`) }).click();
   }
 
@@ -81,7 +83,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     // teste (a lista não tem paginação suficiente para achar item recente
     // sem filtro, dado o volume de dados acumulado por outras suítes E2E).
     await page.click('button:has-text("Lista")');
-    await page.getByLabel('Modelo', { exact: true }).selectOption(modeloId);
+    await selecionarModeloNoCombobox(page);
     await expect(page.getByText(titulo)).toBeVisible();
   });
 

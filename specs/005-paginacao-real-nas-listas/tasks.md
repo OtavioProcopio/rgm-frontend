@@ -182,3 +182,23 @@ Tarefas acrescentadas: nenhuma
 - **Não verificado:** reconexão do tempo real com colunas em blocos contra o backend real;
   contraste do contorno de foco; a suíte e2e do repositório não foi rodada de novo depois
   desta feature.
+
+### Rodada 2 — 2026-10-07
+
+Depois da rodada 1, a suíte e2e do repositório foi rodada contra o backend de `develop`
+(`app/tests/e2e`, 48 roteiros), o que a rodada 1 registrava como não verificado.
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-08 | realizado | o roteiro "lista solicitações contém a criada" (`app/tests/e2e/kanban.spec.ts`) usava o `select` de modelo do filtro, que esta feature trocou pelo seletor com busca. O roteiro foi atualizado para digitar o código e escolher o modelo, e passa |
+
+Veredito: convergido
+
+Tarefas acrescentadas: nenhuma
+
+- **Suíte e2e:** 47 de 48 passam. O que falha é `evidencias.spec.ts:78`, já registrado na
+  issue #138 (roteiro desatualizado pela regra de visibilidade do operador), sem relação com
+  esta feature.
+- **`make validate`** não foi rodado de novo: a única mudança depois da rodada 1 foi no
+  roteiro e2e, que o `make validate` não executa. Tipos conferidos com `tsc`; o ESLint do
+  projeto ignora a pasta `tests/e2e`, então o arquivo não passou por lint.
