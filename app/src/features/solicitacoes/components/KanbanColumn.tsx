@@ -1,5 +1,7 @@
 import { Inbox } from 'lucide-react';
 
+import { Button } from '@/shared/components/Button/Button';
+
 import { cn } from '@/shared/lib/cn';
 
 import type { RelacaoDoOperador } from '../lib/relacaoDoOperador';
@@ -16,6 +18,13 @@ export type ColumnConfig = {
 type Props = {
   config: ColumnConfig;
   cards: Solicitacao[];
+  /** Total de solicitações do status; pode ser maior que a quantidade de cards carregados. */
+  total: number;
+  temMais?: boolean;
+  carregandoMais?: boolean;
+  onCarregarMais?: () => void;
+  /** Recorte aplicado à coluna, dito ao usuário (por exemplo "Últimos 30 dias"). */
+  aviso?: string;
   isDropTarget: boolean;
   isInvalidDrop: boolean;
   mobileView?: boolean;
@@ -32,6 +41,11 @@ type Props = {
 export function KanbanColumn({
   config,
   cards,
+  total,
+  temMais = false,
+  carregandoMais = false,
+  onCarregarMais,
+  aviso,
   isDropTarget,
   isInvalidDrop,
   mobileView = false,
@@ -60,7 +74,7 @@ export function KanbanColumn({
         >
           <span className="text-sm font-semibold tracking-wide">{config.label}</span>
           <span className="rounded-full bg-white/25 px-2 py-0.5 text-xs font-bold tabular-nums">
-            {cards.length}
+            {total}
           </span>
         </div>
       )}
@@ -89,6 +103,9 @@ export function KanbanColumn({
           onDrop(config.status);
         }}
       >
+        {aviso ? (
+          <p className="px-1 text-xs font-medium text-slate-600 dark:text-slate-300">{aviso}</p>
+        ) : null}
         {cards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
@@ -109,6 +126,17 @@ export function KanbanColumn({
             />
           ))
         )}
+        {temMais ? (
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            disabled={carregandoMais}
+            onClick={onCarregarMais}
+          >
+            {carregandoMais ? 'Carregando...' : `Carregar mais (${cards.length} de ${total})`}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

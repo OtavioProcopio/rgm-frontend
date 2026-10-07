@@ -11,12 +11,11 @@ import { solicitacoesKeys } from '@/features/solicitacoes/hooks/solicitacoesKeys
 import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolicitacao';
 import { useAtividades } from '@/features/solicitacoes/hooks/useAtividades';
 import { useCancelarSolicitacao } from '@/features/solicitacoes/hooks/useCancelarSolicitacao';
-import { useDashboardData } from '@/features/solicitacoes/hooks/useDashboardData';
 import { useDevolverSolicitacao } from '@/features/solicitacoes/hooks/useDevolverSolicitacao';
 import { useEditarSolicitacao } from '@/features/solicitacoes/hooks/useEditarSolicitacao';
 import { useEncerrarSolicitacao } from '@/features/solicitacoes/hooks/useEncerrarSolicitacao';
 import { useEnviarParaValidacao } from '@/features/solicitacoes/hooks/useEnviarParaValidacao';
-import { useKanbanSolicitacoes } from '@/features/solicitacoes/hooks/useKanbanSolicitacoes';
+import { useColunaDoQuadro } from '@/features/solicitacoes/hooks/useColunaDoQuadro';
 import { useMetricas } from '@/features/solicitacoes/hooks/useMetricas';
 import { useRegistrarComentario } from '@/features/solicitacoes/hooks/useRegistrarComentario';
 import { useSolicitacao } from '@/features/solicitacoes/hooks/useSolicitacao';
@@ -77,15 +76,6 @@ describe('useSolicitacao', () => {
   });
 });
 
-describe('useKanbanSolicitacoes', () => {
-  it('fetches solicitacoes and selects content', async () => {
-    const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useKanbanSolicitacoes(), { wrapper: QueryWrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toHaveLength(1);
-  });
-});
-
 describe('useAtividades', () => {
   it('fetches atividades for solicitacao', async () => {
     const { QueryWrapper } = createQueryWrapper();
@@ -101,32 +91,6 @@ describe('useMetricas', () => {
     const { result } = renderHook(() => useMetricas(), { wrapper: QueryWrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeDefined();
-  });
-});
-
-describe('useDashboardData', () => {
-  it('returns metrics computed from solicitacoes', async () => {
-    const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useDashboardData(), { wrapper: QueryWrapper });
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.metrics.total).toBe(1);
-    expect(result.current.metrics.byStatus['A_FAZER']).toBe(1);
-  });
-
-  it('calculates avgLeadTimeDays for concluded solicitacoes', async () => {
-    const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
-    const concluded = {
-      ...mockSolicitacao,
-      status: 'CONCLUIDA' as const,
-      criadaEm: '2024-01-01T00:00:00Z',
-      concluidaEm: '2024-01-03T00:00:00Z',
-    };
-    vi.mocked(solicitacoesApi.listar).mockResolvedValueOnce({ ...mockPage, content: [concluded] });
-
-    const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useDashboardData(), { wrapper: QueryWrapper });
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.metrics.avgLeadTimeDays).toBe(2);
   });
 });
 
@@ -168,10 +132,13 @@ describe('useAbrirSolicitacao', () => {
     // Arrange
     const { QueryWrapper } = createQueryWrapper();
     const { result } = renderHook(
-      () => ({ quadro: useKanbanSolicitacoes(), abrir: useAbrirSolicitacao() }),
+      () => ({
+        quadro: useColunaDoQuadro('A_FAZER', {}, '2026-09-07T00:00:00.000Z'),
+        abrir: useAbrirSolicitacao(),
+      }),
       { wrapper: QueryWrapper },
     );
-    await waitFor(() => expect(result.current.quadro.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.quadro.carregando).toBe(false));
     const buscasAntes = vi.mocked(solicitacoesApi.listar).mock.calls.length;
     const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
 

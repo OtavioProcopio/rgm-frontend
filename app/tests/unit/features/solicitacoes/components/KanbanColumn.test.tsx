@@ -53,6 +53,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[]}
+        total={0}
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
@@ -71,6 +72,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[]}
+        total={0}
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
@@ -89,6 +91,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[solicitacao]}
+        total={1}
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
@@ -108,6 +111,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[]}
+        total={0}
         isDropTarget={false}
         isInvalidDrop={false}
         mobileView
@@ -127,6 +131,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[solicitacao, { ...solicitacao, id: '2' }]}
+        total={2}
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
@@ -145,6 +150,7 @@ describe('KanbanColumn', () => {
       <KanbanColumn
         config={config}
         cards={[solicitacao]}
+        total={1}
         isDropTarget={false}
         isInvalidDrop={false}
         canDragCard={() => true}
@@ -177,5 +183,87 @@ describe('KanbanColumn', () => {
 
     // Assert
     expect(within(container).getByTestId('kanban-card').dataset.relacao).toBe('nenhuma');
+  });
+
+  function colunaEmBlocos(extra: Partial<Parameters<typeof KanbanColumn>[0]> = {}) {
+    return (
+      <KanbanColumn
+        config={config}
+        cards={[solicitacao, { ...solicitacao, id: '2' }]}
+        total={45}
+        isDropTarget={false}
+        isInvalidDrop={false}
+        canDragCard={() => true}
+        canAdvanceCard={() => false}
+        onDragStart={vi.fn()}
+        onDragOver={vi.fn()}
+        onDrop={vi.fn()}
+        onAdvance={vi.fn()}
+        {...extra}
+      />
+    );
+  }
+
+  it('deve mostrar no contador o total da coluna, e não a quantidade de cards carregados', () => {
+    // Act
+    const { container } = render(colunaEmBlocos());
+
+    // Assert
+    expect(within(container).getByText('45')).toBeDefined();
+  });
+
+  it('deve oferecer "Carregar mais", dizendo quantos estão na tela, quando há mais solicitações', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: true }));
+
+    // Assert
+    expect(
+      within(container).getByRole('button', { name: 'Carregar mais (2 de 45)' }),
+    ).toBeDefined();
+  });
+
+  it('deve não oferecer "Carregar mais" quando a coluna mostra todas as solicitações', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: false }));
+
+    // Assert
+    expect(within(container).queryByRole('button', { name: /Carregar mais/ })).toBeNull();
+  });
+
+  it('deve pedir o próximo bloco uma vez quando "Carregar mais" é acionado', () => {
+    // Arrange
+    const onCarregarMais = vi.fn();
+    const { container } = render(colunaEmBlocos({ temMais: true, onCarregarMais }));
+
+    // Act
+    within(container).getByRole('button', { name: /Carregar mais/ }).click();
+
+    // Assert
+    expect(onCarregarMais).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve desabilitar o botão e dizer "Carregando..." enquanto o próximo bloco é buscado', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ temMais: true, carregandoMais: true }));
+
+    // Assert
+    const botao = within(container).getByRole('button', { name: 'Carregando...' });
+    expect((botao as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('deve dizer o recorte aplicado à coluna quando recebe um aviso', () => {
+    // Act
+    const { container } = render(colunaEmBlocos({ aviso: 'Últimos 30 dias' }));
+
+    // Assert
+    expect(within(container).getByText('Últimos 30 dias')).toBeDefined();
+  });
+
+  it('deve não dizer recorte nenhum quando não recebe aviso', () => {
+    // Act
+    const { container } = render(colunaEmBlocos());
+
+    // Assert
+    expect(within(container).queryByText('Últimos 30 dias')).toBeNull();
   });
 });

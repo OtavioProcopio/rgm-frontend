@@ -15,17 +15,17 @@ testado tem em `app/src`.
 
 ## Fase 1 — Domínio
 
-- [ ] T001 Criar `TST/features/solicitacoes/lib/filtrosDaColuna.test.ts`: bloco de 20 na página pedida; status da coluna; modelo e período de criação repassados a toda coluna; Concluída e Cancelada sem período pedem data de conclusão a partir de 30 dias atrás; com período não pedem; colunas em aberto nunca pedem; `inicioDosUltimos30Dias` devolve o início do dia de 30 dias antes
-- [ ] T002 Alterar `SRC/features/solicitacoes/types/solicitacaoTypes.ts` (`emAberto`, `tipoData`, `dataInicio`, `dataFim`) e criar `SRC/features/solicitacoes/lib/filtrosDaColuna.ts`
+- [x] T001 Criar `TST/features/solicitacoes/lib/filtrosDaColuna.test.ts`: bloco de 20 na página pedida; status da coluna; modelo e período de criação repassados a toda coluna; Concluída e Cancelada sem período pedem data de conclusão a partir de 30 dias atrás; com período não pedem; colunas em aberto nunca pedem; `inicioDosUltimos30Dias` devolve o início do dia de 30 dias antes
+- [x] T002 Alterar `SRC/features/solicitacoes/types/solicitacaoTypes.ts` (`emAberto`, `tipoData`, `dataInicio`, `dataFim`) e criar `SRC/features/solicitacoes/lib/filtrosDaColuna.ts`
 
 ## Fase 2 — Quadro em blocos
 
-- [ ] T003 Criar `TST/features/solicitacoes/hooks/useColunaDoQuadro.test.ts`: primeira carga pede 1 bloco de 20; devolve os cards e o total da API; `temMais` verdadeiro com mais páginas e falso na última; carregar mais pede a página seguinte e soma os cards; atualizar as listas refaz os 2 blocos carregados e mantém a quantidade; card repetido entre blocos aparece uma vez
-- [ ] T004 Alterar `SRC/features/solicitacoes/hooks/solicitacoesKeys.ts` (chave `coluna()`) e criar `SRC/features/solicitacoes/hooks/useColunaDoQuadro.ts`
-- [ ] T005 Testes e alteração de `SRC/features/solicitacoes/components/KanbanColumn.tsx`: contador mostra o `total` e não a quantidade de cards; "Carregar mais" aparece com `temMais`; não aparece sem; chama `onCarregarMais` uma vez; fica desabilitado com "Carregando..." durante a busca; mostra o aviso recebido ("últimos 30 dias") e não mostra sem ele
-- [ ] T006 Testes em `TST/features/solicitacoes/components/KanbanBoard.test.tsx`: abre com uma consulta por coluna; contador de cada coluna e das abas do celular com o total; "últimos 30 dias" em Concluída e Cancelada sem período e ausente com período; quadro vazio do operador só quando as cinco colunas responderam e somam zero; não aparece enquanto alguma carrega; operador com 1 solicitação vê as cinco colunas; erro de uma coluna mostra o erro do quadro. Ajustar os testes existentes do arquivo ao hook novo
-- [ ] T007 Alterar `SRC/features/solicitacoes/components/KanbanBoard.tsx`
-- [ ] T008 Remover `SRC/features/solicitacoes/hooks/useKanbanSolicitacoes.ts` e `SRC/features/solicitacoes/hooks/useDashboardData.ts`, e os testes dos dois em `TST/features/solicitacoes/hooks/solicitacoesHooks.test.ts` (o teste de RF-09 da feature 009 passa a usar `useColunaDoQuadro`)
+- [x] T003 Criar `TST/features/solicitacoes/hooks/useColunaDoQuadro.test.ts`: primeira carga pede 1 bloco de 20; devolve os cards e o total da API; `temMais` verdadeiro com mais páginas e falso na última; carregar mais pede a página seguinte e soma os cards; atualizar as listas refaz os 2 blocos carregados e mantém a quantidade; card repetido entre blocos aparece uma vez
+- [x] T004 Alterar `SRC/features/solicitacoes/hooks/solicitacoesKeys.ts` (chave `coluna()`) e criar `SRC/features/solicitacoes/hooks/useColunaDoQuadro.ts`
+- [x] T005 Testes e alteração de `SRC/features/solicitacoes/components/KanbanColumn.tsx`: contador mostra o `total` e não a quantidade de cards; "Carregar mais" aparece com `temMais`; não aparece sem; chama `onCarregarMais` uma vez; fica desabilitado com "Carregando..." durante a busca; mostra o aviso recebido ("últimos 30 dias") e não mostra sem ele
+- [x] T006 Testes em `TST/features/solicitacoes/components/KanbanBoard.test.tsx`: abre com uma consulta por coluna; contador de cada coluna e das abas do celular com o total; "últimos 30 dias" em Concluída e Cancelada sem período e ausente com período; quadro vazio do operador só quando as cinco colunas responderam e somam zero; não aparece enquanto alguma carrega; operador com 1 solicitação vê as cinco colunas; erro de uma coluna mostra o erro do quadro. Ajustar os testes existentes do arquivo ao hook novo
+- [x] T007 Alterar `SRC/features/solicitacoes/components/KanbanBoard.tsx`
+- [x] T008 Remover `SRC/features/solicitacoes/hooks/useKanbanSolicitacoes.ts` e `SRC/features/solicitacoes/hooks/useDashboardData.ts`, e os testes dos dois em `TST/features/solicitacoes/hooks/solicitacoesHooks.test.ts` (o teste de RF-09 da feature 009 passa a usar `useColunaDoQuadro`)
 
 ## Fase 3 — Aba pessoal e painel
 
