@@ -24,7 +24,7 @@ arquivo.
 
 ## Fase 0 — Contrato de operação
 
-- [ ] T001 Alterar `Makefile` e `app/package.json`: alvo `fmt` (formata, aceita `CAMINHO=`), `test` roda uma vez e aceita `CAMINHO=` (o modo interativo vai para `test-watch`), alvo `cover`, e `typecheck` passa a verificar os arquivos de `app/tsconfig.app.json`. Os alvos `format`, `test-run`, `coverage`, `check` e `validate` continuam com o mesmo efeito. Pronto quando `make test CAMINHO=tests/unit/shared/lib` roda só essa pasta, `make typecheck` falha com um erro de tipo plantado e removido em seguida, e `make validate` passa
+- [x] T001 Alterar `Makefile` e `app/package.json`: alvo `fmt` (formata, aceita `CAMINHO=`), `test` roda uma vez e aceita `CAMINHO=` (o modo interativo vai para `test-watch`), alvo `cover`, e `typecheck` passa a verificar os arquivos de `app/tsconfig.app.json`. Os alvos `format`, `test-run`, `coverage`, `check` e `validate` continuam com o mesmo efeito. Pronto quando `make test CAMINHO=tests/unit/shared/lib` roda só essa pasta, `make typecheck` falha com um erro de tipo plantado e removido em seguida, e `make validate` passa
 
 ## Fase 1 — Domínio
 
