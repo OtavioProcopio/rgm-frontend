@@ -241,6 +241,27 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByRole('button', { name: /voltar/i })).toBeDefined();
   });
 
+  it('deve não mostrar Mais ações quando o cabeçalho mostra só Editar e Voltar', async () => {
+    // Arrange
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
+
+    // Act
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(within(container).getByRole('button', { name: 'Editar' })).toBeDefined();
+    expect(within(container).getByRole('button', { name: 'Voltar' })).toBeDefined();
+    expect(within(container).queryByRole('button', { name: 'Mais ações' })).toBeNull();
+  });
+
   it('shows solicitacao tipo and descricao', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
@@ -581,6 +602,19 @@ describe('SolicitacaoDetalhePage — edição', () => {
       titulo: novoTitulo,
       descricao: mockSolicitacao.descricao,
     });
+  });
+
+  it('deve não mostrar Mais ações quando a edição mostra só Salvar e Cancelar', async () => {
+    // Arrange
+    const { tela } = await abrirEdicao();
+
+    // Act
+    const salvar = tela.getByRole('button', { name: 'Salvar' });
+
+    // Assert
+    expect(salvar).toBeDefined();
+    expect(botaoCancelarEdicao(tela)).toBeDefined();
+    expect(tela.queryByRole('button', { name: 'Mais ações' })).toBeNull();
   });
 
   it('deve fechar a edição sem perguntar quando cancelar é acionado sem alteração', async () => {

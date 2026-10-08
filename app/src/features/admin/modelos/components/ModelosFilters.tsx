@@ -1,6 +1,8 @@
 import { Card } from '@/shared/components/Card/Card';
 import { Input } from '@/shared/components/Input/Input';
+import { SecaoRecolhivel } from '@/shared/components/SecaoRecolhivel/SecaoRecolhivel';
 import { Select } from '@/shared/components/Select/Select';
+import { resumoDeFiltros } from '@/shared/lib/resumoDeFiltros';
 
 type MaquinaOption = { value: string; label: string };
 
@@ -22,6 +24,11 @@ const ativoOptions = [
   { value: 'false', label: 'Inativos' },
 ];
 
+function contarFiltrosPreenchidos(textos: Array<string | undefined>, ativo?: boolean): number {
+  const textosPreenchidos = textos.filter((texto) => texto !== undefined && texto !== '').length;
+  return textosPreenchidos + (ativo === undefined ? 0 : 1);
+}
+
 export function ModelosFilters({
   ativo,
   codigo,
@@ -34,35 +41,44 @@ export function ModelosFilters({
   onMaquinaChange,
   onDescricaoChange,
 }: ModelosFiltersProps) {
+  const preenchidos = contarFiltrosPreenchidos([codigo, descricao, maquina], ativo);
+
   return (
-    <Card className="mb-4 grid gap-3 rounded-md bg-surface-muted p-4 shadow-none sm:grid-cols-2 md:grid-cols-4">
-      <Input
-        label="Código"
-        value={codigo ?? ''}
-        onChange={(e) => onCodigoChange(e.target.value || undefined)}
-        placeholder="Buscar por código"
-      />
-      <Input
-        label="Descrição"
-        value={descricao ?? ''}
-        onChange={(e) => onDescricaoChange?.(e.target.value || undefined)}
-        placeholder="Buscar por descrição"
-      />
-      <Select
-        label="Máquina"
-        options={maquinaOptions}
-        placeholder={maquinaOptionsLoading ? 'Carregando...' : 'Todas'}
-        disabled={maquinaOptionsLoading}
-        value={maquina ?? ''}
-        onChange={(e) => onMaquinaChange?.(e.target.value || undefined)}
-      />
-      <Select
-        label="Status"
-        options={ativoOptions}
-        placeholder="Todos"
-        value={ativo === undefined ? '' : String(ativo)}
-        onChange={(e) => onAtivoChange(e.target.value ? e.target.value === 'true' : undefined)}
-      />
-    </Card>
+    <SecaoRecolhivel
+      id="filtros-modelos"
+      titulo="Filtros"
+      resumo={resumoDeFiltros(preenchidos)}
+      className="mb-4"
+    >
+      <Card className="mt-2 grid gap-3 rounded-md bg-surface-muted p-4 shadow-none sm:grid-cols-2 md:grid-cols-4">
+        <Input
+          label="Código"
+          value={codigo ?? ''}
+          onChange={(e) => onCodigoChange(e.target.value || undefined)}
+          placeholder="Buscar por código"
+        />
+        <Input
+          label="Descrição"
+          value={descricao ?? ''}
+          onChange={(e) => onDescricaoChange?.(e.target.value || undefined)}
+          placeholder="Buscar por descrição"
+        />
+        <Select
+          label="Máquina"
+          options={maquinaOptions}
+          placeholder={maquinaOptionsLoading ? 'Carregando...' : 'Todas'}
+          disabled={maquinaOptionsLoading}
+          value={maquina ?? ''}
+          onChange={(e) => onMaquinaChange?.(e.target.value || undefined)}
+        />
+        <Select
+          label="Status"
+          options={ativoOptions}
+          placeholder="Todos"
+          value={ativo === undefined ? '' : String(ativo)}
+          onChange={(e) => onAtivoChange(e.target.value ? e.target.value === 'true' : undefined)}
+        />
+      </Card>
+    </SecaoRecolhivel>
   );
 }

@@ -207,6 +207,18 @@ describe('PerfilPage — selo de perfil', () => {
   });
 
   it.each(PERFIS)(
+    'deve escrever o perfil em caixa normal no selo quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      const selo = screen.getByText(rotuloDoPerfil[perfil]);
+      expect(selo.className.split(' ')).not.toContain('uppercase');
+    },
+  );
+
+  it.each(PERFIS)(
     'deve pintar o selo com a variação do perfil quando o perfil é %s',
     async (perfil) => {
       // Act

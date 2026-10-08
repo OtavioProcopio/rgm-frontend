@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 
 import { modelosApi } from '../api/modelosApi';
 import { ModelosFilters } from '../components/ModelosFilters';
@@ -25,6 +25,20 @@ export function ModelosPage() {
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
     filters.maquina,
   );
+  const {
+    exportar,
+    exportando,
+    erro: erroDeExportacao,
+  } = useExportarPdf({
+    buscar: () =>
+      modelosApi.exportarLista({
+        ativo: filters.ativo,
+        codigo: filters.codigo,
+        maquina: filters.maquina,
+        descricao: filters.descricao,
+      }),
+    nomeDoArquivo: () => `relatorio_modelos_${Date.now()}.pdf`,
+  });
 
   return (
     <section>
@@ -32,24 +46,21 @@ export function ModelosPage() {
         title="Modelos"
         description="Gerencie modelos vinculados às máquinas."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <ExportarPdfButton
-              buscar={() =>
-                modelosApi.exportarLista({
-                  ativo: filters.ativo,
-                  codigo: filters.codigo,
-                  maquina: filters.maquina,
-                  descricao: filters.descricao,
-                })
-              }
-              nomeDoArquivo={() => `relatorio_modelos_${Date.now()}.pdf`}
-            />
-            <Link to="/app/admin/modelos/novo">
-              <Button>Novo modelo</Button>
-            </Link>
-          </div>
+          <Link to="/app/admin/modelos/novo">
+            <Button>Novo modelo</Button>
+          </Link>
         }
+        maisAcoes={[
+          {
+            rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
+            onSelect: exportar,
+            desabilitada: exportando,
+          },
+        ]}
       />
+      {erroDeExportacao ? (
+        <ErrorState title="Exportação não concluída" description={erroDeExportacao} />
+      ) : null}
       <ModelosFilters
         codigo={filters.codigo}
         maquina={filters.maquina}
@@ -59,7 +70,9 @@ export function ModelosPage() {
         maquinaOptionsLoading={maquinasLoading}
         onCodigoChange={(codigo) => setFilters((current) => ({ ...current, codigo, page: 0 }))}
         onMaquinaChange={(maquina) => setFilters((current) => ({ ...current, maquina, page: 0 }))}
-        onDescricaoChange={(descricao) => setFilters((current) => ({ ...current, descricao, page: 0 }))}
+        onDescricaoChange={(descricao) =>
+          setFilters((current) => ({ ...current, descricao, page: 0 }))
+        }
         onAtivoChange={(ativo) => setFilters((current) => ({ ...current, ativo, page: 0 }))}
       />
       {isLoading ? <LoadingState title="Carregando modelos..." /> : null}

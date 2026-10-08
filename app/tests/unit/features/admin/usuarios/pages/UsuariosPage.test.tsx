@@ -79,6 +79,18 @@ describe('UsuariosPage', () => {
     expect(within(container).getByRole('link', { name: /novo usuário/i })).toBeDefined();
   });
 
+  it('deve não mostrar Mais ações quando o cabeçalho tem só o comando Novo usuário', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(within(container).getByRole('link', { name: 'Novo usuário' })).toBeDefined();
+    expect(within(container).queryByRole('button', { name: 'Mais ações' })).toBeNull();
+  });
+
   it('shows error state when request fails', async () => {
     const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
     vi.mocked(useUsuarios).mockReturnValue({

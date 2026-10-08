@@ -10,7 +10,8 @@ import { Card } from '@/shared/components/Card/Card';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
-import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { PageHeader, type AcaoDoMenu } from '@/shared/components/PageHeader/PageHeader';
+import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 import { cn } from '@/shared/lib/cn';
 import { canManageModelos } from '@/shared/lib/permissions';
 import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
@@ -66,6 +67,38 @@ export function ModeloDetalhePage() {
   }
 
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
+  const buscarFicha = () => modelosApi.exportarFicha(id ?? '');
+  const nomeDaFicha = () => `ficha-modelo-${modelo?.codigo ?? id}.pdf`;
+  const {
+    exportar,
+    exportando,
+    erro: erroDaExportacao,
+  } = useExportarPdf({
+    buscar: buscarFicha,
+    nomeDoArquivo: nomeDaFicha,
+  });
+  const gerencia = Boolean(id) && podeGerenciarFoto;
+
+  const maisAcoes: AcaoDoMenu[] = [
+    {
+      rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
+      onSelect: exportar,
+      desabilitada: exportando,
+    },
+    ...(modelo?.ativo === true
+      ? [
+          {
+            rotulo: 'Desativar',
+            perigo: true,
+            onSelect: () => setShowConfirm('desativar'),
+            desabilitada: isMutating,
+          },
+        ]
+      : []),
+    ...(modelo?.ativo === false
+      ? [{ rotulo: 'Ativar', onSelect: () => setShowConfirm('ativar'), desabilitada: isMutating }]
+      : []),
+  ];
 
   return (
     <section>
@@ -73,40 +106,21 @@ export function ModeloDetalhePage() {
         title="Detalhe do modelo"
         description="Consulte dados, eventos e a galeria de fotos do modelo."
         actions={
-          <div className="flex flex-wrap gap-2">
-            {id ? (
-              <ExportarPdfButton
-                buscar={() => modelosApi.exportarFicha(id)}
-                nomeDoArquivo={() => `ficha-modelo-${modelo?.codigo ?? id}.pdf`}
-              />
-            ) : null}
-            {id && podeGerenciarFoto ? (
-              <>
-                <Link to={`/app/admin/modelos/${id}/editar`}>
-                  <Button variant="secondary">Editar</Button>
-                </Link>
-                {modelo?.ativo ? (
-                  <Button
-                    variant="secondary"
-                    disabled={isMutating}
-                    onClick={() => setShowConfirm('desativar')}
-                  >
-                    Desativar
-                  </Button>
-                ) : (
-                  <Button
-                    variant="primary"
-                    disabled={isMutating}
-                    onClick={() => setShowConfirm('ativar')}
-                  >
-                    Ativar
-                  </Button>
-                )}
-              </>
-            ) : null}
-          </div>
+          gerencia ? (
+            <Link to={`/app/admin/modelos/${id}/editar`}>
+              <Button variant="secondary">Editar</Button>
+            </Link>
+          ) : id ? (
+            <ExportarPdfButton buscar={buscarFicha} nomeDoArquivo={nomeDaFicha} />
+          ) : null
         }
+        maisAcoes={gerencia ? maisAcoes : undefined}
       />
+      {erroDaExportacao && gerencia ? (
+        <div className="mb-4">
+          <ErrorState title="Exportação não concluída" description={erroDaExportacao} />
+        </div>
+      ) : null}
       {actionError ? (
         <div className="mb-4">
           <ErrorState title="Operação não concluída" description={actionError} />
