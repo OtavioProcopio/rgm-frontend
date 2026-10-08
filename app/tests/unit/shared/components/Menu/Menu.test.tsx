@@ -262,6 +262,23 @@ describe('Menu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  it.each([['Enter'], [' ']])(
+    'deve executar a ação e fechar quando a tecla "%s" é apertada num item',
+    (tecla) => {
+      // Arrange
+      const { aoEscolher } = renderizar();
+      abrir();
+
+      // Act
+      fireEvent.keyDown(item('Primeira'), { key: tecla });
+
+      // Assert
+      expect(aoEscolher).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('menu')).toBeNull();
+      expect(document.activeElement).toBe(botao());
+    },
+  );
+
   it('deve navegar e fechar quando o item é um link', () => {
     // Arrange
     renderizar(<MenuLink to="/app/perfil">Meu perfil</MenuLink>);

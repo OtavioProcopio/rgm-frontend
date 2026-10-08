@@ -44,14 +44,14 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 - [x] T012 Criar `TST/shared/components/Menu/Menu.test.tsx`: o botão anuncia `aria-haspopup="menu"` e `aria-expanded`; abre por clique e foca o primeiro item; seta para baixo e para cima percorrem com volta ao fim; Home e End; Enter e Espaço escolhem e fecham; Esc fecha e devolve o foco ao botão; Tab fecha; clique fora fecha; `MenuLink` navega e fecha; `MenuItem` de escolha única marca `aria-checked`; item `perigo` usa cor de perigo; item desabilitado não é escolhido; alvo de toque de 44 px (`pointer-coarse:min-h-11`); sem animação com `motion-reduce`
 - [x] T013 Criar `SRC/shared/components/Menu/Menu.tsx` (com `MenuItem`, `MenuLink`, `MenuSeparator`, `MenuTitulo`)
-- [ ] T014 [P] Alterar `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx` só se algo que o teste afirma sobre o DOM mudar; a regra é: **todos os testes atuais passam sem alteração** com o `Menu` novo (R4)
-- [ ] T015 [P] Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx` para usar o `Menu`
-- [ ] T016 [P] Alterar `TST/shared/components/PageHeader/PageHeader.test.tsx`: sem `maisAcoes` nenhum botão "Mais ações"; com um item aparece o botão; o menu lista as ações com texto e ícone; a ação `perigo` é a última, depois de um separador; escolher chama `onSelect`; item com `to` navega; desabilitada não executa
-- [ ] T017 [P] Alterar `SRC/shared/components/PageHeader/PageHeader.tsx`
-- [ ] T018 [P] Criar `TST/shared/components/SecaoRecolhivel/SecaoRecolhivel.test.tsx`: aberta por padrão; o título é um botão com `aria-expanded` e `aria-controls`; clicar e Enter recolhem; fechada mostra o resumo e aberta não; o conteúdo continua montado e com `hidden` quando fechado; o estado vale numa nova montagem (`rgm.secao.<id>`); o primeiro `render` já está no estado guardado; dois ids guardam estados separados
-- [ ] T019 [P] Criar `SRC/shared/components/SecaoRecolhivel/SecaoRecolhivel.tsx`
-- [ ] T020 [P] Alterar `TST/shared/components/ExportarPdfButton/ExportarPdfButton.test.tsx`: todos os testes atuais passam sem alteração com o hook
-- [ ] T021 [P] Alterar `SRC/shared/components/ExportarPdfButton/ExportarPdfButton.tsx` para usar `useExportarPdf`
+- [x] T014 [P] Alterar `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx` só se algo que o teste afirma sobre o DOM mudar; a regra é: **todos os testes atuais passam sem alteração** com o `Menu` novo (R4)
+- [x] T015 [P] Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx` para usar o `Menu`
+- [x] T016 [P] Alterar `TST/shared/components/PageHeader/PageHeader.test.tsx`: sem `maisAcoes` nenhum botão "Mais ações"; com um item aparece o botão; o menu lista as ações com texto e ícone; a ação `perigo` é a última, depois de um separador; escolher chama `onSelect`; item com `to` navega; desabilitada não executa
+- [x] T017 [P] Alterar `SRC/shared/components/PageHeader/PageHeader.tsx`
+- [x] T018 [P] Criar `TST/shared/components/SecaoRecolhivel/SecaoRecolhivel.test.tsx`: aberta por padrão; o título é um botão com `aria-expanded` e `aria-controls`; clicar e Enter recolhem; fechada mostra o resumo e aberta não; o conteúdo continua montado e com `hidden` quando fechado; o estado vale numa nova montagem (`rgm.secao.<id>`); o primeiro `render` já está no estado guardado; dois ids guardam estados separados
+- [x] T019 [P] Criar `SRC/shared/components/SecaoRecolhivel/SecaoRecolhivel.tsx`
+- [x] T020 [P] Alterar `TST/shared/components/ExportarPdfButton/ExportarPdfButton.test.tsx`: todos os testes atuais passam sem alteração com o hook
+- [x] T021 [P] Alterar `SRC/shared/components/ExportarPdfButton/ExportarPdfButton.tsx` para usar `useExportarPdf`
 
 ## Fase 4 — Layout
 

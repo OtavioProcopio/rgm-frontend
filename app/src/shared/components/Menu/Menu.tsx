@@ -98,10 +98,12 @@ export function Menu({
       fechar();
     } else if (evento.key === 'Tab') {
       setAberto(false);
-    } else if (evento.key === ' ' && (evento.target as HTMLElement).tagName === 'A') {
-      // Espaço não aciona link sozinho; o menu o trata como botão.
+    } else if (evento.key === 'Enter' || evento.key === ' ') {
+      // Enter e Espaço escolhem o item focado; o menu os trata no teclado para valer igual em todo item.
+      const alvo = evento.target as HTMLElement;
+      if (alvo.tagName !== 'A' && alvo.tagName !== 'BUTTON') return;
       evento.preventDefault();
-      (evento.target as HTMLElement).click();
+      alvo.click();
     }
   }
 
