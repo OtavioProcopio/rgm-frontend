@@ -32,7 +32,7 @@ export function ExportarPdfButton({ buscar, nomeDoArquivo }: Props) {
         {exportando ? 'Exportando...' : 'Exportar PDF'}
       </Button>
       {erro ? (
-        <p role="alert" className="max-w-xs text-right text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="max-w-xs text-right text-sm text-danger-fg">
           {erro}
         </p>
       ) : null}

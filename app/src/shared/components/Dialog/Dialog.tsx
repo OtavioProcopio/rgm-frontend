@@ -20,8 +20,7 @@ type DialogProps = {
 const APARENCIAS = {
   painel: {
     fundo: 'items-end bg-black/50 sm:items-center sm:p-4',
-    painel:
-      'max-h-dvh overflow-y-auto rounded-t-xl bg-white sm:max-w-md sm:rounded-xl dark:bg-slate-900',
+    painel: 'max-h-dvh overflow-y-auto rounded-t-xl bg-surface-raised sm:max-w-md sm:rounded-xl',
   },
   imersivo: {
     fundo: 'items-stretch bg-scrim',

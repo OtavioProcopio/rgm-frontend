@@ -59,8 +59,8 @@ arquivo.
 - [x] T024 Criar `SRC/shared/components/Table/Table.tsx`
 - [x] T025 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: aparência `imersivo` usa o fundo de sobreposição de foto e ocupa a tela; sem a propriedade o painel é o de hoje; foco preso, Esc e retorno do foco valem nas duas aparências
 - [x] T026 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: propriedade `aparencia`
-- [ ] T027 Apagar `TST/coresPorPapel.pendentes/pecas-base.txt`, ver a guarda falhar e ajustar, para o resultado esperado, os testes de `TST/shared/components/` que citam cor (Button, ConfirmDialog e os demais que a guarda apontar)
-- [ ] T028 Migrar para os papéis as peças de `SRC/shared/components/`: Button, Input, Textarea, Select, Combobox, Dialog, ConfirmDialog, Pagination, PageHeader, EmptyState, ErrorState, LoadingState, ExportarPdfButton e ThemeToggle
+- [x] T027 Apagar `TST/coresPorPapel.pendentes/pecas-base.txt`, ver a guarda falhar e ajustar, para o resultado esperado, os testes de `TST/shared/components/` que citam cor (Button, ConfirmDialog e os demais que a guarda apontar)
+- [x] T028 Migrar para os papéis as peças de `SRC/shared/components/`: Button, Input, Textarea, Select, Combobox, Dialog, ConfirmDialog, Pagination, PageHeader, EmptyState, ErrorState, LoadingState, ExportarPdfButton e ThemeToggle
 
 ## Fase 4 — Telas
 
@@ -198,6 +198,11 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 ## Casos sem papel adequado
 
 > Registrados pelas tarefas de migração, para decisão. Vazio até a Fase 4.
+
+| Tarefa | Onde | Caso | O que ficou |
+|---|---|---|---|
+| T028 | `Button` secundário (`SRC/shared/components/Button/Button.tsx`) | passar o mouse escurecia o fundo (`slate-100` → `slate-200`); a tabela de conversão leva os dois para `surface-muted`, e não há papel de superfície mais forte | `hover:brightness-95`, que não escreve cor; aguarda decisão: manter, ou criar um papel de "superfície suave em destaque" |
+| T028 | botão de confirmar de alerta do `ConfirmDialog` | passar o mouse escurecia o fundo cheio (`amber-600` → `amber-700`); existe `danger-hover`, não existe `warning-hover` | `bg-warning` com `hover:brightness-95`; aguarda decisão: manter, ou criar `warning-hover` |
 
 ## Convergence
 
