@@ -66,6 +66,18 @@ describe('AppLayout', () => {
     expect(classes(logo.parentElement!)).toContain(PLACA_DO_LOGO);
   });
 
+  it('deve alinhar o logo da barra lateral pela base para não abrir folga abaixo dele', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: USUARIO });
+
+    // Act
+    render(<AppLayout />, { wrapper: AppWrapper });
+
+    // Assert
+    const logo = within(screen.getByRole('complementary')).getByRole('img', { name: NOME_DO_LOGO });
+    expect(classes(logo.parentElement!)).toContain('align-bottom');
+  });
+
   it('deve mostrar o controle de tema quando o cabeçalho é montado', () => {
     // Arrange
     const { AppWrapper } = createAppWrapper({ user: USUARIO });

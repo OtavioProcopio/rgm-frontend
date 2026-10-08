@@ -40,7 +40,7 @@ export function UsuariosTable({
               </div>
               <UsuarioStatusBadge ativo={usuario.ativo} />
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex min-h-6 flex-wrap gap-2">
               <UsuarioPerfilBadge perfil={usuario.perfil} />
               <span className="text-xs text-fg-muted">
                 Criado em {formatDate(usuario.criadoEm)}

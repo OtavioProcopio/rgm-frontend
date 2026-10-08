@@ -17,9 +17,14 @@ export function Table({ className, children }: TableProps) {
   );
 }
 
-export function TableHead({ children }: { children: ReactNode }) {
+export function TableHead({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <thead className="bg-surface-muted text-left text-xs font-semibold uppercase tracking-wide text-fg-muted">
+    <thead
+      className={cn(
+        'bg-surface-muted text-left text-xs font-semibold uppercase tracking-wide text-fg-muted',
+        className,
+      )}
+    >
       {children}
     </thead>
   );

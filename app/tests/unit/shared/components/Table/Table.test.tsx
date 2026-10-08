@@ -111,6 +111,27 @@ describe('Table', () => {
     );
   });
 
+  it('deve aceitar classes extras no cabeçalho quando className é informado', () => {
+    // Arrange
+    const extra = '[&_th]:py-3.5';
+
+    // Act
+    render(
+      <table>
+        <TableHead className={extra}>
+          <tr>
+            <th>Nome</th>
+          </tr>
+        </TableHead>
+      </table>,
+    );
+
+    // Assert
+    expect(classes(screen.getAllByRole('rowgroup')[0])).toEqual(
+      expect.arrayContaining(['bg-surface-muted', extra]),
+    );
+  });
+
   it('deve separar o cabeçalho do corpo pelo papel de borda', () => {
     // Act
     renderTabela();

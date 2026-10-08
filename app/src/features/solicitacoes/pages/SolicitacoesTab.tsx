@@ -271,7 +271,7 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
           Distribuição detalhada por status
         </h2>
         <Table className="rounded-lg">
-          <TableHead>
+          <TableHead className="[&_th]:py-3.5">
             <TableRow>
               <TableHeaderCell>Status</TableHeaderCell>
               <TableHeaderCell className="text-right">Qtd.</TableHeaderCell>

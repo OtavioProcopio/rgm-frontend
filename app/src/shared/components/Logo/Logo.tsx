@@ -11,10 +11,13 @@ type LogoProps = {
   className?: string;
 };
 
-/** Logo da empresa sobre a placa `logo-plate`: transparente no tema claro, clara no escuro. */
+/**
+ * Logo da empresa sobre a placa `logo-plate`: transparente no tema claro, clara no escuro.
+ * A margem negativa devolve o espaço da placa, para o logo ocupar o mesmo lugar de antes.
+ */
 export function Logo({ tamanho = 'md', className }: LogoProps) {
   return (
-    <span className={cn('inline-flex rounded-md bg-logo-plate p-1', className)}>
+    <span className={cn('inline-flex rounded-md bg-logo-plate p-1 -m-1', className)}>
       <img
         src="/logo-rgm-autoparts.png"
         alt="RGM Auto Parts"

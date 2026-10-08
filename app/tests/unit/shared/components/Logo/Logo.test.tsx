@@ -36,6 +36,15 @@ describe('Logo', () => {
     expect(classes(imagem().parentElement!)).toContain('bg-logo-plate');
   });
 
+  it('deve ocupar o mesmo espaço da imagem quando a placa é desenhada ao redor dela', () => {
+    // Act
+    render(<Logo />);
+
+    // Assert
+    const placa = classes(imagem().parentElement!);
+    expect(placa).toEqual(expect.arrayContaining(['p-1', '-m-1']));
+  });
+
   it.each(ALTURAS)(
     'deve ter a altura $classe quando o tamanho é $tamanho',
     ({ tamanho, classe }) => {

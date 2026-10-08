@@ -109,6 +109,28 @@ describe('papéis de cor', () => {
     },
   );
 
+  it('deve deixar a regra base de link na camada base para não vencer as classes de cor', () => {
+    // Arrange
+    const foraDeCamada = /(?:^|\n)a\s*\{/;
+
+    // Act
+    const regraSolta = foraDeCamada.test(css);
+
+    // Assert
+    expect(regraSolta).toBe(false);
+  });
+
+  it('deve manter a fonte herdada de botão e campo fora da camada base para não mudar a largura dos botões', () => {
+    // Arrange
+    const foraDeCamada = /(?:^|\n)button,\s*\n\s*input\s*\{/;
+
+    // Act
+    const regraSolta = foraDeCamada.test(css);
+
+    // Assert
+    expect(regraSolta).toBe(true);
+  });
+
   it('deve tirar a paleta genérica das cores do Tailwind', () => {
     // Act
     const tema = blocoDoTema();

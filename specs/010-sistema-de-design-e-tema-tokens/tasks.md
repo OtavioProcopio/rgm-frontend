@@ -112,7 +112,7 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 - [x] T051 Teste em `TST/styles/papeisDeCor.test.ts`: só os papéis, branco, preto e transparente existem como cor; não há redefinição de `sky` nem de `slate`
 - [x] T052 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [x] T053 Alterar `SRC/styles/globals.css`: remover a paleta genérica do `@theme` e as redefinições de `sky` e `slate`
-- [ ] T054 Medição com API simulada, antes (`e9cbb6f`) e depois, em `/root/rgm/evidencias/010-frontend/`: contraste de todo texto, borda de campo e contorno de foco nas 16 telas, nos dois temas (RNF-01, RNF-02); posição e tamanho dos controles em 1440 px e 390 px (RNF-07); área de toque e foco em 390 px (RNF-08); cinco carregamentos por tema sem quadro no tema errado (RNF-09); tempo de troca de tema (RNF-10); capturas das 16 telas nos dois temas. Registrar na convergência
+- [x] T054 Medição com API simulada, antes (`e9cbb6f`) e depois, em `/root/rgm/evidencias/010-frontend/`: contraste de todo texto, borda de campo e contorno de foco nas 16 telas, nos dois temas (RNF-01, RNF-02); posição e tamanho dos controles em 1440 px e 390 px (RNF-07); área de toque e foco em 390 px (RNF-08); cinco carregamentos por tema sem quadro no tema errado (RNF-09); tempo de troca de tema (RNF-10); capturas das 16 telas nos dois temas. Registrar na convergência
 - [ ] T055 Rodar a feature contra o backend de `develop`: entrada, quadro, detalhe, painel e administração nos dois temas, e a suíte `app/tests/e2e`. Registrar na convergência
 - [ ] T056 `make cover` com os arquivos medidos em 95% ou mais (RNF-11) e `app/package.json` sem pacote novo (RNF-12)
 - [ ] T057 `make validate` verde

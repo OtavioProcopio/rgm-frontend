@@ -56,7 +56,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-canvas text-fg lg:grid lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r border-line bg-surface lg:flex lg:min-h-screen lg:flex-col">
         <div className="border-b border-line px-6 py-5">
-          <Logo />
+          <Logo className="align-bottom" />
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-accent">
             {user?.perfil ? PERFIL_LABEL[user.perfil] : 'RGM Auto Parts'}
           </p>

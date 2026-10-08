@@ -107,7 +107,7 @@ export function ModelosTab() {
           <p className="text-sm text-fg-muted">Nenhum modelo cadastrado.</p>
         ) : (
           <Table className="rounded-lg">
-            <TableHead>
+            <TableHead className="[&_th]:py-3.5">
               <TableRow>
                 <TableHeaderCell>Máquina</TableHeaderCell>
                 <TableHeaderCell className="text-right">Modelos</TableHeaderCell>
@@ -191,7 +191,7 @@ function RankingModelos() {
       {data && data.content.length > 0 ? (
         <>
           <Table className="rounded-lg">
-            <TableHead>
+            <TableHead className="[&_th]:py-3.5">
               <TableRow>
                 <TableHeaderCell>Código</TableHeaderCell>
                 <SortableHeader

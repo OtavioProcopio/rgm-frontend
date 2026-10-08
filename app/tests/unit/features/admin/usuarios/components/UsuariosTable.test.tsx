@@ -49,6 +49,28 @@ function abrirTabela() {
 
 afterEach(cleanup);
 
+describe('UsuariosTable na lista de tela estreita', () => {
+  it('deve manter a altura da linha do perfil no cartão do usuário quando o selo é mais baixo', () => {
+    // Arrange
+    const alturaDoSeloAntigo = 'min-h-6';
+
+    // Act
+    const { container } = render(
+      <UsuariosTable
+        usuarios={[usuario]}
+        onAtivar={vi.fn()}
+        onDesativar={vi.fn()}
+        onExcluir={vi.fn()}
+      />,
+    );
+
+    // Assert
+    const cartao = container.querySelector('article')!;
+    const linhaDoPerfil = within(cartao).getByText(usuario.perfil).parentElement!;
+    expect(classes(linhaDoPerfil)).toContain(alturaDoSeloAntigo);
+  });
+});
+
 describe('UsuariosTable', () => {
   it('renders usuario items', () => {
     const { container } = render(
