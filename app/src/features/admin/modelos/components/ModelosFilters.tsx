@@ -1,3 +1,4 @@
+import { Card } from '@/shared/components/Card/Card';
 import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
 
@@ -34,7 +35,7 @@ export function ModelosFilters({
   onDescricaoChange,
 }: ModelosFiltersProps) {
   return (
-    <div className="mb-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2 md:grid-cols-4">
+    <Card className="mb-4 grid gap-3 rounded-md bg-surface-muted p-4 shadow-none sm:grid-cols-2 md:grid-cols-4">
       <Input
         label="Código"
         value={codigo ?? ''}
@@ -62,6 +63,6 @@ export function ModelosFilters({
         value={ativo === undefined ? '' : String(ativo)}
         onChange={(e) => onAtivoChange(e.target.value ? e.target.value === 'true' : undefined)}
       />
-    </div>
+    </Card>
   );
 }

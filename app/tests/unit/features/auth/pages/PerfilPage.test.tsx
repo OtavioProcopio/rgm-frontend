@@ -13,8 +13,10 @@ import { createQueryWrapper } from '@tests/support/queryWrapper';
 import { AuthProvider } from '@/app/providers/AuthProvider';
 import { perfilApi } from '@/features/auth/api/perfilApi';
 import { PerfilPage } from '@/features/auth/pages/PerfilPage';
+import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { ApiError } from '@/shared/api/apiError';
 import { authToken } from '@/shared/api/authToken';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: undefined, isLoading: true, isError: false }),
@@ -163,6 +165,58 @@ describe('PerfilPage — molduras de cartão', () => {
     // Assert
     expect(secao?.className.split(' ')).toEqual(expect.arrayContaining(MOLDURA_DE_CARTAO));
   });
+});
+
+describe('PerfilPage — selo de perfil', () => {
+  const CLASSES_DO_SELO: Record<PerfilUsuario, string[]> = {
+    ADMINISTRADOR: ['bg-accent', 'text-on-accent'],
+    GESTOR: ['bg-info-soft', 'text-info-fg'],
+    OPERADOR: ['bg-surface-muted', 'text-fg-muted'],
+    EXTERNO: ['bg-success-soft', 'text-success-fg'],
+  };
+  const PERFIS = Object.keys(rotuloDoPerfil) as PerfilUsuario[];
+
+  async function abrirPerfilDe(perfil: PerfilUsuario) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { nome: 'Otávio', email: 'o@o.com', perfil },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  it.each(PERFIS)(
+    'deve mostrar o rótulo do perfil no selo quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      expect(screen.getAllByText(rotuloDoPerfil[perfil])).toHaveLength(1);
+    },
+  );
+
+  it.each(PERFIS)('deve não mostrar o valor cru da API quando o perfil é %s', async (perfil) => {
+    // Act
+    await abrirPerfilDe(perfil);
+
+    // Assert
+    expect(screen.queryByText(perfil)).toBeNull();
+  });
+
+  it.each(PERFIS)(
+    'deve pintar o selo com a variação do perfil quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      const selo = screen.getByText(rotuloDoPerfil[perfil]);
+      expect(selo.className.split(' ')).toEqual(expect.arrayContaining(CLASSES_DO_SELO[perfil]));
+    },
+  );
 });
 
 describe('PerfilPage — troca de senha', () => {

@@ -93,15 +93,15 @@ importar rótulos de `SRC/shared/lib/rotulos.ts`; terminar com as guardas e os t
 área verdes.
 Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, sem criar papel.
 
-- [ ] T038 [P] Migrar a área `layouts-e-entrada`: `SRC/app/layouts/AppLayout.tsx`, `SRC/app/layouts/PublicLayout.tsx` e `SRC/features/auth/pages/LoginPage.tsx`, com `Logo` e o controle de tema
-- [ ] T039 [P] Migrar a área `area-a`: em `SRC/features/solicitacoes/components/`, `KanbanBoard.tsx`, `KanbanColumn.tsx`, `KanbanCard.tsx`, `kanbanColunas.ts`, `SolicitacaoCard.tsx`, `SolicitacaoStatusBadge.tsx`, `SolicitacaoPrioridadeBadge.tsx`
-- [ ] T040 [P] Migrar a área `area-b`: em `SRC/features/solicitacoes/components/`, `SolicitacaoResumo.tsx`, `SolicitacaoTimeline.tsx`, `SolicitacaoAcoes.tsx`, `AvisoSemAtualizacao.tsx`, `HistoricoChart.tsx`, `SeletorDeModelo.tsx`, `SolicitacaoFilters.tsx`, `TriagemModal.tsx`, `DevolucaoModal.tsx`, `EncerramentoModal.tsx`, `EnviarValidacaoModal.tsx`, `AlterarResponsaveisModal.tsx`; todos os arquivos de `SRC/features/solicitacoes/actions/`; e `SRC/features/solicitacoes/lib/solicitacaoMessages.ts`, que passa a reexportar os rótulos de `rotulos.ts`
-- [ ] T041 [P] Migrar a área `area-c`: em `SRC/features/solicitacoes/pages/`, `SolicitacoesPage.tsx`, `SolicitacaoDetalhePage.tsx`, `NovaSolicitacaoPage.tsx`, `DashboardPage.tsx`, `PessoalTab.tsx`
-- [ ] T042 [P] Migrar a área `area-d`: em `SRC/features/solicitacoes/pages/`, `SolicitacoesTab.tsx`, `ModelosTab.tsx`, `DashboardKpiCard.tsx`
-- [ ] T043 [P] Migrar a área `area-e`: todos os arquivos de `SRC/features/admin/modelos/components/` e `SRC/features/admin/modelos/pages/`, com as três sobreposições de foto dentro do `Dialog`; e `SRC/features/admin/modelos/types/modeloTypes.ts`, cujo `TIPO_MODELO_LABELS` passa a reexportar o rótulo de `rotulos.ts` (achado ao escrever a guarda de rótulos em T010, 2026-10-08: o arquivo define rótulo e não estava em nenhuma área)
-- [ ] T044 [P] Migrar a área `area-f`: todos os arquivos de `SRC/features/admin/usuarios/components/` e `SRC/features/admin/usuarios/pages/`
-- [ ] T045 [P] Migrar a área `area-g`: `SRC/features/admin/maquinas/`, `SRC/features/admin/components/`, `SRC/features/admin/pages/` e `SRC/features/modelos/`
-- [ ] T046 [P] Migrar a área `area-h`: `SRC/features/auth/pages/PerfilPage.tsx`, `SRC/features/evidencias/` e `SRC/app/routes/`
+- [x] T038 [P] Migrar a área `layouts-e-entrada`: `SRC/app/layouts/AppLayout.tsx`, `SRC/app/layouts/PublicLayout.tsx` e `SRC/features/auth/pages/LoginPage.tsx`, com `Logo` e o controle de tema
+- [x] T039 [P] Migrar a área `area-a`: em `SRC/features/solicitacoes/components/`, `KanbanBoard.tsx`, `KanbanColumn.tsx`, `KanbanCard.tsx`, `kanbanColunas.ts`, `SolicitacaoCard.tsx`, `SolicitacaoStatusBadge.tsx`, `SolicitacaoPrioridadeBadge.tsx`
+- [x] T040 [P] Migrar a área `area-b`: em `SRC/features/solicitacoes/components/`, `SolicitacaoResumo.tsx`, `SolicitacaoTimeline.tsx`, `SolicitacaoAcoes.tsx`, `AvisoSemAtualizacao.tsx`, `HistoricoChart.tsx`, `SeletorDeModelo.tsx`, `SolicitacaoFilters.tsx`, `TriagemModal.tsx`, `DevolucaoModal.tsx`, `EncerramentoModal.tsx`, `EnviarValidacaoModal.tsx`, `AlterarResponsaveisModal.tsx`; todos os arquivos de `SRC/features/solicitacoes/actions/`; e `SRC/features/solicitacoes/lib/solicitacaoMessages.ts`, que passa a reexportar os rótulos de `rotulos.ts`
+- [x] T041 [P] Migrar a área `area-c`: em `SRC/features/solicitacoes/pages/`, `SolicitacoesPage.tsx`, `SolicitacaoDetalhePage.tsx`, `NovaSolicitacaoPage.tsx`, `DashboardPage.tsx`, `PessoalTab.tsx`
+- [x] T042 [P] Migrar a área `area-d`: em `SRC/features/solicitacoes/pages/`, `SolicitacoesTab.tsx`, `ModelosTab.tsx`, `DashboardKpiCard.tsx`
+- [x] T043 [P] Migrar a área `area-e`: todos os arquivos de `SRC/features/admin/modelos/components/` e `SRC/features/admin/modelos/pages/`, com as três sobreposições de foto dentro do `Dialog`; e `SRC/features/admin/modelos/types/modeloTypes.ts`, cujo `TIPO_MODELO_LABELS` passa a reexportar o rótulo de `rotulos.ts` (achado ao escrever a guarda de rótulos em T010, 2026-10-08: o arquivo define rótulo e não estava em nenhuma área)
+- [x] T044 [P] Migrar a área `area-f`: todos os arquivos de `SRC/features/admin/usuarios/components/` e `SRC/features/admin/usuarios/pages/`
+- [x] T045 [P] Migrar a área `area-g`: `SRC/features/admin/maquinas/`, `SRC/features/admin/components/`, `SRC/features/admin/pages/` e `SRC/features/modelos/`
+- [x] T046 [P] Migrar a área `area-h`: `SRC/features/auth/pages/PerfilPage.tsx`, `SRC/features/evidencias/` e `SRC/app/routes/`
 
 ## Fase 5 — Integração e fechamento
 
@@ -203,6 +203,20 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 |---|---|---|---|
 | T028 | `Button` secundário (`SRC/shared/components/Button/Button.tsx`) | passar o mouse escurecia o fundo (`slate-100` → `slate-200`); a tabela de conversão leva os dois para `surface-muted`, e não há papel de superfície mais forte | `hover:brightness-95`, que não escreve cor; aguarda decisão: manter, ou criar um papel de "superfície suave em destaque" |
 | T028 | botão de confirmar de alerta do `ConfirmDialog` | passar o mouse escurecia o fundo cheio (`amber-600` → `amber-700`); existe `danger-hover`, não existe `warning-hover` | `bg-warning` com `hover:brightness-95`; aguarda decisão: manter, ou criar `warning-hover` |
+| T039 a T045 | links e botões sobre superfície suave: "Ver" e avançar do `KanbanCard`, "Renomear" (`MaquinaActionsMenu`), "Editar" (`UsuarioActionsMenu`), "Detalhes" e "Abrir solicitação" (`ModeloActionsMenu`), "Voltar" (`EditarModeloPage`), área de selecionar foto (`AdicionarFotoGaleriaForm`), item do acompanhamento crítico (`SolicitacoesTab`) | o mesmo caso do `Button` secundário: não há superfície mais forte para o passar o mouse | `hover:brightness-95`; segue a decisão do caso do `Button` secundário |
+| T043 | controles sobre foto no `GaleriaCarousel` e no `ModeloFotoCapa` (setas, "Fechar", "Remover foto selecionada") | o fundo translúcido branco (`bg-white/10`, `/20`) não tem papel | `bg-scrim text-on-solid` com `hover:brightness-125`, quase imperceptível sobre o fundo escuro; os botões de ícone do cabeçalho ficaram sem fundo, com `hover:bg-scrim` |
+| T043 | ícones "Salvar identificação" (verde) e "Remover foto" (vermelho) sobre a foto, no `GaleriaCarousel` | `success-fg` e `danger-fg` não têm contraste garantido sobre `scrim` | `text-on-solid`; a cor de reforço saiu, o nome acessível e o `title` ficam |
+| T043 | campo de renomear a foto, no `GaleriaCarousel` | era translúcido sobre a foto | campo normal (`bg-surface`, `border-line-strong`), opaco |
+| T043 | `ModeloFotoCapa`: escurecer a capa ao passar o mouse (`bg-black/30`) | véu parcial não tem papel (`scrim` é 80%) | o véu saiu; fica só a lupa surgindo |
+| T038 | círculo do avatar no atalho do perfil (`AppLayout`) | decorativo (`sky-100` com ícone `sky-700`); `surface-muted` sumiria no passar o mouse do atalho | `bg-info-soft text-info-fg` |
+| T039 | botão de avançar do `KanbanCard` | era verde suave; RF-22 só deixa cor própria a prioridade, prazo e status | `bg-surface-muted text-accent` |
+| T039 | zona de soltar do `KanbanColumn` | válida era verde, inválida vermelha; a diferença é só de cor, como já era (RF-23) | válida `border-accent bg-surface-muted`, inválida `border-danger bg-danger-soft`; aguarda decisão sobre acrescentar texto ou ícone |
+| T042 | borda do indicador do painel ao passar o mouse (`DashboardKpiCard`) e barras de "Distribuição por tipo" (`SolicitacoesTab`) | eram coloridas por variação e por tipo; RF-22 as torna neutras | `hover:border-line-strong`; barras todas em `bg-accent` |
+| T044, T041 | rótulos de campo escritos fora das peças (`UsuarioForm`, `UsuariosFilters`, `EditarUsuarioPage`, "Tipo" na edição do detalhe) | a tabela leva `slate-700` a `fg-muted`; o rótulo das peças `Input` e `Select`, ao lado, é `fg` | `text-fg`, igual ao das peças |
+| T045 | quadradinho do ícone do `AdminCard` | mudava de tom com o mouse no cartão; não há superfície mais forte | o efeito saiu; o retorno fica na borda (`hover:border-accent`) e na sombra do cartão |
+| T046 | anel do círculo das iniciais e ponto de "Inativo" (`PerfilPage`) | anel decorativo (`sky-100/50`); o ponto de inativo era vermelho | `ring-line`; ponto `bg-fg-muted` (o texto "Inativo" continua) |
+
+**Disposição a conferir na medição (T054):** o cabeçalho das três tabelas do painel ficou cerca de 4 px mais baixo com a peça `Table` (era `text-sm`, a peça usa `text-xs` em maiúsculas); o logo do cabeçalho em tela estreita ficou 4 px mais alto com a placa; o modal "Adicionar foto à galeria" passou a seguir o `Dialog` (folha colada embaixo em tela estreita). Ajuste, se a medição passar de 2 px fora das exceções de RNF-07, é feito na T054.
 
 ## Convergence
 

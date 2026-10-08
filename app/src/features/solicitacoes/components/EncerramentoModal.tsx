@@ -44,12 +44,10 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
   return (
     <div
       className={`rounded-md border p-4 text-sm ${
-        concluir
-          ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30'
-          : 'border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30'
+        concluir ? 'border-success bg-success-soft' : 'border-danger bg-danger-soft'
       }`}
     >
-      <h3 className="font-semibold text-slate-900 dark:text-white font-sans">
+      <h3 className="font-semibold text-fg font-sans">
         {podeConcluir ? 'Encerrar solicitação' : 'Cancelar solicitação'}
       </h3>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
@@ -84,30 +82,16 @@ export function EncerramentoModal({ isPending, podeConcluir = true, onCancel, on
         />
         {concluir ? (
           <div>
-            <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
-              Foto de conclusão (opcional)
-            </p>
+            <p className="mb-2 block text-sm font-medium text-fg">Foto de conclusão (opcional)</p>
             <EvidenciaUploader onUpload={setFoto} />
-            {foto ? (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Anexado: {foto.name}
-              </p>
-            ) : null}
+            {foto ? <p className="mt-1 text-xs text-fg-muted">Anexado: {foto.name}</p> : null}
           </div>
         ) : null}
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending}
-            className={
-              !concluir
-                ? 'bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500'
-                : undefined
-            }
-          >
+          <Button type="submit" disabled={isPending} variant={concluir ? 'primary' : 'danger'}>
             {isPending
               ? podeConcluir
                 ? 'Encerrando...'

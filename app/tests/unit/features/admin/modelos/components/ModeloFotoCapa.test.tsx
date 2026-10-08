@@ -105,6 +105,31 @@ describe('ModeloFotoCapa com a foto ampliada como diálogo modal', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: NOME_DE_QUEM_ABRE }));
   });
 
+  it('deve fechar a foto ampliada quando o clique é fora da foto', async () => {
+    // Arrange
+    await abrirFotoAmpliada();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    const areaEmVoltaDaFoto = within(dialogo).getByRole('img').parentElement!;
+
+    // Act
+    await userEvent.click(areaEmVoltaDaFoto);
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve manter a foto ampliada aberta quando o clique é na própria foto', async () => {
+    // Arrange
+    await abrirFotoAmpliada();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('img'));
+
+    // Assert
+    expect(screen.getByRole('dialog', { name: NOME_DO_DIALOGO })).toBeDefined();
+  });
+
   it('deve usar o fundo de sobreposição de foto quando a foto é ampliada', async () => {
     // Act
     await abrirFotoAmpliada();

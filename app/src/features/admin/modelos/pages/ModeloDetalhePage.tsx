@@ -6,11 +6,14 @@ import { modelosApi } from '../api/modelosApi';
 import { useAuth } from '@/app/providers/authContext';
 import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
+import { Card } from '@/shared/components/Card/Card';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { cn } from '@/shared/lib/cn';
 import { canManageModelos } from '@/shared/lib/permissions';
+import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useResumoDasSolicitacoesDoModelo } from '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo';
@@ -19,7 +22,7 @@ import { formatDuracao } from '@/features/solicitacoes/lib/solicitacaoMessages';
 import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import { TIPO_MODELO_LABELS, type ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
+import type { ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
@@ -137,53 +140,47 @@ export function ModeloDetalhePage() {
       ) : null}
       {modelo ? (
         <div className="space-y-6">
-          <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+          <Card className="rounded-md p-5 shadow-none">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+              <h2 className="text-2xl font-semibold text-fg">
                 {modelo.codigo} v{modelo.versao}
               </h2>
               <ModeloStatusBadge ativo={modelo.ativo} />
             </div>
-            <p className="mt-3 text-slate-700 dark:text-slate-200">{modelo.descricao}</p>
+            <p className="mt-3 text-fg-muted">{modelo.descricao}</p>
             <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
               <Detail label="Máquina / Encaixe" value={modelo.maquina} />
               <Detail
                 label="Tipo do Modelo"
-                value={modelo.tipo ? TIPO_MODELO_LABELS[modelo.tipo] : 'Não definido'}
+                value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
               />
               <Detail label="Pendência aberta" value={modelo.temPendenciaAberta ? 'Sim' : 'Não'} />
               <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
               <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
             </dl>
             {modelo.observacoes ? (
-              <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">
-                {modelo.observacoes}
-              </p>
+              <p className="mt-5 text-sm text-fg-muted">{modelo.observacoes}</p>
             ) : null}
-          </div>
+          </Card>
           <div>
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Galeria de fotos
-            </h2>
-            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-fg">Galeria de fotos</h2>
+            <p className="mb-3 text-xs text-fg-muted">
               Fotos de apresentação e estado atual do modelo. Independente do histórico de
               evidências — marque uma foto como capa para destacá-la nas listagens.
             </p>
             {id ? <GaleriaModelo modeloId={id} podeGerenciar={podeGerenciarFoto} /> : null}
           </div>
           <div>
-            <h2 className="mb-1 text-lg font-semibold text-slate-950 dark:text-white">
-              Visão geral das solicitações
-            </h2>
-            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            <h2 className="mb-1 text-lg font-semibold text-fg">Visão geral das solicitações</h2>
+            <p className="mb-3 text-xs text-fg-muted">
               Indicadores consolidados de todos os chamados vinculados a este modelo.
             </p>
             {erroNoResumo ? (
-              <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+              <p role="alert" className="text-sm text-danger-fg">
                 Não foi possível carregar o resumo das solicitações deste modelo.
               </p>
             ) : carregandoResumo || !resumoDasSolicitacoes ? (
-              <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+              <p role="status" className="text-sm text-fg-muted">
                 Carregando o resumo das solicitações...
               </p>
             ) : (
@@ -191,41 +188,37 @@ export function ModeloDetalhePage() {
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Eventos do Modelo
-            </h2>
-            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-fg">Eventos do Modelo</h2>
+            <p className="mb-3 text-xs text-fg-muted">
               Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções
               concluídas neste modelo.
             </p>
             <EventosModeloList eventos={eventosData ?? []} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            <h2 className="text-lg font-semibold text-fg">
               Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
             </h2>
-            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mb-3 text-xs text-fg-muted">
               Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já
               encerrados) vinculados a este modelo.
             </p>
             {solicitacoesPage?.content?.length ? (
-              <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+              <ul className="divide-y divide-line rounded-md border border-line">
                 {solicitacoesPage.content.map((s) => (
                   <li key={s.id}>
                     <Link
                       to={`/app/solicitacoes/${s.id}`}
-                      className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-muted"
                     >
-                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {s.titulo}
-                      </span>
+                      <span className="text-sm font-medium text-fg">{s.titulo}</span>
                       <SolicitacaoStatusBadge status={s.status} />
                     </Link>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-fg-muted">
                 Nenhuma solicitação registrada para este modelo.
               </p>
             )}
@@ -242,60 +235,55 @@ function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo }) 
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <KpiCard label="Total" value={total} color="slate" />
-      <KpiCard label="Abertas" value={resumo.emAberto} color="amber" />
-      <KpiCard label="Concluídas" value={concluidas} color="green" />
-      <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} color="blue" />
+      <KpiCard label="Total" value={total} tom="neutro" />
+      <KpiCard label="Abertas" value={resumo.emAberto} tom="alerta" />
+      <KpiCard label="Concluídas" value={concluidas} tom="sucesso" />
+      <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} tom="destaque" />
       <KpiCard
         label="Tempo médio de resolução"
         value={
           tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'
         }
-        color="slate"
+        tom="neutro"
       />
       <KpiCard
         label="Intervalo médio entre solicitações"
         value={intervaloMedioSegundos != null ? formatDuracao(intervaloMedioSegundos) : '—'}
-        color="slate"
+        tom="neutro"
       />
     </div>
   );
 }
 
+const TONS_DO_INDICADOR = {
+  neutro: { borda: 'border-line', valor: 'text-fg' },
+  alerta: { borda: 'border-warning', valor: 'text-warning-fg' },
+  sucesso: { borda: 'border-success', valor: 'text-success-fg' },
+  destaque: { borda: 'border-accent', valor: 'text-accent' },
+};
+
 function KpiCard({
   label,
   value,
-  color,
+  tom,
 }: {
   label: string;
   value: number | string;
-  color: 'slate' | 'amber' | 'green' | 'blue';
+  tom: keyof typeof TONS_DO_INDICADOR;
 }) {
-  const colorMap = {
-    slate: 'border-slate-200 dark:border-slate-700',
-    amber: 'border-amber-200 dark:border-amber-800',
-    green: 'border-green-200 dark:border-green-800',
-    blue: 'border-sky-200 dark:border-sky-800',
-  };
-  const valueColorMap = {
-    slate: 'text-slate-900 dark:text-slate-100',
-    amber: 'text-amber-600 dark:text-amber-400',
-    green: 'text-green-600 dark:text-green-400',
-    blue: 'text-sky-600 dark:text-sky-400',
-  };
   return (
-    <div className={`rounded-md border bg-white p-4 dark:bg-slate-900 ${colorMap[color]}`}>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${valueColorMap[color]}`}>{value}</p>
-    </div>
+    <Card className={cn('rounded-md p-4 shadow-none', TONS_DO_INDICADOR[tom].borda)}>
+      <p className="text-xs font-medium text-fg-muted">{label}</p>
+      <p className={cn('mt-1 text-2xl font-bold', TONS_DO_INDICADOR[tom].valor)}>{value}</p>
+    </Card>
   );
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="font-medium text-slate-500 dark:text-slate-400">{label}</dt>
-      <dd className="mt-1 text-slate-900 dark:text-slate-100">{value}</dd>
+      <dt className="font-medium text-fg-muted">{label}</dt>
+      <dd className="mt-1 text-fg">{value}</dd>
     </div>
   );
 }

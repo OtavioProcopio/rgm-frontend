@@ -23,6 +23,7 @@ import {
 } from '@/shared/lib/arquivoPermitido';
 import { canAbrirSolicitacaoCriacao } from '@/shared/lib/permissions';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
 import { acaoFeitaSemFoto, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
@@ -30,14 +31,15 @@ import {
   abrirSolicitacaoSchema,
   type AbrirSolicitacaoFormData,
 } from '../schemas/solicitacaoSchema';
+import type { TipoSolicitacao } from '../types/solicitacaoTypes';
 
-const BASE_TIPO_OPTIONS = [
-  { value: 'REPARO', label: 'Reparo' },
-  { value: 'INSPECAO', label: 'Inspeção' },
-  { value: 'REENGENHARIA', label: 'Reengenharia' },
-];
+const TIPOS_BASE: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA'];
+const TIPOS_COM_CRIACAO: TipoSolicitacao[] = [...TIPOS_BASE, 'CRIACAO'];
 
-const CRIACAO_TIPO_OPTION = { value: 'CRIACAO', label: 'Criação de modelo' };
+/** Opções do campo Tipo, com o texto da fonte única de rótulos. */
+function opcoesDeTipo(tipos: TipoSolicitacao[]): { value: TipoSolicitacao; label: string }[] {
+  return tipos.map((tipo) => ({ value: tipo, label: rotuloDoTipoDeSolicitacao[tipo] }));
+}
 
 export function NovaSolicitacaoPage() {
   const navigate = useNavigate();
@@ -48,9 +50,7 @@ export function NovaSolicitacaoPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const podeAbrirCriacao = canAbrirSolicitacaoCriacao(user?.perfil);
-  const tipoOptions = podeAbrirCriacao
-    ? [...BASE_TIPO_OPTIONS, CRIACAO_TIPO_OPTION]
-    : BASE_TIPO_OPTIONS;
+  const tipoOptions = opcoesDeTipo(podeAbrirCriacao ? TIPOS_COM_CRIACAO : TIPOS_BASE);
 
   // Foto Evidência State
   const [photo, setPhoto] = useState<File | null>(null);
@@ -212,8 +212,8 @@ export function NovaSolicitacaoPage() {
         />
 
         {isCriacao ? (
-          <div className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="space-y-5 rounded-md border border-line bg-surface-muted p-4">
+            <p className="text-xs text-fg-muted">
               O modelo ainda não existe — ele será criado automaticamente quando esta solicitação
               for concluída, com os dados abaixo.
             </p>
@@ -259,9 +259,7 @@ export function NovaSolicitacaoPage() {
 
         {/* Anexar Foto (Evidência Inicial) */}
         <div className="space-y-2">
-          <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">
-            Foto do problema (Opcional)
-          </span>
+          <span className="block text-sm font-medium text-fg">Foto do problema (Opcional)</span>
 
           <input
             ref={fileInputRef}
@@ -278,22 +276,22 @@ export function NovaSolicitacaoPage() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isPending}
-              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-350 bg-slate-50/50 py-6 px-4 text-center hover:bg-slate-50 transition-colors focus:outline-none dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900 cursor-pointer"
+              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line-strong bg-surface py-6 px-4 text-center hover:bg-surface-muted transition-colors focus:outline-none cursor-pointer"
             >
-              <div className="rounded-full bg-slate-100 p-2 text-slate-500 dark:bg-slate-850 dark:text-slate-400">
+              <div className="rounded-full bg-surface-muted p-2 text-fg-muted">
                 <Camera size={20} />
               </div>
-              <span className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <span className="mt-2 text-sm font-medium text-fg-muted">
                 Clique para selecionar uma foto
               </span>
-              <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <span className="mt-1 text-xs text-fg-muted">
                 Formatos suportados: {nomesDosTipos(TIPOS_DE_IMAGEM)} até {TAMANHO_MAXIMO_MB} MB
               </span>
             </button>
           ) : (
-            <div className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
+            <div className="relative rounded-lg border border-line bg-surface-muted p-2">
               <div className="flex items-center gap-3">
-                <div className="h-16 w-16 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
+                <div className="h-16 w-16 overflow-hidden rounded bg-surface">
                   <img
                     src={photoPreview}
                     alt="Preview do problema"
@@ -301,10 +299,8 @@ export function NovaSolicitacaoPage() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                    {photo?.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-medium text-fg truncate">{photo?.name}</p>
+                  <p className="text-xs text-fg-muted">
                     {(photo!.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
                 </div>
@@ -312,7 +308,7 @@ export function NovaSolicitacaoPage() {
                   type="button"
                   onClick={handleRemovePhoto}
                   disabled={isPending}
-                  className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
+                  className="rounded-full p-1.5 text-fg-muted hover:bg-surface hover:text-fg"
                   title="Remover foto"
                 >
                   <X size={16} />
@@ -321,7 +317,7 @@ export function NovaSolicitacaoPage() {
             </div>
           )}
 
-          {photoError && <p className="text-sm text-red-600 dark:text-red-400">{photoError}</p>}
+          {photoError && <p className="text-sm text-danger-fg">{photoError}</p>}
         </div>
 
         <div className="flex gap-3 pt-2">

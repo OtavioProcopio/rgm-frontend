@@ -55,7 +55,7 @@ export function EvidenciaUploader({ isPending, onUpload }: Props) {
         >
           {isPending ? 'Enviando...' : 'Anexar arquivo'}
         </Button>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-fg-muted">
           {nomesDosTipos(TIPOS_DE_EVIDENCIA)} — máx. {TAMANHO_MAXIMO_MB} MB
         </span>
       </div>

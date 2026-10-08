@@ -1,6 +1,11 @@
 import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
 import { Select } from '@/shared/components/Select/Select';
 import { Input } from '@/shared/components/Input/Input';
+import {
+  rotuloDaPrioridade,
+  rotuloDoStatus,
+  rotuloDoTipoDeSolicitacao,
+} from '@/shared/lib/rotulos';
 
 import { SeletorDeModelo } from './SeletorDeModelo';
 
@@ -16,27 +21,14 @@ type Props = {
   onChange: (filters: SolicitacoesFilters) => void;
 };
 
-const statusOptions = [
-  { value: 'A_FAZER', label: 'A fazer' },
-  { value: 'EM_ANDAMENTO', label: 'Em andamento' },
-  { value: 'EM_VALIDACAO', label: 'Em validação' },
-  { value: 'CONCLUIDA', label: 'Concluída' },
-  { value: 'CANCELADA', label: 'Cancelada' },
-];
+/** Opções de um filtro, na ordem do mapa de rótulos compartilhado. */
+function opcoesDe(rotulos: Record<string, string>): { value: string; label: string }[] {
+  return Object.entries(rotulos).map(([value, label]) => ({ value, label }));
+}
 
-const tipoOptions = [
-  { value: 'REPARO', label: 'Reparo' },
-  { value: 'INSPECAO', label: 'Inspeção' },
-  { value: 'REENGENHARIA', label: 'Reengenharia' },
-  { value: 'CRIACAO', label: 'Criação de modelo' },
-];
-
-const prioridadeOptions = [
-  { value: 'BAIXA', label: 'Baixa' },
-  { value: 'MEDIA', label: 'Média' },
-  { value: 'ALTA', label: 'Alta' },
-  { value: 'URGENTE', label: 'Urgente' },
-];
+const statusOptions = opcoesDe(rotuloDoStatus);
+const tipoOptions = opcoesDe(rotuloDoTipoDeSolicitacao);
+const prioridadeOptions = opcoesDe(rotuloDaPrioridade);
 
 export function SolicitacaoFilters({ filters, onChange }: Props) {
   const { options: maquinaOptions } = useMaquinaOptions(filters.maquina);

@@ -239,3 +239,113 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
     expect(classes(fundo)).toContain('bg-scrim');
   });
 });
+
+const NOME_DO_MODAL_DE_ADICIONAR = 'Adicionar foto à galeria';
+const NOME_DE_QUEM_ABRE_O_MODAL = 'Adicionar foto';
+
+async function abrirModalDeAdicionar() {
+  render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+  await userEvent.click(screen.getByRole('button', { name: NOME_DE_QUEM_ABRE_O_MODAL }));
+}
+
+async function simularEnvio(emAndamento: boolean) {
+  const { useAdicionarFotoGaleria } =
+    await import('@/features/admin/modelos/hooks/useAdicionarFotoGaleria');
+  vi.mocked(useAdicionarFotoGaleria).mockReturnValue({
+    mutateAsync: adicionarMutateAsync,
+    isPending: emAndamento,
+  } as never);
+}
+
+describe('GaleriaModelo com o modal de adicionar foto como diálogo modal', () => {
+  afterEach(() => simularEnvio(false));
+
+  it('deve ser anunciado como diálogo modal com o nome da ação quando o modal de adicionar abre', async () => {
+    // Act
+    await abrirModalDeAdicionar();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve levar o foco para dentro do modal quando o modal de adicionar abre', async () => {
+    // Act
+    await abrirModalDeAdicionar();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+    expect(dialogo.contains(document.activeElement)).toBe(true);
+  });
+
+  it('deve fechar o modal de adicionar quando Esc é apertado', async () => {
+    // Arrange
+    await abrirModalDeAdicionar();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve devolver o foco ao botão que abriu quando o modal de adicionar fecha', async () => {
+    // Arrange
+    await abrirModalDeAdicionar();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: NOME_DE_QUEM_ABRE_O_MODAL }),
+    );
+  });
+
+  it('deve fechar o modal de adicionar quando o botão Fechar é clicado', async () => {
+    // Arrange
+    await abrirModalDeAdicionar();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Fechar' }));
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve usar a superfície elevada no painel quando o modal de adicionar abre', async () => {
+    // Act
+    await abrirModalDeAdicionar();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+    expect(classes(dialogo)).toContain('bg-surface-raised');
+  });
+
+  it('deve manter o modal de adicionar aberto quando Esc é apertado com o envio em andamento', async () => {
+    // Arrange
+    await simularEnvio(true);
+    await abrirModalDeAdicionar();
+    screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR }).focus();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR })).toBeDefined();
+  });
+
+  it('deve desabilitar o botão Fechar quando o envio está em andamento', async () => {
+    // Arrange
+    await simularEnvio(true);
+
+    // Act
+    await abrirModalDeAdicionar();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+    const fechar = within(dialogo).getByRole<HTMLButtonElement>('button', { name: 'Fechar' });
+    expect(fechar.disabled).toBe(true);
+  });
+});

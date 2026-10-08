@@ -1,3 +1,5 @@
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
+
 import type { PerfilUsuario } from '../types/usuarioTypes';
 
 type UsuariosFiltersProps = {
@@ -7,6 +9,8 @@ type UsuariosFiltersProps = {
   onAtivoChange: (ativo?: boolean) => void;
 };
 
+const perfilOptions = Object.keys(rotuloDoPerfil) as PerfilUsuario[];
+
 export function UsuariosFilters({
   ativo,
   onAtivoChange,
@@ -14,25 +18,26 @@ export function UsuariosFilters({
   perfil,
 }: UsuariosFiltersProps) {
   return (
-    <div className="mb-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2">
-      <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+    <div className="mb-4 grid gap-3 rounded-md border border-line bg-surface-muted p-4 sm:grid-cols-2">
+      <label className="space-y-2 text-sm font-medium text-fg">
         <span>Perfil</span>
         <select
           value={perfil ?? ''}
           onChange={(event) =>
             onPerfilChange(event.target.value ? (event.target.value as PerfilUsuario) : undefined)
           }
-          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-line-strong bg-surface px-3 text-sm text-fg"
         >
           <option value="">Todos</option>
-          <option value="ADMINISTRADOR">Administrador</option>
-          <option value="GESTOR">Gestor</option>
-          <option value="OPERADOR">Operador</option>
-          <option value="EXTERNO">Externo</option>
+          {perfilOptions.map((option) => (
+            <option key={option} value={option}>
+              {rotuloDoPerfil[option]}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+      <label className="space-y-2 text-sm font-medium text-fg">
         <span>Status</span>
         <select
           value={ativo === undefined ? '' : String(ativo)}
@@ -44,7 +49,7 @@ export function UsuariosFilters({
 
             onAtivoChange(event.target.value === 'true');
           }}
-          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          className="h-10 w-full rounded-md border pointer-coarse:h-11 border-line-strong bg-surface px-3 text-sm text-fg"
         >
           <option value="">Todos</option>
           <option value="true">Ativos</option>

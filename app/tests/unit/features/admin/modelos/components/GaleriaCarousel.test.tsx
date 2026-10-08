@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { useState } from 'react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -300,5 +300,68 @@ describe('GaleriaCarousel como diálogo modal', () => {
     // Assert
     const fundo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO }).parentElement!;
     expect(classes(fundo)).toContain('bg-scrim');
+  });
+});
+
+describe('GaleriaCarousel com o foco preso ao diálogo durante o uso', () => {
+  it('deve manter o foco no botão de próxima foto quando ele é clicado', async () => {
+    // Arrange
+    await abrirCarrossel();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima foto' }));
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Próxima foto' }));
+  });
+
+  it('deve fechar quando Esc é apertado depois de trocar de foto pela seta', async () => {
+    // Arrange
+    await abrirCarrossel();
+    await userEvent.keyboard('{ArrowRight}');
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve levar o foco ao botão de renomear quando a identificação é salva com Enter', async () => {
+    // Arrange
+    await abrirCarrossel();
+    await userEvent.click(screen.getByRole('button', { name: 'Renomear foto' }));
+
+    // Act
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Renomear foto' }));
+  });
+
+  it('deve fechar quando Esc é apertado depois de cancelar a edição pelo botão', async () => {
+    // Arrange
+    await abrirCarrossel();
+    await userEvent.click(screen.getByRole('button', { name: 'Renomear foto' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar edição' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve mostrar o ícone de foto indisponível só na foto que falhou quando outra foto é exibida', async () => {
+    // Arrange
+    await abrirCarrossel();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    fireEvent.error(within(dialogo).getByRole('img', { name: fotos[0].identificacao }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima foto' }));
+
+    // Assert
+    expect(screen.getByRole('img', { name: fotos[1].identificacao })).toBeDefined();
   });
 });

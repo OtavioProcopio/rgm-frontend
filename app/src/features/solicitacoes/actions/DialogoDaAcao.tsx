@@ -57,7 +57,7 @@ export function DialogoDaAcao({ acao, solicitacao, onClose }: Props) {
         />
       </div>
       {perguntando ? (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-100">
+        <div className="rounded-md border border-warning bg-warning-soft p-4 text-sm text-warning-fg">
           <h3 className="font-semibold">Descartar o que foi preenchido?</h3>
           <p className="mt-2">O que você preencheu nesta ação será perdido.</p>
           <div className="mt-4 flex flex-wrap gap-2">

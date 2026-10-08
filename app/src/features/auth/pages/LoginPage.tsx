@@ -6,7 +6,9 @@ import { useAuth } from '@/app/providers/authContext';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/loginSchema';
 import { ApiError } from '@/shared/api/apiError';
 import { Button } from '@/shared/components/Button/Button';
+import { Card } from '@/shared/components/Card/Card';
 import { Input } from '@/shared/components/Input/Input';
+import { Logo } from '@/shared/components/Logo/Logo';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -39,11 +41,13 @@ export function LoginPage() {
   }
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/10 [--foco:var(--color-sky-600)] dark:border-slate-700 sm:p-8">
+    <Card as="section" className="rounded-md p-6 shadow-xl sm:p-8">
       <div className="mb-8 text-center">
-        <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="mx-auto h-16 w-auto" />
-        <h1 className="mt-6 text-3xl font-semibold text-slate-950">Rei Auto Parts</h1>
-        <h2 className="mt-1 text-2xl font-semibold text-slate-700">Gestão de Modelos</h2>
+        <div className="flex justify-center">
+          <Logo tamanho="lg" className="mx-auto" />
+        </div>
+        <h1 className="mt-6 text-3xl font-semibold text-fg">Rei Auto Parts</h1>
+        <h2 className="mt-1 text-2xl font-semibold text-fg">Gestão de Modelos</h2>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -54,8 +58,6 @@ export function LoginPage() {
           placeholder="admin@rgm.com"
           error={errors.email?.message}
           disabled={isSubmitting}
-          labelClassName="dark:text-slate-800"
-          className="dark:border-slate-300 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-500 dark:focus:border-sky-600 dark:focus:ring-sky-600/10"
           {...register('email')}
         />
 
@@ -66,13 +68,11 @@ export function LoginPage() {
           placeholder="Digite sua senha"
           error={errors.senha?.message}
           disabled={isSubmitting}
-          labelClassName="dark:text-slate-800"
-          className="dark:border-slate-300 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-500 dark:focus:border-sky-600 dark:focus:ring-sky-600/10"
           {...register('senha')}
         />
 
         {loginError ? (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">
+          <div className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger-fg">
             {loginError}
           </div>
         ) : null}
@@ -81,6 +81,6 @@ export function LoginPage() {
           {isSubmitting ? 'Entrando...' : 'Entrar'}
         </Button>
       </form>
-    </section>
+    </Card>
   );
 }

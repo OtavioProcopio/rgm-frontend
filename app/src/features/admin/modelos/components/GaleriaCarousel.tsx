@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, ImageOff, Pencil, Star, Trash2, X } from 'lucide-react';
 
+import { Badge } from '@/shared/components/Badge/Badge';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
+import { Dialog } from '@/shared/components/Dialog/Dialog';
 import { cn } from '@/shared/lib/cn';
 
 import type { FotoGaleria } from '../types/galeriaTypes';
@@ -18,6 +20,9 @@ type Props = {
   onRemover: (fotoId: string) => void;
   onClose: () => void;
 };
+
+const SETA =
+  'absolute z-10 rounded-full bg-scrim p-2 text-on-solid transition hover:brightness-125';
 
 export function GaleriaCarousel({
   fotos,
@@ -54,12 +59,12 @@ export function GaleriaCarousel({
   }
 
   useEffect(() => {
+    // Esc é do `Dialog`; aqui ficam só as setas, que trocam de foto.
     function handleKeyDown(event: KeyboardEvent) {
       // Com a confirmação aberta, o teclado é dela.
-      if (showConfirmRemover) return;
-      if (event.key === 'Escape') onClose();
-      if (event.key === 'ArrowLeft' && fotos.length > 1) goPrev();
-      if (event.key === 'ArrowRight' && fotos.length > 1) goNext();
+      if (showConfirmRemover || fotos.length <= 1) return;
+      if (event.key === 'ArrowLeft') goPrev();
+      if (event.key === 'ArrowRight') goNext();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -68,50 +73,52 @@ export function GaleriaCarousel({
   if (!foto) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Galeria de fotos: ${foto.identificacao}`}
-      className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
-    >
-      <CarouselPhotoPanel
-        key={foto.id}
-        foto={foto}
-        podeGerenciar={podeGerenciar}
-        isSaving={isSaving}
-        isRemoving={isRemoving}
-        onDefinirCapa={() => onDefinirCapa(foto.id)}
-        onRenomear={(identificacao) => onRenomear(foto.id, identificacao)}
-        onRequestRemove={() => setShowConfirmRemover(true)}
+    <>
+      <Dialog
+        aparencia="imersivo"
+        titulo={`Galeria de fotos: ${foto.identificacao}`}
         onClose={onClose}
       >
-        {fotos.length > 1 ? (
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label="Foto anterior"
-            className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:left-6"
+        <div className="flex h-full flex-col">
+          <CarouselPhotoPanel
+            foto={foto}
+            podeGerenciar={podeGerenciar}
+            isSaving={isSaving}
+            isRemoving={isRemoving}
+            onDefinirCapa={() => onDefinirCapa(foto.id)}
+            onRenomear={(identificacao) => onRenomear(foto.id, identificacao)}
+            onRequestRemove={() => setShowConfirmRemover(true)}
+            onClose={onClose}
           >
-            <ChevronLeft size={22} />
-          </button>
-        ) : null}
-        {fotos.length > 1 ? (
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label="Próxima foto"
-            className="absolute right-2 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:right-6"
-          >
-            <ChevronRight size={22} />
-          </button>
-        ) : null}
-      </CarouselPhotoPanel>
+            {fotos.length > 1 ? (
+              <button
+                type="button"
+                onClick={goPrev}
+                aria-label="Foto anterior"
+                className={cn(SETA, 'left-2 sm:left-6')}
+              >
+                <ChevronLeft size={22} />
+              </button>
+            ) : null}
+            {fotos.length > 1 ? (
+              <button
+                type="button"
+                onClick={goNext}
+                aria-label="Próxima foto"
+                className={cn(SETA, 'right-2 sm:right-6')}
+              >
+                <ChevronRight size={22} />
+              </button>
+            ) : null}
+          </CarouselPhotoPanel>
 
-      {fotos.length > 1 ? (
-        <p className="pb-4 text-center text-sm text-white/60">
-          {safeIndex + 1} / {fotos.length}
-        </p>
-      ) : null}
+          {fotos.length > 1 ? (
+            <p className="pb-4 text-center text-sm text-on-solid">
+              {safeIndex + 1} / {fotos.length}
+            </p>
+          ) : null}
+        </div>
+      </Dialog>
 
       {showConfirmRemover ? (
         <ConfirmDialog
@@ -127,8 +134,22 @@ export function GaleriaCarousel({
           }}
         />
       ) : null}
-    </div>
+    </>
   );
+}
+
+/**
+ * O `Dialog` ouve o teclado a partir do controle focado. Quando esse controle sai da tela
+ * (a edição termina, a foto vira capa), o foco volta para a primeira ação do cabeçalho,
+ * para Esc e Tab continuarem valendo.
+ */
+function useFocoNasAcoes() {
+  const acoes = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (document.activeElement !== document.body) return;
+    acoes.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus();
+  });
+  return acoes;
 }
 
 function CarouselPhotoPanel({
@@ -152,16 +173,26 @@ function CarouselPhotoPanel({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const [imgError, setImgError] = useState(false);
-  const [editing, setEditing] = useState(false);
+  // Os estados guardam a foto a que se referem: trocar de foto os desfaz sem remontar os
+  // controles, e o foco fica onde estava.
+  const [fotoComErro, setFotoComErro] = useState<string | null>(null);
+  const [fotoEmEdicao, setFotoEmEdicao] = useState<string | null>(null);
   const [identificacao, setIdentificacao] = useState(foto.identificacao);
+  const acoes = useFocoNasAcoes();
+  const imgError = fotoComErro === foto.id;
+  const editing = fotoEmEdicao === foto.id;
+
+  function handleEditar() {
+    setIdentificacao(foto.identificacao);
+    setFotoEmEdicao(foto.id);
+  }
 
   function handleSalvarIdentificacao() {
     const trimmed = identificacao.trim();
     if (trimmed && trimmed !== foto.identificacao) {
       onRenomear(trimmed);
     }
-    setEditing(false);
+    setFotoEmEdicao(null);
   }
 
   return (
@@ -174,28 +205,35 @@ function CarouselPhotoPanel({
               value={identificacao}
               onChange={(event) => setIdentificacao(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSalvarIdentificacao();
-                if (event.key === 'Escape') setEditing(false);
+                if (event.key === 'Escape') setFotoEmEdicao(null);
+                if (event.key !== 'Enter') return;
+                // O foco vai para o botão de renomear; sem isto, o mesmo Enter o acionaria.
+                event.preventDefault();
+                handleSalvarIdentificacao();
               }}
-              className="h-9 w-full max-w-xs rounded-md border border-white/30 bg-white/10 px-2 text-sm text-white outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30"
+              className="h-9 w-full max-w-xs rounded-md border border-line-strong bg-surface px-2 text-sm text-fg outline-none focus:border-accent focus:ring-2 focus:ring-accent/40"
             />
           ) : (
             <>
               <p
-                className="min-w-0 truncate text-base font-medium text-white"
+                className="min-w-0 truncate text-base font-medium text-on-solid"
                 title={foto.identificacao}
               >
                 {foto.identificacao}
               </p>
               {foto.principal ? (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white">
-                  <Star size={11} fill="currentColor" /> Capa
-                </span>
+                <Badge
+                  variant="accent"
+                  icon={<Star size={11} fill="currentColor" />}
+                  className="shrink-0 px-2 font-semibold"
+                >
+                  Capa
+                </Badge>
               ) : null}
             </>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div ref={acoes} className="flex shrink-0 items-center gap-1">
           {podeGerenciar ? (
             editing ? (
               <>
@@ -203,21 +241,20 @@ function CarouselPhotoPanel({
                   label="Salvar identificação"
                   disabled={isSaving}
                   onClick={handleSalvarIdentificacao}
-                  className="text-emerald-400 hover:bg-emerald-400/10"
                 >
                   <Check size={16} />
                 </CarouselIconButton>
                 <CarouselIconButton
                   label="Cancelar edição"
                   disabled={isSaving}
-                  onClick={() => setEditing(false)}
+                  onClick={() => setFotoEmEdicao(null)}
                 >
                   <X size={16} />
                 </CarouselIconButton>
               </>
             ) : (
               <>
-                <CarouselIconButton label="Renomear foto" onClick={() => setEditing(true)}>
+                <CarouselIconButton label="Renomear foto" onClick={handleEditar}>
                   <Pencil size={16} />
                 </CarouselIconButton>
                 {!foto.principal ? (
@@ -233,7 +270,6 @@ function CarouselPhotoPanel({
                   label="Remover foto"
                   disabled={isRemoving}
                   onClick={onRequestRemove}
-                  className="text-red-400 hover:bg-red-400/10"
                 >
                   <Trash2 size={16} />
                 </CarouselIconButton>
@@ -253,10 +289,10 @@ function CarouselPhotoPanel({
             src={foto.publicUrl}
             alt={foto.identificacao}
             className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
-            onError={() => setImgError(true)}
+            onError={() => setFotoComErro(foto.id)}
           />
         ) : (
-          <div className="flex h-64 w-64 items-center justify-center rounded-lg bg-white/5 text-white/50">
+          <div className="flex h-64 w-64 items-center justify-center rounded-lg text-on-solid">
             <ImageOff size={40} />
           </div>
         )}
@@ -269,13 +305,11 @@ function CarouselIconButton({
   label,
   disabled,
   onClick,
-  className,
   children,
 }: {
   label: string;
   disabled?: boolean;
   onClick: () => void;
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -285,10 +319,7 @@ function CarouselIconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-on-solid transition hover:bg-scrim disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>

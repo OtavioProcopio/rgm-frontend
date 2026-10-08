@@ -17,7 +17,7 @@ import { colunaLimitadaAos30Dias, inicioDosUltimos30Dias } from '../lib/filtrosD
 import { relacaoDoOperador } from '../lib/relacaoDoOperador';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
-import { COLUMNS, TAB_ACCENT } from './kanbanColunas';
+import { COLUMNS } from './kanbanColunas';
 import { KanbanColumn } from './KanbanColumn';
 
 type AcaoPendente = { acao: AcaoSolicitacao; card: Solicitacao };
@@ -146,7 +146,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     >
       {/* ── Mobile: tab bar ── */}
       <div className="mb-3 lg:hidden">
-        <div className="flex overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex overflow-x-auto rounded-xl border border-line bg-surface-muted">
           {COLUMNS.map((col) => {
             const count = colunas[col.status].total;
             const isActive = col.status === activeTab;
@@ -156,21 +156,20 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
                 type="button"
                 onClick={() => setActiveTab(col.status)}
                 className={cn(
-                  'flex shrink-0 flex-col items-center border-b-2 px-4 py-2.5 text-center transition-colors',
+                  'flex shrink-0 flex-col items-center border-b-2 bg-surface-muted px-4 py-2.5 text-center transition-colors',
                   isActive
-                    ? cn('border-b-2', TAB_ACCENT[col.status])
-                    : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200',
+                    ? 'border-b-accent font-semibold text-fg'
+                    : 'border-b-transparent font-medium text-fg-muted hover:text-fg',
                 )}
               >
-                <span
-                  className={cn(
-                    'text-lg font-bold tabular-nums leading-none',
-                    isActive ? '' : 'text-slate-700 dark:text-slate-200',
-                  )}
-                >
-                  {count}
+                <span className="text-lg font-bold tabular-nums leading-none">{count}</span>
+                <span className="mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-xs">
+                  <span
+                    aria-hidden="true"
+                    className={cn('h-1.5 w-1.5 shrink-0 rounded-full', col.pontoClass)}
+                  />
+                  <span>{col.label}</span>
                 </span>
-                <span className="mt-0.5 whitespace-nowrap text-xs font-medium">{col.label}</span>
               </button>
             );
           })}

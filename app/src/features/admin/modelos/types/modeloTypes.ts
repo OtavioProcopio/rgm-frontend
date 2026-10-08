@@ -1,17 +1,8 @@
 export type TipoModelo =
-  | 'PLACA_ALUMINIO'
-  | 'MADEIRA_E_3D'
-  | 'ALUMINIO_E_3D'
-  | 'RESINA'
-  | 'COQUILHA_ACO';
+  'PLACA_ALUMINIO' | 'MADEIRA_E_3D' | 'ALUMINIO_E_3D' | 'RESINA' | 'COQUILHA_ACO';
 
-export const TIPO_MODELO_LABELS: Record<TipoModelo, string> = {
-  PLACA_ALUMINIO: 'Placa Alumínio',
-  MADEIRA_E_3D: 'Madeira e 3D',
-  ALUMINIO_E_3D: 'Alumínio e 3D',
-  RESINA: 'Resina',
-  COQUILHA_ACO: 'Coquilha em Aço',
-};
+/** O rótulo de cada tipo tem uma fonte só; este nome continua valendo para quem já o importa. */
+export { rotuloDoTipoDeModelo as TIPO_MODELO_LABELS } from '@/shared/lib/rotulos';
 
 export type Modelo = {
   id: string;
@@ -83,4 +74,3 @@ export type EditarModeloRequest = {
   maquina: string;
   tipo?: TipoModelo;
 };
-

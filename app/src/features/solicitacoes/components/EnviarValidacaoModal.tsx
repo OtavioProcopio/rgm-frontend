@@ -64,9 +64,9 @@ export function EnviarValidacaoModal({
   const podeEnviar = evidenciaObrigatoria ? evidenciaAnexada : isValid;
 
   return (
-    <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm dark:border-blue-900/60 dark:bg-blue-950/30">
-      <h3 className="font-semibold text-blue-900 dark:text-blue-100">Enviar para validação</h3>
-      <p className="mt-1 text-blue-800 dark:text-blue-200">
+    <div className="rounded-md border border-info bg-info-soft p-4 text-sm">
+      <h3 className="font-semibold text-info-fg">Enviar para validação</h3>
+      <p className="mt-1 text-info-fg">
         {evidenciaObrigatoria
           ? 'Descreva o serviço realizado e anexe uma foto como evidência.'
           : 'Descreva o andamento antes de enviar para validação.'}
@@ -83,33 +83,27 @@ export function EnviarValidacaoModal({
         />
 
         <div>
-          <p className="mb-2 font-medium text-blue-900 dark:text-blue-100">
+          <p className="mb-2 font-medium text-info-fg">
             Evidência do serviço realizado{' '}
             {evidenciaObrigatoria ? (
-              <span className="text-red-600 dark:text-red-400">*</span>
+              <span className="text-danger-fg">*</span>
             ) : (
-              <span className="text-xs font-normal text-blue-700 dark:text-blue-300">
-                (opcional)
-              </span>
+              <span className="text-xs font-normal text-info-fg">(opcional)</span>
             )}
           </p>
           {evidenciaAnexada ? (
-            <p className="text-xs text-green-700 dark:text-green-400">
-              ✓ Evidência anexada com sucesso
-            </p>
+            <p className="text-xs text-success-fg">✓ Evidência anexada com sucesso</p>
           ) : (
             <>
               <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
               {evidenciaObrigatoria ? (
-                <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                <p className="mt-1 text-xs text-info-fg">
                   Preencha a descrição antes de anexar a foto.
                 </p>
               ) : null}
             </>
           )}
-          {uploadError && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{uploadError}</p>
-          )}
+          {uploadError && <p className="mt-1 text-xs text-danger-fg">{uploadError}</p>}
         </div>
 
         <div className="flex flex-wrap gap-2">

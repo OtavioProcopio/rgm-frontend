@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRightCircle, ExternalLink, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
 
+import { Badge, type BadgeVariant } from '@/shared/components/Badge/Badge';
+import { Card } from '@/shared/components/Card/Card';
 import { cn } from '@/shared/lib/cn';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
 import { acaoDoMovimento, proximoStatus, rotuloDaAcao } from '../lib/acoesSolicitacao';
 import { idadeEmDias, situacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
@@ -20,58 +23,37 @@ type Props = {
   onAdvance: (s: Solicitacao) => void;
 };
 
-const TIPO_CONFIG: Record<
-  TipoSolicitacao,
-  { label: string; cls: string; Icon: React.ElementType }
-> = {
-  REPARO: {
-    label: 'Reparo',
-    cls: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    Icon: Wrench,
-  },
-  INSPECAO: {
-    label: 'Inspeção',
-    cls: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-    Icon: Eye,
-  },
-  REENGENHARIA: {
-    label: 'Reengenharia',
-    cls: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-    Icon: Settings2,
-  },
-  CRIACAO: {
-    label: 'Criação de modelo',
-    cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    Icon: PackagePlus,
-  },
+const ICONE_DO_TIPO: Record<TipoSolicitacao, React.ElementType> = {
+  REPARO: Wrench,
+  INSPECAO: Eye,
+  REENGENHARIA: Settings2,
+  CRIACAO: PackagePlus,
 };
 
 const PRIORITY_BORDER: Record<string, string> = {
-  URGENTE: 'border-l-red-500',
-  ALTA: 'border-l-orange-400',
-  MEDIA: 'border-l-sky-400',
-  BAIXA: 'border-l-slate-300 dark:border-l-slate-600',
+  URGENTE: 'border-l-danger',
+  ALTA: 'border-l-warning',
+  MEDIA: 'border-l-info',
+  BAIXA: 'border-l-line-strong',
 };
 
-const TOM_DO_PRAZO: Record<TomDoPrazo, string> = {
-  atraso: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  atencao: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  neutro: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  ok: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+const VARIACAO_DO_PRAZO: Record<TomDoPrazo, BadgeVariant> = {
+  atraso: 'danger',
+  atencao: 'warning',
+  neutro: 'neutral',
+  ok: 'success',
 };
 
 function PrazoBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: number }) {
   const situacao = situacaoDoPrazo(solicitacao, agora);
   if (!situacao) return null;
   return (
-    <span
-      className={cn(
-        'shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums',
-        TOM_DO_PRAZO[situacao.tom],
-      )}
+    <Badge
+      variant={VARIACAO_DO_PRAZO[situacao.tom]}
+      className="shrink-0 whitespace-nowrap rounded px-1.5 font-semibold tabular-nums"
     >
       {situacao.rotulo}
-    </span>
+    </Badge>
   );
 }
 
@@ -80,14 +62,7 @@ function AgeBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: num
   if (!days) return null;
   return (
     <span
-      className={cn(
-        'shrink-0 text-xs font-semibold tabular-nums',
-        days > 7
-          ? 'text-red-600 dark:text-red-400'
-          : days > 3
-            ? 'text-amber-600 dark:text-amber-400'
-            : 'text-slate-500 dark:text-slate-400',
-      )}
+      className="shrink-0 text-xs font-semibold tabular-nums text-fg-muted"
       title={`Aberta há ${days} dias`}
     >
       {days}d
@@ -114,47 +89,47 @@ export function KanbanCard({
   onDragStart,
   onAdvance,
 }: Props) {
-  const tipo = TIPO_CONFIG[solicitacao.tipo];
-  const { Icon } = tipo;
+  const Icon = ICONE_DO_TIPO[solicitacao.tipo];
   const [agora] = useState(() => Date.now());
   const avancar = rotuloDeAvancar(solicitacao);
   const criadaEmFormatada = new Date(solicitacao.criadaEm).toLocaleDateString('pt-BR');
   const borderClass = solicitacao.prioridade
     ? PRIORITY_BORDER[solicitacao.prioridade]
-    : 'border-l-slate-200 dark:border-l-slate-700';
+    : 'border-l-line-strong';
 
   return (
-    <div
+    <Card
       draggable={isDraggable}
-      onDragStart={isDraggable ? (e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        onDragStart(solicitacao);
-      } : undefined}
+      onDragStart={
+        isDraggable
+          ? (e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              onDragStart(solicitacao);
+            }
+          : undefined
+      }
       className={cn(
-        'group rounded-lg border border-slate-200 border-l-4 bg-white shadow-sm',
+        'group rounded-lg border-l-4',
         'transition-all hover:shadow-md active:opacity-50',
         isDraggable && 'lg:cursor-grab lg:active:cursor-grabbing',
-        'dark:border-slate-700 dark:bg-slate-800',
         borderClass,
       )}
     >
       <div className="p-3">
         {/* Tipo + age */}
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <span
-            className={cn(
-              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium',
-              tipo.cls,
-            )}
+          <Badge
+            variant="neutral"
+            icon={<Icon size={10} aria-hidden="true" />}
+            className="rounded px-1.5"
           >
-            <Icon size={10} />
-            {tipo.label}
-          </span>
+            {rotuloDoTipoDeSolicitacao[solicitacao.tipo]}
+          </Badge>
           <div className="flex shrink-0 items-center gap-1.5">
             <time
               dateTime={solicitacao.criadaEm}
               title={`Aberta em ${criadaEmFormatada}`}
-              className="text-xs text-slate-500 dark:text-slate-400"
+              className="text-xs text-fg-muted"
             >
               {criadaEmFormatada}
             </time>
@@ -163,19 +138,17 @@ export function KanbanCard({
         </div>
 
         {relacao ? (
-          <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-            {ROTULO_DA_RELACAO[relacao]}
-          </p>
+          <p className="mt-2 text-xs font-medium text-fg-muted">{ROTULO_DA_RELACAO[relacao]}</p>
         ) : null}
 
         {/* Título */}
-        <p className="mt-2 text-sm font-semibold leading-snug text-slate-900 line-clamp-2 dark:text-white">
+        <p className="mt-2 text-sm font-semibold leading-snug text-fg line-clamp-2">
           {solicitacao.titulo}
         </p>
 
         {/* Descrição */}
         {solicitacao.descricao && (
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-fg-muted">
             {solicitacao.descricao}
           </p>
         )}
@@ -186,7 +159,7 @@ export function KanbanCard({
             {solicitacao.prioridade ? (
               <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
             ) : (
-              <span className="text-xs text-slate-500 dark:text-slate-400">Sem prioridade</span>
+              <span className="text-xs text-fg-muted">Sem prioridade</span>
             )}
             <PrazoBadge solicitacao={solicitacao} agora={agora} />
           </div>
@@ -200,10 +173,7 @@ export function KanbanCard({
                   e.stopPropagation();
                   onAdvance(solicitacao);
                 }}
-                className={cn(
-                  CONTROLE_DO_CARD,
-                  'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40',
-                )}
+                className={cn(CONTROLE_DO_CARD, 'bg-surface-muted text-accent hover:brightness-95')}
               >
                 <ArrowRightCircle size={14} aria-hidden />
               </button>
@@ -212,10 +182,7 @@ export function KanbanCard({
               to={`/app/solicitacoes/${solicitacao.id}`}
               onClick={(e) => e.stopPropagation()}
               aria-label={`Ver solicitação: ${solicitacao.titulo}`}
-              className={cn(
-                CONTROLE_DO_CARD,
-                'bg-slate-50 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:bg-slate-700 dark:text-sky-300 dark:hover:bg-sky-900/30',
-              )}
+              className={cn(CONTROLE_DO_CARD, 'bg-surface-muted text-accent hover:brightness-95')}
             >
               Ver
               <ExternalLink size={10} aria-hidden />
@@ -223,6 +190,6 @@ export function KanbanCard({
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

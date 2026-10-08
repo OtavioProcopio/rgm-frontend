@@ -79,4 +79,30 @@ describe('AppLayout', () => {
     });
     expect(controles).toHaveLength(1);
   });
+
+  it('deve mostrar o rótulo do perfil no cabeçalho quando há usuário autenticado', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: USUARIO });
+
+    // Act
+    render(<AppLayout />, { wrapper: AppWrapper });
+
+    // Assert
+    const atalhoDoPerfil = within(screen.getByRole('banner')).getByRole('link', { name: /Ge/ });
+    expect(atalhoDoPerfil.textContent).toBe('GeGestor');
+  });
+
+  it('deve não mostrar rótulo de perfil no cabeçalho quando não há usuário autenticado', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: null });
+
+    // Act
+    render(<AppLayout />, { wrapper: AppWrapper });
+
+    // Assert
+    const atalhoDoPerfil = screen
+      .getAllByRole('link')
+      .find((atalho) => atalho.getAttribute('href') === '/app/perfil');
+    expect(atalhoDoPerfil?.textContent).toBe('');
+  });
 });

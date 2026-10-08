@@ -22,7 +22,7 @@ export function SolicitacaoAcoes({ solicitacao }: Props) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
+      <h2 className="text-sm font-semibold text-fg-muted">Ações</h2>
       <div className="flex flex-wrap gap-2">
         {botoes.map((botao) => (
           <Button

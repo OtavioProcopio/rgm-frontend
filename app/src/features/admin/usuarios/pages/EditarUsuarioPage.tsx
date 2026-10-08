@@ -7,6 +7,8 @@ import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { Card } from '@/shared/components/Card/Card';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 import { erroDaSenha } from '@/shared/lib/senha';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 
@@ -103,16 +105,6 @@ export function EditarUsuarioPage() {
     }
   }
 
-  function getPerfilLabel(perfil: PerfilUsuario) {
-    const labels: Record<PerfilUsuario, string> = {
-      ADMINISTRADOR: 'Administrador',
-      GESTOR: 'Gestor',
-      OPERADOR: 'Operador',
-      EXTERNO: 'Externo',
-    };
-    return labels[perfil];
-  }
-
   if (isLoading) {
     return <LoadingState title="Carregando usuário..." />;
   }
@@ -138,10 +130,10 @@ export function EditarUsuarioPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Coluna Principal: Formulário Básico */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:col-span-2 space-y-6">
+        <Card className="p-6 lg:col-span-2 space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Dados Gerais</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Nome e endereço de e-mail de acesso.</p>
+            <h2 className="text-lg font-semibold text-fg">Dados Gerais</h2>
+            <p className="text-xs text-fg-muted">Nome e endereço de e-mail de acesso.</p>
           </div>
           <UsuarioForm
             mode="edit"
@@ -149,43 +141,42 @@ export function EditarUsuarioPage() {
             isSubmitting={editarUsuario.isPending}
             onSubmit={handleSubmit}
           />
-        </div>
+        </Card>
 
         {/* Coluna Lateral: Ações Administrativas */}
         <div className="lg:col-span-1 space-y-6">
-          
           {/* Card: Alterar Perfil */}
           {usuario.perfil !== 'EXTERNO' && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 pb-4 dark:border-slate-700/60">
-                <div className="rounded-lg bg-sky-50 p-2 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400">
+            <Card className="p-6">
+              <div className="flex items-center gap-2.5 border-b border-line pb-4">
+                <div className="rounded-lg bg-info-soft p-2 text-info-fg">
                   <Shield size={18} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-950 dark:text-white">Nível de Acesso</h3>
-                  <p className="text-xxs text-slate-500 dark:text-slate-400">Defina o perfil de permissão do usuário.</p>
+                  <h3 className="font-semibold text-fg">Nível de Acesso</h3>
+                  <p className="text-xxs text-fg-muted">Defina o perfil de permissão do usuário.</p>
                 </div>
               </div>
 
               <form onSubmit={handleAlterarPerfil} className="mt-4 space-y-4">
                 {perfilSucesso && (
-                  <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-md border border-success bg-success-soft px-3 py-2 text-xs text-success-fg">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-success-fg" />
                     <span>{perfilSucesso}</span>
                   </div>
                 )}
 
                 {perfilErro && (
-                  <div className="flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <div className="flex items-center gap-2 rounded-md border border-danger bg-danger-soft px-3 py-2 text-xs text-danger-fg">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-danger-fg" />
                     <span>{perfilErro}</span>
                   </div>
                 )}
 
-                <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label className="block space-y-2 text-sm font-medium text-fg">
                   <span>Perfil</span>
                   <select
-                    className="h-10 w-full rounded-md border pointer-coarse:h-11 border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white disabled:opacity-50"
+                    className="h-10 w-full rounded-md border pointer-coarse:h-11 border-line-strong bg-surface px-3 text-sm text-fg disabled:opacity-50"
                     value={novoPerfil}
                     onChange={(e) => setNovoPerfil(e.target.value as PerfilUsuario)}
                     disabled={alterarPerfil.isPending || isMe}
@@ -194,15 +185,16 @@ export function EditarUsuarioPage() {
                       .filter((p) => p !== 'EXTERNO') // Prestador externo cadastrado por fluxo especial
                       .map((option) => (
                         <option key={option} value={option}>
-                          {getPerfilLabel(option)}
+                          {rotuloDoPerfil[option]}
                         </option>
                       ))}
                   </select>
                 </label>
 
                 {isMe && (
-                  <p className="text-xxs text-amber-600 dark:text-amber-400">
-                    Você não pode alterar seu próprio nível de permissão nesta tela para evitar perda do seu acesso administrativo.
+                  <p className="text-xxs text-warning-fg">
+                    Você não pode alterar seu próprio nível de permissão nesta tela para evitar
+                    perda do seu acesso administrativo.
                   </p>
                 )}
 
@@ -215,33 +207,35 @@ export function EditarUsuarioPage() {
                   </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           )}
 
           {/* Card: Redefinir Senha */}
           {usuario.perfil !== 'EXTERNO' && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 pb-4 dark:border-slate-700/60">
-                <div className="rounded-lg bg-sky-50 p-2 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400">
+            <Card className="p-6">
+              <div className="flex items-center gap-2.5 border-b border-line pb-4">
+                <div className="rounded-lg bg-info-soft p-2 text-info-fg">
                   <KeyRound size={18} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-950 dark:text-white">Redefinir Senha</h3>
-                  <p className="text-xxs text-slate-500 dark:text-slate-400">Envie uma senha temporária ou nova senha.</p>
+                  <h3 className="font-semibold text-fg">Redefinir Senha</h3>
+                  <p className="text-xxs text-fg-muted">
+                    Envie uma senha temporária ou nova senha.
+                  </p>
                 </div>
               </div>
 
               <form onSubmit={handleRedefinirSenha} className="mt-4 space-y-4">
                 {senhaSucesso && (
-                  <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-md border border-success bg-success-soft px-3 py-2 text-xs text-success-fg">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-success-fg" />
                     <span>{senhaSucesso}</span>
                   </div>
                 )}
 
                 {senhaErro && (
-                  <div className="flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <div className="flex items-center gap-2 rounded-md border border-danger bg-danger-soft px-3 py-2 text-xs text-danger-fg">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-danger-fg" />
                     <span>{senhaErro}</span>
                   </div>
                 )}
@@ -258,17 +252,13 @@ export function EditarUsuarioPage() {
                 />
 
                 <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={redefinirSenha.isPending || !novaSenha.trim()}
-                  >
+                  <Button type="submit" disabled={redefinirSenha.isPending || !novaSenha.trim()}>
                     {redefinirSenha.isPending ? 'Redefinindo...' : 'Confirmar Senha'}
                   </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           )}
-
         </div>
       </div>
     </section>
