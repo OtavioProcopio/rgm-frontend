@@ -87,6 +87,7 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 - [x] T043 Rodar a feature contra o backend de `develop` (ambiente local): barra lateral, barra de abas, menu do usuário, "Mais ações" na ficha, filtros recolhíveis, e a suíte `make e2e`. Registrar na convergência
 - [x] T044 `make cover` com os arquivos alterados em 95% ou mais (RNF-10) e `app/package.json` sem pacote novo (RNF-11)
 - [x] T045 `make validate` verde
+- [x] T046 (acrescentada na convergência) `Menu`, `SecaoRecolhivel` e `BarraDeAbas` deixam de desligar o contorno de foco global (`outline-none` e `ring-accent/40` saem; entra `outline-offset-[-2px]`): três testes em `TST/shared/components/Menu/Menu.test.tsx`, `TST/shared/components/SecaoRecolhivel/SecaoRecolhivel.test.tsx` e `TST/app/layouts/BarraDeAbas.test.tsx` falharam antes e passam depois (RNF-02)
 
 ## Cenários da spec × teste
 
@@ -159,3 +160,91 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 1 — 2026-10-08
+
+Verificação em `feat/navegacao-e-menus-que-recolhem` (`bb61305`). `make validate`, saída real
+(rodado antes da T046): `169 passed` arquivos, `2204 passed` testes, cobertura 99,32% de
+instruções, 99,21% de ramos, 99,81% de linhas, build ok, saída 0; o único arquivo medido
+abaixo de 95% é `shared/config/env.ts` (75%), que esta feature não tocou. Depois da T046,
+`make test CAMINHO=tests/unit/shared/components` (273), `tests/unit/app` (79),
+`make lint` (0 erros; 1 aviso antigo em `NovaSolicitacaoPage.tsx`) e a guarda de cores (17)
+passam. `app/package.json` e `package-lock.json` sem diferença contra `5e1f29d`.
+Suíte e2e contra o backend de `develop`: 47 passam, 1 falha, `evidencias.spec.ts:78`, que é a
+issue #138 já aberta e anterior a esta feature. Medições em
+`/root/rgm/evidencias/011-frontend/` (`antes.json`, `depois.json`, `layout/`, scripts
+`medir011.cjs`, `largura-recolhida.cjs`, `menus-e-rolagem.cjs`, `contraste-controles.cjs`).
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01 | realizado | `app/src/app/layouts/BarraLateral.tsx:61,68` (largura e `aria-expanded`), etiqueta no foco e no ponteiro `:41`; `TST/app/layouts/BarraLateral.test.tsx` |
+| RF-02 | realizado | `BarraLateral.tsx:10` (`rgm.barraLateral`); `usePreferenciaGuardada`; testes de estado guardado |
+| RF-03 | realizado | `BarraLateral.tsx:61` e `AppLayout.tsx` (`lg:flex`, `flex-1`); `AppLayout.test.tsx` "recolher a coluna" |
+| RF-04 | realizado | estado lido na inicialização (`usePreferenciaGuardada`); `largura-recolhida.cjs`: 0 quadros errados em 5 carregamentos |
+| RF-05 | realizado | `BarraDeAbas.tsx:16`; `depois.json`: administrador 5 de 5 destinos visíveis sem rolar, gestor e operador 3 de 3, em 390 e 360 px |
+| RF-06 | realizado | `index.html:22` (`viewport-fit=cover`), `BarraDeAbas.tsx:16`, `AppLayout.tsx:44`; `menus-e-rolagem.cjs`: fim do conteúdo acima da barra em 3 telas (764 de 787, 916 de 939) |
+| RF-07 | realizado | `AppLayout.tsx` sem faixa que rola; `depois.json`: nenhuma barra com `overflow-x-auto`; teste "não ter faixa de navegação que rola" |
+| RF-08 | realizado | `app/src/app/layouts/MenuDoUsuario.tsx` (nome, perfil, Meu perfil, tema, Sair `:74`); `AppLayout.test.tsx` "não mostrar nome, tema e Sair soltos" |
+| RF-09 | realizado | `PerfilPage.tsx` sem `uppercase` (a busca achou 1 uso); testes `MenuDoUsuario` e `PerfilPage` ("caixa normal") |
+| RF-10 | realizado | `AppLayout.tsx` sem o bloco "Administração RGM"; testes de identificação uma vez (gestor e administrador) |
+| RF-11 | realizado | `AppLayout.tsx:45` (`<main className="min-w-0">`); `depois.json`: borda 0 e sombra falsa em todas as telas; moldura máxima 3 → 2 |
+| RF-12 | realizado | `PageHeader.tsx:19,67`; `SolicitacoesPage.tsx:95`, `ModelosPage.tsx:53`, `ModeloDetalhePage.tsx:82,117`; as quatro telas de um comando só provadas por T036; `depois.json`: quadro, lista e ficha com "Mais ações" |
+| RF-13 | realizado | `PageHeader.tsx:59` (separador antes da ação de perigo); `ModeloDetalhePage.test.tsx` (último item, perigo, confirma e cancela) |
+| RF-14 | realizado | `Menu.tsx:77,82-96` (setas, Home, End, Esc, Tab, Enter e Espaço), `aria-haspopup` `:118`; `Menu.test.tsx` (29 testes) |
+| RF-15 | realizado | `SecaoRecolhivel.tsx:25,36` (`aria-expanded`, `hidden` sem desmontar), `resumoDeFiltros.ts` |
+| RF-16 | realizado | `SecaoRecolhivel.tsx:18` (`rgm.secao.<id>`); testes de nova montagem e do primeiro render |
+| RF-17 | realizado | `ModelosFilters.tsx:47` e `UsuariosFilters.tsx`; quadro sem mudança (conferido em `SolicitacoesPage.tsx`) |
+| RNF-01 | realizado | `menus-e-rolagem.cjs` em 390 px com toque: 5 itens do menu do usuário e 2 de "Mais ações" com 44 px; botão "Mais ações" 138 × 44; `depois.json`: 2 controles abaixo de 44 px, os mesmos de antes (caixa de 13 px no formulário de novo usuário, fora desta feature) |
+| RNF-02 | realizado | `contraste-controles.cjs`: texto dos controles novos de 5,17:1 a 17,85:1 nos dois temas (0 abaixo de 4,5:1); contorno de foco de 2 px confirmado em barra lateral, abas, itens e título de seção; achado e corrigido na T046 |
+| RNF-03 | realizado | `depois.json`: moldura máxima 2 em 1440 e em 390 px nas 18 telas medidas; antes: 3 |
+| RNF-04 | realizado | `depois.json` (1440 px): ficha do modelo de 3 comandos para "Editar" + "Mais ações"; lista de modelos e quadro, "principal" + "Mais ações"; as demais seguem como antes |
+| RNF-05 | realizado | `largura-recolhida.cjs`: expandida 280 px, recolhida 72 px |
+| RNF-06 | realizado | `depois.json`: altura 57 px (56 mais a borda) em 390 e 360 px, fixa, todos os destinos visíveis |
+| RNF-07 | realizado | `largura-recolhida.cjs`: `[0,0,0,0,0]` quadros com a barra no estado errado; seção coberta por teste do primeiro render (não medida em tela) |
+| RNF-08 | realizado | `BarraLateral.tsx` com `motion-safe:transition-[width] motion-safe:duration-200`; `Menu` sem animação; testes de `motion-safe`. A duração de 200 ms vem da classe; não medida com cronômetro |
+| RNF-09 | realizado | o maior menu tem 5 itens; teclas por `Menu.test.tsx` (setas, Home, End); menos de 10 pressionamentos por construção |
+| RNF-10 | realizado | cobertura de 99,32% no conjunto medido; todo arquivo novo de produção tem teste espelhado |
+| RNF-11 | realizado | `git diff 5e1f29d -- app/package.json app/package-lock.json` vazio |
+| RNF-12 | realizado | nenhum `*Api.ts` nem contrato tocado; `git diff --stat` só em `src/app`, `src/shared` e telas |
+| RNF-13 | realizado | `TST/shared/lib/navegacao.test.ts` fixa os destinos de cada perfil contra `5e1f29d` |
+
+**Excesso de escopo (registrado, nenhum viola o Fora de escopo):** `opcoesDeTema.ts` (a regra de
+fast refresh do lint recusou exportar a lista de dentro do componente; T030a), `iconesDeNavegacao.ts`
+(T022a, para uma barra não depender da outra), seta para baixo no botão do menu abre o menu e
+Home/End percorrem os itens (`Menu.tsx`; dentro de RF-14). Nenhum atalho global, destino novo ou
+título que encolhe foi criado.
+
+**Decisões abertas, a confirmar com o usuário (não bloqueiam a revisão):**
+- **R1:** a principal do quadro ("Nova solicitação") e da lista de modelos ("Novo modelo") foi
+  escolhida no plano, com "Exportar PDF" no menu; a correção do RF-12 na spec segue como
+  "Aguardando confirmação" na tabela de Esclarecimentos.
+- **R3:** a barra recolhida não mostra o logo (72 px). Ver a captura
+  `layout/2-desktop-recolhida.png`.
+
+**Desvios de processo, sem disfarce:**
+- `/bu:analyze` e os checklists não foram feitos (usuário pediu para ir direto à implementação,
+  2026-10-08); `/bu:review` ainda não rodou.
+- Edição por script no shell (o usuário já recusou isso antes): eu, em `spec.md`, `tasks.md`,
+  `Menu.tsx`, `Menu.test.tsx` e `SecaoRecolhivel.test.tsx`; um subagente, em
+  `BarraLateral.test.tsx`. Depois de lembrar da regra, só Write e Edit.
+- Teste visto falhar antes de implementar: nos 5 pares de subagentes e nos pares feitos por
+  mim, sim; **não** em `iconesDeNavegacao` (T022a) e em `opcoesDeTema` (T030a), onde escrevi
+  teste e arquivo na sequência sem rodar o teste vermelho; e os testes de T036 passaram de cara
+  por serem de caracterização.
+- `make fmt` sem `CAMINHO` formatou 64 arquivos alheios; desfeitos com `git checkout` antes de
+  qualquer commit.
+- Link público do front: a publicação numa porta aberta foi negada pelo classificador de
+  permissões; as capturas foram entregues como arquivos.
+
+**Achados fora de escopo:** (1) o cartão de usuário no celular transborda a página
+(viewport de 481 px antes e 461 px depois em `/app/admin/usuarios`, com e-mails longos): já
+existia, a feature só o reduziu; (2) o `ErrorState` não tem `role="alert"`; (3) a falha de
+`evidencias.spec.ts:78` é a #138.
+
+Veredito: **convergido**, com R1 e R3 abertos para o usuário.
+Tarefas acrescentadas: T022a, T030a, T046.
+
+Complemento da rodada 1 (2026-10-08, depois da T046, estado final `bb61305`): `make validate`
+de novo, saída real: `169 passed` arquivos, `2207 passed` testes, cobertura 99,32% de
+instruções, 99,21% de ramos, 99,81% de linhas, build ok, saída 0. O número de testes sobe de
+2204 para 2207 pelos três testes de foco da T046; o veredito não muda.
