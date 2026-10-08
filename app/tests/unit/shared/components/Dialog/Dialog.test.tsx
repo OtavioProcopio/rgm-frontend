@@ -40,6 +40,134 @@ function PaginaComDialog() {
   );
 }
 
+const APARENCIAS = ['painel', 'imersivo'] as const;
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+/** Página com um botão que abre o diálogo na aparência pedida. */
+function PaginaComAparencia({ aparencia }: { aparencia: (typeof APARENCIAS)[number] }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setAberto(true)}>
+        Abrir
+      </button>
+      {aberto ? (
+        <Dialog titulo="Foto do modelo" aparencia={aparencia} onClose={() => setAberto(false)}>
+          <button type="button">Primeiro</button>
+          <button type="button">Último</button>
+        </Dialog>
+      ) : null}
+    </>
+  );
+}
+
+describe('Dialog com aparência', () => {
+  it('deve usar o fundo de sobreposição de foto quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog').parentElement!)).toContain('bg-scrim');
+  });
+
+  it('deve ocupar a tela quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).toEqual(
+      expect.arrayContaining(['h-dvh', 'w-full']),
+    );
+  });
+
+  it('deve não limitar a largura quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).not.toContain('sm:max-w-md');
+  });
+
+  it('deve ser o painel de largura limitada quando a aparência não é informada', () => {
+    // Act
+    render(
+      <Dialog titulo="Triar" onClose={vi.fn()}>
+        <p>Formulário</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).toContain('sm:max-w-md');
+  });
+
+  it('deve não usar o fundo de sobreposição de foto quando a aparência não é informada', () => {
+    // Act
+    render(
+      <Dialog titulo="Triar" onClose={vi.fn()}>
+        <p>Formulário</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog').parentElement!)).not.toContain('bg-scrim');
+  });
+
+  it.each(APARENCIAS)(
+    'deve levar o foco ao primeiro controle quando Tab é apertado no último e a aparência é %s',
+    async (aparencia) => {
+      // Arrange
+      render(<PaginaComAparencia aparencia={aparencia} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+      screen.getByRole('button', { name: 'Último' }).focus();
+
+      // Act
+      await userEvent.tab();
+
+      // Assert
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+    },
+  );
+
+  it.each(APARENCIAS)('deve fechar quando Esc é apertado e a aparência é %s', async (aparencia) => {
+    // Arrange
+    render(<PaginaComAparencia aparencia={aparencia} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it.each(APARENCIAS)(
+    'deve devolver o foco a quem abriu quando fecha e a aparência é %s',
+    async (aparencia) => {
+      // Arrange
+      render(<PaginaComAparencia aparencia={aparencia} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+      // Act
+      await userEvent.keyboard('{Escape}');
+
+      // Assert
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir' }));
+    },
+  );
+});
+
 describe('Dialog', () => {
   it('deve ser anunciado como diálogo modal com o nome informado', () => {
     // Act

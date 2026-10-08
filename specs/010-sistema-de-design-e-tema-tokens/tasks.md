@@ -49,16 +49,16 @@ arquivo.
 - [x] T014 Alterar `app/index.html` e `SRC/main.tsx`. `main.tsx` ficou como estava: `initializeTheme()` continua sendo quem grava a passagem única e a cor da barra do navegador; o trecho de `index.html` só aplica a classe
 - [x] T015 Testes em `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx`: o botão abre um menu com "Sistema", "Claro" e "Escuro"; a opção ativa está marcada; escolher uma opção troca o tema e fecha o menu; setas movem entre as opções; Enter escolhe; Esc fecha e devolve o foco ao botão; clique fora fecha; o botão informa a opção ativa no nome acessível; área de toque de 44 px
 - [x] T016 Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx`
-- [ ] T017 Criar `TST/shared/components/Logo/Logo.test.tsx`: imagem com o nome "RGM Auto Parts"; a placa usa o papel `logo-plate`; aceita tamanho
-- [ ] T018 Criar `SRC/shared/components/Logo/Logo.tsx`
-- [ ] T019 Criar `TST/shared/components/Badge/Badge.test.tsx`: cada uma das seis variações usa o fundo e o texto do seu papel; mostra o texto recebido; aceita ícone; sem variação informada é neutro
-- [ ] T020 Criar `SRC/shared/components/Badge/Badge.tsx`
-- [ ] T021 Criar `TST/shared/components/Card/Card.test.tsx`: superfície, borda e canto pelos papéis; mostra o conteúdo; aceita a etiqueta e classes extras
-- [ ] T022 Criar `SRC/shared/components/Card/Card.tsx`
-- [ ] T023 Criar `TST/shared/components/Table/Table.test.tsx`: é uma tabela com cabeçalho e linhas acessíveis por papel; a moldura rola na horizontal; cabeçalho com superfície suave; divisórias pelo papel de borda
-- [ ] T024 Criar `SRC/shared/components/Table/Table.tsx`
-- [ ] T025 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: aparência `imersivo` usa o fundo de sobreposição de foto e ocupa a tela; sem a propriedade o painel é o de hoje; foco preso, Esc e retorno do foco valem nas duas aparências
-- [ ] T026 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: propriedade `aparencia`
+- [x] T017 Criar `TST/shared/components/Logo/Logo.test.tsx`: imagem com o nome "RGM Auto Parts"; a placa usa o papel `logo-plate`; aceita tamanho
+- [x] T018 Criar `SRC/shared/components/Logo/Logo.tsx`
+- [x] T019 Criar `TST/shared/components/Badge/Badge.test.tsx`: cada uma das seis variações usa o fundo e o texto do seu papel; mostra o texto recebido; aceita ícone; sem variação informada é neutro
+- [x] T020 Criar `SRC/shared/components/Badge/Badge.tsx`
+- [x] T021 Criar `TST/shared/components/Card/Card.test.tsx`: superfície, borda e canto pelos papéis; mostra o conteúdo; aceita a etiqueta e classes extras
+- [x] T022 Criar `SRC/shared/components/Card/Card.tsx`
+- [x] T023 Criar `TST/shared/components/Table/Table.test.tsx`: é uma tabela com cabeçalho e linhas acessíveis por papel; a moldura rola na horizontal; cabeçalho com superfície suave; divisórias pelo papel de borda
+- [x] T024 Criar `SRC/shared/components/Table/Table.tsx`
+- [x] T025 Testes em `TST/shared/components/Dialog/Dialog.test.tsx`: aparência `imersivo` usa o fundo de sobreposição de foto e ocupa a tela; sem a propriedade o painel é o de hoje; foco preso, Esc e retorno do foco valem nas duas aparências
+- [x] T026 Alterar `SRC/shared/components/Dialog/Dialog.tsx`: propriedade `aparencia`
 - [ ] T027 Apagar `TST/coresPorPapel.pendentes/pecas-base.txt`, ver a guarda falhar e ajustar, para o resultado esperado, os testes de `TST/shared/components/` que citam cor (Button, ConfirmDialog e os demais que a guarda apontar)
 - [ ] T028 Migrar para os papéis as peças de `SRC/shared/components/`: Button, Input, Textarea, Select, Combobox, Dialog, ConfirmDialog, Pagination, PageHeader, EmptyState, ErrorState, LoadingState, ExportarPdfButton e ThemeToggle
 

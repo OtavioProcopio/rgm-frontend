@@ -1,5 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 
+import { cn } from '@/shared/lib/cn';
+
 type DialogProps = {
   /** Nome acessível do diálogo: a ação e sobre o que ela age. */
   titulo: string;
@@ -7,7 +9,24 @@ type DialogProps = {
   onClose: () => void;
   /** Enquanto verdadeiro, Esc e clique fora não fecham (envio em andamento). */
   bloqueado?: boolean;
+  /**
+   * `painel` (padrão) é o painel de formulário; `imersivo` ocupa a tela sobre o fundo de
+   * sobreposição de foto, escuro nos dois temas.
+   */
+  aparencia?: keyof typeof APARENCIAS;
   children: ReactNode;
+};
+
+const APARENCIAS = {
+  painel: {
+    fundo: 'items-end bg-black/50 sm:items-center sm:p-4',
+    painel:
+      'max-h-dvh overflow-y-auto rounded-t-xl bg-white sm:max-w-md sm:rounded-xl dark:bg-slate-900',
+  },
+  imersivo: {
+    fundo: 'items-stretch bg-scrim',
+    painel: 'h-dvh text-on-solid',
+  },
 };
 
 const FOCAVEIS = [
@@ -20,7 +39,13 @@ const FOCAVEIS = [
 ].join(',');
 
 /** Diálogo modal: montado significa aberto. Prende o foco e devolve-o ao fechar. */
-export function Dialog({ titulo, onClose, bloqueado = false, children }: DialogProps) {
+export function Dialog({
+  titulo,
+  onClose,
+  bloqueado = false,
+  aparencia = 'painel',
+  children,
+}: DialogProps) {
   const painel = useRef<HTMLDivElement>(null);
 
   function focaveis(): HTMLElement[] {
@@ -68,7 +93,7 @@ export function Dialog({ titulo, onClose, bloqueado = false, children }: DialogP
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+      className={cn('fixed inset-0 z-50 flex justify-center', APARENCIAS[aparencia].fundo)}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !bloqueado) onClose();
       }}
@@ -80,7 +105,7 @@ export function Dialog({ titulo, onClose, bloqueado = false, children }: DialogP
         aria-modal="true"
         aria-label={titulo}
         tabIndex={-1}
-        className="max-h-dvh w-full overflow-y-auto rounded-t-xl bg-white outline-none sm:max-w-md sm:rounded-xl dark:bg-slate-900"
+        className={cn('w-full outline-none', APARENCIAS[aparencia].painel)}
       >
         {children}
       </div>
