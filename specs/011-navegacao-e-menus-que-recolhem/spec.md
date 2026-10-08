@@ -65,7 +65,8 @@ Depois desta entrega:
   telas.
 - **Definir qual é a ação principal de cada etapa da solicitação.** Isso é da #130; aqui
   vale a regra geral (uma principal, o resto no menu).
-- **Atalhos de teclado além do que recolhe a barra lateral** e paleta de comandos.
+- **Atalhos de teclado globais** (inclusive para recolher a barra lateral) e paleta de comandos: o botão, acionado por Enter, é o único meio.
+- **Título da página que encolhe ao rolar no celular:** o título fica fixo.
 - **Navegação por migalhas de pão e botão "Voltar" que usa o histórico (#130).**
 - **Guardar a preferência de barra lateral e de seções no servidor:** a escolha fica no
   navegador, como a do tema.
@@ -91,10 +92,10 @@ Depois desta entrega:
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-01 | Em tela larga, a barra lateral deve poder ser recolhida para uma coluna só de ícones e expandida de novo, por um botão e por teclado; recolhida, cada destino mostra o rótulo ao receber o ponteiro ou o foco, e o destino atual continua marcado | obrigatório |
+| RF-01 | Em tela larga, a barra lateral deve poder ser recolhida para uma coluna só de ícones e expandida de novo, por um botão acionável por teclado (Enter ou Espaço, sem atalho global); recolhida, cada destino mostra o rótulo ao receber o ponteiro ou o foco, e o destino atual continua marcado | obrigatório |
 | RF-02 | A escolha entre recolhida e expandida deve valer nas visitas seguintes, no mesmo navegador | obrigatório |
 | RF-03 | Ao recolher ou expandir a barra, o conteúdo deve ocupar o espaço liberado ou cedido, sem recarregar a página | obrigatório |
-| RF-04 | A barra lateral deve estar no estado guardado antes de a primeira tela aparecer: o usuário não vê a barra no estado errado e depois a troca | obrigatório |
+| RF-04 | Na primeira visita, sem escolha guardada, a barra deve aparecer expandida em todas as telas, sem regra especial para telas de leitura; depois, deve estar no estado guardado antes de a primeira tela aparecer: o usuário não vê a barra no estado errado e depois a troca | obrigatório |
 
 ### Navegação no celular
 
@@ -108,7 +109,7 @@ Depois desta entrega:
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-08 | Nome do usuário, perfil, acesso à tela de perfil, escolha de tema e "Sair" devem ficar num menu do usuário só, aberto por um botão no canto do cabeçalho, no lugar dos controles soltos | obrigatório |
+| RF-08 | Nome do usuário, perfil, acesso à tela de perfil, escolha de tema e "Sair" devem ficar num menu do usuário só, aberto por um botão no canto do cabeçalho, no lugar dos controles soltos; "Sair" existe só dentro desse menu, no computador e no celular | obrigatório |
 | RF-09 | O perfil deve ser escrito por extenso e em caixa normal ("Administrador", "Gestor", "Operador"), em todo lugar onde aparece | obrigatório |
 | RF-10 | O cabeçalho não deve repetir o contexto que a barra lateral já dá: a identificação do portal aparece uma vez | obrigatório |
 | RF-11 | O conteúdo da página deve ficar sobre o fundo da aplicação, sem o cartão com borda e sombra que hoje o envolve; só agrupamentos reais viram cartão, e nenhuma tela passa de dois níveis de moldura | obrigatório |
@@ -117,7 +118,7 @@ Depois desta entrega:
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-12 | O cabeçalho de página deve mostrar a ação principal e, quando houver outras, um botão "Mais ações" que abre um menu com elas, cada uma com texto e ícone; com uma ação só, nenhum menu aparece. As sete telas que hoje têm ações no cabeçalho devem usar essa peça | obrigatório |
+| RF-12 | O cabeçalho de página deve mostrar a ação principal e, quando houver outras, um botão "Mais ações" que abre um menu com elas, cada uma com texto e ícone; com uma ação só, nenhum menu aparece. As sete telas que hoje têm ações no cabeçalho devem usar essa peça: as quatro com uma ação só (nova solicitação, novo usuário, novo modelo, nova máquina) seguem sem menu; na ficha do modelo a principal é "Editar", e "Exportar PDF" e "Desativar" ficam em "Mais ações"; no detalhe da solicitação a peça é usada com as ações que já existem, e a regra de uma principal por etapa é da #130 | obrigatório |
 | RF-13 | A ação destrutiva (desativar, excluir) deve ficar no fim do menu, separada das demais, em cor de perigo, e só deve ser executada depois de uma confirmação | obrigatório |
 | RF-14 | O menu "Mais ações" e o menu do usuário devem funcionar por teclado (abrir, navegar entre itens, escolher, fechar com Esc), devolver o foco ao botão que os abriu ao fechar e ser anunciados por leitor de tela como menu com estado aberto ou fechado | obrigatório |
 
@@ -127,7 +128,7 @@ Depois desta entrega:
 |---|---|---|
 | RF-15 | Deve existir uma peça de seção recolhível: título que abre e fecha a seção por clique e por teclado, com o estado anunciado a leitor de tela; fechada, mostra um resumo curto do conteúdo escondido (por exemplo, "Filtros · 2 ativos") | obrigatório |
 | RF-16 | O estado aberto ou fechado de cada seção recolhível deve valer nas visitas seguintes, no mesmo navegador | obrigatório |
-| RF-17 | A faixa de filtros das listas deve usar a seção recolhível [NECESSITA ESCLARECIMENTO: quais listas entram nesta entrega: só a de modelos e a de usuários, ou também o quadro de solicitações?] | obrigatório |
+| RF-17 | A faixa de filtros das listas de modelos e de usuários deve usar a seção recolhível; o quadro de solicitações mantém os filtros como estão | obrigatório |
 
 ## Requisitos não funcionais
 
@@ -177,6 +178,7 @@ Funcionalidade: Navegação e menus que recolhem
     Então a barra recolhe
     E o foco permanece no botão
     Mas nenhum destino perde a ordem de tabulação
+    E nenhuma combinação de teclas fora do botão recolhe a barra
 
   Cenário: A escolha da barra vale na visita seguinte
     Dado um usuário que recolheu a barra lateral
@@ -187,7 +189,9 @@ Funcionalidade: Navegação e menus que recolhem
   Cenário: Primeira visita
     Dado um navegador sem escolha guardada
     Quando o usuário abre a aplicação em tela larga
-    Então a barra lateral aparece no estado definido pela decisão de RF-01 [NECESSITA ESCLARECIMENTO: a barra começa expandida ou recolhida na primeira visita, e as telas de leitura começam recolhidas?]
+    Então a barra lateral aparece expandida
+    E isso vale também nas telas de leitura, como o detalhe da solicitação e a ficha do modelo
+    Mas a barra não muda de estado sozinha ao navegar entre telas
 
   # Navegação no celular
 
@@ -245,8 +249,21 @@ Funcionalidade: Navegação e menus que recolhem
   Cenário: Ação principal e menu
     Dado a ficha de um modelo aberta por um administrador
     Quando a tela carrega
-    Então o cabeçalho mostra a ação principal e um botão "Mais ações"
-    Mas não mostra "Exportar PDF" nem "Desativar" soltos no cabeçalho
+    Então o cabeçalho mostra "Editar" como ação principal e um botão "Mais ações"
+    E "Exportar PDF" e "Desativar" estão dentro de "Mais ações"
+    Mas não aparecem soltos no cabeçalho
+
+  Cenário: Sair só no menu do usuário
+    Dado um usuário em tela de 390 px
+    Quando ele olha o cabeçalho
+    Então não existe botão "Sair" fora do menu do usuário
+    E "Sair" está dentro do menu do usuário
+
+  Cenário: Filtros recolhíveis só nas listas definidas
+    Dado as listas de modelos, de usuários e o quadro de solicitações
+    Quando cada uma abre
+    Então modelos e usuários mostram a faixa de filtros como seção recolhível
+    Mas o quadro de solicitações mostra os filtros como hoje
 
   Cenário: Uma ação só
     Dado uma tela com uma única ação no cabeçalho
@@ -318,14 +335,7 @@ Funcionalidade: Navegação e menus que recolhem
 
 ## Ambiguidades
 
-Pontos não resolvidos, marcados no lugar onde faltaram:
-
-1. [NECESSITA ESCLARECIMENTO: a barra lateral começa expandida ou recolhida na primeira visita, e as telas de leitura (detalhe de solicitação, ficha do modelo) começam recolhidas por padrão, como a #127 sugere com "podem começar recolhidas"?] (RF-01, cenário "Primeira visita")
-2. [NECESSITA ESCLARECIMENTO: quais listas usam a seção de filtros recolhível nesta entrega: modelos e usuários, ou também o quadro de solicitações?] (RF-17)
-3. [NECESSITA ESCLARECIMENTO: qual é o atalho de teclado que recolhe e expande a barra lateral, ou basta o botão focado com Enter?] (RF-01)
-4. [NECESSITA ESCLARECIMENTO: qual é a ação principal em cada uma das sete telas com ações no cabeçalho (quadro, usuários, modelos, máquinas, ficha do modelo, edição do modelo, detalhe da solicitação)? Para o detalhe da solicitação, a regra por etapa é da #130; aqui só o que fica visível hoje.] (RF-12, RNF-04)
-5. [NECESSITA ESCLARECIMENTO: o título da página no cabeçalho, no celular, encolhe ao rolar, como a #127 sugere, ou fica fixo?] (a issue pede; nenhum RF cobre ainda)
-6. [NECESSITA ESCLARECIMENTO: "Sair" fica só dentro do menu do usuário, ou também visível fora dele no celular, onde não há barra lateral?] (RF-08)
+Nenhuma em aberto; as respostas estão em **Esclarecimentos**.
 
 Já decidido, sem pergunta:
 
@@ -348,3 +358,14 @@ Já decidido, sem pergunta:
   própria.
 - Medição de largura útil em 1440 px: conteúdo pelo menos 200 px mais largo com a barra
   recolhida.
+
+## Esclarecimentos
+
+| Pergunta | Resposta do usuário | Data |
+|---|---|---|
+| RF-04: a barra lateral começa expandida ou recolhida na primeira visita, e as telas de leitura começam recolhidas? | Expandida em todas, sem regra por tela | 2026-10-08 |
+| RF-17: quais listas usam a seção de filtros recolhível? | Modelos e usuários; o quadro fica como está | 2026-10-08 |
+| RF-12, RNF-04: qual é a ação principal nas telas com ações? E o detalhe da solicitação? | "Editar" na ficha do modelo; o detalhe da solicitação só usa a peça com o que já existe, e a regra por etapa fica para a #130 | 2026-10-08 |
+| RF-08: onde fica o "Sair" no celular? | Só dentro do menu do usuário, no computador e no celular | 2026-10-08 |
+| O título da página, no celular, encolhe ao rolar ou fica fixo? | Fica fixo | 2026-10-08 |
+| RF-01: qual é o atalho de teclado para recolher a barra lateral? | Nenhum; só o botão, acionado por Enter | 2026-10-08 |
