@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -6,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { contraste } from '@/shared/lib/contraste';
 import { THEME_COLOR } from '@/shared/lib/theme';
 
+// O Vitest não entrega o conteúdo de folha de estilo importada: o arquivo é lido do disco.
 const css = readFileSync(resolve(__dirname, '../../../src/styles/globals.css'), 'utf8');
 
 type Tema = 'claro' | 'escuro';
