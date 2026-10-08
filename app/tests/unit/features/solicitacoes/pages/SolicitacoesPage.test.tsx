@@ -246,6 +246,134 @@ describe('SolicitacoesPage — ações do cabeçalho', () => {
   });
 });
 
+describe('SolicitacoesPage — período vazio e lista vazia', () => {
+  async function abrirListaVazia(filtrar: boolean) {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }));
+    if (filtrar) {
+      await userEvent.click(screen.getByRole('button', { name: 'Filtrar pelo modelo m-9' }));
+    }
+  }
+
+  it('deve entregar ao quadro o início vazio quando a data inicial é apagada', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const campo = screen.getByLabelText('Criada a partir de');
+    await userEvent.type(campo, '2026-10-01');
+
+    // Act
+    await userEvent.clear(campo);
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve entregar ao quadro o fim vazio quando a data final é apagada', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const campo = screen.getByLabelText('Criada até');
+    await userEvent.type(campo, '2026-10-07');
+
+    // Act
+    await userEvent.clear(campo);
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve avisar que nada foi cadastrado quando a lista vem vazia sem filtros', async () => {
+    // Act
+    await abrirListaVazia(false);
+
+    // Assert
+    expect(screen.getByText('Nenhuma solicitação cadastrada ainda.')).toBeDefined();
+  });
+
+  it('deve avisar que os filtros não acharam nada quando a lista vem vazia com filtro de modelo', async () => {
+    // Act
+    await abrirListaVazia(true);
+
+    // Assert
+    expect(screen.getByText('Nenhuma solicitação com os filtros aplicados.')).toBeDefined();
+  });
+});
+
+describe('SolicitacoesPage — paginação da lista', () => {
+  async function abrirListaComTresPaginas() {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: {
+        content: [{ id: 's-1', titulo: 'Troca de molde' }],
+        page: 1,
+        totalPages: 3,
+        totalElements: 50,
+      },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }));
+    vi.mocked(useSolicitacoes).mockClear();
+    return useSolicitacoes;
+  }
+
+  it('deve mostrar um cartão por solicitação quando a lista tem resultados', async () => {
+    // Arrange
+    await abrirListaComTresPaginas();
+
+    // Act
+    const cartoes = screen.getAllByTestId('solicitacao-card');
+
+    // Assert
+    expect(cartoes).toHaveLength(1);
+    expect(cartoes[0].textContent).toBe('Troca de molde');
+  });
+
+  it('deve pedir a página seguinte quando Próxima é acionado', async () => {
+    // Arrange
+    const useSolicitacoes = await abrirListaComTresPaginas();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+
+    // Assert
+    expect(useSolicitacoes).toHaveBeenCalledTimes(1);
+    expect(useSolicitacoes).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, size: 20 }),
+      expect.anything(),
+    );
+  });
+
+  it('deve pedir a página anterior quando Anterior é acionado', async () => {
+    // Arrange
+    const useSolicitacoes = await abrirListaComTresPaginas();
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+    vi.mocked(useSolicitacoes).mockClear();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+
+    // Assert
+    expect(useSolicitacoes).toHaveBeenCalledTimes(1);
+    expect(useSolicitacoes).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 0, size: 20 }),
+      expect.anything(),
+    );
+  });
+});
+
 describe('SolicitacoesPage — cores por papel', () => {
   it('deve pôr a troca de visão sobre a superfície com a borda do tema quando a página abre', () => {
     // Arrange

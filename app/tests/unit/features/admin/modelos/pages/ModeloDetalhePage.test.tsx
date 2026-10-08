@@ -4,7 +4,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
 
@@ -36,11 +36,22 @@ vi.mock('@/features/admin/modelos/hooks/useAtivarModelo', () => ({
   useAtivarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('@/features/admin/modelos/components/EventosModeloList', () => ({
-  EventosModeloList: () => <div />,
+  EventosModeloList: vi.fn(() => <div />),
 }));
 vi.mock('@/features/admin/modelos/components/GaleriaModelo', () => ({
   GaleriaModelo: () => <div data-testid="galeria-modelo" />,
 }));
+
+beforeEach(async () => {
+  const { useEventosModelo } = await import('@/features/admin/modelos/hooks/useEventosModelo');
+  const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+  vi.mocked(useEventosModelo).mockReturnValue({ data: [] } as unknown as ReturnType<
+    typeof useEventosModelo
+  >);
+  vi.mocked(useSolicitacoes).mockReturnValue({ data: undefined } as unknown as ReturnType<
+    typeof useSolicitacoes
+  >);
+});
 
 afterEach(cleanup);
 
@@ -445,5 +456,190 @@ describe('ModeloDetalhePage (admin) — confirmações', () => {
     // Assert
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /mais ações/i }));
+  });
+
+  it('deve mostrar o erro da operação e fechar o diálogo quando a desativação falha', async () => {
+    // Arrange
+    const { useDesativarModelo } =
+      await import('@/features/admin/modelos/hooks/useDesativarModelo');
+    const mutateAsync = vi.fn().mockRejectedValue(new Error('falhou'));
+    vi.mocked(useDesativarModelo).mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useDesativarModelo>);
+    await abrirDetalhe(true);
+    await abrirMaisAcoes();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Desativar' }));
+
+    // Act
+    const dialogo = screen.getByRole('dialog', { name: 'Desativar modelo' });
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Desativar' }));
+
+    // Assert
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    expect(mutateAsync).toHaveBeenCalledWith('1');
+    expect(await screen.findByText('Operação não concluída')).toBeDefined();
+    expect(
+      screen.getByText('Não foi possível concluir a operação. Tente novamente.'),
+    ).toBeDefined();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve não ativar quando a confirmação de ativação é cancelada', async () => {
+    // Arrange
+    const { useAtivarModelo } = await import('@/features/admin/modelos/hooks/useAtivarModelo');
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useAtivarModelo).mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useAtivarModelo>);
+    await abrirDetalhe(false);
+    await abrirMaisAcoes();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Ativar' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    // Assert
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('ModeloDetalhePage (admin) — corpo da ficha', () => {
+  async function abrirFicha(
+    dadosDoModelo: Record<string, unknown>,
+    solicitacoes: Record<string, unknown> = { content: [], totalElements: 0 },
+    rota = '/modelos/1',
+  ) {
+    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useModelo).mockReturnValue({
+      data: { ...modelo, ...dadosDoModelo },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useModelo>);
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: solicitacoes,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper({
+      initialEntries: [rota],
+      user: { nome: 'Teste', perfil: 'ADMINISTRADOR' },
+    });
+    render(
+      <Routes>
+        <Route path="/modelos/:id" element={<ModeloDetalhePage />} />
+        <Route path="/modelos" element={<ModeloDetalhePage />} />
+      </Routes>,
+      { wrapper: AppWrapper },
+    );
+  }
+
+  it('deve mostrar as observações do modelo quando elas existem', async () => {
+    // Arrange
+    await abrirFicha({ observacoes: 'Revisar encaixe' });
+
+    // Act
+    const observacoes = screen.getByText('Revisar encaixe');
+
+    // Assert
+    expect(observacoes.tagName).toBe('P');
+  });
+
+  it('deve mostrar o rótulo do tipo e a pendência aberta quando o modelo tem tipo e pendência', async () => {
+    // Arrange
+    await abrirFicha({ tipo: 'RESINA', temPendenciaAberta: true });
+
+    // Act
+    const tipo = screen.getByText('Tipo do Modelo').parentElement as HTMLElement;
+    const pendencia = screen.getByText('Pendência aberta').parentElement as HTMLElement;
+
+    // Assert
+    expect(within(tipo).getByText('Resina')).toBeDefined();
+    expect(within(pendencia).getByText('Sim')).toBeDefined();
+  });
+
+  it('deve mostrar "Não definido" no tipo quando o modelo não tem tipo', async () => {
+    // Arrange
+    await abrirFicha({ tipo: null });
+
+    // Act
+    const tipo = screen.getByText('Tipo do Modelo').parentElement as HTMLElement;
+
+    // Assert
+    expect(within(tipo).getByText('Não definido')).toBeDefined();
+  });
+
+  it('deve listar as solicitações com link e status quando o histórico tem itens', async () => {
+    // Arrange
+    await abrirFicha(
+      {},
+      {
+        content: [{ id: 's1', titulo: 'Trocar pino', status: 'CONCLUIDA' }],
+        totalElements: 1,
+      },
+    );
+
+    // Act
+    const link = screen.getByRole('link', { name: /Trocar pino/ });
+
+    // Assert
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes/s1');
+    expect(within(link).getByText('Concluída')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Histórico de Solicitações (1)' })).toBeDefined();
+  });
+
+  it('deve avisar que não há solicitações quando o histórico está vazio', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const aviso = screen.getByText('Nenhuma solicitação registrada para este modelo.');
+
+    // Assert
+    expect(aviso).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Histórico de Solicitações (0)' })).toBeDefined();
+  });
+
+  it('deve entregar lista vazia à lista de eventos quando os eventos ainda não foram carregados', async () => {
+    // Arrange
+    const { useEventosModelo } = await import('@/features/admin/modelos/hooks/useEventosModelo');
+    const { EventosModeloList } =
+      await import('@/features/admin/modelos/components/EventosModeloList');
+    vi.mocked(useEventosModelo).mockReturnValue({
+      data: undefined,
+    } as unknown as ReturnType<typeof useEventosModelo>);
+    vi.mocked(EventosModeloList).mockClear();
+
+    // Act
+    await abrirFicha({});
+
+    // Assert
+    expect(vi.mocked(EventosModeloList).mock.calls[0][0]).toEqual({ eventos: [] });
+  });
+
+  it('deve mostrar zero solicitações quando o histórico ainda não foi carregado', async () => {
+    // Arrange
+    await abrirFicha({}, null as unknown as Record<string, unknown>);
+
+    // Act
+    const titulo = screen.getByRole('heading', { name: 'Histórico de Solicitações (0)' });
+
+    // Assert
+    expect(titulo).toBeDefined();
+    expect(screen.getByText('Nenhuma solicitação registrada para este modelo.')).toBeDefined();
+  });
+
+  it('deve esconder a galeria e as ações do cabeçalho quando a rota não tem id', async () => {
+    // Arrange
+    await abrirFicha({}, undefined, '/modelos');
+
+    // Act
+    const galeria = screen.queryByTestId('galeria-modelo');
+
+    // Assert
+    expect(galeria).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Editar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Exportar PDF' })).toBeNull();
   });
 });

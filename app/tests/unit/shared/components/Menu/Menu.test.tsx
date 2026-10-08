@@ -291,6 +291,30 @@ describe('Menu', () => {
     },
   );
 
+  it('deve cancelar o clique do navegador quando o Espaço é solto num item', () => {
+    // Arrange
+    renderizar();
+    abrir();
+
+    // Act
+    const naoCancelado = fireEvent.keyUp(item('Primeira'), { key: ' ' });
+
+    // Assert
+    expect(naoCancelado).toBe(false);
+  });
+
+  it('deve deixar passar o evento quando outra tecla é solta num item', () => {
+    // Arrange
+    renderizar();
+    abrir();
+
+    // Act
+    const naoCancelado = fireEvent.keyUp(item('Primeira'), { key: 'a' });
+
+    // Assert
+    expect(naoCancelado).toBe(true);
+  });
+
   it('deve abrir a página do destino e fechar o menu quando o item é um link', () => {
     // Arrange
     render(

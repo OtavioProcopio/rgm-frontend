@@ -60,7 +60,18 @@ describe('BarraLateral', () => {
     // Assert
     expect(screen.getByRole('link', { name: 'Dashboard' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Solicitações' })).toBeTruthy();
-    expect(screen.getAllByText('Dashboard')[0]?.classList.contains('sr-only')).toBe(true);
+  });
+
+  it('deve esconder o texto do destino so visualmente quando recolhida', () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    fireEvent.click(botao());
+
+    // Assert
+    const texto = screen.getByRole('link', { name: 'Dashboard' }).querySelector('span');
+    expect(texto?.classList.contains('sr-only')).toBe(true);
   });
 
   it('deve anunciar expandir e aria-expanded falso quando recolhida', () => {
@@ -109,7 +120,7 @@ describe('BarraLateral', () => {
     expect(screen.getByText(IDENTIFICACAO)).toBeTruthy();
   });
 
-  it('deve ter etiqueta visual que aparece no foco e no ponteiro quando recolhida', () => {
+  it('deve repetir o rotulo do destino numa etiqueta escondida do leitor de tela quando recolhida', () => {
     // Arrange
     const { container } = renderizar();
 
@@ -119,10 +130,34 @@ describe('BarraLateral', () => {
     // Assert
     const etiqueta = container.querySelector('nav [aria-hidden="true"].absolute');
     expect(etiqueta?.textContent).toBe('Dashboard');
-    expect(etiqueta?.classList.contains('hidden')).toBe(true);
-    expect(etiqueta?.classList.contains('group-hover:block')).toBe(true);
-    expect(etiqueta?.classList.contains('group-focus-visible:block')).toBe(true);
   });
+
+  it('deve declarar a etiqueta oculta em repouso quando recolhida', () => {
+    // Arrange
+    const { container } = renderizar();
+
+    // Act
+    fireEvent.click(botao());
+
+    // Assert
+    const etiqueta = container.querySelector('nav [aria-hidden="true"].absolute');
+    expect(etiqueta?.classList.contains('hidden')).toBe(true);
+  });
+
+  it.each(['group-hover:block', 'group-focus-visible:block'])(
+    'deve declarar a classe %s para mostrar a etiqueta quando recolhida',
+    (classe) => {
+      // Arrange
+      const { container } = renderizar();
+
+      // Act
+      fireEvent.click(botao());
+
+      // Assert
+      const etiqueta = container.querySelector('nav [aria-hidden="true"].absolute');
+      expect(etiqueta?.classList.contains(classe)).toBe(true);
+    },
+  );
 
   it('deve marcar o destino da rota atual quando ha rota ativa', () => {
     // Arrange

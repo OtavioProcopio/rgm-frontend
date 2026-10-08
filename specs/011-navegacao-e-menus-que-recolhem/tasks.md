@@ -280,3 +280,33 @@ Edit (o usuário já recusou edição por script).
 
 Veredito: **convergido**, com R1 e R3 abertos para o usuário e os achados 3, 5 e 7 registrados.
 Tarefas acrescentadas: T047.
+
+### Rodada 3 — 2026-10-08 (depois do segundo `/bu:review`)
+
+O segundo parecer reprovou de novo. O achado central: a cobertura de 99,8% do `make validate`
+não mede os arquivos que esta feature mais alterou (a configuração exclui layouts, páginas,
+componentes de feature e hooks), e não havia como medi-los pelo `make`. Alvo criado
+(Princípio 1): **`make cover-arquivos ARQUIVOS="src/..."`**, que mede os arquivos informados
+mesmo quando excluídos e exige 95% **em cada um** (`thresholds.perFile`), sem acrescentar
+nada à lista de exclusões (Princípio 10).
+
+| Achado do segundo parecer | Estado | Evidência |
+|---|---|---|
+| 1. Cobertura por arquivo não provada pelo gate | corrigido | `make cover-arquivos` com os 22 arquivos de `src/` alterados desde `5e1f29d`: saída 0, 169 arquivos, 2265 testes, 99,66% de instruções, 98,73% de ramos, 100% de funções, 100% de linhas; nenhum abaixo de 95%. Mínimos: `ModeloDetalhePage.tsx` 97,61% de instruções e 95,58% de ramos (sobram a guarda de `handleConfirmAction` e os `?? id` do caso sem id) e `ModelosFilters.tsx` 95,65% de ramos. Antes: `ModelosPage` 40%, `SolicitacoesPage` 82%, `ModeloDetalhePage` 88%, `PerfilPage` 94%, `ModelosFilters` 60%, `UsuariosFilters` 50% |
+| 2. `Menu` com cerca de 90 linhas | corrigido | `useMenuAberto` (estado, foco ao abrir, clique fora) e `useTecladoDoMenu` (teclas) extraídos; o componente cabe em cerca de 45 linhas |
+| 3. Espaço no Firefox: `click()` manual depois de `preventDefault` | mitigado, não verificado | `Menu.tsx` passa a cancelar o `keyup` do Espaço no menu (`aoSoltar`), com 2 testes; Firefox não instala nesta VPS (faltam dependências do sistema), então **fica para conferência manual do usuário** (escolher "Sair" ou "Exportar PDF" com a barra de espaço no Firefox e ver se o menu reabre) |
+| 4. Teste de etiqueta só conferia classe | corrigido | o comportamento real foi medido no navegador (`etiqueta-recolhida.cjs`): oculta em repouso, visível com o ponteiro e com o foco do teclado, oculta ao sair; os testes de unidade foram divididos em uma asserção cada e renomeados para dizer que provam a declaração da classe |
+| 5. `make validate` sem `fmt`, `it`, `bdd` | registrado, legado | existia antes da branch (`Makefile` diz "coverage 85%"); fora de escopo, para a feature de contrato de operação já combinada na 010 |
+| 6. R1, R3 e checklists sem dono | aberto | R1 e R3 vão no corpo da PR para o usuário; checklists e `/bu:analyze` pulados a pedido dele |
+
+Acrescentado nesta rodada, fora do pedido do parecer: teste que deixava mocks de
+`useSolicitacoes` e `useEventosModelo` alterados para o teste seguinte (dependência de ordem)
+agora restaura o padrão num `beforeEach`.
+
+`make validate` desta rodada, saída real: `169 passed` arquivos, `2265 passed` testes,
+cobertura 99,83% de instruções, 99,79% de ramos, 100% de funções, 99,81% de linhas, build ok,
+saída 0.
+
+Veredito: **convergido**, com R1 e R3 abertos, a conferência manual do Espaço no Firefox
+pendente, e os achados 5 e 7 do parecer registrados.
+Tarefas acrescentadas: nenhuma além da T047 (a T047 cobre também o trabalho desta rodada).

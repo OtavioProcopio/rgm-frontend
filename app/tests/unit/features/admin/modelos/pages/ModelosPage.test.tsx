@@ -33,7 +33,32 @@ vi.mock('@/features/admin/modelos/components/ModelosTable', () => ({
   ),
 }));
 vi.mock('@/features/admin/modelos/components/ModelosFilters', () => ({
-  ModelosFilters: () => <div data-testid="modelos-filters" />,
+  ModelosFilters: ({
+    onCodigoChange,
+    onMaquinaChange,
+    onDescricaoChange,
+    onAtivoChange,
+  }: {
+    onCodigoChange: (valor?: string) => void;
+    onMaquinaChange: (valor?: string) => void;
+    onDescricaoChange: (valor?: string) => void;
+    onAtivoChange: (valor?: boolean) => void;
+  }) => (
+    <div data-testid="modelos-filters">
+      <button type="button" onClick={() => onCodigoChange('M01')}>
+        Filtrar código M01
+      </button>
+      <button type="button" onClick={() => onMaquinaChange('Injetora')}>
+        Filtrar máquina Injetora
+      </button>
+      <button type="button" onClick={() => onDescricaoChange('Tampa')}>
+        Filtrar descrição Tampa
+      </button>
+      <button type="button" onClick={() => onAtivoChange(true)}>
+        Filtrar somente ativos
+      </button>
+    </div>
+  ),
 }));
 
 afterEach(cleanup);
@@ -124,6 +149,78 @@ function renderizarPagina(): void {
 function abrirMaisAcoes(): void {
   fireEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
 }
+
+async function listarComTresPaginas(): Promise<
+  typeof import('@/features/admin/modelos/hooks/useModelos').useModelos
+> {
+  const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+  vi.mocked(useModelos).mockReset();
+  vi.mocked(useModelos).mockReturnValue({
+    data: {
+      content: [{ id: '1', codigo: 'M01' }],
+      page: 1,
+      totalPages: 3,
+      totalElements: 50,
+    },
+    error: null,
+    isLoading: false,
+  } as unknown as ReturnType<typeof useModelos>);
+  return useModelos;
+}
+
+describe('ModelosPage filtros e paginação', () => {
+  it.each([
+    ['Filtrar código M01', { codigo: 'M01' }],
+    ['Filtrar máquina Injetora', { maquina: 'Injetora' }],
+    ['Filtrar descrição Tampa', { descricao: 'Tampa' }],
+    ['Filtrar somente ativos', { ativo: true }],
+  ])(
+    'deve pedir a lista com o filtro na primeira página quando "%s" é acionado',
+    async (nome, esperado) => {
+      // Arrange
+      const useModelos = await listarComTresPaginas();
+      renderizarPagina();
+      fireEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+      vi.mocked(useModelos).mockClear();
+
+      // Act
+      fireEvent.click(screen.getByRole('button', { name: nome }));
+
+      // Assert
+      expect(useModelos).toHaveBeenCalledTimes(1);
+      expect(useModelos).toHaveBeenCalledWith({ ...esperado, page: 0, size: 20 });
+    },
+  );
+
+  it('deve pedir a página seguinte quando Próxima é acionado', async () => {
+    // Arrange
+    const useModelos = await listarComTresPaginas();
+    renderizarPagina();
+    vi.mocked(useModelos).mockClear();
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+
+    // Assert
+    expect(useModelos).toHaveBeenCalledTimes(1);
+    expect(useModelos).toHaveBeenCalledWith({ page: 1, size: 20 });
+  });
+
+  it('deve pedir a página anterior quando Anterior é acionado', async () => {
+    // Arrange
+    const useModelos = await listarComTresPaginas();
+    renderizarPagina();
+    fireEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+    vi.mocked(useModelos).mockClear();
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+
+    // Assert
+    expect(useModelos).toHaveBeenCalledTimes(1);
+    expect(useModelos).toHaveBeenCalledWith({ page: 0, size: 20 });
+  });
+});
 
 describe('ModelosPage cabeçalho', () => {
   beforeEach(() => {

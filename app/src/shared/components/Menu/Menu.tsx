@@ -7,6 +7,7 @@ import {
   useState,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { Check } from 'lucide-react';
 import { Link } from 'react-router';
@@ -48,28 +49,18 @@ type MenuProps = {
   children: ReactNode;
 };
 
-/** Menu aberto por um botão: setas percorrem os itens, Esc fecha e devolve o foco ao botão. */
-export function Menu({
-  rotuloDoMenu,
-  rotuloDoBotao,
-  titulo,
-  botao,
-  classeDoBotao,
-  children,
-}: MenuProps) {
+/** Estado do menu: aberto ou fechado, foco ao abrir, fechar por clique fora e devolver o foco ao botão. */
+function useMenuAberto() {
   const [aberto, setAberto] = useState(false);
   const raizRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-
-  const itens = () => Array.from(menuRef.current!.querySelectorAll<HTMLElement>(ITENS));
 
   useEffect(() => {
     if (!aberto) return;
 
     const marcado = menuRef.current!.querySelector<HTMLElement>('[aria-checked="true"]');
-    (marcado ?? itens()[0])?.focus();
+    (marcado ?? menuRef.current!.querySelector<HTMLElement>(ITENS))?.focus();
 
     function fecharSeForFora(evento: MouseEvent) {
       if (!raizRef.current!.contains(evento.target as Node)) setAberto(false);
@@ -83,19 +74,22 @@ export function Menu({
     botaoRef.current!.focus();
   }
 
-  function aoTeclarNoBotao(evento: KeyboardEvent<HTMLButtonElement>) {
-    if (evento.key !== 'ArrowDown') return;
-    evento.preventDefault();
-    setAberto(true);
-  }
+  return { aberto, setAberto, raizRef, botaoRef, menuRef, fechar };
+}
 
+/** Teclas do menu aberto: movimento entre itens, Esc e Tab fecham, Enter e Espaço escolhem. */
+function useTecladoDoMenu(
+  menuRef: RefObject<HTMLDivElement | null>,
+  setAberto: (aberto: boolean) => void,
+  fechar: () => void,
+) {
   function moverFoco(tecla: string) {
-    const lista = itens();
+    const lista = Array.from(menuRef.current!.querySelectorAll<HTMLElement>(ITENS));
     const atual = lista.indexOf(document.activeElement as HTMLElement);
     lista[MOVIMENTOS[tecla](lista.length, atual)]?.focus();
   }
 
-  function aoTeclarNoMenu(evento: KeyboardEvent<HTMLDivElement>) {
+  function aoTeclar(evento: KeyboardEvent<HTMLDivElement>) {
     const { key } = evento;
 
     if (Object.hasOwn(MOVIMENTOS, key)) {
@@ -111,6 +105,33 @@ export function Menu({
       evento.preventDefault();
       (evento.target as HTMLElement).click();
     }
+  }
+
+  /** Alguns navegadores clicam no Espaço ao soltar a tecla; a escolha já foi feita ao apertar. */
+  function aoSoltar(evento: KeyboardEvent<HTMLDivElement>) {
+    if (evento.key === ' ') evento.preventDefault();
+  }
+
+  return { aoTeclar, aoSoltar };
+}
+
+/** Menu aberto por um botão: setas percorrem os itens, Esc fecha e devolve o foco ao botão. */
+export function Menu({
+  rotuloDoMenu,
+  rotuloDoBotao,
+  titulo,
+  botao,
+  classeDoBotao,
+  children,
+}: MenuProps) {
+  const { aberto, setAberto, raizRef, botaoRef, menuRef, fechar } = useMenuAberto();
+  const teclado = useTecladoDoMenu(menuRef, setAberto, fechar);
+  const menuId = useId();
+
+  function aoTeclarNoBotao(evento: KeyboardEvent<HTMLButtonElement>) {
+    if (evento.key !== 'ArrowDown') return;
+    evento.preventDefault();
+    setAberto(true);
   }
 
   return (
@@ -137,7 +158,8 @@ export function Menu({
             id={menuId}
             role="menu"
             aria-label={rotuloDoMenu}
-            onKeyDown={aoTeclarNoMenu}
+            onKeyDown={teclado.aoTeclar}
+            onKeyUp={teclado.aoSoltar}
             className="absolute right-0 top-full z-50 mt-1 min-w-48 rounded-md border border-line bg-surface-raised p-1 shadow-lg"
           >
             {children}
