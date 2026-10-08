@@ -2,58 +2,99 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
+
+function simularSistema(escuro: boolean) {
+  window.matchMedia = vi
+    .fn<typeof window.matchMedia>()
+    .mockReturnValue({ matches: escuro } as MediaQueryList);
+}
 
 describe('ThemeToggle', () => {
   afterEach(() => {
     cleanup();
     localStorage.clear();
     document.documentElement.classList.remove('dark');
+    Reflect.deleteProperty(window, 'matchMedia');
   });
 
-  it('uses dark theme as the default preference', () => {
+  it('deve oferecer o tema claro quando nada foi guardado e o sistema está no escuro', () => {
+    // Arrange
+    simularSistema(true);
+
+    // Act
     render(<ThemeToggle />);
 
-    expect(localStorage.getItem('rgm.theme')).toBe('dark');
-    expect(localStorage.getItem('rgm.theme.defaulted')).toBe('2');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ativar tema claro' })).toBeDefined();
   });
 
-  it('migrates old light preference to the dark default once', () => {
-    localStorage.setItem('rgm.theme', 'light');
-    localStorage.setItem('rgm.theme.defaulted', 'true');
+  it('deve oferecer o tema escuro quando nada foi guardado e o sistema está no claro', () => {
+    // Arrange
+    simularSistema(false);
 
+    // Act
     render(<ThemeToggle />);
 
-    expect(localStorage.getItem('rgm.theme')).toBe('dark');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ativar tema escuro' })).toBeDefined();
   });
 
-  it('toggles theme preference', () => {
+  it('deve manter a preferência system quando o botão só é mostrado', () => {
+    // Arrange
+    simularSistema(true);
+
+    // Act
     render(<ThemeToggle />);
 
+    // Assert
+    expect(localStorage.getItem('rgm.theme')).toBe('system');
+  });
+
+  it('deve guardar light quando o tema claro é ativado', () => {
+    // Arrange
+    simularSistema(true);
+    render(<ThemeToggle />);
+
+    // Act
     fireEvent.click(screen.getByRole('button', { name: 'Ativar tema claro' }));
 
+    // Assert
     expect(localStorage.getItem('rgm.theme')).toBe('light');
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('renders in light mode when light theme is stored', () => {
-    localStorage.setItem('rgm.theme', 'light');
-    localStorage.setItem('rgm.theme.defaulted', '2');
-
+  it('deve tirar o tema escuro do documento quando o tema claro é ativado', () => {
+    // Arrange
+    simularSistema(true);
     render(<ThemeToggle />);
 
-    expect(screen.getByRole('button', { name: 'Ativar tema escuro' })).toBeDefined();
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar tema claro' }));
+
+    // Assert
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('accepts optional className prop', () => {
+  it('deve oferecer o tema escuro quando light está guardado e o sistema está no escuro', () => {
+    // Arrange
+    simularSistema(true);
+    localStorage.setItem('rgm.theme', 'light');
+    localStorage.setItem('rgm.theme.defaulted', '3');
+
+    // Act
+    render(<ThemeToggle />);
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ativar tema escuro' })).toBeDefined();
+  });
+
+  it('deve aceitar classes extras quando className é informado', () => {
+    // Act
     render(<ThemeToggle className="custom-class" />);
 
-    const button = screen.getByRole('button');
-    expect(button.className).toContain('custom-class');
+    // Assert
+    expect(screen.getByRole('button').className).toContain('custom-class');
   });
 });
