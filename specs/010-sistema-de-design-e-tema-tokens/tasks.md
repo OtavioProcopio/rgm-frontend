@@ -105,13 +105,13 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 
 ## Fase 5 — Integração e fechamento
 
-- [ ] T047 Teste em `TST/coresPorPapel.test.ts`: a guarda não aceita mais área pendente (falha se a pasta de pendências existir) e confere todo o código de produção; uma cor genérica plantada num texto de exemplo é apontada com o arquivo
-- [ ] T048 Simplificar `TST/coresPorPapel.test.ts` para conferir todo o código de produção, sem o mecanismo de pendências
-- [ ] T049 Teste em `TST/rotulosUnicos.test.ts`: a guarda não aceita mais área pendente e confere todo o código de produção; um rótulo de valor da API plantado num texto de exemplo é apontado com o arquivo
-- [ ] T050 Simplificar `TST/rotulosUnicos.test.ts`, sem o mecanismo de pendências, e remover a pasta `TST/coresPorPapel.pendentes/`, que deve estar vazia
-- [ ] T051 Teste em `TST/styles/papeisDeCor.test.ts`: só os papéis, branco, preto e transparente existem como cor; não há redefinição de `sky` nem de `slate`
-- [ ] T052 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
-- [ ] T053 Alterar `SRC/styles/globals.css`: remover a paleta genérica do `@theme` e as redefinições de `sky` e `slate`
+- [x] T047 Teste em `TST/coresPorPapel.test.ts`: a guarda não aceita mais área pendente (falha se a pasta de pendências existir) e confere todo o código de produção; uma cor genérica plantada num texto de exemplo é apontada com o arquivo
+- [x] T048 Simplificar `TST/coresPorPapel.test.ts` para conferir todo o código de produção, sem o mecanismo de pendências
+- [x] T049 Teste em `TST/rotulosUnicos.test.ts`: a guarda não aceita mais área pendente e confere todo o código de produção; um rótulo de valor da API plantado num texto de exemplo é apontado com o arquivo
+- [x] T050 Simplificar `TST/rotulosUnicos.test.ts`, sem o mecanismo de pendências, e remover a pasta `TST/coresPorPapel.pendentes/`, que deve estar vazia
+- [x] T051 Teste em `TST/styles/papeisDeCor.test.ts`: só os papéis, branco, preto e transparente existem como cor; não há redefinição de `sky` nem de `slate`
+- [x] T052 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
+- [x] T053 Alterar `SRC/styles/globals.css`: remover a paleta genérica do `@theme` e as redefinições de `sky` e `slate`
 - [ ] T054 Medição com API simulada, antes (`e9cbb6f`) e depois, em `/root/rgm/evidencias/010-frontend/`: contraste de todo texto, borda de campo e contorno de foco nas 16 telas, nos dois temas (RNF-01, RNF-02); posição e tamanho dos controles em 1440 px e 390 px (RNF-07); área de toque e foco em 390 px (RNF-08); cinco carregamentos por tema sem quadro no tema errado (RNF-09); tempo de troca de tema (RNF-10); capturas das 16 telas nos dois temas. Registrar na convergência
 - [ ] T055 Rodar a feature contra o backend de `develop`: entrada, quadro, detalhe, painel e administração nos dois temas, e a suíte `app/tests/e2e`. Registrar na convergência
 - [ ] T056 `make cover` com os arquivos medidos em 95% ou mais (RNF-11) e `app/package.json` sem pacote novo (RNF-12)

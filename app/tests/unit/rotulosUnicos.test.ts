@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import * as rotulos from '@/shared/lib/rotulos';
-import { AREAS, PENDENTES, arquivosConferidos } from '@tests/support/areasDaMigracao';
 
 const FONTES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   query: '?raw',
@@ -45,8 +44,8 @@ function ehRotuloDoValor(valor: string, texto: string): boolean {
 
 type Achado = { arquivo: string; trecho: string };
 
-function rotulosForaDaFonte(fontes: Record<string, string>, pendentes: string[]): Achado[] {
-  return arquivosConferidos(fontes, pendentes)
+function rotulosForaDaFonte(fontes: Record<string, string>): Achado[] {
+  return Object.entries(fontes)
     .filter(([arquivo]) => arquivo !== FONTE_DOS_ROTULOS)
     .flatMap(([arquivo, texto]) =>
       FORMAS.flatMap((forma) => [...texto.matchAll(forma)])
@@ -56,8 +55,12 @@ function rotulosForaDaFonte(fontes: Record<string, string>, pendentes: string[])
 }
 
 const ARQUIVO_SEM_AREA = '/src/exemplo/Tela.tsx';
-const AREA = 'area-f';
-const ARQUIVO_DA_AREA = `${AREAS[AREA][0]}Exemplo.tsx`;
+const ARQUIVOS_DE_PRODUCAO = [
+  '/src/shared/components/Exemplo/Exemplo.tsx',
+  '/src/features/solicitacoes/components/Exemplo.tsx',
+  '/src/features/admin/usuarios/pages/ExemploPage.tsx',
+  '/src/app/layouts/ExemploLayout.tsx',
+];
 const [VALOR_DE_EXEMPLO, ROTULO_DE_EXEMPLO] = Object.entries(rotulos.rotuloDoPerfil)[1];
 
 describe('guarda de rótulo único por valor da API', () => {
@@ -80,7 +83,7 @@ describe('guarda de rótulo único por valor da API', () => {
     const fontes = { [ARQUIVO_SEM_AREA]: `const exemplo = { ${trecho} };` };
 
     // Act
-    const achados = rotulosForaDaFonte(fontes, []);
+    const achados = rotulosForaDaFonte(fontes);
 
     // Assert
     expect(achados).toEqual([{ arquivo: ARQUIVO_SEM_AREA, trecho }]);
@@ -95,7 +98,7 @@ describe('guarda de rótulo único por valor da API', () => {
     const fontes = { [ARQUIVO_SEM_AREA]: `const exemplo = { ${trecho} };` };
 
     // Act
-    const achados = rotulosForaDaFonte(fontes, []);
+    const achados = rotulosForaDaFonte(fontes);
 
     // Assert
     expect(achados).toEqual([{ arquivo: ARQUIVO_SEM_AREA, trecho }]);
@@ -108,7 +111,7 @@ describe('guarda de rótulo único por valor da API', () => {
     };
 
     // Act
-    const achados = rotulosForaDaFonte(fontes, []);
+    const achados = rotulosForaDaFonte(fontes);
 
     // Assert
     expect(achados).toEqual([]);
@@ -119,41 +122,27 @@ describe('guarda de rótulo único por valor da API', () => {
     const fontes = { [FONTE_DOS_ROTULOS]: FONTES[FONTE_DOS_ROTULOS] };
 
     // Act
-    const achados = rotulosForaDaFonte(fontes, []);
+    const achados = rotulosForaDaFonte(fontes);
 
     // Assert
     expect(achados).toEqual([]);
   });
 
-  it('deve não conferir o arquivo quando a área dele tem pendência', () => {
-    // Arrange
-    const fontes = {
-      [ARQUIVO_DA_AREA]: `const exemplo = { ${VALOR_DE_EXEMPLO}: '${ROTULO_DE_EXEMPLO}' };`,
-    };
-
-    // Act
-    const achados = rotulosForaDaFonte(fontes, [AREA]);
-
-    // Assert
-    expect(achados).toEqual([]);
-  });
-
-  it('deve conferir o arquivo quando a área dele não tem pendência', () => {
+  it.each(ARQUIVOS_DE_PRODUCAO)('deve conferir o arquivo %s, de qualquer pasta', (arquivo) => {
     // Arrange
     const trecho = `${VALOR_DE_EXEMPLO}: '${ROTULO_DE_EXEMPLO}'`;
-    const fontes = { [ARQUIVO_DA_AREA]: `const exemplo = { ${trecho} };` };
-    const outrasAreas = Object.keys(AREAS).filter((area) => area !== AREA);
+    const fontes = { [arquivo]: `const exemplo = { ${trecho} };` };
 
     // Act
-    const achados = rotulosForaDaFonte(fontes, outrasAreas);
+    const achados = rotulosForaDaFonte(fontes);
 
     // Assert
-    expect(achados).toEqual([{ arquivo: ARQUIVO_DA_AREA, trecho }]);
+    expect(achados).toEqual([{ arquivo, trecho }]);
   });
 
-  it('deve não encontrar rótulo de valor da API fora da fonte no código de produção das áreas sem pendência', () => {
+  it('deve não encontrar rótulo de valor da API fora da fonte em nenhum arquivo de produção', () => {
     // Act
-    const achados = rotulosForaDaFonte(FONTES, PENDENTES);
+    const achados = rotulosForaDaFonte(FONTES);
 
     // Assert
     expect(achados).toEqual([]);

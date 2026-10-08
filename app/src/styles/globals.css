@@ -47,12 +47,6 @@
    * do login) pode trocá-lo.
    */
   --foco: var(--accent);
-
-  /* Telas ainda não migradas para os papéis: accent da marca na paleta genérica. */
-  --color-sky-400: #60a5fa;
-  --color-sky-500: #3b82f6;
-  --color-sky-600: #2563eb;
-  --color-sky-700: #1d4ed8;
 }
 
 .dark {
@@ -86,16 +80,13 @@
   --on-solid: #ffffff;
   --scrim: rgb(0 0 0 / 0.8);
   --logo-plate: #f8fafc;
-
-  /* Telas ainda não migradas para os papéis: superfícies na paleta genérica. */
-  --color-slate-950: #0f1117;
-  --color-slate-900: #1a1d23;
-  --color-slate-800: #21252e;
-  --color-slate-700: #323845;
-  --color-slate-200: #e2e8f0;
 }
 
+/* Só os papéis, branco e preto geram classe de cor: a paleta genérica do Tailwind sai. */
 @theme inline {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);

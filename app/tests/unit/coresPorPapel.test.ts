@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { AREAS, PENDENTES, arquivosConferidos } from '@tests/support/areasDaMigracao';
-
 const FONTES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   query: '?raw',
   import: 'default',
@@ -69,8 +67,8 @@ const VALOR_DE_PAPEL_FORA_DO_CSS = ['/src/shared/lib/theme.ts'];
 
 type Achado = { arquivo: string; trecho: string };
 
-function coresForaDosPapeis(fontes: Record<string, string>, pendentes: string[]): Achado[] {
-  return arquivosConferidos(fontes, pendentes).flatMap(([arquivo, texto]) => {
+function coresForaDosPapeis(fontes: Record<string, string>): Achado[] {
+  return Object.entries(fontes).flatMap(([arquivo, texto]) => {
     const padroes = VALOR_DE_PAPEL_FORA_DO_CSS.includes(arquivo)
       ? [COR_DE_FAMILIA, VARIANTE_ESCURA_DE_COR]
       : [COR_DE_FAMILIA, VARIANTE_ESCURA_DE_COR, COR_EM_HEXADECIMAL];
@@ -82,8 +80,12 @@ function coresForaDosPapeis(fontes: Record<string, string>, pendentes: string[])
 }
 
 const ARQUIVO_SEM_AREA = '/src/exemplo/Tela.tsx';
-const AREA = 'pecas-base';
-const ARQUIVO_DA_AREA = `${AREAS[AREA][0]}Exemplo/Exemplo.tsx`;
+const ARQUIVOS_DE_PRODUCAO = [
+  '/src/shared/components/Exemplo/Exemplo.tsx',
+  '/src/features/solicitacoes/components/Exemplo.tsx',
+  '/src/features/admin/usuarios/pages/ExemploPage.tsx',
+  '/src/app/layouts/ExemploLayout.tsx',
+];
 const tela = (classes: string) => `export const Tela = () => <p className="${classes}">texto</p>;`;
 
 describe('guarda de cores por papel', () => {
@@ -107,7 +109,7 @@ describe('guarda de cores por papel', () => {
     const fontes = { [ARQUIVO_SEM_AREA]: tela(classes) };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, []);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
     expect(achados).toEqual([{ arquivo: ARQUIVO_SEM_AREA, trecho }]);
@@ -120,7 +122,7 @@ describe('guarda de cores por papel', () => {
     const fontes = { [ARQUIVO_SEM_AREA]: tela(classes) };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, []);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
     expect(achados).toEqual([]);
@@ -133,33 +135,42 @@ describe('guarda de cores por papel', () => {
     };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, []);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
     expect(achados).toEqual([]);
   });
 
-  it('deve não conferir o arquivo quando a área dele tem pendência', () => {
+  it.each(ARQUIVOS_DE_PRODUCAO)('deve conferir o arquivo %s, de qualquer pasta', (arquivo) => {
     // Arrange
-    const fontes = { [ARQUIVO_DA_AREA]: tela('bg-slate-800') };
+    const trecho = 'slate-800';
+    const fontes = { [arquivo]: tela(`bg-${trecho}`) };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, [AREA]);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
-    expect(achados).toEqual([]);
+    expect(achados).toEqual([{ arquivo, trecho }]);
   });
 
-  it('deve conferir o arquivo quando a área dele não tem pendência', () => {
+  it('deve apontar cada arquivo com o próprio trecho quando mais de um escreve cor', () => {
     // Arrange
-    const fontes = { [ARQUIVO_DA_AREA]: tela('bg-slate-800') };
-    const outrasAreas = Object.keys(AREAS).filter((area) => area !== AREA);
+    const [primeiro, segundo] = ARQUIVOS_DE_PRODUCAO;
+    const fontes = { [primeiro]: tela('text-red-600'), [segundo]: tela('bg-surface') };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, outrasAreas);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
-    expect(achados).toEqual([{ arquivo: ARQUIVO_DA_AREA, trecho: 'slate-800' }]);
+    expect(achados).toEqual([{ arquivo: primeiro, trecho: 'red-600' }]);
+  });
+
+  it('deve não aceitar área pendente: a pasta de pendências não existe', () => {
+    // Act
+    const pendencias = Object.keys(import.meta.glob('./coresPorPapel.pendentes/*'));
+
+    // Assert
+    expect(pendencias).toEqual([]);
   });
 
   it('deve aceitar a cor em hexadecimal quando o arquivo é o que guarda a cor da barra do navegador', () => {
@@ -167,23 +178,23 @@ describe('guarda de cores por papel', () => {
     const fontes = { [VALOR_DE_PAPEL_FORA_DO_CSS[0]]: `export const COR = '#f8fafc';` };
 
     // Act
-    const achados = coresForaDosPapeis(fontes, []);
+    const achados = coresForaDosPapeis(fontes);
 
     // Assert
     expect(achados).toEqual([]);
   });
 
-  it('deve ter pendência só de área conhecida', () => {
+  it('deve conferir os arquivos de produção de todas as pastas', () => {
     // Act
-    const desconhecidas = PENDENTES.filter((area) => !(area in AREAS));
+    const pastas = new Set(Object.keys(FONTES).map((arquivo) => arquivo.split('/')[2]));
 
     // Assert
-    expect(desconhecidas).toEqual([]);
+    expect([...pastas].sort()).toEqual(expect.arrayContaining(['app', 'features', 'shared']));
   });
 
-  it('deve não encontrar cor fora dos papéis no código de produção das áreas sem pendência', () => {
+  it('deve não encontrar cor fora dos papéis em nenhum arquivo de produção', () => {
     // Act
-    const achados = coresForaDosPapeis(FONTES, PENDENTES);
+    const achados = coresForaDosPapeis(FONTES);
 
     // Assert
     expect(achados).toEqual([]);

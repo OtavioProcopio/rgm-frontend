@@ -109,6 +109,33 @@ describe('papéis de cor', () => {
     },
   );
 
+  it('deve tirar a paleta genérica das cores do Tailwind', () => {
+    // Act
+    const tema = blocoDoTema();
+
+    // Assert
+    expect(tema).toContain('--color-*: initial;');
+  });
+
+  it('deve expor como cor só os papéis, branco e preto', () => {
+    // Arrange
+    const esperadas = [...PAPEIS, 'white', 'black'].sort();
+
+    // Act
+    const expostas = [...blocoDoTema().matchAll(/--color-([a-z-]+):/g)].map((achado) => achado[1]);
+
+    // Assert
+    expect(expostas.sort()).toEqual(esperadas);
+  });
+
+  it.each(['sky', 'slate'])('deve não redefinir a família %s em nenhum tema', (familia) => {
+    // Act
+    const redefinicoes = css.match(new RegExp(`--color-${familia}-\\d+`, 'g')) ?? [];
+
+    // Assert
+    expect(redefinicoes).toEqual([]);
+  });
+
   it('deve usar o papel accent no contorno de foco', () => {
     // Act
     const foco = [...blocos(':root').matchAll(/--foco:\s*([^;]+);/g)].map((achado) => achado[1]);
