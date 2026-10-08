@@ -21,7 +21,13 @@ const METRICAS = {
   totalUsuarios: 5,
   totalModelos: 2,
   totalSolicitacoes: 200,
-  solicitacoesPorStatus: { A_FAZER: 3, EM_ANDAMENTO: 4, EM_VALIDACAO: 2, CONCLUIDA: 1, CANCELADA: 0 },
+  solicitacoesPorStatus: {
+    A_FAZER: 3,
+    EM_ANDAMENTO: 4,
+    EM_VALIDACAO: 2,
+    CONCLUIDA: 1,
+    CANCELADA: 0,
+  },
   solicitacoesAbertas: 9,
   solicitacoesPendentes: 3,
   solicitacoesConcluidas: 1,
@@ -57,6 +63,82 @@ async function abrirPainel() {
   await screen.findByText('41');
   return vi.mocked(solicitacoesApi.listar).mock.calls.map(([filtros]) => filtros);
 }
+
+const COLUNAS_DA_TABELA_DE_STATUS = ['Status', 'Qtd.', '%'];
+const TITULO_DO_ACOMPANHAMENTO = 'Acompanhamento Crítico';
+const DESCRICAO_DO_ACOMPANHAMENTO = 'Ordens de serviço gargalando o SLA operacional.';
+
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+describe('SolicitacoesTab — tabela de status pela peça de tabela', () => {
+  it('deve rolar a tabela na horizontal dentro da moldura com a borda do papel', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(classes(screen.getByRole('table').parentElement!)).toEqual(
+      expect.arrayContaining(['overflow-x-auto', 'border', 'border-line']),
+    );
+  });
+
+  it('deve ter o cabeçalho da tabela com a superfície suave e o texto secundário', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(classes(screen.getByRole('table').querySelector('thead')!)).toEqual(
+      expect.arrayContaining(['bg-surface-muted', 'text-fg-muted']),
+    );
+  });
+
+  it('deve separar as linhas da tabela pelo papel de borda, sobre a superfície', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(classes(screen.getByRole('table').querySelector('tbody')!)).toEqual(
+      expect.arrayContaining(['divide-line', 'bg-surface']),
+    );
+  });
+
+  it('deve ter um cabeçalho de coluna para cada coluna da tabela', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(screen.getAllByRole('columnheader').map((celula) => celula.textContent)).toEqual(
+      COLUNAS_DA_TABELA_DE_STATUS,
+    );
+  });
+
+  it('deve marcar cada cabeçalho da tabela como cabeçalho de coluna', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(
+      screen.getAllByRole('columnheader').map((celula) => celula.getAttribute('scope')),
+    ).toEqual(COLUNAS_DA_TABELA_DE_STATUS.map(() => 'col'));
+  });
+});
+
+describe('SolicitacoesTab — textos pelos papéis', () => {
+  it('deve mostrar o título do acompanhamento crítico com o texto principal', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(classes(screen.getByText(TITULO_DO_ACOMPANHAMENTO))).toContain('text-fg');
+  });
+
+  it('deve mostrar a descrição do acompanhamento crítico com o texto secundário', async () => {
+    // Act
+    await abrirPainel();
+
+    // Assert
+    expect(classes(screen.getByText(DESCRICAO_DO_ACOMPANHAMENTO))).toContain('text-fg-muted');
+  });
+});
 
 describe('SolicitacoesTab — distribuição por prioridade', () => {
   it.each(['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'])(

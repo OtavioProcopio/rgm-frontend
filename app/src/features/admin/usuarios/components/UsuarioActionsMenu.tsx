@@ -27,7 +27,7 @@ export function UsuarioActionsMenu({
     <div className="flex flex-wrap gap-2">
       <Link
         to={`/app/admin/usuarios/${usuario.id}/editar`}
-        className="inline-flex items-center justify-center rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+        className="inline-flex items-center justify-center rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-fg transition-colors hover:brightness-95"
       >
         Editar
       </Link>

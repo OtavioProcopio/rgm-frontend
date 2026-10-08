@@ -113,6 +113,21 @@ describe('DialogoDaAcao', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('deve usar o fundo, a borda e o texto de alerta quando pergunta', async () => {
+    // Arrange
+    montar();
+    await preencherMotivo();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+    const pergunta = screen.getByText(PERGUNTA).parentElement!;
+
+    // Assert
+    expect(pergunta.className.split(' ')).toEqual(
+      expect.arrayContaining(['bg-warning-soft', 'border-warning', 'text-warning-fg']),
+    );
+  });
+
   it('deve pôr o foco em Continuar editando quando pergunta', async () => {
     // Arrange
     montar();

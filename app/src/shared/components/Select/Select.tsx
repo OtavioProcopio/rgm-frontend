@@ -28,10 +28,7 @@ export function Select({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={selectId}
-        className="block text-sm font-medium text-slate-800 dark:text-slate-100"
-      >
+      <label htmlFor={selectId} className="block text-sm font-medium text-fg">
         {label}
       </label>
       <select
@@ -39,10 +36,8 @@ export function Select({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${selectId}-erro` : undefined}
         className={cn(
-          'h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-950 outline-none transition-colors focus:border-sky-600 focus:ring-2 focus:ring-sky-600/40',
-          'dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400 dark:focus:ring-sky-400/50',
-          error &&
-            'border-red-500 focus:border-red-500 focus:ring-red-500/40 dark:border-red-400 dark:focus:border-red-400',
+          'h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/40',
+          error && 'border-danger focus:border-danger focus:ring-danger/40',
           className,
         )}
         {...props}
@@ -59,7 +54,7 @@ export function Select({
         ))}
       </select>
       {error ? (
-        <p id={`${selectId}-erro`} className="text-sm text-red-600 dark:text-red-400">
+        <p id={`${selectId}-erro`} className="text-sm text-danger-fg">
           {error}
         </p>
       ) : null}

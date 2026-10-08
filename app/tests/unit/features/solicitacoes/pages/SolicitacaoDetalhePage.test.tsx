@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
+import { ancestralComum } from '@tests/support/ancestralComum';
 import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
@@ -75,7 +76,9 @@ vi.mock('@/features/evidencias/hooks/useUploadEvidencia', () => ({
   useUploadEvidencia: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
-  usePerfil: vi.fn().mockReturnValue({ data: { id: 'u-admin', nome: 'Teste', email: 't@t.com', perfil: 'ADMINISTRADOR' } }),
+  usePerfil: vi.fn().mockReturnValue({
+    data: { id: 'u-admin', nome: 'Teste', email: 't@t.com', perfil: 'ADMINISTRADOR' },
+  }),
 }));
 vi.mock('@/features/solicitacoes/components/SolicitacaoStatusBadge', () => ({
   SolicitacaoStatusBadge: ({ status }: { status: string }) => <span>{status}</span>,
@@ -88,12 +91,16 @@ vi.mock('@/features/solicitacoes/components/SolicitacaoTimeline', () => ({
 }));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   TriagemModal: ({ onConfirm }: { onConfirm: (d: unknown) => void }) => (
-    <button onClick={() => onConfirm({ prioridade: 'ALTA', responsavelIds: [] })}>confirmar-triagem</button>
+    <button onClick={() => onConfirm({ prioridade: 'ALTA', responsavelIds: [] })}>
+      confirmar-triagem
+    </button>
   ),
 }));
 vi.mock('@/features/solicitacoes/components/EncerramentoModal', () => ({
   EncerramentoModal: ({ onConfirm }: { onConfirm: (d: unknown) => void }) => (
-    <button onClick={() => onConfirm({ concluir: true, comentario: 'ok' })}>confirmar-encerramento</button>
+    <button onClick={() => onConfirm({ concluir: true, comentario: 'ok' })}>
+      confirmar-encerramento
+    </button>
   ),
 }));
 vi.mock('@/features/solicitacoes/components/DevolucaoModal', () => ({
@@ -122,10 +129,20 @@ vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
 }));
 
 const mockSolicitacao = {
-  id: 's1', titulo: 'Reparo na Máquina A', descricao: 'Desc', tipo: 'REPARO' as const,
-  status: 'A_FAZER' as const, prioridade: 'ALTA' as const, modeloId: 'm1', abertaPorUsuarioId: 'u1',
-  comentarioFinal: null, criadaEm: '2024-01-01T00:00:00Z', atualizadaEm: '2024-01-01T00:00:00Z',
-  concluidaEm: null, canceladaEm: null, responsavelIds: [],
+  id: 's1',
+  titulo: 'Reparo na Máquina A',
+  descricao: 'Desc',
+  tipo: 'REPARO' as const,
+  status: 'A_FAZER' as const,
+  prioridade: 'ALTA' as const,
+  modeloId: 'm1',
+  abertaPorUsuarioId: 'u1',
+  comentarioFinal: null,
+  criadaEm: '2024-01-01T00:00:00Z',
+  atualizadaEm: '2024-01-01T00:00:00Z',
+  concluidaEm: null,
+  canceladaEm: null,
+  responsavelIds: [],
 };
 
 afterEach(cleanup);
@@ -167,10 +184,14 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'A_FAZER' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     expect(within(container).getByRole('button', { name: /triar/i })).toBeDefined();
   });
@@ -179,10 +200,14 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     expect(within(container).getByRole('button', { name: /encerrar/i })).toBeDefined();
   });
@@ -191,10 +216,14 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     expect(within(container).getByRole('button', { name: /devolver/i })).toBeDefined();
   });
@@ -202,7 +231,9 @@ describe('SolicitacaoDetalhePage', () => {
   it('shows Voltar button in loaded state', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao, isLoading: false, error: null,
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
@@ -214,7 +245,8 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, tipo: 'INSPECAO', descricao: 'Verificar pressão' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
@@ -224,15 +256,23 @@ describe('SolicitacaoDetalhePage', () => {
 
   it('opens triagem modal and calls handleTriar', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
-    const { useTriarSolicitacao } = await import('@/features/solicitacoes/hooks/useTriarSolicitacao');
+    const { useTriarSolicitacao } =
+      await import('@/features/solicitacoes/hooks/useTriarSolicitacao');
     const triarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useTriarSolicitacao).mockReturnValue({ mutateAsync: triarMock, isPending: false } as unknown as ReturnType<typeof useTriarSolicitacao>);
+    vi.mocked(useTriarSolicitacao).mockReturnValue({
+      mutateAsync: triarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useTriarSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'A_FAZER' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /triar/i }));
     await userEvent.click(within(container).getByText('confirmar-triagem'));
@@ -241,32 +281,50 @@ describe('SolicitacaoDetalhePage', () => {
 
   it('opens enviarValidacao modal when button is clicked', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
-    const { useEnviarParaValidacao } = await import('@/features/solicitacoes/hooks/useEnviarParaValidacao');
+    const { useEnviarParaValidacao } =
+      await import('@/features/solicitacoes/hooks/useEnviarParaValidacao');
     const enviarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useEnviarParaValidacao).mockReturnValue({ mutateAsync: enviarMock, isPending: false } as unknown as ReturnType<typeof useEnviarParaValidacao>);
+    vi.mocked(useEnviarParaValidacao).mockReturnValue({
+      mutateAsync: enviarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useEnviarParaValidacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_ANDAMENTO', responsavelIds: ['u1'] },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getByRole('button', { name: /enviar para validação/i }));
+    await userEvent.click(
+      within(container).getByRole('button', { name: /enviar para validação/i }),
+    );
     // Modal should now be visible — getByText throws if not found
     within(container).getByText(/Descrição do serviço realizado/i);
   });
 
   it('opens encerramento modal and calls handleEncerrar', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
-    const { useEncerrarSolicitacao } = await import('@/features/solicitacoes/hooks/useEncerrarSolicitacao');
+    const { useEncerrarSolicitacao } =
+      await import('@/features/solicitacoes/hooks/useEncerrarSolicitacao');
     const encerrarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useEncerrarSolicitacao).mockReturnValue({ mutateAsync: encerrarMock, isPending: false } as unknown as ReturnType<typeof useEncerrarSolicitacao>);
+    vi.mocked(useEncerrarSolicitacao).mockReturnValue({
+      mutateAsync: encerrarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useEncerrarSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /encerrar/i }));
     await userEvent.click(within(container).getByText('confirmar-encerramento'));
@@ -275,15 +333,23 @@ describe('SolicitacaoDetalhePage', () => {
 
   it('opens devolucao modal and calls handleDevolver', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
-    const { useDevolverSolicitacao } = await import('@/features/solicitacoes/hooks/useDevolverSolicitacao');
+    const { useDevolverSolicitacao } =
+      await import('@/features/solicitacoes/hooks/useDevolverSolicitacao');
     const devolverMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useDevolverSolicitacao).mockReturnValue({ mutateAsync: devolverMock, isPending: false } as unknown as ReturnType<typeof useDevolverSolicitacao>);
+    vi.mocked(useDevolverSolicitacao).mockReturnValue({
+      mutateAsync: devolverMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useDevolverSolicitacao>);
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /devolver/i }));
     await userEvent.click(within(container).getByText('confirmar-devolucao'));
@@ -292,11 +358,17 @@ describe('SolicitacaoDetalhePage', () => {
 
   it('calls handleComentario when submitted', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
-    const { useRegistrarComentario } = await import('@/features/solicitacoes/hooks/useRegistrarComentario');
+    const { useRegistrarComentario } =
+      await import('@/features/solicitacoes/hooks/useRegistrarComentario');
     const comentarMock = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useRegistrarComentario).mockReturnValue({ mutateAsync: comentarMock, isPending: false } as unknown as ReturnType<typeof useRegistrarComentario>);
+    vi.mocked(useRegistrarComentario).mockReturnValue({
+      mutateAsync: comentarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useRegistrarComentario>);
     vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao, isLoading: false, error: null,
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
@@ -308,7 +380,9 @@ describe('SolicitacaoDetalhePage', () => {
   it('shows evidence list and uploader', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao, isLoading: false, error: null,
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
@@ -342,7 +416,9 @@ describe('SolicitacaoDetalhePage', () => {
   it('shows tipo as read-only text in edit mode (imutável após a abertura)', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao, isLoading: false, error: null,
+      data: mockSolicitacao,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
 
     const { AppWrapper } = createAppWrapper({
@@ -362,7 +438,8 @@ describe('SolicitacaoDetalhePage', () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_ANDAMENTO', responsavelIds: ['op'] },
-      isLoading: false, error: null,
+      isLoading: false,
+      error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
     const usuario = { email: null, ativo: true, criadoEm: '', atualizadoEm: '' };
     vi.mocked(usuariosApi.listar).mockResolvedValueOnce({
@@ -372,9 +449,14 @@ describe('SolicitacaoDetalhePage', () => {
         { ...usuario, id: 'ad', nome: 'Ana Administradora', perfil: 'ADMINISTRADOR' },
         { ...usuario, id: 'in', nome: 'Ivo Inativo', perfil: 'OPERADOR', ativo: false },
       ],
-      page: 0, totalPages: 1, totalElements: 4,
+      page: 0,
+      totalPages: 1,
+      totalElements: 4,
     } as Awaited<ReturnType<typeof usuariosApi.listar>>);
-    const { AppWrapper } = createAppWrapper({ user: { nome: 'G', perfil: 'GESTOR' }, initialEntries: ['/solicitacoes/s1'] });
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'G', perfil: 'GESTOR' },
+      initialEntries: ['/solicitacoes/s1'],
+    });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
 
     // Act
@@ -433,6 +515,30 @@ describe('SolicitacaoDetalhePage — edição', () => {
     expect(campo.maxLength).toBe(esperado);
   });
 
+  it('deve pôr os campos da edição sobre a superfície suave com a borda do tema quando a edição é aberta', async () => {
+    // Arrange
+    const esperado = ['border-line', 'bg-surface-muted'];
+
+    // Act
+    const { tela } = await abrirEdicao();
+    const moldura = ancestralComum(tela.getByLabelText('Título'), tela.getByLabelText('Descrição'));
+
+    // Assert
+    expect(moldura.className.split(' ')).toEqual(expect.arrayContaining(esperado));
+  });
+
+  it.each(['Evidências', 'Histórico de atividades', 'Adicionar comentário'])(
+    'deve mostrar o título da seção no texto secundário quando a seção é %s',
+    async (secao) => {
+      // Act
+      const { tela } = await abrirEdicao();
+      const titulo = tela.getByRole('heading', { name: secao });
+
+      // Assert
+      expect(titulo.className.split(' ')).toContain('text-fg-muted');
+    },
+  );
+
   it('deve recusar a edição com a mensagem do esquema quando o título fica só com espaços', async () => {
     // Arrange
     const { editar, tela } = await abrirEdicao();
@@ -471,7 +577,10 @@ describe('SolicitacaoDetalhePage — edição', () => {
     await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
 
     // Assert
-    expect(editar).toHaveBeenCalledWith({ titulo: novoTitulo, descricao: mockSolicitacao.descricao });
+    expect(editar).toHaveBeenCalledWith({
+      titulo: novoTitulo,
+      descricao: mockSolicitacao.descricao,
+    });
   });
 
   it('deve fechar a edição sem perguntar quando cancelar é acionado sem alteração', async () => {

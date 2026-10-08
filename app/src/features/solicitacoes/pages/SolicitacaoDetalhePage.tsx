@@ -17,7 +17,7 @@ import { useAtividades } from '../hooks/useAtividades';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
-import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
+import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import { editarSolicitacaoSchema } from '../schemas/solicitacaoSchema';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
@@ -27,6 +27,7 @@ import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidenc
 import { Input } from '@/shared/components/Input/Input';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
@@ -199,7 +200,7 @@ export function SolicitacaoDetalhePage() {
 
       {/* Info */}
       {isEditing ? (
-        <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+        <div className="space-y-4 rounded-md border border-line bg-surface-muted p-4">
           <Input
             label="Título"
             value={editTitulo}
@@ -210,9 +211,9 @@ export function SolicitacaoDetalhePage() {
             required
           />
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Tipo</label>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {tipoLabel[solicitacao.tipo]}{' '}
+            <label className="text-sm font-medium text-fg">Tipo</label>
+            <p className="text-sm text-fg-muted">
+              {rotuloDoTipoDeSolicitacao[solicitacao.tipo]}{' '}
               <span className="text-xs">(não pode ser alterado após a abertura)</span>
             </p>
           </div>
@@ -247,9 +248,7 @@ export function SolicitacaoDetalhePage() {
 
       {/* Evidências */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Evidências
-        </h2>
+        <h2 className="mb-3 text-sm font-semibold text-fg-muted">Evidências</h2>
         {canAnexarEvidencia ? (
           <div className="mb-4">
             <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
@@ -265,18 +264,14 @@ export function SolicitacaoDetalhePage() {
 
       {/* Histórico */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Histórico de atividades
-        </h2>
+        <h2 className="mb-3 text-sm font-semibold text-fg-muted">Histórico de atividades</h2>
         <SolicitacaoTimeline atividades={atividades} isLoading={isLoadingAtividades} />
       </div>
 
       {/* Comentário */}
       {!isTerminal ? (
         <div>
-          <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Adicionar comentário
-          </h2>
+          <h2 className="mb-3 text-sm font-semibold text-fg-muted">Adicionar comentário</h2>
           <ComentarioForm isPending={comentar.isPending} onSubmit={handleComentario} />
         </div>
       ) : null}

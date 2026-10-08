@@ -1,13 +1,35 @@
-import { AlertTriangle, CheckCircle2, Clock, Hourglass, Layers, Package, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Hourglass,
+  Layers,
+  Package,
+  Users,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { Badge } from '@/shared/components/Badge/Badge';
+import { Card } from '@/shared/components/Card/Card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/shared/components/Table/Table';
 import { cn } from '@/shared/lib/cn';
+import {
+  rotuloDaPrioridade,
+  rotuloDoStatus,
+  rotuloDoTipoDeSolicitacao,
+} from '@/shared/lib/rotulos';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
-import { statusLabel, tipoLabel, prioridadeLabel } from '../lib/solicitacaoMessages';
 import type {
   MetricasResponse,
   PrioridadeSolicitacao,
@@ -93,29 +115,29 @@ const STATUS_ORDER: StatusSolicitacao[] = [
 ];
 
 const STATUS_COLOR: Record<StatusSolicitacao, string> = {
-  A_FAZER: 'bg-slate-400 dark:bg-slate-500',
-  EM_ANDAMENTO: 'bg-sky-500 dark:bg-sky-400',
-  EM_VALIDACAO: 'bg-amber-500 dark:bg-amber-400',
-  CONCLUIDA: 'bg-emerald-500 dark:bg-emerald-400',
-  CANCELADA: 'bg-rose-500 dark:bg-rose-400',
+  A_FAZER: 'bg-fg-muted',
+  EM_ANDAMENTO: 'bg-info',
+  EM_VALIDACAO: 'bg-warning',
+  CONCLUIDA: 'bg-success',
+  CANCELADA: 'bg-danger',
 };
 
 const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
-  A_FAZER: 'text-slate-600 dark:text-slate-400',
-  EM_ANDAMENTO: 'text-sky-600 dark:text-sky-400',
-  EM_VALIDACAO: 'text-amber-600 dark:text-amber-400',
-  CONCLUIDA: 'text-emerald-600 dark:text-emerald-400',
-  CANCELADA: 'text-rose-600 dark:text-rose-400',
+  A_FAZER: 'text-fg-muted',
+  EM_ANDAMENTO: 'text-info-fg',
+  EM_VALIDACAO: 'text-warning-fg',
+  CONCLUIDA: 'text-success-fg',
+  CANCELADA: 'text-danger-fg',
 };
 
 const TIPO_ORDER: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'];
 const PRIORIDADE_ORDER: PrioridadeSolicitacao[] = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
 
 const PRIORIDADE_COLOR: Record<PrioridadeSolicitacao, string> = {
-  URGENTE: 'bg-rose-500 dark:bg-rose-400',
-  ALTA: 'bg-orange-500 dark:bg-orange-400',
-  MEDIA: 'bg-amber-500 dark:bg-amber-400',
-  BAIXA: 'bg-slate-400 dark:bg-slate-500',
+  URGENTE: 'bg-danger',
+  ALTA: 'bg-warning',
+  MEDIA: 'bg-info',
+  BAIXA: 'bg-fg-muted',
 };
 
 function BarRow({
@@ -134,10 +156,10 @@ function BarRow({
   const pct = max > 0 ? Math.round((count / max) * 100) : 0;
   return (
     <div className="group flex items-center gap-3 py-1 transition-all">
-      <span className="w-24 shrink-0 text-right text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 truncate">
+      <span className="w-24 shrink-0 text-right text-xs font-medium text-fg-muted group-hover:text-fg truncate">
         {label}
       </span>
-      <div className="flex-1 rounded-full bg-slate-100 dark:bg-slate-700/50" style={{ height: 8 }}>
+      <div className="flex-1 rounded-full bg-surface-muted" style={{ height: 8 }}>
         <div
           className={cn('h-full rounded-full transition-all duration-550 shadow-sm', barClass)}
           style={{ width: `${pct}%` }}
@@ -146,7 +168,7 @@ function BarRow({
       <span
         className={cn(
           'w-8 text-right text-xs font-semibold tabular-nums',
-          textColor ?? 'text-slate-700 dark:text-slate-350',
+          textColor ?? 'text-fg-muted',
         )}
       >
         {count}
@@ -244,72 +266,56 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
         />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-fg-muted">
           Distribuição detalhada por status
         </h2>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
-                  Qtd.
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
-                  %
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-              {STATUS_ORDER.map((status) => {
-                const count = metricas.solicitacoesPorStatus[status] ?? 0;
-                const pct =
-                  metricas.totalSolicitacoes > 0
-                    ? ((count / metricas.totalSolicitacoes) * 100).toFixed(1)
-                    : '0.0';
-                return (
-                  <tr key={status} className="bg-white dark:bg-slate-800/50">
-                    <td className={cn('px-4 py-3 font-medium', STATUS_TEXT_COLOR[status])}>
-                      {statusLabel[status]}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {count}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-500 dark:text-slate-400">
-                      {pct}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <Table className="rounded-lg">
+          <TableHead className="[&_th]:py-3.5">
+            <TableRow>
+              <TableHeaderCell>Status</TableHeaderCell>
+              <TableHeaderCell className="text-right">Qtd.</TableHeaderCell>
+              <TableHeaderCell className="text-right">%</TableHeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {STATUS_ORDER.map((status) => {
+              const count = metricas.solicitacoesPorStatus[status] ?? 0;
+              const pct =
+                metricas.totalSolicitacoes > 0
+                  ? ((count / metricas.totalSolicitacoes) * 100).toFixed(1)
+                  : '0.0';
+              return (
+                <TableRow key={status}>
+                  <TableCell className={cn('font-medium', STATUS_TEXT_COLOR[status])}>
+                    {rotuloDoStatus[status]}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">{count}</TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">{pct}%</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:col-span-1 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-700/60">
+        <Card className="p-5 lg:col-span-1 space-y-4">
+          <div className="flex items-center justify-between border-b border-line pb-3">
             <div>
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">
-                Distribuição por status
-              </h2>
-              <p className="text-xxs text-slate-500 dark:text-slate-400">
-                Ordens de serviço nas raias do Kanban.
-              </p>
+              <h2 className="text-sm font-semibold text-fg-muted">Distribuição por status</h2>
+              <p className="text-xxs text-fg-muted">Ordens de serviço nas raias do Kanban.</p>
             </div>
-            <span className="rounded bg-sky-50 px-2 py-0.5 text-xxs font-bold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 shrink-0">
+            <Badge className="rounded px-2 text-base font-bold shrink-0">
               {metricas.solicitacoesAbertas} abertas
-            </span>
+            </Badge>
           </div>
 
           <div className="space-y-2.5 pt-1">
             {STATUS_ORDER.map((status) => (
               <BarRow
                 key={status}
-                label={statusLabel[status]}
+                label={rotuloDoStatus[status]}
                 count={metricas.solicitacoesPorStatus[status] ?? 0}
                 max={maxStatus}
                 barClass={STATUS_COLOR[status]}
@@ -317,37 +323,31 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
               />
             ))}
           </div>
-        </div>
+        </Card>
 
         <div className="space-y-6 lg:col-span-1">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
-            <div className="border-b border-slate-100 pb-2 dark:border-slate-700/60">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">
-                Distribuição por tipo
-              </h2>
-              <p className="text-xxs text-slate-500 dark:text-slate-400">
-                Classificação por categorias de chamados.
-              </p>
+          <Card className="p-5 space-y-4">
+            <div className="border-b border-line pb-2">
+              <h2 className="text-sm font-semibold text-fg-muted">Distribuição por tipo</h2>
+              <p className="text-xxs text-fg-muted">Classificação por categorias de chamados.</p>
             </div>
             <div className="space-y-2.5 pt-1">
               {TIPO_ORDER.map((tipo) => (
                 <BarRow
                   key={tipo}
-                  label={tipoLabel[tipo]}
+                  label={rotuloDoTipoDeSolicitacao[tipo]}
                   count={distributions.byTipo[tipo] ?? 0}
                   max={distributions.maxTipo}
-                  barClass="bg-sky-500 dark:bg-sky-400"
+                  barClass="bg-accent"
                 />
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
-            <div className="border-b border-slate-100 pb-2 dark:border-slate-700/60">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-250">
-                Distribuição por prioridade
-              </h2>
-              <p className="text-xxs text-slate-500 dark:text-slate-400">
+          <Card className="p-5 space-y-4">
+            <div className="border-b border-line pb-2">
+              <h2 className="text-sm font-semibold text-fg-muted">Distribuição por prioridade</h2>
+              <p className="text-xxs text-fg-muted">
                 Prioridades atribuídas aos chamados em andamento.
               </p>
             </div>
@@ -355,22 +355,22 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
               {PRIORIDADE_ORDER.map((p) => (
                 <BarRow
                   key={p}
-                  label={prioridadeLabel[p]}
+                  label={rotuloDaPrioridade[p]}
                   count={distributions.byPrioridade[p] ?? 0}
                   max={distributions.maxPrio}
                   barClass={PRIORIDADE_COLOR[p]}
                 />
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:col-span-1 space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-700/60">
-            <Hourglass className="h-5 w-5 text-amber-500 animate-spin-slow" />
+        <Card className="p-5 lg:col-span-1 space-y-4">
+          <div className="flex items-center gap-2 border-b border-line pb-3">
+            <Hourglass className="h-5 w-5 text-warning-fg animate-spin-slow" />
             <div>
-              <h2 className="font-bold text-slate-900 dark:text-white">Acompanhamento Crítico</h2>
-              <p className="text-xxs text-slate-500 dark:text-slate-400">
+              <h2 className="font-bold text-fg">Acompanhamento Crítico</h2>
+              <p className="text-xxs text-fg-muted">
                 Ordens de serviço gargalando o SLA operacional.
               </p>
             </div>
@@ -378,13 +378,9 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
 
           {agingCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Operação Saudável
-              </p>
-              <p className="text-xxs text-slate-500 dark:text-slate-400">
-                Nenhum chamado aberto excedeu 7 dias.
-              </p>
+              <CheckCircle2 className="h-10 w-10 text-success-fg" />
+              <p className="mt-2 text-sm font-semibold text-fg-muted">Operação Saudável</p>
+              <p className="text-xxs text-fg-muted">Nenhum chamado aberto excedeu 7 dias.</p>
             </div>
           ) : (
             <ul className="space-y-2.5">
@@ -392,10 +388,10 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
                 <li key={task.id} className="group">
                   <Link
                     to={`/app/solicitacoes/${task.id}`}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/50 p-3 transition-all hover:bg-sky-50/40 hover:border-sky-200 dark:border-slate-700/50 dark:bg-slate-900/30 dark:hover:bg-sky-950/20 dark:hover:border-sky-900/40"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-muted p-3 transition-all hover:border-line-strong hover:brightness-95"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                      <p className="truncate text-xs font-semibold text-fg group-hover:text-accent">
                         {task.titulo}
                       </p>
                       <span
@@ -404,18 +400,18 @@ export function SolicitacoesTab({ metricas, isAdmin, isGestor }: Props) {
                           STATUS_TEXT_COLOR[task.status],
                         )}
                       >
-                        {statusLabel[task.status]}
+                        {rotuloDoStatus[task.status]}
                       </span>
                     </div>
-                    <span className="rounded bg-rose-50 px-2 py-0.5 text-xxs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 shrink-0">
+                    <Badge variant="danger" className="rounded px-2 text-base font-bold shrink-0">
                       {task.diasAberta}d abertas
-                    </span>
+                    </Badge>
                   </Link>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

@@ -22,40 +22,37 @@ export function AlterarResponsaveisModal({
   const [selecionados, setSelecionados] = useState<string[]>(responsaveisAtuais);
 
   function toggle(id: string) {
-    setSelecionados((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setSelecionados((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   return (
-    <div className="rounded-md border border-sky-200 bg-sky-50 p-4 text-sm dark:border-sky-900/60 dark:bg-sky-950/30">
-      <h3 className="font-semibold text-sky-900 dark:text-sky-100">Alterar responsáveis</h3>
-      <p className="mt-1 text-sky-800 dark:text-sky-200">
+    <div className="rounded-md border border-info bg-info-soft p-4 text-sm">
+      <h3 className="font-semibold text-info-fg">Alterar responsáveis</h3>
+      <p className="mt-1 text-info-fg">
         Selecione os responsáveis pela execução desta solicitação.
       </p>
       <div className="mt-4 space-y-2">
         {usuarios.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Nenhum responsável disponível.
-          </p>
+          <p className="text-sm text-fg-muted">Nenhum responsável disponível.</p>
         ) : (
           usuarios.map((u) => (
-            <label key={u.id} className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11">
+            <label
+              key={u.id}
+              className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11"
+            >
               <input
                 type="checkbox"
                 checked={selecionados.includes(u.id)}
                 onChange={() => toggle(u.id)}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-line-strong"
               />
-              <span className="text-sm text-slate-800 dark:text-slate-100">{u.nome}</span>
+              <span className="text-sm text-fg">{u.nome}</span>
             </label>
           ))
         )}
       </div>
       {selecionados.length === 0 && (
-        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-          Selecione pelo menos 1 responsável.
-        </p>
+        <p className="mt-2 text-xs text-danger-fg">Selecione pelo menos 1 responsável.</p>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>

@@ -1,4 +1,12 @@
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Package, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CheckCircle2,
+  Package,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -9,6 +17,15 @@ import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { Card } from '@/shared/components/Card/Card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/shared/components/Table/Table';
 import { canManageModelos } from '@/shared/lib/permissions';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
@@ -84,54 +101,42 @@ export function ModelosTab() {
         />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Modelos por máquina
-        </h2>
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-fg-muted">Modelos por máquina</h2>
         {stats.maquinasOrdenadas.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum modelo cadastrado.</p>
+          <p className="text-sm text-fg-muted">Nenhum modelo cadastrado.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">
-                    Máquina
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
-                    Modelos
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {stats.maquinasOrdenadas.map(([maquina, count]) => (
-                  <tr
-                    key={maquina}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Ver solicitações da máquina ${maquina}`}
-                    onClick={() => irParaSolicitacoesDaMaquina(maquina)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        irParaSolicitacoesDaMaquina(maquina);
-                      }
-                    }}
-                    className="cursor-pointer bg-white transition-colors hover:bg-sky-50 dark:bg-slate-800/50 dark:hover:bg-sky-950/20"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
-                      {maquina}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {count}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg">
+            <TableHead className="[&_th]:py-3.5">
+              <TableRow>
+                <TableHeaderCell>Máquina</TableHeaderCell>
+                <TableHeaderCell className="text-right">Modelos</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {stats.maquinasOrdenadas.map(([maquina, count]) => (
+                <TableRow
+                  key={maquina}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ver solicitações da máquina ${maquina}`}
+                  onClick={() => irParaSolicitacoesDaMaquina(maquina)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      irParaSolicitacoesDaMaquina(maquina);
+                    }
+                  }}
+                  className="cursor-pointer transition-colors hover:bg-surface-muted"
+                >
+                  <TableCell className="font-medium text-fg-muted">{maquina}</TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">{count}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
 
       <RankingModelos />
     </div>
@@ -160,11 +165,9 @@ function RankingModelos() {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <Card className="p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Ranking de modelos por tempo
-        </h2>
+        <h2 className="text-sm font-semibold text-fg-muted">Ranking de modelos por tempo</h2>
         <ExportarPdfButton
           buscar={() => solicitacoesApi.exportarMetricasPorModeloPdf({ sort, dir })}
           nomeDoArquivo={() => `ranking-modelos-por-tempo-${Date.now()}.pdf`}
@@ -187,44 +190,40 @@ function RankingModelos() {
 
       {data && data.content.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">
-                    Código
-                  </th>
-                  <SortableHeader
-                    label="Tempo médio de resolução"
-                    active={sort === 'TEMPO_RESOLUCAO'}
-                    dir={dir}
-                    onClick={() => handleSort('TEMPO_RESOLUCAO')}
-                  />
-                  <SortableHeader
-                    label="Intervalo médio entre solicitações"
-                    active={sort === 'INTERVALO'}
-                    dir={dir}
-                    onClick={() => handleSort('INTERVALO')}
-                  />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {data.content.map((m) => (
-                  <tr key={m.modeloId} className="bg-white dark:bg-slate-800/50">
-                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
-                      {m.codigo}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {formatDuracao(m.tempoMedioResolucaoSegundos)}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {m.intervaloMedioSegundos != null ? formatDuracao(m.intervaloMedioSegundos) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg">
+            <TableHead className="[&_th]:py-3.5">
+              <TableRow>
+                <TableHeaderCell>Código</TableHeaderCell>
+                <SortableHeader
+                  label="Tempo médio de resolução"
+                  active={sort === 'TEMPO_RESOLUCAO'}
+                  dir={dir}
+                  onClick={() => handleSort('TEMPO_RESOLUCAO')}
+                />
+                <SortableHeader
+                  label="Intervalo médio entre solicitações"
+                  active={sort === 'INTERVALO'}
+                  dir={dir}
+                  onClick={() => handleSort('INTERVALO')}
+                />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.content.map((m) => (
+                <TableRow key={m.modeloId}>
+                  <TableCell className="font-medium text-fg-muted">{m.codigo}</TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">
+                    {formatDuracao(m.tempoMedioResolucaoSegundos)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">
+                    {m.intervaloMedioSegundos != null
+                      ? formatDuracao(m.intervaloMedioSegundos)
+                      : '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           <Pagination
             page={data.page}
             totalPages={data.totalPages}
@@ -235,7 +234,7 @@ function RankingModelos() {
           />
         </>
       ) : null}
-    </div>
+    </Card>
   );
 }
 
@@ -252,15 +251,15 @@ function SortableHeader({
 }) {
   const Icon = active ? (dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
-    <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
+    <TableHeaderCell className="text-right">
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white"
+        className="inline-flex items-center gap-1 uppercase hover:text-fg"
       >
         {label}
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
-    </th>
+    </TableHeaderCell>
   );
 }

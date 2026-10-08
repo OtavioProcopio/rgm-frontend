@@ -5,6 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 
 import {
   criarUsuarioSchema,
@@ -96,29 +97,29 @@ function CriarUsuarioForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <label className="space-y-2 text-sm font-medium text-fg">
           <span>Perfil</span>
           <select
-            className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            className="h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-fg"
             disabled={isSubmitting}
             {...register('perfil')}
           >
             {perfilOptions.map((option) => (
               <option key={option} value={option}>
-                {getPerfilLabel(option)}
+                {rotuloDoPerfil[option]}
               </option>
             ))}
           </select>
         </label>
 
-        <label className="flex min-h-11 items-center gap-2 self-end rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <label className="flex min-h-11 items-center gap-2 self-end rounded-md border border-line bg-surface-muted px-3 py-3 text-sm font-medium text-fg">
           <input type="checkbox" disabled={isSubmitting} {...register('ativo')} />
           Usuário ativo
         </label>
       </div>
 
       {isExterno ? (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200">
+        <div className="rounded-md border border-success bg-success-soft p-4 text-sm text-success-fg">
           Prestador externo não acessa o sistema. Ele pode ser vinculado a solicitações por um
           gestor ou administrador.
         </div>
@@ -193,12 +194,12 @@ function EditarUsuarioForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <ReadOnlyField label="Perfil" value={getPerfilLabel(usuario.perfil)} />
+        <ReadOnlyField label="Perfil" value={rotuloDoPerfil[usuario.perfil]} />
         <ReadOnlyField label="Status" value={usuario.ativo ? 'Ativo' : 'Inativo'} />
       </div>
 
       {usuario.perfil === 'EXTERNO' ? (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-100">
+        <div className="rounded-md border border-warning bg-warning-soft p-4 text-sm text-warning-fg">
           Prestador externo não possui login no sistema. O backend atual pode recusar edição pelo
           caso de uso comum.
         </div>
@@ -214,21 +215,10 @@ function EditarUsuarioForm({
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-2">
-      <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
-      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+      <span className="block text-sm font-medium text-fg">{label}</span>
+      <div className="rounded-md border border-line bg-surface-muted px-3 py-2 text-sm text-fg-muted">
         {value}
       </div>
     </div>
   );
-}
-
-function getPerfilLabel(perfil: PerfilUsuario) {
-  const labels: Record<PerfilUsuario, string> = {
-    ADMINISTRADOR: 'Administrador',
-    GESTOR: 'Gestor',
-    OPERADOR: 'Operador',
-    EXTERNO: 'Externo',
-  };
-
-  return labels[perfil];
 }

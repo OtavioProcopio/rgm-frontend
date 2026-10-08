@@ -9,6 +9,11 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 
 afterEach(cleanup);
 
+const VARIANTES = [
+  { variant: 'danger', fundo: 'bg-danger-soft', texto: 'text-danger-fg', botao: 'bg-danger' },
+  { variant: 'warning', fundo: 'bg-warning-soft', texto: 'text-warning-fg', botao: 'bg-warning' },
+] as const;
+
 describe('ConfirmDialog', () => {
   const baseProps = {
     title: 'Confirmar ação',
@@ -54,33 +59,41 @@ describe('ConfirmDialog', () => {
     expect(within(container).getByText('Aguarde...')).toBeDefined();
   });
 
-  it('applies danger variant styles by default', () => {
+  it.each(VARIANTES)(
+    'deve mostrar o aviso com o fundo e o texto do papel quando a variante é $variant',
+    ({ variant, fundo, texto }) => {
+      // Act
+      const { container } = render(<ConfirmDialog {...baseProps} variant={variant} />);
+
+      // Assert
+      const aviso = within(container).getByRole('dialog').firstElementChild!;
+      expect(aviso.className.split(' ')).toEqual(expect.arrayContaining([fundo, texto]));
+    },
+  );
+
+  it('deve mostrar o aviso de perigo quando a variante não é informada', () => {
+    // Arrange
+    const perigo = VARIANTES[0];
+
+    // Act
     const { container } = render(<ConfirmDialog {...baseProps} />);
-    expect(within(container).getByRole('dialog').firstElementChild?.className).toContain('red');
+
+    // Assert
+    const aviso = within(container).getByRole('dialog').firstElementChild!;
+    expect(aviso.className.split(' ')).toContain(perigo.fundo);
   });
 
-  it('applies warning variant styles', () => {
-    const { container } = render(<ConfirmDialog {...baseProps} variant="warning" />);
-    expect(within(container).getByRole('dialog').firstElementChild?.className).toContain('amber');
-  });
+  it.each(VARIANTES)(
+    'deve confirmar com o botão da cor cheia do papel quando a variante é $variant',
+    ({ variant, botao }) => {
+      // Act
+      const { container } = render(<ConfirmDialog {...baseProps} variant={variant} />);
 
-  it('deve usar o botão de perigo para confirmar quando a variante é danger', () => {
-    const { container } = render(<ConfirmDialog {...baseProps} />);
-
-    const classes = within(container).getByRole('button', { name: 'Confirmar' }).className;
-
-    expect(classes).toContain('bg-red-600');
-    expect(classes).not.toContain('bg-sky-600');
-  });
-
-  it('deve usar a cor de aviso para confirmar quando a variante é warning', () => {
-    const { container } = render(<ConfirmDialog {...baseProps} variant="warning" />);
-
-    const classes = within(container).getByRole('button', { name: 'Confirmar' }).className;
-
-    expect(classes).toContain('bg-amber-600');
-    expect(classes).not.toContain('bg-red-600');
-  });
+      // Assert
+      const confirmar = within(container).getByRole('button', { name: 'Confirmar' });
+      expect(confirmar.className.split(' ')).toContain(botao);
+    },
+  );
 
   it('deve abrir como diálogo modal com o título como nome', () => {
     // Act

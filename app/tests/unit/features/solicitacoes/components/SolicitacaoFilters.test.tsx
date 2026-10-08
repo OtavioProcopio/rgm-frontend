@@ -17,8 +17,61 @@ vi.mock('@/features/admin/modelos/hooks/useMaquinaOptions', () => ({
 }));
 
 import { SolicitacaoFilters } from '@/features/solicitacoes/components/SolicitacaoFilters';
+import {
+  rotuloDaPrioridade,
+  rotuloDoStatus,
+  rotuloDoTipoDeSolicitacao,
+} from '@/shared/lib/rotulos';
+
+const FILTROS_COM_ROTULO = [
+  { campo: 'Status', mapa: rotuloDoStatus },
+  { campo: 'Tipo', mapa: rotuloDoTipoDeSolicitacao },
+  { campo: 'Prioridade', mapa: rotuloDaPrioridade },
+].flatMap(({ campo, mapa }) =>
+  Object.entries(mapa).map(([valor, rotulo]) => ({ campo, valor, rotulo })),
+);
 
 afterEach(cleanup);
+
+describe('SolicitacaoFilters — rótulos dos valores da API', () => {
+  it.each(FILTROS_COM_ROTULO)(
+    'deve oferecer $valor com o rótulo compartilhado quando o filtro é $campo',
+    ({ campo, valor, rotulo }) => {
+      // Arrange
+      const filtros = { page: 0, size: 20 };
+
+      // Act
+      const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+      const opcao = within(container)
+        .getByLabelText(campo)
+        .querySelector(`option[value="${valor}"]`);
+
+      // Assert
+      expect(opcao?.textContent).toBe(rotulo);
+    },
+  );
+
+  it.each([
+    { campo: 'Status', mapa: rotuloDoStatus },
+    { campo: 'Tipo', mapa: rotuloDoTipoDeSolicitacao },
+    { campo: 'Prioridade', mapa: rotuloDaPrioridade },
+  ])(
+    'deve oferecer só os valores do mapa compartilhado quando o filtro é $campo',
+    ({ campo, mapa }) => {
+      // Arrange
+      const filtros = { page: 0, size: 20 };
+
+      // Act
+      const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+      const valores = [...within(container).getByLabelText(campo).querySelectorAll('option')]
+        .map((opcao) => opcao.value)
+        .filter((valor) => valor !== '');
+
+      // Assert
+      expect(valores).toEqual(Object.keys(mapa));
+    },
+  );
+});
 
 describe('SolicitacaoFilters', () => {
   it('renders status select', () => {
@@ -129,9 +182,7 @@ describe('SolicitacaoFilters', () => {
 
     select.value = 'VICK';
     select.dispatchEvent(new Event('change', { bubbles: true }));
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ maquina: 'VICK', page: 0 }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ maquina: 'VICK', page: 0 }));
   });
 
   it('does not render maquina filter when no maquinas are available', async () => {

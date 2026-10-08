@@ -2,6 +2,7 @@ import { Activity } from 'lucide-react';
 import { useState } from 'react';
 
 import { useAuth } from '@/app/providers/authContext';
+import { Badge } from '@/shared/components/Badge/Badge';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -51,14 +52,17 @@ export function DashboardPage() {
                 : 'Painel de indicadores'
           }
         />
-        <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-sky-100 bg-sky-50/50 px-3 py-1 text-xs font-semibold text-sky-800 dark:border-sky-950/40 dark:bg-sky-950/20 dark:text-sky-300">
-          <Activity className="h-3.5 w-3.5 animate-pulse" />
+        <Badge
+          variant="info"
+          icon={<Activity className="h-3.5 w-3.5 animate-pulse" />}
+          className="gap-1.5 self-start border border-info px-3 py-1 font-semibold"
+        >
           <span>Monitoramento em Tempo Real</span>
-        </div>
+        </Badge>
       </div>
 
       {visibleTabs.length > 1 ? (
-        <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex gap-1 border-b border-line">
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
@@ -67,8 +71,8 @@ export function DashboardPage() {
               className={cn(
                 '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                 activeTab === tab.id
-                  ? 'border-sky-600 text-sky-700 dark:border-sky-400 dark:text-sky-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-fg-muted hover:text-fg',
               )}
             >
               {tab.label}

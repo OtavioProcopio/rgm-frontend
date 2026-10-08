@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KanbanCard } from '@/features/solicitacoes/components/KanbanCard';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
 vi.mock('@/features/solicitacoes/components/SolicitacaoPrioridadeBadge', () => ({
   SolicitacaoPrioridadeBadge: ({ prioridade }: { prioridade: string }) => <span>{prioridade}</span>,
@@ -79,45 +80,6 @@ describe('KanbanCard', () => {
     expect(within(container).getByText('Trocar vedações')).toBeDefined();
   });
 
-  it('renders sem prioridade when prioridade is null', () => {
-    const { container } = render(
-      <KanbanCard
-        solicitacao={{ ...baseSolicitacao, prioridade: null }}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText(/sem prioridade/i)).toBeDefined();
-  });
-
-  it('renders INSPECAO tipo', () => {
-    const { container } = render(
-      <KanbanCard
-        solicitacao={{ ...baseSolicitacao, tipo: 'INSPECAO' }}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText('Inspeção')).toBeDefined();
-  });
-
-  it('renders REENGENHARIA tipo', () => {
-    const { container } = render(
-      <KanbanCard
-        solicitacao={{ ...baseSolicitacao, tipo: 'REENGENHARIA' }}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText('Reengenharia')).toBeDefined();
-  });
-
   it('renders the formatted creation date', () => {
     const criadaEm = new Date('2026-03-15T12:00:00Z').toISOString();
     const { container } = render(
@@ -132,19 +94,6 @@ describe('KanbanCard', () => {
     const time = container.querySelector('time')!;
     expect(time).toBeDefined();
     expect(time.getAttribute('dateTime')).toBe(criadaEm);
-  });
-
-  it('renders CRIACAO tipo without a modelo vinculado', () => {
-    const { container } = render(
-      <KanbanCard
-        solicitacao={{ ...baseSolicitacao, tipo: 'CRIACAO', modeloId: null }}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText('Criação de modelo')).toBeDefined();
   });
 
   it('shows age badge for old cards', () => {
@@ -317,6 +266,140 @@ describe('KanbanCard', () => {
     );
 
     expect(within(container).getByRole('button', { name: 'Enviar para validação' })).toBeDefined();
+  });
+});
+
+describe('KanbanCard — selos', () => {
+  const NEUTRO = ['bg-surface-muted', 'text-fg-muted'];
+  const TEXTO_SECUNDARIO = 'text-fg-muted';
+  const SEM_PRIORIDADE = 'Sem prioridade';
+  const TIPOS = [
+    { tipo: 'REPARO', modeloId: 'm1' },
+    { tipo: 'INSPECAO', modeloId: 'm1' },
+    { tipo: 'REENGENHARIA', modeloId: 'm1' },
+    { tipo: 'CRIACAO', modeloId: null },
+  ] as const;
+  const PRAZOS = [
+    {
+      situacao: 'está atrasada',
+      rotulo: 'Atrasada há 5 h',
+      papel: ['bg-danger-soft', 'text-danger-fg'],
+      dados: () => ({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(29),
+        prazoLimite: horasAtras(5),
+        atrasada: true,
+      }),
+    },
+    {
+      situacao: 'está perto de vencer',
+      rotulo: 'Vence em 4 h',
+      papel: ['bg-warning-soft', 'text-warning-fg'],
+      dados: () => ({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(20),
+        prazoLimite: emHoras(4.5),
+        atrasada: false,
+      }),
+    },
+    {
+      situacao: 'passou da metade do prazo',
+      rotulo: 'Vence em 10 h',
+      papel: NEUTRO,
+      dados: () => ({
+        status: 'EM_ANDAMENTO',
+        criadaEm: horasAtras(20),
+        prazoLimite: emHoras(10.5),
+        atrasada: false,
+      }),
+    },
+    {
+      situacao: 'foi concluída no prazo',
+      rotulo: 'No prazo',
+      papel: ['bg-success-soft', 'text-success-fg'],
+      dados: () => ({
+        status: 'CONCLUIDA',
+        criadaEm: horasAtras(48),
+        prazoLimite: emHoras(5),
+        atrasada: false,
+      }),
+    },
+  ];
+
+  const classes = (elemento: Element) => elemento.className.split(' ');
+
+  it.each(TIPOS)(
+    'deve mostrar o selo de tipo na variação neutra quando o tipo é $tipo',
+    ({ tipo, modeloId }) => {
+      // Act
+      const { container } = render(card({ tipo, modeloId }));
+
+      // Assert
+      const selo = within(container).getByText(rotuloDoTipoDeSolicitacao[tipo]);
+      expect(classes(selo)).toEqual(expect.arrayContaining(NEUTRO));
+    },
+  );
+
+  it.each(TIPOS)(
+    'deve mostrar um ícone decorativo no selo de tipo quando o tipo é $tipo',
+    ({ tipo, modeloId }) => {
+      // Act
+      const { container } = render(card({ tipo, modeloId }));
+
+      // Assert
+      const selo = within(container).getByText(rotuloDoTipoDeSolicitacao[tipo]);
+      expect(selo.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    },
+  );
+
+  it.each(TIPOS)(
+    'deve dizer o tipo em texto no selo quando o tipo é $tipo',
+    ({ tipo, modeloId }) => {
+      // Act
+      const { container } = render(card({ tipo, modeloId }));
+
+      // Assert
+      const selo = within(container).getByText(rotuloDoTipoDeSolicitacao[tipo]);
+      expect(selo.textContent).toBe(rotuloDoTipoDeSolicitacao[tipo]);
+    },
+  );
+
+  it.each(PRAZOS)(
+    'deve dizer "$rotulo" no selo de prazo quando a solicitação $situacao',
+    ({ rotulo, dados }) => {
+      // Act
+      const { container } = render(card(dados()));
+
+      // Assert
+      expect(within(container).getByText(rotulo).textContent).toBe(rotulo);
+    },
+  );
+
+  it.each(PRAZOS)(
+    'deve dar ao selo de prazo a cor do papel quando a solicitação $situacao',
+    ({ rotulo, papel, dados }) => {
+      // Act
+      const { container } = render(card(dados()));
+
+      // Assert
+      expect(classes(within(container).getByText(rotulo))).toEqual(expect.arrayContaining(papel));
+    },
+  );
+
+  it('deve dizer "Sem prioridade" quando a solicitação não tem prioridade', () => {
+    // Act
+    const { container } = render(card({ prioridade: null }));
+
+    // Assert
+    expect(within(container).getByText(SEM_PRIORIDADE).textContent).toBe(SEM_PRIORIDADE);
+  });
+
+  it('deve usar o texto secundário em "Sem prioridade" quando a solicitação não tem prioridade', () => {
+    // Act
+    const { container } = render(card({ prioridade: null }));
+
+    // Assert
+    expect(classes(within(container).getByText(SEM_PRIORIDADE))).toContain(TEXTO_SECUNDARIO);
   });
 });
 

@@ -18,10 +18,15 @@ export function EvidenciaPreview({ evidencia, onDelete, isDeleting }: Props) {
   const isImage = evidencia.mimeType.startsWith('image/');
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
       {/* Thumbnail */}
       {isImage ? (
-        <a href={evidencia.publicUrl} target="_blank" rel="noopener noreferrer" className="block shrink-0">
+        <a
+          href={evidencia.publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block shrink-0"
+        >
           <img
             src={evidencia.publicUrl}
             alt={evidencia.nomeArquivo}
@@ -29,25 +34,21 @@ export function EvidenciaPreview({ evidencia, onDelete, isDeleting }: Props) {
           />
         </a>
       ) : (
-        <div className="flex h-24 shrink-0 items-center justify-center bg-slate-100 text-sm text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+        <div className="flex h-24 shrink-0 items-center justify-center bg-surface-muted text-sm text-fg-muted">
           Arquivo
         </div>
       )}
 
       {/* Info + ações */}
       <div className="flex flex-col gap-1 p-2">
-        <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">
-          {evidencia.nomeArquivo}
-        </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500">
-          {formatBytes(evidencia.tamanhoBytes)}
-        </p>
+        <p className="truncate text-xs font-medium text-fg">{evidencia.nomeArquivo}</p>
+        <p className="text-xs text-fg-muted">{formatBytes(evidencia.tamanhoBytes)}</p>
         <div className="mt-1 flex items-center justify-between gap-2">
           <a
             href={evidencia.publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
+            className="text-xs font-medium text-accent hover:underline"
           >
             Abrir
           </a>
@@ -57,7 +58,7 @@ export function EvidenciaPreview({ evidencia, onDelete, isDeleting }: Props) {
               onClick={() => onDelete(evidencia.id)}
               disabled={isDeleting}
               aria-label="Excluir evidência"
-              className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+              className="rounded p-1 text-fg-muted hover:bg-danger-soft hover:text-danger-fg disabled:opacity-50"
             >
               <Trash2 size={13} />
             </button>

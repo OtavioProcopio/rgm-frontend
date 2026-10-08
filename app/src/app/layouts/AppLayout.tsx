@@ -11,8 +11,10 @@ import { NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
+import { Logo } from '@/shared/components/Logo/Logo';
 import { ThemeToggle } from '@/shared/components/ThemeToggle/ThemeToggle';
 import { cn } from '@/shared/lib/cn';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { AvisoSemAtualizacao } from '@/features/solicitacoes/components/AvisoSemAtualizacao';
 import { useSolicitacaoEvents } from '@/features/solicitacoes/hooks/useSolicitacaoEvents';
@@ -51,11 +53,11 @@ export function AppLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-900 dark:text-white lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 lg:flex lg:min-h-screen lg:flex-col">
-        <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
-          <img src="/logo-rgm-autoparts.png" alt="RGM Auto Parts" className="h-12 w-auto" />
-          <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
+    <div className="min-h-screen bg-canvas text-fg lg:grid lg:grid-cols-[280px_1fr]">
+      <aside className="hidden border-r border-line bg-surface lg:flex lg:min-h-screen lg:flex-col">
+        <div className="border-b border-line px-6 py-5">
+          <Logo className="align-bottom" />
+          <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-accent">
             {user?.perfil ? PERFIL_LABEL[user.perfil] : 'RGM Auto Parts'}
           </p>
         </div>
@@ -68,9 +70,8 @@ export function AppLayout() {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
-                  isActive &&
-                    'bg-sky-600 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-500',
+                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-muted',
+                  isActive && 'bg-accent text-on-accent hover:bg-accent',
                 )
               }
             >
@@ -82,19 +83,15 @@ export function AppLayout() {
       </aside>
 
       <div className="min-w-0">
-        <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+        <header className="border-b border-line bg-surface">
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
-              <img
-                src="/logo-rgm-autoparts.png"
-                alt="RGM Auto Parts"
-                className="h-9 w-auto lg:hidden"
-              />
+              <Logo tamanho="sm" className="lg:hidden" />
               <div className="hidden min-w-0 lg:block">
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                <p className="text-sm font-semibold text-fg">
                   {isAdmin ? 'Administração RGM' : 'RGM Auto Parts'}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-fg-muted">
                   {isAdmin ? 'Usuários, máquinas e modelos' : 'Solicitações de manutenção'}
                 </p>
               </div>
@@ -105,17 +102,19 @@ export function AppLayout() {
                 to="/app/perfil"
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors pointer-coarse:min-h-11 hover:bg-slate-100 dark:hover:bg-slate-700',
-                    isActive && 'bg-slate-100 dark:bg-slate-700',
+                    'flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors pointer-coarse:min-h-11 hover:bg-surface-muted',
+                    isActive && 'bg-surface-muted',
                   )
                 }
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/40">
-                  <User size={14} className="text-sky-700 dark:text-sky-300" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-info-soft">
+                  <User size={14} className="text-info-fg" />
                 </div>
                 <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold text-slate-950 dark:text-white">{user?.nome}</p>
-                  <p className="text-xs uppercase text-slate-500 dark:text-slate-400">{user?.perfil}</p>
+                  <p className="text-sm font-semibold text-fg">{user?.nome}</p>
+                  <p className="text-xs uppercase text-fg-muted">
+                    {user?.perfil ? rotuloDoPerfil[user.perfil] : null}
+                  </p>
                 </div>
               </NavLink>
               <ThemeToggle />
@@ -129,7 +128,7 @@ export function AppLayout() {
           <AvisoSemAtualizacao />
 
           {navigation.length > 0 ? (
-            <nav className="flex gap-2 overflow-x-auto border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-6 lg:hidden">
+            <nav className="flex gap-2 overflow-x-auto border-t border-line px-4 py-3 sm:px-6 lg:hidden">
               {navigation.map((item) => (
                 <NavLink
                   key={item.to}
@@ -137,9 +136,8 @@ export function AppLayout() {
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 pointer-coarse:min-h-11 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
-                      isActive &&
-                        'bg-sky-600 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-500',
+                      'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-fg-muted pointer-coarse:min-h-11 transition-colors hover:bg-surface-muted',
+                      isActive && 'bg-accent text-on-accent hover:bg-accent',
                     )
                   }
                 >
@@ -152,7 +150,7 @@ export function AppLayout() {
         </header>
 
         <div className="px-4 py-5 sm:px-6 lg:px-8">
-          <main className="min-w-0 rounded-md border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+          <main className="min-w-0 rounded-md border border-line bg-surface p-5 shadow-sm sm:p-6">
             <Outlet />
           </main>
         </div>

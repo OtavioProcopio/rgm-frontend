@@ -11,8 +11,8 @@ import { KanbanCard } from './KanbanCard';
 export type ColumnConfig = {
   status: StatusSolicitacao;
   label: string;
-  headerClass: string;
-  accentClass: string;
+  /** Papel de cor do ponto que acompanha o nome da etapa. */
+  pontoClass: string;
 };
 
 type Props = {
@@ -61,21 +61,19 @@ export function KanbanColumn({
 }: Props) {
   return (
     <div
-      className={cn(
-        'flex flex-col',
-        mobileView ? 'w-full' : 'min-w-[170px] max-w-[340px] flex-1',
-      )}
+      className={cn('flex flex-col', mobileView ? 'w-full' : 'min-w-[170px] max-w-[340px] flex-1')}
     >
       {/* Header — only shown in desktop (mobile shows tabs instead) */}
       {!mobileView && (
-        <div
-          className={cn(
-            'flex items-center justify-between rounded-t-lg px-3 py-2.5',
-            config.headerClass,
-          )}
-        >
-          <span className="text-sm font-semibold tracking-wide">{config.label}</span>
-          <span className="rounded-full bg-white/25 px-2 py-0.5 text-xs font-bold tabular-nums">
+        <div className="flex items-center justify-between rounded-t-lg bg-surface-muted px-3 py-2.5 text-fg">
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              aria-hidden="true"
+              className={cn('h-2 w-2 shrink-0 rounded-full', config.pontoClass)}
+            />
+            <span className="text-sm font-semibold tracking-wide">{config.label}</span>
+          </div>
+          <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-bold tabular-nums">
             {total}
           </span>
         </div>
@@ -87,10 +85,10 @@ export function KanbanColumn({
           'flex-1 space-y-2 overflow-y-auto p-2 transition-colors',
           mobileView ? 'rounded-lg border-2' : 'rounded-b-lg border-2',
           isDropTarget && !isInvalidDrop
-            ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/20'
+            ? 'border-accent bg-surface-muted'
             : isDropTarget && isInvalidDrop
-              ? 'border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950/20'
-              : cn('border-transparent', config.accentClass),
+              ? 'border-danger bg-danger-soft'
+              : 'border-line bg-canvas',
         )}
         style={{
           minHeight: mobileView ? 300 : 200,
@@ -105,15 +103,13 @@ export function KanbanColumn({
           onDrop(config.status);
         }}
       >
-        {aviso ? (
-          <p className="px-1 text-xs font-medium text-slate-600 dark:text-slate-300">{aviso}</p>
-        ) : null}
+        {aviso ? <p className="px-1 text-xs font-medium text-fg-muted">{aviso}</p> : null}
         {cards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-              <Inbox size={16} className="text-slate-400 dark:text-slate-500" />
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted">
+              <Inbox size={16} className="text-fg-muted" />
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-600">Nenhuma solicitação</p>
+            <p className="text-xs text-fg-muted">Nenhuma solicitação</p>
           </div>
         ) : (
           cards.map((s) => (
@@ -129,7 +125,7 @@ export function KanbanColumn({
           ))
         )}
         {falhouAoCarregarMais ? (
-          <p role="alert" className="px-1 text-xs font-medium text-red-700 dark:text-red-300">
+          <p role="alert" className="px-1 text-xs font-medium text-danger-fg">
             Não foi possível carregar mais solicitações. Tente de novo.
           </p>
         ) : null}

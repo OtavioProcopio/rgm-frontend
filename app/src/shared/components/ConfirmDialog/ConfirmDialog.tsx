@@ -18,14 +18,12 @@ type Props = {
 
 const styles: Record<Variant, { container: string; button: string }> = {
   danger: {
-    container:
-      'rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-950 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-100',
+    container: 'rounded-md border border-danger bg-danger-soft p-4 text-sm text-danger-fg',
     button: '',
   },
   warning: {
-    container:
-      'rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-100',
-    button: 'bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500',
+    container: 'rounded-md border border-warning bg-warning-soft p-4 text-sm text-warning-fg',
+    button: 'bg-warning hover:bg-warning hover:brightness-95',
   },
 };
 

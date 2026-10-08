@@ -46,7 +46,13 @@ test.describe('Autenticação', () => {
     // Perfil agora fica no header — clica no link do nome do usuário
     await page.goto('/app/perfil');
     await expect(page).toHaveURL(/\/app\/perfil/);
-    await expect(page.getByRole('main').getByText('ADMINISTRADOR', { exact: true })).toBeVisible();
+    // O selo mostra o rótulo do perfil (não o valor da API); o nome do usuário de teste também é "Administrador".
+    await expect(
+      page
+        .getByRole('main')
+        .locator('span')
+        .filter({ hasText: /^Administrador$/ }),
+    ).toBeVisible();
     await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();
   });
 

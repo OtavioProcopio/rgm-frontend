@@ -19,7 +19,7 @@ export function Pagination({
 }: PaginationProps) {
   return (
     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-fg-muted">
         Página {page + 1} de {Math.max(totalPages, 1)} &bull; {totalElements} {itemLabel}
       </p>
       <div className="flex gap-2">

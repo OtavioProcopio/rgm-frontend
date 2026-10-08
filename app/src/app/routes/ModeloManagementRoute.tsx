@@ -8,7 +8,7 @@ export function ModeloManagementRoute() {
 
   if (!canManageModelos(user?.perfil)) {
     return (
-      <section className="rounded-md border border-amber-200 bg-amber-50 p-6 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+      <section className="rounded-md border border-warning bg-warning-soft p-6 text-warning-fg">
         <h1 className="text-xl font-semibold">Acesso negado</h1>
         <p className="mt-2 text-sm">Seu perfil não possui permissão para gerenciar modelos.</p>
       </section>

@@ -121,7 +121,8 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
       if (filtros.status === 'CONCLUIDA') {
         return Promise.resolve({ ...emptyPage, totalElements: 7 });
       }
-      if (filtros.abertaPorUsuarioId) return Promise.resolve(pagina(minhas, filtros.page, filtros.size));
+      if (filtros.abertaPorUsuarioId)
+        return Promise.resolve(pagina(minhas, filtros.page, filtros.size));
       return Promise.resolve(pagina(comigo, filtros.page, filtros.size));
     });
     const { AppWrapper, queryClient: cliente } = createAppWrapper({
@@ -245,6 +246,33 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
 
     // Assert
     expect(tela.getByRole('link', { name: /Abri 02/ })).toBeDefined();
+  });
+
+  it.each(['Minhas solicitações abertas', 'Sob minha responsabilidade'])(
+    'deve emoldurar a lista com a peça de cartão quando o título é %s',
+    async (titulo) => {
+      // Arrange
+      const esperado = ['border-line', 'bg-surface'];
+
+      // Act
+      const { tela } = await abrirAba();
+      const moldura = tela.getByRole('heading', { name: titulo }).closest('section, div');
+
+      // Assert
+      expect(moldura?.className.split(' ')).toEqual(expect.arrayContaining(esperado));
+    },
+  );
+
+  it('deve mostrar o aviso de lista vazia no texto secundário quando o operador não abriu solicitação', async () => {
+    // Arrange
+    minhas.length = 0;
+
+    // Act
+    const { tela } = await abrirAba();
+    const aviso = tela.getByText('Nenhuma solicitação encontrada.');
+
+    // Assert
+    expect(aviso.className.split(' ')).toContain('text-fg-muted');
   });
 
   it('deve voltar para a última página que existe quando a página aberta deixa de existir', async () => {

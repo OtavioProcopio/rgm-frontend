@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Card } from '@/shared/components/Card/Card';
 import { cn } from '@/shared/lib/cn';
 
 import { useHistoricoMetricas } from '../hooks/useHistoricoMetricas';
@@ -18,18 +19,16 @@ export function HistoricoChart() {
   const maxTotal = series.reduce((max, p) => Math.max(max, p.total), 0) || 1;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <Card className="p-5">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-            Histórico de Solicitações
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <h3 className="text-sm font-semibold text-fg">Histórico de Solicitações</h3>
+          <p className="text-xs text-fg-muted">
             {data?.periodoLabel ?? 'Evolução temporal'}
             {data ? ` · SLA médio ${data.slaGlobalMediaHoras}h` : ''}
           </p>
         </div>
-        <div className="inline-flex gap-1 self-start rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+        <div className="inline-flex gap-1 self-start rounded-lg border border-line p-0.5">
           {PERIODOS.map((p) => (
             <button
               key={p.dias}
@@ -37,9 +36,7 @@ export function HistoricoChart() {
               onClick={() => setDias(p.dias)}
               className={cn(
                 'rounded-md px-2.5 py-1 text-xs font-medium transition-colors pointer-coarse:min-h-11',
-                dias === p.dias
-                  ? 'bg-sky-600 text-white'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
+                dias === p.dias ? 'bg-accent text-on-accent' : 'text-fg-muted hover:text-fg',
               )}
             >
               {p.label}
@@ -49,13 +46,13 @@ export function HistoricoChart() {
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-slate-400">Carregando histórico...</p>
+        <p className="py-8 text-center text-sm text-fg-muted">Carregando histórico...</p>
       ) : isError ? (
-        <p className="py-8 text-center text-sm text-rose-500">
+        <p className="py-8 text-center text-sm text-danger-fg">
           Não foi possível carregar o histórico.
         </p>
       ) : series.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-400">Sem dados no período.</p>
+        <p className="py-8 text-center text-sm text-fg-muted">Sem dados no período.</p>
       ) : (
         <>
           <div className="flex h-44 items-end gap-1 overflow-x-auto">
@@ -74,22 +71,22 @@ export function HistoricoChart() {
                     className="flex w-full flex-col-reverse overflow-hidden rounded-t"
                     style={{ height: `${totalHeight}%` }}
                   >
-                    <div className="bg-emerald-500" style={{ height: `${concluidasPct}%` }} />
-                    <div className="bg-rose-400" style={{ height: `${canceladasPct}%` }} />
-                    <div className="bg-sky-500" style={{ height: `${abertasPct}%` }} />
+                    <div className="bg-success" style={{ height: `${concluidasPct}%` }} />
+                    <div className="bg-danger" style={{ height: `${canceladasPct}%` }} />
+                    <div className="bg-accent" style={{ height: `${abertasPct}%` }} />
                   </div>
                 </div>
               );
             })}
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-            <LegendItem className="bg-sky-500" label="Abertas" />
-            <LegendItem className="bg-emerald-500" label="Concluídas" />
-            <LegendItem className="bg-rose-400" label="Canceladas" />
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-fg-muted">
+            <LegendItem className="bg-accent" label="Abertas" />
+            <LegendItem className="bg-success" label="Concluídas" />
+            <LegendItem className="bg-danger" label="Canceladas" />
           </div>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 

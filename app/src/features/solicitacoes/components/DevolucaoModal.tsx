@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDaPrioridade } from '@/shared/lib/rotulos';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
@@ -19,12 +20,10 @@ type Props = {
   onConfirm: (data: DevolverSolicitacaoFormData, foto: File | null) => void;
 };
 
-const prioridadeOptions = [
-  { value: 'BAIXA', label: 'Baixa' },
-  { value: 'MEDIA', label: 'Média' },
-  { value: 'ALTA', label: 'Alta' },
-  { value: 'URGENTE', label: 'Urgente' },
-];
+const prioridadeOptions = Object.entries(rotuloDaPrioridade).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
   const [foto, setFoto] = useState<File | null>(null);
@@ -41,11 +40,9 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
   }
 
   return (
-    <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900/60 dark:bg-amber-950/30">
-      <h3 className="font-semibold text-amber-900 dark:text-amber-100">Devolver solicitação</h3>
-      <p className="mt-1 text-amber-800 dark:text-amber-200">
-        A solicitação voltará para EM ANDAMENTO.
-      </p>
+    <div className="rounded-md border border-warning bg-warning-soft p-4 text-sm">
+      <h3 className="font-semibold text-warning-fg">Devolver solicitação</h3>
+      <p className="mt-1 text-warning-fg">A solicitação voltará para EM ANDAMENTO.</p>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
         <Textarea
           label="Motivo da devolução *"
@@ -61,13 +58,11 @@ export function DevolucaoModal({ isPending, onCancel, onConfirm }: Props) {
           {...register('prioridade')}
         />
         <div>
-          <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
+          <p className="mb-2 block text-sm font-medium text-fg">
             Foto do que ainda precisa ser corrigido (opcional)
           </p>
           <EvidenciaUploader onUpload={setFoto} />
-          {foto ? (
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Anexado: {foto.name}</p>
-          ) : null}
+          {foto ? <p className="mt-1 text-xs text-fg-muted">Anexado: {foto.name}</p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>

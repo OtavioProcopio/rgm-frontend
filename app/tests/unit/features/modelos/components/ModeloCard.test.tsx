@@ -26,6 +26,8 @@ const baseModelo: Modelo = {
   atualizadoEm: '2024-01-01T00:00:00',
 };
 
+const classes = (elemento: Element) => elemento.className.split(' ');
+
 function renderCard(modelo: Partial<Modelo> = {}) {
   const { container } = render(
     <MemoryRouter>
@@ -100,5 +102,71 @@ describe('ModeloCard', () => {
 
     const img = c.getByRole('img', { name: 'MDL-001' });
     expect(img.getAttribute('src')).toBe('https://example.com/foto.jpg');
+  });
+
+  it('deve ter a moldura da peça de cartão, com superfície, borda e canto pelos papéis', () => {
+    // Arrange
+    const moldura = ['rounded-xl', 'border', 'border-line', 'bg-surface'];
+
+    // Act
+    const { container } = render(
+      <MemoryRouter>
+        <ModeloCard modelo={baseModelo} />
+      </MemoryRouter>,
+    );
+
+    // Assert
+    expect(classes(container.firstElementChild as HTMLElement)).toEqual(
+      expect.arrayContaining(moldura),
+    );
+  });
+
+  it('deve mostrar o código com o texto principal pelo papel', () => {
+    // Act
+    const cartao = renderCard();
+
+    // Assert
+    expect(classes(cartao.getByText(baseModelo.codigo))).toContain('text-fg');
+  });
+
+  it('deve mostrar a descrição com o texto secundário pelo papel', () => {
+    // Act
+    const cartao = renderCard();
+
+    // Assert
+    expect(classes(cartao.getByText(baseModelo.descricao))).toContain('text-fg-muted');
+  });
+
+  it.each([
+    { ativo: true, rotulo: 'Ativo', variacao: ['bg-success-soft', 'text-success-fg'] },
+    { ativo: false, rotulo: 'Inativo', variacao: ['bg-surface-muted', 'text-fg-muted'] },
+  ])(
+    'deve mostrar a situação $rotulo pelos papéis quando ativo é $ativo',
+    ({ ativo, rotulo, variacao }) => {
+      // Act
+      const cartao = renderCard({ ativo });
+
+      // Assert
+      expect(classes(cartao.getByText(rotulo))).toEqual(expect.arrayContaining(variacao));
+    },
+  );
+
+  it('deve mostrar a pendência aberta pelos papéis de alerta, com texto', () => {
+    // Arrange
+    const alerta = ['bg-warning-soft', 'text-warning-fg'];
+
+    // Act
+    const cartao = renderCard({ temPendenciaAberta: true });
+
+    // Assert
+    expect(classes(cartao.getByText('Pendência aberta'))).toEqual(expect.arrayContaining(alerta));
+  });
+
+  it('deve mostrar o link de detalhes com a cor de destaque pelo papel', () => {
+    // Act
+    const cartao = renderCard();
+
+    // Assert
+    expect(classes(cartao.getByRole('link', { name: /ver detalhes/i }))).toContain('text-accent');
   });
 });

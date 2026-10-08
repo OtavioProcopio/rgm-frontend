@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/shared/api/apiError';
+import {
+  rotuloDaPrioridade,
+  rotuloDoStatus,
+  rotuloDoTipoDeSolicitacao,
+} from '@/shared/lib/rotulos';
 
 import {
   formatDuracao,
@@ -57,6 +62,23 @@ describe('solicitacaoMessages', () => {
   });
 });
 
+describe('solicitacaoMessages — rótulos de uma fonte só', () => {
+  it.each([
+    { nome: 'statusLabel', exportado: statusLabel, fonte: rotuloDoStatus },
+    { nome: 'prioridadeLabel', exportado: prioridadeLabel, fonte: rotuloDaPrioridade },
+    { nome: 'tipoLabel', exportado: tipoLabel, fonte: rotuloDoTipoDeSolicitacao },
+  ])(
+    'deve reexportar o mapa de rótulos compartilhado quando $nome é importado',
+    ({ exportado, fonte }) => {
+      // Act
+      const mapa: Record<string, string> = exportado;
+
+      // Assert
+      expect(mapa).toBe(fonte);
+    },
+  );
+});
+
 describe('mensagemFotoNaoEnviadaAntes', () => {
   it('deve dizer que nada foi concluído e incluir o motivo quando a API recusa a foto', () => {
     // Arrange
@@ -66,7 +88,9 @@ describe('mensagemFotoNaoEnviadaAntes', () => {
     const mensagem = mensagemFotoNaoEnviadaAntes(recusa);
 
     // Assert
-    expect(mensagem).toBe(`A foto não foi enviada e a solicitação não foi concluída. ${recusa.message}`);
+    expect(mensagem).toBe(
+      `A foto não foi enviada e a solicitação não foi concluída. ${recusa.message}`,
+    );
   });
 
   it('deve dizer só que nada foi concluído quando a falha não veio da API', () => {

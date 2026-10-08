@@ -7,7 +7,52 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EncerramentoModal } from '@/features/solicitacoes/components/EncerramentoModal';
 import { LIMITES } from '@/shared/lib/limites';
 
+const classes = (elemento: Element) => elemento.className.split(' ');
+
 afterEach(cleanup);
+
+describe('EncerramentoModal — cores por papel', () => {
+  it('deve usar o fundo e a borda de sucesso quando a opção é concluir', () => {
+    // Act
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
+
+    // Assert
+    expect(classes(container.firstElementChild!)).toEqual(
+      expect.arrayContaining(['bg-success-soft', 'border-success']),
+    );
+  });
+
+  it('deve usar o fundo e a borda de perigo quando a opção é cancelar', () => {
+    // Act
+    const { container } = render(
+      <EncerramentoModal podeConcluir={false} onCancel={vi.fn()} onConfirm={vi.fn()} />,
+    );
+
+    // Assert
+    expect(classes(container.firstElementChild!)).toEqual(
+      expect.arrayContaining(['bg-danger-soft', 'border-danger']),
+    );
+  });
+
+  it('deve usar o fundo cheio de perigo no botão de confirmar quando a opção é cancelar', () => {
+    // Act
+    const { container } = render(
+      <EncerramentoModal podeConcluir={false} onCancel={vi.fn()} onConfirm={vi.fn()} />,
+    );
+    const confirmar = within(container).getByRole('button', { name: 'Cancelar solicitação' });
+
+    // Assert
+    expect(classes(confirmar)).toEqual(expect.arrayContaining(['bg-danger', 'text-on-solid']));
+  });
+
+  it('deve usar o texto principal quando mostra o título', () => {
+    // Act
+    const { container } = render(<EncerramentoModal onCancel={vi.fn()} onConfirm={vi.fn()} />);
+
+    // Assert
+    expect(classes(within(container).getByRole('heading'))).toContain('text-fg');
+  });
+});
 
 describe('EncerramentoModal', () => {
   it('renders encerrar title when podeConcluir', () => {

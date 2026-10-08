@@ -13,8 +13,10 @@ import { createQueryWrapper } from '@tests/support/queryWrapper';
 import { AuthProvider } from '@/app/providers/AuthProvider';
 import { perfilApi } from '@/features/auth/api/perfilApi';
 import { PerfilPage } from '@/features/auth/pages/PerfilPage';
+import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { ApiError } from '@/shared/api/apiError';
 import { authToken } from '@/shared/api/authToken';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: undefined, isLoading: true, isError: false }),
@@ -127,6 +129,96 @@ describe('PerfilPage — botões de mostrar senha', () => {
   });
 });
 
+describe('PerfilPage — molduras de cartão', () => {
+  const USUARIO = { nome: 'Otávio', email: 'o@o.com', perfil: 'ADMINISTRADOR' };
+  const MOLDURA_DE_CARTAO = ['border-line', 'bg-surface'];
+
+  async function abrirPerfil() {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: USUARIO,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  it('deve usar a moldura de cartão na seção de dados do perfil quando o perfil é carregado', async () => {
+    // Arrange
+    await abrirPerfil();
+
+    // Act
+    const secao = screen.getByRole('heading', { name: USUARIO.nome }).closest('.rounded-xl');
+
+    // Assert
+    expect(secao?.className.split(' ')).toEqual(expect.arrayContaining(MOLDURA_DE_CARTAO));
+  });
+
+  it('deve usar a moldura de cartão na seção de troca de senha quando o perfil é carregado', async () => {
+    // Arrange
+    await abrirPerfil();
+
+    // Act
+    const secao = screen.getByRole('heading', { name: 'Alterar Senha' }).closest('.rounded-xl');
+
+    // Assert
+    expect(secao?.className.split(' ')).toEqual(expect.arrayContaining(MOLDURA_DE_CARTAO));
+  });
+});
+
+describe('PerfilPage — selo de perfil', () => {
+  const CLASSES_DO_SELO: Record<PerfilUsuario, string[]> = {
+    ADMINISTRADOR: ['bg-accent', 'text-on-accent'],
+    GESTOR: ['bg-info-soft', 'text-info-fg'],
+    OPERADOR: ['bg-surface-muted', 'text-fg-muted'],
+    EXTERNO: ['bg-success-soft', 'text-success-fg'],
+  };
+  const PERFIS = Object.keys(rotuloDoPerfil) as PerfilUsuario[];
+
+  async function abrirPerfilDe(perfil: PerfilUsuario) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { nome: 'Otávio', email: 'o@o.com', perfil },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  it.each(PERFIS)(
+    'deve mostrar o rótulo do perfil no selo quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      expect(screen.getAllByText(rotuloDoPerfil[perfil])).toHaveLength(1);
+    },
+  );
+
+  it.each(PERFIS)('deve não mostrar o valor cru da API quando o perfil é %s', async (perfil) => {
+    // Act
+    await abrirPerfilDe(perfil);
+
+    // Assert
+    expect(screen.queryByText(perfil)).toBeNull();
+  });
+
+  it.each(PERFIS)(
+    'deve pintar o selo com a variação do perfil quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      const selo = screen.getByText(rotuloDoPerfil[perfil]);
+      expect(selo.className.split(' ')).toEqual(expect.arrayContaining(CLASSES_DO_SELO[perfil]));
+    },
+  );
+});
+
 describe('PerfilPage — troca de senha', () => {
   const USUARIO = { id: 'u-1', nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR', ativo: true };
 
@@ -235,6 +327,30 @@ describe('PerfilPage — troca de senha', () => {
 
     // Assert
     expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve pintar o aviso com o papel de sucesso quando a troca de senha dá certo', async () => {
+    // Arrange
+    const papelDeSucesso = ['border-success', 'bg-success-soft', 'text-success-fg'];
+
+    // Act
+    await trocarSenha(comCredenciais);
+
+    // Assert
+    const aviso = (await screen.findByText('Senha alterada com sucesso!')).closest('div');
+    expect(aviso?.className.split(' ')).toEqual(expect.arrayContaining(papelDeSucesso));
+  });
+
+  it('deve pintar o aviso com o papel de perigo quando a API recusa a troca', async () => {
+    // Arrange
+    const papelDePerigo = ['border-danger', 'bg-danger-soft', 'text-danger-fg'];
+
+    // Act
+    await trocarSenha(recusada);
+
+    // Assert
+    const aviso = (await screen.findByText('Senha atual incorreta.')).closest('div');
+    expect(aviso?.className.split(' ')).toEqual(expect.arrayContaining(papelDePerigo));
   });
 
   it('deve não mostrar o sucesso quando a API recusa a troca', async () => {

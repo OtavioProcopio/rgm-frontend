@@ -7,11 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { createAppWrapper } from '@tests/support/appWrapper';
+import { ETAPAS, FUNDO_NEUTRO, SELETOR_DO_PONTO, fundosDe } from '@tests/support/etapasDoQuadro';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
 import { useColunasDoQuadro } from '@/features/solicitacoes/hooks/useColunaDoQuadro';
-import type { Solicitacao, StatusSolicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
+import type {
+  Solicitacao,
+  StatusSolicitacao,
+} from '@/features/solicitacoes/types/solicitacaoTypes';
 import { KanbanBoard } from '@/features/solicitacoes/components/KanbanBoard';
+import { COLUMNS } from '@/features/solicitacoes/components/kanbanColunas';
 
 vi.mock('@/features/solicitacoes/hooks/useColunaDoQuadro', () => ({
   useColunasDoQuadro: vi.fn(),
@@ -20,7 +25,9 @@ vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: { id: 'eu' } }),
 }));
 vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
-  usuariosApi: { listar: vi.fn().mockResolvedValue({ content: [], page: 0, totalPages: 0, totalElements: 0 }) },
+  usuariosApi: {
+    listar: vi.fn().mockResolvedValue({ content: [], page: 0, totalPages: 0, totalElements: 0 }),
+  },
 }));
 vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
   KanbanColumn: ({
@@ -83,7 +90,13 @@ vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   ),
 }));
 
-const STATUS: StatusSolicitacao[] = ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO', 'CONCLUIDA', 'CANCELADA'];
+const STATUS: StatusSolicitacao[] = [
+  'A_FAZER',
+  'EM_ANDAMENTO',
+  'EM_VALIDACAO',
+  'CONCLUIDA',
+  'CANCELADA',
+];
 
 type Coluna = ReturnType<typeof useColunasDoQuadro>[StatusSolicitacao];
 
@@ -111,9 +124,7 @@ function colunasCom(
 }
 
 beforeEach(() => {
-  vi.mocked(useColunasDoQuadro).mockReturnValue(
-    colunasCom([], { A_FAZER: { carregando: true } }),
-  );
+  vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([], { A_FAZER: { carregando: true } }));
 });
 
 afterEach(cleanup);
@@ -145,7 +156,9 @@ describe('KanbanBoard', () => {
 
     // Assert
     const abas = within(container)
-      .getAllByRole('button', { name: /^0\s*(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada)$/ })
+      .getAllByRole('button', {
+        name: /^0\s*(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada)$/,
+      })
       .map((aba) => aba.textContent);
     expect(abas).toHaveLength(5);
   });
@@ -167,27 +180,43 @@ describe('KanbanBoard', () => {
   it('deve listar os responsáveis disponíveis no modal de triagem quando o gestor avança um card de A Fazer', async () => {
     // Arrange
     const { useColunasDoQuadro } = await import('@/features/solicitacoes/hooks/useColunaDoQuadro');
-    vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([
+    vi.mocked(useColunasDoQuadro).mockReturnValue(
+      colunasCom([
         {
-          id: 's1', titulo: 'Trocar correia', status: 'A_FAZER', tipo: 'REPARO', prioridade: null,
-          descricao: '', modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
-          criadaEm: new Date().toISOString(), atualizadaEm: new Date().toISOString(),
-          concluidaEm: null, canceladaEm: null, responsavelIds: [],
+          id: 's1',
+          titulo: 'Trocar correia',
+          status: 'A_FAZER',
+          tipo: 'REPARO',
+          prioridade: null,
+          descricao: '',
+          modeloId: 'm1',
+          abertaPorUsuarioId: 'u1',
+          comentarioFinal: null,
+          criadaEm: new Date().toISOString(),
+          atualizadaEm: new Date().toISOString(),
+          concluidaEm: null,
+          canceladaEm: null,
+          responsavelIds: [],
         },
-      ]));
+      ]),
+    );
     const usuario = { email: null, ativo: true, criadoEm: '', atualizadoEm: '' };
     vi.mocked(usuariosApi.listar).mockResolvedValueOnce({
       content: [
         { ...usuario, id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
         { ...usuario, id: 'ad', nome: 'Ana Administradora', perfil: 'ADMINISTRADOR' },
       ],
-      page: 0, totalPages: 1, totalElements: 2,
+      page: 0,
+      totalPages: 1,
+      totalElements: 2,
     } as Awaited<ReturnType<typeof usuariosApi.listar>>);
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
 
     // Assert
     const lista = within(container).getByRole('list', { name: 'Responsáveis disponíveis' });
@@ -202,7 +231,9 @@ describe('KanbanBoard', () => {
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
 
     // Assert
     expect(within(container).getByText(/Descrição do serviço realizado/i)).toBeDefined();
@@ -210,12 +241,16 @@ describe('KanbanBoard', () => {
 
   it('deve não abrir ação nenhuma quando o operador não responsável tenta avançar o card', async () => {
     // Arrange
-    await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['outro'] }));
+    await carregarQuadroCom(
+      criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['outro'] }),
+    );
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
 
     // Assert
     expect(within(container).queryByText(/Descrição do serviço realizado/i)).toBeNull();
@@ -228,10 +263,14 @@ describe('KanbanBoard', () => {
     await carregarQuadroCom(criarSolicitacao({ status: 'EM_VALIDACAO' }));
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Soltar em Em Andamento' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Soltar em Em Andamento' })[0],
+    );
 
     // Assert
     expect(within(container).getByLabelText('Motivo da devolução *')).toBeDefined();
@@ -243,10 +282,14 @@ describe('KanbanBoard', () => {
     await carregarQuadroCom(criarSolicitacao({ status: 'EM_VALIDACAO' }));
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Soltar em Cancelada' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Soltar em Cancelada' })[0],
+    );
 
     // Assert
     expect(within(container).getByLabelText('Motivo do cancelamento')).toBeDefined();
@@ -258,10 +301,14 @@ describe('KanbanBoard', () => {
     await carregarQuadroCom(criarSolicitacao({ status: 'A_FAZER' }));
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Soltar em Concluída' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Soltar em Concluída' })[0],
+    );
 
     // Assert
     expect(container.querySelector('form')).toBeNull();
@@ -276,7 +323,9 @@ describe('KanbanBoard', () => {
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
     // Act
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
 
     // Assert
     const dialogo = within(container).getByRole('dialog', {
@@ -290,7 +339,9 @@ describe('KanbanBoard', () => {
     await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['eu'] }));
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
 
     // Act
     await userEvent.keyboard('{Escape}');
@@ -304,7 +355,9 @@ describe('KanbanBoard', () => {
     await carregarQuadroCom(criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['eu'] }));
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0]);
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
     const dialogo = within(container).getByRole('dialog');
     await userEvent.type(within(dialogo).getByRole('textbox'), 'Correia trocada');
 
@@ -325,7 +378,10 @@ describe('KanbanBoard — quadro do operador', () => {
     vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom(solicitacoes));
   }
 
-  function montar(user: { nome: string; perfil: 'OPERADOR' | 'GESTOR' }, props: Parameters<typeof KanbanBoard>[0] = {}) {
+  function montar(
+    user: { nome: string; perfil: 'OPERADOR' | 'GESTOR' },
+    props: Parameters<typeof KanbanBoard>[0] = {},
+  ) {
     const { AppWrapper } = createAppWrapper({ user, initialEntries: ['/app/solicitacoes'] });
     return render(<KanbanBoard {...props} />, { wrapper: AppWrapper });
   }
@@ -436,7 +492,9 @@ describe('KanbanBoard — quadro do operador', () => {
 
   it('deve marcar só como atribuída a solicitação que o operador abriu e também recebeu', async () => {
     // Arrange
-    await quadroCom([criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] })]);
+    await quadroCom([
+      criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] }),
+    ]);
 
     // Act
     const { container } = montar(OPERADOR);
@@ -447,7 +505,9 @@ describe('KanbanBoard — quadro do operador', () => {
 
   it('deve não calcular relação para o gestor, mesmo na solicitação que ele abriu', async () => {
     // Arrange
-    await quadroCom([criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] })]);
+    await quadroCom([
+      criarSolicitacao({ id: 's1', abertaPorUsuarioId: 'eu', responsavelIds: ['eu'] }),
+    ]);
 
     // Act
     const { container } = montar(GESTOR);
@@ -664,7 +724,10 @@ describe('KanbanBoard — colunas em blocos', () => {
     rerender(<KanbanBoard />);
 
     // Assert
-    const instantes = vi.mocked(useColunasDoQuadro).mock.calls.slice(-2).map(([, inicio]) => inicio);
+    const instantes = vi
+      .mocked(useColunasDoQuadro)
+      .mock.calls.slice(-2)
+      .map(([, inicio]) => inicio);
     expect(instantes[0]).toBe(instantes[1]);
   });
 
@@ -680,4 +743,48 @@ describe('KanbanBoard — colunas em blocos', () => {
     // Assert
     expect(within(container).queryByText('Erro ao carregar solicitações')).toBeNull();
   });
+});
+
+describe('KanbanBoard — abas do celular', () => {
+  const classes = (elemento: Element) => elemento.className.split(' ');
+  const rotuloDa = (status: StatusSolicitacao) =>
+    COLUMNS.find((coluna) => coluna.status === status)!.label;
+
+  function abaDe(status: StatusSolicitacao) {
+    vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([]));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
+    const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
+    return within(container).getByText(rotuloDa(status)).closest('button')!;
+  }
+
+  it.each(ETAPAS)('deve mostrar o nome da etapa na aba quando a etapa é $status', ({ status }) => {
+    // Act
+    const aba = abaDe(status);
+
+    // Assert
+    expect(aba.textContent).toContain(rotuloDa(status));
+  });
+
+  it.each(ETAPAS)(
+    'deve usar o mesmo fundo neutro na aba quando a etapa é $status',
+    ({ status }) => {
+      // Act
+      const aba = abaDe(status);
+
+      // Assert
+      expect(fundosDe(aba)).toEqual([FUNDO_NEUTRO]);
+    },
+  );
+
+  it.each(ETAPAS)(
+    'deve mostrar na aba um ponto com o papel $ponto quando a etapa é $status',
+    ({ status, ponto }) => {
+      // Act
+      const aba = abaDe(status);
+
+      // Assert
+      const pontos = Array.from(aba.querySelectorAll(SELETOR_DO_PONTO), classes);
+      expect(pontos).toEqual([expect.arrayContaining([ponto])]);
+    },
+  );
 });

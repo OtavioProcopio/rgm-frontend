@@ -1,4 +1,7 @@
-.PHONY: help setup install dev build lint format typecheck test test-run coverage check validate
+.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage e2e check validate
+
+# CAMINHO= limita fmt, lint e test a um arquivo ou pasta, relativo a app/.
+# Exemplo: make test CAMINHO=tests/unit/shared/lib
 
 help: ## Mostrar ajuda com todos os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -19,25 +22,34 @@ dev: ## Executar servidor de desenvolvimento do Vite (com hot-reload)
 
 # ── Qualidade de Código & Linter ─────────────────────────────
 
-lint: ## Executar verificação de linter (ESLint)
-	cd app && npm run lint
+lint: ## Executar verificação de linter (ESLint); aceita CAMINHO=
+	cd app && npx eslint $(if $(CAMINHO),$(CAMINHO),.)
 
-format: ## Formatar código com Prettier
-	cd app && npm run format
+fmt: ## Formatar código com Prettier; aceita CAMINHO=
+	cd app && npx prettier --write $(if $(CAMINHO),$(CAMINHO),.)
 
-typecheck: ## Verificar erros de tipo com TypeScript Compiler (tsc)
+format: fmt ## O mesmo que fmt (nome antigo)
+
+typecheck: ## Verificar erros de tipo do código e dos testes (tsc)
 	cd app && npm run typecheck
 
 # ── Testes ───────────────────────────────────────────────────
 
-test: ## Executar testes do Vitest em modo interativo (watch)
+test: ## Executar os testes do Vitest uma única vez; aceita CAMINHO=
+	cd app && npm run test:run -- $(CAMINHO)
+
+test-watch: ## Executar testes do Vitest em modo interativo (watch)
 	cd app && npm run test
 
-test-run: ## Executar suite de testes do Vitest uma única vez
-	cd app && npm run test:run
+test-run: test ## O mesmo que test (nome antigo)
 
-coverage: ## Rodar testes com relatório de cobertura V8 (coverage/)
+cover: ## Rodar testes com relatório de cobertura V8 (coverage/); falha abaixo de 95%
 	cd app && npm run test:coverage
+
+coverage: cover ## O mesmo que cover (nome antigo)
+
+e2e: ## Rodar os testes e2e do Playwright (frontend e backend no ar); aceita BASE_URL= e API_URL=; CAMINHO= escolhe o arquivo
+	cd app && npm run e2e -- $(CAMINHO)
 
 # ── Validação Global ──────────────────────────────────────────
 

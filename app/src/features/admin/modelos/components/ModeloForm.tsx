@@ -6,6 +6,7 @@ import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
 
 import { useMaquinaOptions } from '../hooks/useMaquinaOptions';
 import {
@@ -14,12 +15,11 @@ import {
   type CriarModeloFormData,
   type EditarModeloFormData,
 } from '../schemas/modeloSchema';
-import { TIPO_MODELO_LABELS } from '../types/modeloTypes';
 import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/modeloTypes';
 
 const tipoModeloOptions = [
   { value: '', label: 'Não definido' },
-  ...Object.entries(TIPO_MODELO_LABELS).map(([value, label]) => ({ value, label })),
+  ...Object.entries(rotuloDoTipoDeModelo).map(([value, label]) => ({ value, label })),
 ];
 
 type ModeloFormProps =

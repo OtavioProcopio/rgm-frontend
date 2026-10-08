@@ -36,7 +36,6 @@ export function SolicitacoesPage() {
   });
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
-
   const canCreate = canOperateSolicitacoes(user?.perfil);
 
   return (
@@ -46,15 +45,15 @@ export function SolicitacoesPage() {
         description="Gerencie as solicitações de manutenção."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex rounded-md border border-line bg-surface">
               <button
                 type="button"
                 onClick={() => setView('kanban')}
                 className={cn(
                   'rounded-l-md px-3 py-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                   view === 'kanban'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',
+                    ? 'bg-accent text-on-accent'
+                    : 'text-fg-muted hover:bg-surface-muted',
                 )}
               >
                 Kanban
@@ -65,8 +64,8 @@ export function SolicitacoesPage() {
                 className={cn(
                   'rounded-r-md px-3 py-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11',
                   view === 'lista'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',
+                    ? 'bg-accent text-on-accent'
+                    : 'text-fg-muted hover:bg-surface-muted',
                 )}
               >
                 Lista

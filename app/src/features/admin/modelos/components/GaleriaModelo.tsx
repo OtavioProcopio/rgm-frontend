@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Images, Plus, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
+import { Dialog } from '@/shared/components/Dialog/Dialog';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
@@ -83,9 +84,7 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
 
   return (
     <div className="space-y-4">
-      {actionError ? (
-        <ErrorState title="Operação não concluída" description={actionError} />
-      ) : null}
+      {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
       {isLoading ? <LoadingState title="Carregando galeria..." /> : null}
       {error ? (
         <ErrorState
@@ -136,25 +135,19 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
       ) : null}
 
       {showAddModal ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Adicionar foto à galeria"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onClick={() => setShowAddModal(false)}
+        <Dialog
+          titulo="Adicionar foto à galeria"
+          bloqueado={adicionarFoto.isPending}
+          onClose={() => setShowAddModal(false)}
         >
-          <div
-            className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className="p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                Adicionar foto à galeria
-              </h3>
+              <h3 className="text-base font-semibold text-fg">Adicionar foto à galeria</h3>
               <button
                 type="button"
+                disabled={adicionarFoto.isPending}
                 onClick={() => setShowAddModal(false)}
-                className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                className="rounded-md p-1 text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Fechar"
               >
                 <X size={18} />
@@ -166,7 +159,7 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
               onCancel={() => setShowAddModal(false)}
             />
           </div>
-        </div>
+        </Dialog>
       ) : null}
 
       {carouselIndex !== null && temFotos ? (

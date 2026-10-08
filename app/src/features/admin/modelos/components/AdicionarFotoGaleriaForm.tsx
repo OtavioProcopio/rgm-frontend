@@ -3,7 +3,12 @@ import { Camera, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
-import { nomesDosTipos, TAMANHO_MAXIMO_MB, TIPOS_DE_IMAGEM, validarArquivo } from '@/shared/lib/arquivoPermitido';
+import {
+  nomesDosTipos,
+  TAMANHO_MAXIMO_MB,
+  TIPOS_DE_IMAGEM,
+  validarArquivo,
+} from '@/shared/lib/arquivoPermitido';
 
 type Props = {
   isSubmitting?: boolean;
@@ -59,7 +64,7 @@ export function AdicionarFotoGaleriaForm({ isSubmitting, onSubmit, onCancel }: P
       />
 
       <div className="space-y-2">
-        <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">Foto</span>
+        <span className="block text-sm font-medium text-fg">Foto</span>
         <input
           ref={fileInputRef}
           type="file"
@@ -74,37 +79,37 @@ export function AdicionarFotoGaleriaForm({ isSubmitting, onSubmit, onCancel }: P
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSubmitting}
-            className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-8 px-4 text-center transition-colors hover:bg-slate-100 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:hover:bg-slate-800"
+            className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line-strong bg-surface-muted py-8 px-4 text-center transition hover:brightness-95 focus:outline-none"
           >
-            <div className="rounded-full bg-slate-200 p-2 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+            <div className="rounded-full bg-surface p-2 text-fg-muted">
               <Camera size={20} />
             </div>
-            <span className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <span className="mt-2 text-sm font-medium text-fg-muted">
               Clique para selecionar uma foto
             </span>
-            <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="mt-1 text-xs text-fg-muted">
               Formatos suportados: {nomesDosTipos(TIPOS_DE_IMAGEM)} até {TAMANHO_MAXIMO_MB} MB
             </span>
           </button>
         ) : (
-          <div className="relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="relative overflow-hidden rounded-lg border border-line">
             <img src={preview} alt="Pré-visualização" className="h-48 w-full object-cover" />
             <button
               type="button"
               onClick={handleRemoveFile}
               disabled={isSubmitting}
-              className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80"
+              className="absolute right-2 top-2 rounded-full bg-scrim p-1.5 text-on-solid transition hover:brightness-125"
               title="Remover foto selecionada"
               aria-label="Remover foto selecionada"
             >
               <X size={16} />
             </button>
-            <p className="truncate border-t border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            <p className="truncate border-t border-line bg-surface px-3 py-2 text-xs text-fg-muted">
               {file?.name} — {file ? (file.size / (1024 * 1024)).toFixed(2) : 0} MB
             </p>
           </div>
         )}
-        {fileError ? <p className="text-sm text-red-600 dark:text-red-400">{fileError}</p> : null}
+        {fileError ? <p className="text-sm text-danger-fg">{fileError}</p> : null}
       </div>
 
       <div className="flex justify-end gap-2">

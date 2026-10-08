@@ -2,32 +2,35 @@ import { CheckCircle2, ClipboardList, UserCheck } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { Card } from '@/shared/components/Card/Card';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
+import { rotuloDoStatus } from '@/shared/lib/rotulos';
 import type { PageResponse } from '@/shared/types/page';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { solicitacoesKeys } from '../hooks/solicitacoesKeys';
-import { statusLabel } from '../lib/solicitacaoMessages';
-import type { Solicitacao, SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
+import type {
+  Solicitacao,
+  SolicitacoesFilters,
+  StatusSolicitacao,
+} from '../types/solicitacaoTypes';
 import { KPICard } from './DashboardKpiCard';
 
 const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
-  A_FAZER: 'text-slate-600 dark:text-slate-400',
-  EM_ANDAMENTO: 'text-sky-600 dark:text-sky-400',
-  EM_VALIDACAO: 'text-amber-600 dark:text-amber-400',
-  CONCLUIDA: 'text-emerald-600 dark:text-emerald-400',
-  CANCELADA: 'text-rose-600 dark:text-rose-400',
+  A_FAZER: 'text-fg-muted',
+  EM_ANDAMENTO: 'text-info-fg',
+  EM_VALIDACAO: 'text-warning-fg',
+  CONCLUIDA: 'text-success-fg',
+  CANCELADA: 'text-danger-fg',
 };
 
 function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
   if (itens.length === 0) {
-    return (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma solicitação encontrada.</p>
-    );
+    return <p className="text-sm text-fg-muted">Nenhuma solicitação encontrada.</p>;
   }
   return (
     <ul className="space-y-2.5">
@@ -35,18 +38,15 @@ function ListaSolicitacoes({ itens }: { itens: Solicitacao[] }) {
         <li key={s.id} className="group">
           <Link
             to={`/app/solicitacoes/${s.id}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/50 p-3 transition-all hover:bg-sky-50/40 hover:border-sky-200 dark:border-slate-700/50 dark:bg-slate-900/30 dark:hover:bg-sky-950/20 dark:hover:border-sky-900/40"
+            className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-muted p-3 transition-all hover:border-accent"
           >
-            <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-700 dark:group-hover:text-sky-400">
+            <p className="min-w-0 flex-1 truncate text-xs font-semibold text-fg group-hover:text-accent">
               {s.titulo}
             </p>
             <span
-              className={cn(
-                'shrink-0 text-xxs font-medium uppercase',
-                STATUS_TEXT_COLOR[s.status],
-              )}
+              className={cn('shrink-0 text-xxs font-medium uppercase', STATUS_TEXT_COLOR[s.status])}
             >
-              {statusLabel[s.status]}
+              {rotuloDoStatus[s.status]}
             </span>
           </Link>
         </li>
@@ -86,8 +86,8 @@ function ListaPaginada({
   }, [paginaSumiu, ultimaPagina, onPagina]);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 space-y-4">
-      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{titulo}</h2>
+    <Card className="space-y-4 p-5">
+      <h2 className="text-sm font-semibold text-fg-muted">{titulo}</h2>
       <ListaSolicitacoes itens={dados?.content ?? []} />
       {dados && dados.totalPages > 1 ? (
         <Pagination
@@ -99,7 +99,7 @@ function ListaPaginada({
           onNext={() => onPagina(dados.page + 1)}
         />
       ) : null}
-    </div>
+    </Card>
   );
 }
 

@@ -9,23 +9,40 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 import { DashboardPage } from '@/features/solicitacoes/pages/DashboardPage';
 
 const mockMetricas = {
-  totalUsuarios: 5, totalMaquinas: 3, totalModelos: 2, totalSolicitacoes: 10,
-  solicitacoesPorStatus: { A_FAZER: 3, EM_ANDAMENTO: 4, EM_VALIDACAO: 2, CONCLUIDA: 1, CANCELADA: 0 },
-  solicitacoesAbertas: 7, solicitacoesPendentes: 2, solicitacoesConcluidas: 1,
+  totalUsuarios: 5,
+  totalMaquinas: 3,
+  totalModelos: 2,
+  totalSolicitacoes: 10,
+  solicitacoesPorStatus: {
+    A_FAZER: 3,
+    EM_ANDAMENTO: 4,
+    EM_VALIDACAO: 2,
+    CONCLUIDA: 1,
+    CANCELADA: 0,
+  },
+  solicitacoesAbertas: 7,
+  solicitacoesPendentes: 2,
+  solicitacoesConcluidas: 1,
   tempoMedioResolucaoSegundos: 86400,
 };
 
 vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   solicitacoesApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 }),
+    listar: vi
+      .fn()
+      .mockResolvedValue({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 }),
   },
 }));
 
 vi.mock('@/features/solicitacoes/hooks/useMetricas', () => ({
-  useMetricas: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null, isError: false }),
+  useMetricas: vi
+    .fn()
+    .mockReturnValue({ data: undefined, isLoading: true, error: null, isError: false }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
-  useModelos: vi.fn().mockReturnValue({ data: { content: [], totalElements: 0 }, isLoading: false, error: null }),
+  useModelos: vi
+    .fn()
+    .mockReturnValue({ data: { content: [], totalElements: 0 }, isLoading: false, error: null }),
 }));
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: null, isLoading: false }),
@@ -36,7 +53,11 @@ afterEach(async () => {
   const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
   vi.mocked(solicitacoesApi.listar).mockReset();
   vi.mocked(solicitacoesApi.listar).mockResolvedValue({
-    content: [], totalElements: 0, page: 0, size: 20, totalPages: 0,
+    content: [],
+    totalElements: 0,
+    page: 0,
+    size: 20,
+    totalPages: 0,
   });
 });
 
@@ -66,7 +87,9 @@ describe('DashboardPage', () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 7200 },
-      isLoading: false, isError: false, error: null,
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
@@ -78,7 +101,9 @@ describe('DashboardPage', () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 120 },
-      isLoading: false, isError: false, error: null,
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
@@ -90,7 +115,9 @@ describe('DashboardPage', () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(useMetricas).mockReturnValue({
       data: { ...mockMetricas, tempoMedioResolucaoSegundos: 30 },
-      isLoading: false, isError: false, error: null,
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
@@ -102,18 +129,35 @@ describe('DashboardPage', () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
     vi.mocked(useMetricas).mockReturnValue({
-      data: mockMetricas, isLoading: false, isError: false, error: null,
+      data: mockMetricas,
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
     const old = new Date(Date.now() - 10 * 86400 * 1000).toISOString();
     vi.mocked(solicitacoesApi.listar).mockImplementation(((filters: { atrasada?: boolean }) => {
       if (filters.atrasada) {
         return Promise.resolve({
-          content: [{
-            id: 's1', titulo: 'Tarefa Velha', criadaEm: old, status: 'A_FAZER',
-            tipo: 'REPARO', prioridade: 'ALTA', descricao: '', modeloId: 'm1',
-            modeloCodigo: 'M01', solicitanteId: 'u1', solicitanteNome: 'J', atualizadaEm: old,
-          }],
-          totalElements: 1, page: 0, size: 5, totalPages: 1,
+          content: [
+            {
+              id: 's1',
+              titulo: 'Tarefa Velha',
+              criadaEm: old,
+              status: 'A_FAZER',
+              tipo: 'REPARO',
+              prioridade: 'ALTA',
+              descricao: '',
+              modeloId: 'm1',
+              modeloCodigo: 'M01',
+              solicitanteId: 'u1',
+              solicitanteNome: 'J',
+              atualizadaEm: old,
+            },
+          ],
+          totalElements: 1,
+          page: 0,
+          size: 5,
+          totalPages: 1,
         });
       }
       return Promise.resolve({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 });
@@ -127,7 +171,10 @@ describe('DashboardPage', () => {
   it('renders status distribution table with percentages', async () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(useMetricas).mockReturnValue({
-      data: mockMetricas, isLoading: false, isError: false, error: null,
+      data: mockMetricas,
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();
@@ -150,11 +197,64 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('deve destacar a aba aberta com o papel de destaque quando o painel abre para o administrador', async () => {
+    // Arrange
+    const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
+    vi.mocked(useMetricas).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof useMetricas>);
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
+    const abaAberta = within(container).getByText('Solicitações', { selector: 'button' });
+
+    // Assert
+    expect(abaAberta.className.split(' ')).toContain('text-accent');
+  });
+
+  it.each(['Modelos', 'Pessoal'])(
+    'deve mostrar a aba fechada no texto secundário quando a aba é %s',
+    async (aba) => {
+      // Arrange
+      const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
+      vi.mocked(useMetricas).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useMetricas>);
+      const { AppWrapper } = createAppWrapper();
+
+      // Act
+      const { container } = render(<DashboardPage />, { wrapper: AppWrapper });
+      const abaFechada = within(container).getByText(aba, { selector: 'button' });
+
+      // Assert
+      expect(abaFechada.className.split(' ')).toContain('text-fg-muted');
+    },
+  );
+
   it('renders zero percentage when totalSolicitacoes is zero', async () => {
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(useMetricas).mockReturnValue({
-      data: { ...mockMetricas, totalSolicitacoes: 0, solicitacoesPorStatus: { A_FAZER: 0, EM_ANDAMENTO: 0, EM_VALIDACAO: 0, CONCLUIDA: 0, CANCELADA: 0 } },
-      isLoading: false, isError: false, error: null,
+      data: {
+        ...mockMetricas,
+        totalSolicitacoes: 0,
+        solicitacoesPorStatus: {
+          A_FAZER: 0,
+          EM_ANDAMENTO: 0,
+          EM_VALIDACAO: 0,
+          CONCLUIDA: 0,
+          CANCELADA: 0,
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
     } as unknown as ReturnType<typeof useMetricas>);
 
     const { AppWrapper } = createAppWrapper();

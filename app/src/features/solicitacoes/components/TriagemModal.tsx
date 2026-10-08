@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/Button/Button';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDaPrioridade } from '@/shared/lib/rotulos';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
 import {
@@ -22,12 +23,10 @@ type Props = {
   onConfirm: (data: TriarSolicitacaoFormData, foto: File | null, nota: string) => void;
 };
 
-const prioridadeOptions = [
-  { value: 'BAIXA', label: 'Baixa' },
-  { value: 'MEDIA', label: 'Média' },
-  { value: 'ALTA', label: 'Alta' },
-  { value: 'URGENTE', label: 'Urgente' },
-];
+const prioridadeOptions = Object.entries(rotuloDaPrioridade).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props) {
   const [foto, setFoto] = useState<File | null>(null);
@@ -48,9 +47,9 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
   }
 
   return (
-    <div className="rounded-md border border-sky-200 bg-sky-50 p-4 text-sm dark:border-sky-900/60 dark:bg-sky-950/30">
-      <h3 className="font-semibold text-sky-900 dark:text-sky-100">Triar solicitação</h3>
-      <p className="mt-1 text-sky-800 dark:text-sky-200">
+    <div className="rounded-md border border-info bg-info-soft p-4 text-sm">
+      <h3 className="font-semibold text-info-fg">Triar solicitação</h3>
+      <p className="mt-1 text-info-fg">
         Defina a prioridade e os responsáveis para colocar em andamento.
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
@@ -63,43 +62,38 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
         />
 
         <div>
-          <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
-            Responsáveis
-          </p>
+          <p className="mb-2 block text-sm font-medium text-fg">Responsáveis</p>
           {usuarios.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Nenhum responsável disponível.
-            </p>
+            <p className="text-sm text-fg-muted">Nenhum responsável disponível.</p>
           ) : (
             <div className="space-y-2">
               {usuarios.map((u) => (
-                <label key={u.id} className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11">
+                <label
+                  key={u.id}
+                  className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11"
+                >
                   <input
                     type="checkbox"
                     value={u.id}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-line-strong"
                     {...register('responsavelIds')}
                   />
-                  <span className="text-sm text-slate-800 dark:text-slate-100">{u.nome}</span>
+                  <span className="text-sm text-fg">{u.nome}</span>
                 </label>
               ))}
             </div>
           )}
           {errors.responsavelIds && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {errors.responsavelIds.message}
-            </p>
+            <p className="mt-1 text-sm text-danger-fg">{errors.responsavelIds.message}</p>
           )}
         </div>
 
         <div>
-          <p className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-100">
+          <p className="mb-2 block text-sm font-medium text-fg">
             Foto do que precisa ser feito (opcional)
           </p>
           <EvidenciaUploader onUpload={setFoto} />
-          {foto ? (
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Anexado: {foto.name}</p>
-          ) : null}
+          {foto ? <p className="mt-1 text-xs text-fg-muted">Anexado: {foto.name}</p> : null}
           {foto ? (
             <div className="mt-2">
               <Textarea
