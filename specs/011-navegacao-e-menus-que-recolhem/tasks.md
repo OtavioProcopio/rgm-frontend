@@ -42,8 +42,8 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 3 — Peças compartilhadas
 
-- [ ] T012 Criar `TST/shared/components/Menu/Menu.test.tsx`: o botão anuncia `aria-haspopup="menu"` e `aria-expanded`; abre por clique e foca o primeiro item; seta para baixo e para cima percorrem com volta ao fim; Home e End; Enter e Espaço escolhem e fecham; Esc fecha e devolve o foco ao botão; Tab fecha; clique fora fecha; `MenuLink` navega e fecha; `MenuItem` de escolha única marca `aria-checked`; item `perigo` usa cor de perigo; item desabilitado não é escolhido; alvo de toque de 44 px (`pointer-coarse:min-h-11`); sem animação com `motion-reduce`
-- [ ] T013 Criar `SRC/shared/components/Menu/Menu.tsx` (com `MenuItem`, `MenuLink`, `MenuSeparator`, `MenuTitulo`)
+- [x] T012 Criar `TST/shared/components/Menu/Menu.test.tsx`: o botão anuncia `aria-haspopup="menu"` e `aria-expanded`; abre por clique e foca o primeiro item; seta para baixo e para cima percorrem com volta ao fim; Home e End; Enter e Espaço escolhem e fecham; Esc fecha e devolve o foco ao botão; Tab fecha; clique fora fecha; `MenuLink` navega e fecha; `MenuItem` de escolha única marca `aria-checked`; item `perigo` usa cor de perigo; item desabilitado não é escolhido; alvo de toque de 44 px (`pointer-coarse:min-h-11`); sem animação com `motion-reduce`
+- [x] T013 Criar `SRC/shared/components/Menu/Menu.tsx` (com `MenuItem`, `MenuLink`, `MenuSeparator`, `MenuTitulo`)
 - [ ] T014 [P] Alterar `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx` só se algo que o teste afirma sobre o DOM mudar; a regra é: **todos os testes atuais passam sem alteração** com o `Menu` novo (R4)
 - [ ] T015 [P] Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx` para usar o `Menu`
 - [ ] T016 [P] Alterar `TST/shared/components/PageHeader/PageHeader.test.tsx`: sem `maisAcoes` nenhum botão "Mais ações"; com um item aparece o botão; o menu lista as ações com texto e ícone; a ação `perigo` é a última, depois de um separador; escolher chama `onSelect`; item com `to` navega; desabilitada não executa
