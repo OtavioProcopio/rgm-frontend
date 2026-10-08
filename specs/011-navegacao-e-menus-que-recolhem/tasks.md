@@ -35,10 +35,10 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 2 — Hooks
 
-- [ ] T008 [P] Criar `TST/shared/hooks/usePreferenciaGuardada.test.ts`: o primeiro valor devolvido já é o guardado (sem quadro com o padrão); sem valor guardado devolve o padrão; trocar o valor grava e atualiza; armazenamento indisponível não lança
-- [ ] T009 [P] Criar `SRC/shared/hooks/usePreferenciaGuardada.ts`
-- [ ] T010 [P] Criar `TST/shared/hooks/useExportarPdf.test.ts`: `exportando` fica verdadeiro durante a busca e falso depois; baixa o arquivo com o nome dado; a falha vira `erro` com `mensagemDeFalhaNaExportacao`; nova tentativa limpa o erro
-- [ ] T011 [P] Criar `SRC/shared/hooks/useExportarPdf.ts`
+- [x] T008 [P] Criar `TST/shared/hooks/usePreferenciaGuardada.test.ts`: o primeiro valor devolvido já é o guardado (sem quadro com o padrão); sem valor guardado devolve o padrão; trocar o valor grava e atualiza; armazenamento indisponível não lança
+- [x] T009 [P] Criar `SRC/shared/hooks/usePreferenciaGuardada.ts`
+- [x] T010 [P] Criar `TST/shared/hooks/useExportarPdf.test.ts`: `exportando` fica verdadeiro durante a busca e falso depois; baixa o arquivo com o nome dado; a falha vira `erro` com `mensagemDeFalhaNaExportacao`; nova tentativa limpa o erro
+- [x] T011 [P] Criar `SRC/shared/hooks/useExportarPdf.ts`
 
 ## Fase 3 — Peças compartilhadas
 
