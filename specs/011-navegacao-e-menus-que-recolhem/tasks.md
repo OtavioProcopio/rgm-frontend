@@ -22,16 +22,16 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 0 — Linha de base
 
-- [ ] T001 Roteiro de medição em `/root/rgm/evidencias/011-frontend/medir011.cjs` (API simulada, fora do repositório): por tela, em 1440 px, 390 px e 360 px, nos dois temas, grava níveis de moldura (RNF-03), largura da barra lateral (RNF-05), destinos visíveis e altura da barra de abas (RNF-06), tamanho dos controles em 390 px com toque (RNF-01), botões no cabeçalho (RNF-04) e capturas. Roda em `5e1f29d` (worktree com `node_modules` por link) e guarda o resultado "antes"
+- [x] T001 Roteiro de medição em `/root/rgm/evidencias/011-frontend/medir011.cjs` (API simulada, fora do repositório): por tela, em 1440 px, 390 px e 360 px, nos dois temas, grava níveis de moldura (RNF-03), largura da barra lateral (RNF-05), destinos visíveis e altura da barra de abas (RNF-06), tamanho dos controles em 390 px com toque (RNF-01), botões no cabeçalho (RNF-04) e capturas. Roda em `5e1f29d` (worktree com `node_modules` por link) e guarda o resultado "antes"
 
 ## Fase 1 — Domínio
 
-- [ ] T002 [P] Criar `TST/shared/lib/preferenciaDeInterface.test.ts`: lê o valor guardado; devolve o padrão quando a chave não existe; devolve o padrão quando o armazenamento lança; grava e lê de volta; gravar não lança quando o armazenamento lança
-- [ ] T003 [P] Criar `SRC/shared/lib/preferenciaDeInterface.ts`
-- [ ] T004 [P] Criar `TST/shared/lib/navegacao.test.ts`: destinos de cada perfil (administrador 5, gestor 3, operador e externo conforme hoje), na ordem de hoje, com o mesmo `to` e `end` de `AppLayout.tsx` em `5e1f29d`; nenhum perfil ganha nem perde destino (RNF-13); nenhum perfil passa de 5
-- [ ] T005 [P] Criar `SRC/shared/lib/navegacao.ts`
-- [ ] T006 [P] Criar `TST/shared/lib/resumoDeFiltros.test.ts`: zero filtros dá "Filtros"; um dá "Filtros · 1 ativo"; dois dão "Filtros · 2 ativos"
-- [ ] T007 [P] Criar `SRC/shared/lib/resumoDeFiltros.ts`
+- [x] T002 [P] Criar `TST/shared/lib/preferenciaDeInterface.test.ts`: lê o valor guardado; devolve o padrão quando a chave não existe; devolve o padrão quando o armazenamento lança; grava e lê de volta; gravar não lança quando o armazenamento lança
+- [x] T003 [P] Criar `SRC/shared/lib/preferenciaDeInterface.ts`
+- [x] T004 [P] Criar `TST/shared/lib/navegacao.test.ts`: destinos de cada perfil (administrador 5, gestor 3, operador e externo conforme hoje), na ordem de hoje, com o mesmo `to` e `end` de `AppLayout.tsx` em `5e1f29d`; nenhum perfil ganha nem perde destino (RNF-13); nenhum perfil passa de 5
+- [x] T005 [P] Criar `SRC/shared/lib/navegacao.ts`
+- [x] T006 [P] Criar `TST/shared/lib/resumoDeFiltros.test.ts`: zero filtros dá "Filtros"; um dá "Filtros · 1 ativo"; dois dão "Filtros · 2 ativos"
+- [x] T007 [P] Criar `SRC/shared/lib/resumoDeFiltros.ts`
 
 ## Fase 2 — Hooks
 
