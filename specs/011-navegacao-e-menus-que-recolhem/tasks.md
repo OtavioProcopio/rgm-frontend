@@ -55,15 +55,17 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 4 — Layout
 
-- [ ] T022 [P] Criar `TST/app/layouts/MenuDoUsuario.test.tsx`: o botão abre um menu com nome, perfil por extenso ("Administrador"), "Meu perfil", três opções de tema com a ativa marcada e "Sair"; escolher tema aplica e fecha; "Sair" chama `logout`; Esc e foco de volta ao botão; sem usuário não quebra
-- [ ] T023 [P] Criar `SRC/app/layouts/MenuDoUsuario.tsx`
-- [ ] T024 [P] Criar `TST/app/layouts/BarraLateral.test.tsx`: expandida por padrão; o botão anuncia `aria-expanded` e muda o rótulo ("Recolher menu lateral" / "Expandir menu lateral"); recolher esconde o texto dos destinos mas mantém o nome acessível; a etiqueta aparece com o foco e com o ponteiro; o destino da rota atual continua marcado; Enter recolhe e o foco fica no botão; nenhum atalho fora do botão recolhe; o primeiro `render` já está no estado guardado; guarda o estado; coluna de 72 px recolhida e 280 px expandida; transição com `motion-reduce`
-- [ ] T025 [P] Criar `SRC/app/layouts/BarraLateral.tsx`
-- [ ] T026 [P] Criar `TST/app/layouts/BarraDeAbas.test.tsx`: mostra todos os destinos do perfil com ícone e rótulo; administrador vê 5 e operador só os dele; a largura se divide entre os destinos; fica fixa na base com a área segura; cada aba tem 44 px ou mais
-- [ ] T027 [P] Criar `SRC/app/layouts/BarraDeAbas.tsx`
-- [ ] T028 Alterar `TST/app/layouts/AppLayout.test.tsx`: não existe a faixa de navegação que rola; a identificação do portal aparece uma vez; o cabeçalho não mostra nome, tema e "Sair" soltos; o `main` não tem borda nem sombra; o fim do conteúdo ganha espaço da barra de abas no celular; a barra lateral recolhida muda a coluna; os testes que citam o logo, o aviso de falta de atualização e a conexão de tempo real seguem passando
-- [ ] T029 Alterar `SRC/app/layouts/AppLayout.tsx` para usar `BarraLateral`, `BarraDeAbas`, `MenuDoUsuario` e `destinosDeNavegacao`, sem o cartão em volta do conteúdo
-- [ ] T030 Alterar `TST/temaInicial.test.ts` (asserção: `app/index.html` declara `viewport-fit=cover`) e `app/index.html`
+- [x] T022a Criar `TST/app/layouts/iconesDeNavegacao.test.ts` e `SRC/app/layouts/iconesDeNavegacao.ts`: mapa de ícones por destino, lido pelas duas barras (achado ao ler o plano: sem ele uma barra dependeria da outra)
+- [x] T022 [P] Criar `TST/app/layouts/MenuDoUsuario.test.tsx`: o botão abre um menu com nome, perfil por extenso ("Administrador"), "Meu perfil", três opções de tema com a ativa marcada e "Sair"; escolher tema aplica e fecha; "Sair" chama `logout`; Esc e foco de volta ao botão; sem usuário não quebra
+- [x] T023 [P] Criar `SRC/app/layouts/MenuDoUsuario.tsx`
+- [x] T024 [P] Criar `TST/app/layouts/BarraLateral.test.tsx`: expandida por padrão; o botão anuncia `aria-expanded` e muda o rótulo ("Recolher menu lateral" / "Expandir menu lateral"); recolher esconde o texto dos destinos mas mantém o nome acessível; a etiqueta aparece com o foco e com o ponteiro; o destino da rota atual continua marcado; Enter recolhe e o foco fica no botão; nenhum atalho fora do botão recolhe; o primeiro `render` já está no estado guardado; guarda o estado; coluna de 72 px recolhida e 280 px expandida; transição com `motion-reduce`
+- [x] T025 [P] Criar `SRC/app/layouts/BarraLateral.tsx`
+- [x] T026 [P] Criar `TST/app/layouts/BarraDeAbas.test.tsx`: mostra todos os destinos do perfil com ícone e rótulo; administrador vê 5 e operador só os dele; a largura se divide entre os destinos; fica fixa na base com a área segura; cada aba tem 44 px ou mais
+- [x] T027 [P] Criar `SRC/app/layouts/BarraDeAbas.tsx`
+- [x] T028 Alterar `TST/app/layouts/AppLayout.test.tsx`: não existe a faixa de navegação que rola; a identificação do portal aparece uma vez; o cabeçalho não mostra nome, tema e "Sair" soltos; o `main` não tem borda nem sombra; o fim do conteúdo ganha espaço da barra de abas no celular; a barra lateral recolhida muda a coluna; os testes que citam o logo, o aviso de falta de atualização e a conexão de tempo real seguem passando
+- [x] T029 Alterar `SRC/app/layouts/AppLayout.tsx` para usar `BarraLateral`, `BarraDeAbas`, `MenuDoUsuario` e `destinosDeNavegacao`, sem o cartão em volta do conteúdo
+- [x] T030a Criar `TST/shared/components/ThemeToggle/opcoesDeTema.test.ts` e `SRC/shared/components/ThemeToggle/opcoesDeTema.ts`: a lista de temas sai do componente para um arquivo próprio (achado no `make lint`: a regra de fast refresh recusa exportar constante de arquivo de componente)
+- [x] T030 Alterar `TST/temaInicial.test.ts` (asserção: `app/index.html` declara `viewport-fit=cover`) e `app/index.html`
 
 ## Fase 5 — Telas
 
