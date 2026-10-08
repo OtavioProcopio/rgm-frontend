@@ -113,9 +113,9 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 - [x] T052 Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [x] T053 Alterar `SRC/styles/globals.css`: remover a paleta genérica do `@theme` e as redefinições de `sky` e `slate`
 - [x] T054 Medição com API simulada, antes (`e9cbb6f`) e depois, em `/root/rgm/evidencias/010-frontend/`: contraste de todo texto, borda de campo e contorno de foco nas 16 telas, nos dois temas (RNF-01, RNF-02); posição e tamanho dos controles em 1440 px e 390 px (RNF-07); área de toque e foco em 390 px (RNF-08); cinco carregamentos por tema sem quadro no tema errado (RNF-09); tempo de troca de tema (RNF-10); capturas das 16 telas nos dois temas. Registrar na convergência
-- [ ] T055 Rodar a feature contra o backend de `develop`: entrada, quadro, detalhe, painel e administração nos dois temas, e a suíte `app/tests/e2e`. Registrar na convergência
-- [ ] T056 `make cover` com os arquivos medidos em 95% ou mais (RNF-11) e `app/package.json` sem pacote novo (RNF-12)
-- [ ] T057 `make validate` verde
+- [x] T055 Rodar a feature contra o backend de `develop`: entrada, quadro, detalhe, painel e administração nos dois temas, e a suíte `app/tests/e2e`. Registrar na convergência
+- [x] T056 `make cover` com os arquivos medidos em 95% ou mais (RNF-11) e `app/package.json` sem pacote novo (RNF-12)
+- [x] T057 `make validate` verde
 
 ## Rastreabilidade
 
@@ -222,3 +222,10 @@ Caso sem papel adequado é registrado na seção **Casos sem papel adequado**, s
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 2026-10-08 — T054 a T057
+
+- **T054 (medição, API simulada):** contraste de texto, borda de campo e contorno de foco sem falhas nas 16 telas, nos dois temas; capturas do quadro no escuro e do detalhe da solicitação conferidas à mão (selos, cabeçalhos e logo corretos). Evidências em `/root/rgm/evidencias/010-frontend/`.
+- **T055 (integração com o backend de `develop`):** `make e2e` com `BASE_URL=http://localhost:5173 API_URL=http://localhost:8080/api`: 47 passam, 1 falha. A falha é `evidencias.spec.ts:78` ("uploader não aparece para OPERADOR não-responsável e não-autor"), o teste desatualizado pela regra de visibilidade do operador, já aberto como #138 e fora do escopo desta feature. `auth.spec.ts` foi ajustado: o selo do perfil mostra o rótulo ("Administrador"), não o valor da API. Alvo `make e2e` acrescentado ao `Makefile`.
+- **T056:** `make cover` com 2024 testes verdes; cobertura 99,81% de instruções, 99,77% de ramos. Único arquivo abaixo de 95% é `shared/config/env.ts` (75%), que esta feature não tocou. `app/package.json` mudou só o script `typecheck` (`-p tsconfig.app.json`); nenhum pacote novo.
+- **T057:** `make validate` verde (saída 0).

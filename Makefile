@@ -1,4 +1,4 @@
-.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage check validate
+.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage e2e check validate
 
 # CAMINHO= limita fmt, lint e test a um arquivo ou pasta, relativo a app/.
 # Exemplo: make test CAMINHO=tests/unit/shared/lib
@@ -47,6 +47,9 @@ cover: ## Rodar testes com relatório de cobertura V8 (coverage/); falha abaixo 
 	cd app && npm run test:coverage
 
 coverage: cover ## O mesmo que cover (nome antigo)
+
+e2e: ## Rodar os testes e2e do Playwright (frontend e backend no ar); aceita BASE_URL= e API_URL=; CAMINHO= escolhe o arquivo
+	cd app && npm run e2e -- $(CAMINHO)
 
 # ── Validação Global ──────────────────────────────────────────
 
