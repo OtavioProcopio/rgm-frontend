@@ -37,7 +37,8 @@ test.describe('Autenticação', () => {
 
   test('faz logout e redireciona para /login', async ({ page, loginAdmin }) => {
     await loginAdmin('/app/admin');
-    await page.click('button:has-text("Sair")');
+    await page.getByRole('button', { name: /^Menu do usuário/ }).click();
+    await page.getByRole('menuitem', { name: 'Sair' }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 
