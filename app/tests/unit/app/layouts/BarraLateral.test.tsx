@@ -2,6 +2,8 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -136,40 +138,49 @@ describe('BarraLateral', () => {
     );
   });
 
-  it('deve recolher e manter o foco no botao quando acionado pelo teclado', () => {
+  it('deve recolher e manter o foco no botao quando Enter e apertado nele', async () => {
     // Arrange
+    const usuario = userEvent.setup();
     renderizar();
     botao().focus();
 
     // Act
-    fireEvent.click(botao());
+    await usuario.keyboard('{Enter}');
 
     // Assert
     expect(botao().getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(botao());
   });
 
-  it('deve ignorar teclas fora do botao quando Ctrl+B e pressionado', () => {
-    // Arrange
-    renderizar();
+  it.each([['{Control>}b{/Control}'], ['[['], ['{Meta>}b{/Meta}'], ['{Alt>}b{/Alt}'], ['b']])(
+    'deve continuar expandida quando a sequencia de teclas %s e apertada fora do botao',
+    async (teclas) => {
+      // Arrange
+      const usuario = userEvent.setup();
+      renderizar();
 
-    // Act
-    fireEvent.keyDown(document, { key: 'b', ctrlKey: true });
+      // Act
+      await usuario.keyboard(teclas);
 
-    // Assert
-    expect(botao().getAttribute('aria-expanded')).toBe('true');
-  });
+      // Assert
+      expect(botao().getAttribute('aria-expanded')).toBe('true');
+    },
+  );
 
-  it('deve renderizar recolhida no primeiro render quando a preferencia guardada e recolhida', () => {
+  it('deve nascer recolhida no primeiro render quando a preferencia guardada e recolhida', () => {
     // Arrange
     localStorage.setItem(CHAVE, 'recolhida');
 
     // Act
-    const { container } = renderizar();
+    const primeiroRender = renderToString(
+      <MemoryRouter>
+        <BarraLateral destinos={DESTINOS} identificacao={IDENTIFICACAO} />
+      </MemoryRouter>,
+    );
 
     // Assert
-    expect(botao().getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('aside')?.classList.contains('lg:w-[72px]')).toBe(true);
+    expect(primeiroRender).toContain('lg:w-[72px]');
+    expect(primeiroRender).toContain('aria-expanded="false"');
   });
 
   it('deve gravar recolhida quando o menu e recolhido', () => {

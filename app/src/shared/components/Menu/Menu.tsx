@@ -21,7 +21,20 @@ const CLASSE_DO_ITEM =
 const CLASSE_DO_BOTAO =
   'inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 text-sm font-medium text-fg transition-colors hover:bg-surface-muted pointer-coarse:min-h-11';
 
-const MenuContexto = createContext<{ fechar: () => void }>({ fechar: () => undefined });
+/** Destino de cada tecla de movimento: o índice do item que recebe o foco. */
+const MOVIMENTOS: Record<string, (total: number, atual: number) => number> = {
+  ArrowDown: (total, atual) => (atual + 1) % total,
+  ArrowUp: (total, atual) => (atual - 1 + total) % total,
+  Home: () => 0,
+  End: (total) => total - 1,
+};
+
+/** Só `MenuItem` e `MenuLink` leem o contexto, e sempre dentro de um `Menu`. */
+const MenuContexto = createContext<{ fechar: () => void } | null>(null);
+
+function useFecharMenu(): () => void {
+  return useContext(MenuContexto)!.fechar;
+}
 
 type MenuProps = {
   /** Nome acessível do menu aberto. */
@@ -32,8 +45,6 @@ type MenuProps = {
   /** Conteúdo do botão que abre o menu. */
   botao: ReactNode;
   classeDoBotao?: string;
-  /** Lado do botão em que o menu se alinha. */
-  alinhamento?: 'direita' | 'esquerda';
   children: ReactNode;
 };
 
@@ -44,7 +55,6 @@ export function Menu({
   titulo,
   botao,
   classeDoBotao,
-  alinhamento = 'direita',
   children,
 }: MenuProps) {
   const [aberto, setAberto] = useState(false);
@@ -79,31 +89,27 @@ export function Menu({
     setAberto(true);
   }
 
-  function aoTeclarNoMenu(evento: KeyboardEvent<HTMLDivElement>) {
+  function moverFoco(tecla: string) {
     const lista = itens();
     const atual = lista.indexOf(document.activeElement as HTMLElement);
+    lista[MOVIMENTOS[tecla](lista.length, atual)]?.focus();
+  }
 
-    if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+  function aoTeclarNoMenu(evento: KeyboardEvent<HTMLDivElement>) {
+    const { key } = evento;
+
+    if (Object.hasOwn(MOVIMENTOS, key)) {
       evento.preventDefault();
-      const passo = evento.key === 'ArrowDown' ? 1 : -1;
-      lista[(atual + passo + lista.length) % lista.length]?.focus();
-    } else if (evento.key === 'Home') {
-      evento.preventDefault();
-      lista[0]?.focus();
-    } else if (evento.key === 'End') {
-      evento.preventDefault();
-      lista[lista.length - 1]?.focus();
-    } else if (evento.key === 'Escape') {
+      moverFoco(key);
+    } else if (key === 'Escape') {
       evento.preventDefault();
       fechar();
-    } else if (evento.key === 'Tab') {
+    } else if (key === 'Tab') {
       setAberto(false);
-    } else if (evento.key === 'Enter' || evento.key === ' ') {
+    } else if (key === 'Enter' || key === ' ') {
       // Enter e Espaço escolhem o item focado; o menu os trata no teclado para valer igual em todo item.
-      const alvo = evento.target as HTMLElement;
-      if (alvo.tagName !== 'A' && alvo.tagName !== 'BUTTON') return;
       evento.preventDefault();
-      alvo.click();
+      (evento.target as HTMLElement).click();
     }
   }
 
@@ -132,10 +138,7 @@ export function Menu({
             role="menu"
             aria-label={rotuloDoMenu}
             onKeyDown={aoTeclarNoMenu}
-            className={cn(
-              'absolute top-full z-50 mt-1 min-w-48 rounded-md border border-line bg-surface-raised p-1 shadow-lg',
-              alinhamento === 'direita' ? 'right-0' : 'left-0',
-            )}
+            className="absolute right-0 top-full z-50 mt-1 min-w-48 rounded-md border border-line bg-surface-raised p-1 shadow-lg"
           >
             {children}
           </div>
@@ -165,7 +168,7 @@ export function MenuItem({
   marcado,
   children,
 }: MenuItemProps) {
-  const { fechar } = useContext(MenuContexto);
+  const fechar = useFecharMenu();
 
   return (
     <button
@@ -192,7 +195,7 @@ export function MenuItem({
 type MenuLinkProps = { to: string; icone?: ReactNode; children: ReactNode };
 
 export function MenuLink({ to, icone, children }: MenuLinkProps) {
-  const { fechar } = useContext(MenuContexto);
+  const fechar = useFecharMenu();
 
   return (
     <Link

@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { SecaoRecolhivel } from '@/shared/components/SecaoRecolhivel/SecaoRecolhivel';
@@ -157,10 +158,14 @@ describe('SecaoRecolhivel', () => {
     localStorage.setItem('rgm.secao.filtros', 'fechada');
 
     // Act
-    const { container } = renderizar();
+    const primeiroRender = renderToString(
+      <SecaoRecolhivel id="filtros" titulo="Filtros">
+        <input aria-label="campo" />
+      </SecaoRecolhivel>,
+    );
 
     // Assert
-    expect(container.querySelector('button')?.getAttribute('aria-expanded')).toBe('false');
+    expect(primeiroRender).toContain('aria-expanded="false"');
   });
 
   it('deve guardar estados separados quando os ids são diferentes', () => {

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Menu, MenuItem, MenuLink, MenuSeparator, MenuTitulo } from '@/shared/components/Menu/Menu';
@@ -107,6 +107,18 @@ describe('Menu', () => {
 
     // Assert
     expect(document.activeElement).toBe(item('Primeira'));
+  });
+
+  it('deve continuar fechado quando uma tecla que não é seta para baixo é apertada no botão', () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    fireEvent.keyDown(botao(), { key: 'a' });
+
+    // Assert
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(botao().getAttribute('aria-expanded')).toBe('false');
   });
 
   it('deve ir ao item seguinte quando aperta seta para baixo', () => {
@@ -279,15 +291,30 @@ describe('Menu', () => {
     },
   );
 
-  it('deve navegar e fechar quando o item é um link', () => {
+  it('deve abrir a página do destino e fechar o menu quando o item é um link', () => {
     // Arrange
-    renderizar(<MenuLink to="/app/perfil">Meu perfil</MenuLink>);
+    render(
+      <MemoryRouter initialEntries={['/inicio']}>
+        <Routes>
+          <Route
+            path="/inicio"
+            element={
+              <Menu rotuloDoMenu="Ações" rotuloDoBotao="Abrir ações" botao="Abrir">
+                <MenuLink to="/perfil">Meu perfil</MenuLink>
+              </Menu>
+            }
+          />
+          <Route path="/perfil" element={<p>Página do perfil</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
     abrir();
 
     // Act
     fireEvent.click(item('Meu perfil'));
 
     // Assert
+    expect(screen.getByText('Página do perfil')).toBeDefined();
     expect(screen.queryByRole('menu')).toBeNull();
   });
 

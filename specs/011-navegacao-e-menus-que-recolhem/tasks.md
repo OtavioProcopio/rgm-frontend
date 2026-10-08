@@ -87,6 +87,7 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 - [x] T043 Rodar a feature contra o backend de `develop` (ambiente local): barra lateral, barra de abas, menu do usuário, "Mais ações" na ficha, filtros recolhíveis, e a suíte `make e2e`. Registrar na convergência
 - [x] T044 `make cover` com os arquivos alterados em 95% ou mais (RNF-10) e `app/package.json` sem pacote novo (RNF-11)
 - [x] T045 `make validate` verde
+- [x] T047 (acrescentada após o `/bu:review`, 2026-10-08) Corrigir os achados do parecer: `Menu.tsx` sem código morto (prop `alinhamento`, valor padrão do contexto e guarda de tag saem) e com o teclado num mapa de teclas, para a cobertura por arquivo voltar a 95% ou mais; testes que não provavam o que o nome prometia refeitos (link que navega de fato, Enter por `user-event`, atalhos fora do botão, primeiro render por `renderToString`); testes dos `onChange` de `ModelosFilters` e `UsuariosFilters`
 - [x] T046 (acrescentada na convergência) `Menu`, `SecaoRecolhivel` e `BarraDeAbas` deixam de desligar o contorno de foco global (`outline-none` e `ring-accent/40` saem; entra `outline-offset-[-2px]`): três testes em `TST/shared/components/Menu/Menu.test.tsx`, `TST/shared/components/SecaoRecolhivel/SecaoRecolhivel.test.tsx` e `TST/app/layouts/BarraDeAbas.test.tsx` falharam antes e passam depois (RNF-02)
 
 ## Cenários da spec × teste
@@ -248,3 +249,34 @@ Complemento da rodada 1 (2026-10-08, depois da T046, estado final `bb61305`): `m
 de novo, saída real: `169 passed` arquivos, `2207 passed` testes, cobertura 99,32% de
 instruções, 99,21% de ramos, 99,81% de linhas, build ok, saída 0. O número de testes sobe de
 2204 para 2207 pelos três testes de foco da T046; o veredito não muda.
+
+### Rodada 2 — 2026-10-08 (depois do `/bu:review`)
+
+O `/bu:review` reprovou a rodada 1. **Correção de uma afirmação minha:** a rodada 1 disse que
+RNF-10 estava realizado e T044 marcou "arquivos alterados em 95% ou mais". Era falso para
+`Menu.tsx`: 95,16% das instruções, 94% dos ramos e 93,75% das funções (linhas 77, 104 e 137).
+O gate passava porque o limite do `vitest.config.ts` é global.
+
+| Achado do parecer | Estado | Evidência |
+|---|---|---|
+| 1. `Menu.tsx` abaixo de 95% por arquivo | corrigido | código morto fora (prop `alinhamento`, valor padrão do contexto, guarda de tag); teste da tecla que não abre o menu; `make validate`: `Menu.tsx` deixa de aparecer entre os arquivos descobertos; funções 100% |
+| 2. Decisão de design como suposição (R1, R3) | aberto | segue em "Decisões abertas"; vai descrita no corpo da PR para o usuário decidir no merge |
+| 3. Arquivos fora do gate | registrado e parcialmente tratado | as exclusões `src/app/layouts/**`, `src/**/hooks/**`, `features/**/pages/**` e `features/**/components/**` seguem no `vitest.config.ts` (Princípio 10 proíbe acrescentar, não manda remover); `ModelosFilters` e `UsuariosFilters` ganharam 13 testes dos `onChange`; as páginas alteradas (`ModelosPage`, `SolicitacoesPage`, `ModeloDetalhePage`) seguem sem medição por arquivo. O plano dizia que `shared/hooks` era medido; não é (`plan.md`, Conformidade) |
+| 4. Código especulativo em `Menu.tsx` | corrigido | `alinhamento`, contexto com valor padrão e guarda de tag removidos |
+| 5. Funções longas | parcial | `aoTeclarNoMenu` agora é um mapa de teclas e `moverFoco`; `Menu` (≈100 linhas) e `BarraLateral` (47 linhas) seguem acima de 20 linhas |
+| 6. Testes que prometiam mais do que verificavam | corrigido | link que navega de fato (`Routes`), Enter por `user-event`, 5 sequências de atalho fora do botão, primeiro render por `renderToString` em `BarraLateral` e `SecaoRecolhivel`. Seguem consultas por classe CSS nos testes de largura da barra e do `Editar` principal (asserção de estilo, não de papel) |
+| 7. Estado de exportação duplicado | aberto, não bloqueia | com um comando só, a página instancia `useExportarPdf` e o `ExportarPdfButton` instancia outro; sem efeito visível |
+
+`make validate` desta rodada, saída real: `169 passed` arquivos, `2226 passed` testes,
+cobertura 99,83% de instruções, 99,79% de ramos, 100% de funções, 99,81% de linhas, build ok,
+saída 0.
+
+**Achado novo, fora de escopo (issue #146):** o `Select` compartilhado desabilita a opção
+"Todos"; depois de escolher um valor num filtro, o usuário não volta a "Todos". Afeta o
+quadro (`SolicitacaoFilters`) e a lista de modelos.
+
+**Desvio desta rodada:** uma troca de duas linhas em `Menu.tsx` foi feita com `sed`, não com
+Edit (o usuário já recusou edição por script).
+
+Veredito: **convergido**, com R1 e R3 abertos para o usuário e os achados 3, 5 e 7 registrados.
+Tarefas acrescentadas: T047.

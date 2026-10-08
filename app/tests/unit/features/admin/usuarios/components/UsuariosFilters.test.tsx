@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UsuariosFilters } from '@/features/admin/usuarios/components/UsuariosFilters';
@@ -11,6 +12,81 @@ beforeEach(() => localStorage.clear());
 afterEach(cleanup);
 
 describe('UsuariosFilters', () => {
+  describe('alterações dos filtros', () => {
+    it('deve chamar onPerfilChange com o perfil quando o usuário escolhe um perfil', async () => {
+      // Arrange
+      const onPerfilChange = vi.fn();
+      render(<UsuariosFilters onPerfilChange={onPerfilChange} onAtivoChange={vi.fn()} />);
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText('Perfil'), 'ADMINISTRADOR');
+
+      // Assert
+      expect(onPerfilChange).toHaveBeenCalledTimes(1);
+      expect(onPerfilChange).toHaveBeenCalledWith('ADMINISTRADOR');
+    });
+
+    it('deve chamar onPerfilChange com undefined quando o usuário volta ao vazio', async () => {
+      // Arrange
+      const onPerfilChange = vi.fn();
+      render(
+        <UsuariosFilters
+          perfil="ADMINISTRADOR"
+          onPerfilChange={onPerfilChange}
+          onAtivoChange={vi.fn()}
+        />,
+      );
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText('Perfil'), '');
+
+      // Assert
+      expect(onPerfilChange).toHaveBeenCalledTimes(1);
+      expect(onPerfilChange).toHaveBeenCalledWith(undefined);
+    });
+
+    it('deve chamar onAtivoChange com true quando o usuário escolhe Ativos', async () => {
+      // Arrange
+      const onAtivoChange = vi.fn();
+      render(<UsuariosFilters onPerfilChange={vi.fn()} onAtivoChange={onAtivoChange} />);
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText('Status'), 'Ativos');
+
+      // Assert
+      expect(onAtivoChange).toHaveBeenCalledTimes(1);
+      expect(onAtivoChange).toHaveBeenCalledWith(true);
+    });
+
+    it('deve chamar onAtivoChange com false quando o usuário escolhe Inativos', async () => {
+      // Arrange
+      const onAtivoChange = vi.fn();
+      render(<UsuariosFilters onPerfilChange={vi.fn()} onAtivoChange={onAtivoChange} />);
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText('Status'), 'Inativos');
+
+      // Assert
+      expect(onAtivoChange).toHaveBeenCalledTimes(1);
+      expect(onAtivoChange).toHaveBeenCalledWith(false);
+    });
+
+    it('deve chamar onAtivoChange com undefined quando o usuário volta ao vazio', async () => {
+      // Arrange
+      const onAtivoChange = vi.fn();
+      render(
+        <UsuariosFilters ativo={false} onPerfilChange={vi.fn()} onAtivoChange={onAtivoChange} />,
+      );
+
+      // Act
+      await userEvent.selectOptions(screen.getByLabelText('Status'), '');
+
+      // Assert
+      expect(onAtivoChange).toHaveBeenCalledTimes(1);
+      expect(onAtivoChange).toHaveBeenCalledWith(undefined);
+    });
+  });
+
   it('renders perfil and status selects', () => {
     const { container } = render(
       <UsuariosFilters onPerfilChange={vi.fn()} onAtivoChange={vi.fn()} />,
