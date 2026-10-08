@@ -83,10 +83,10 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 - [x] T039 [P] Alterar `app/tests/e2e/admin.spec.ts`: desativar e exportar passam por "Mais ações"
 - [x] T040 [P] Alterar `app/tests/e2e/kanban.spec.ts` e `app/tests/e2e/kanban-responsivo.spec.ts`: a navegação no celular usa a barra de abas; exportar do quadro passa por "Mais ações". **Sem mudança necessária** (conferido em 2026-10-08): nenhum dos dois roteiros clica em navegação nem em "Exportar PDF"; a suíte inteira roda na T043
 - [x] T041 [P] Acrescentar a linha desta feature à tabela de `openspec/README.md`
-- [ ] T042 Medição "depois" com `/root/rgm/evidencias/011-frontend/medir011.cjs` na branch: RNF-01, RNF-03 a RNF-08, capturas das 16 telas nos dois temas e do celular; comparar com T001; registrar na convergência
-- [ ] T043 Rodar a feature contra o backend de `develop` (ambiente local): barra lateral, barra de abas, menu do usuário, "Mais ações" na ficha, filtros recolhíveis, e a suíte `make e2e`. Registrar na convergência
-- [ ] T044 `make cover` com os arquivos alterados em 95% ou mais (RNF-10) e `app/package.json` sem pacote novo (RNF-11)
-- [ ] T045 `make validate` verde
+- [x] T042 Medição "depois" com `/root/rgm/evidencias/011-frontend/medir011.cjs` na branch: RNF-01, RNF-03 a RNF-08, capturas das 16 telas nos dois temas e do celular; comparar com T001; registrar na convergência
+- [x] T043 Rodar a feature contra o backend de `develop` (ambiente local): barra lateral, barra de abas, menu do usuário, "Mais ações" na ficha, filtros recolhíveis, e a suíte `make e2e`. Registrar na convergência
+- [x] T044 `make cover` com os arquivos alterados em 95% ou mais (RNF-10) e `app/package.json` sem pacote novo (RNF-11)
+- [x] T045 `make validate` verde
 
 ## Cenários da spec × teste
 
