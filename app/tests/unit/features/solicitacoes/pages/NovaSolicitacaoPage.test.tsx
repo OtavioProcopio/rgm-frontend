@@ -13,6 +13,16 @@ import { useAbrirSolicitacao } from '@/features/solicitacoes/hooks/useAbrirSolic
 
 import { NovaSolicitacaoPage } from '@/features/solicitacoes/pages/NovaSolicitacaoPage';
 import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
+import { ancestralComum } from '@tests/support/ancestralComum';
+
+vi.mock('@/shared/lib/rotulos', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/shared/lib/rotulos')>();
+  const daFonte = Object.fromEntries(
+    Object.keys(original.rotuloDoTipoDeSolicitacao).map((tipo) => [tipo, `Rótulo de ${tipo}`]),
+  );
+  return { ...original, rotuloDoTipoDeSolicitacao: daFonte };
+});
 
 vi.mock('@/features/solicitacoes/hooks/useAbrirSolicitacao', () => ({
   useAbrirSolicitacao: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
@@ -280,6 +290,55 @@ describe('NovaSolicitacaoPage', () => {
       screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.'),
     ).toBeDefined();
     expect(screen.queryByText('laudo.pdf')).toBeNull();
+  });
+});
+
+describe('NovaSolicitacaoPage — rótulo do tipo e cores por papel', () => {
+  it.each(Object.entries(rotuloDoTipoDeSolicitacao))(
+    'deve mostrar na opção %s o rótulo da fonte única quando o formulário abre para o administrador',
+    (tipo, rotulo) => {
+      // Arrange
+      const { AppWrapper } = createAppWrapper();
+
+      // Act
+      render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+      const campo = screen.getByLabelText('Tipo') as HTMLSelectElement;
+      const opcao = Array.from(campo.options).find((o) => o.value === tipo);
+
+      // Assert
+      expect(opcao?.textContent).toBe(rotulo);
+    },
+  );
+
+  it('deve pôr os dados do modelo pretendido sobre a superfície suave com a borda do tema quando o tipo é criação', async () => {
+    // Arrange
+    const esperado = ['border-line', 'bg-surface-muted'];
+    const { AppWrapper } = createAppWrapper();
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.selectOptions(screen.getByLabelText('Tipo'), 'CRIACAO');
+    const moldura = ancestralComum(
+      screen.getByLabelText('Código do modelo'),
+      screen.getByLabelText('Observações (opcional)'),
+    );
+
+    // Assert
+    expect(moldura.className.split(' ')).toEqual(expect.arrayContaining(esperado));
+  });
+
+  it('deve mostrar a recusa da foto no papel de perigo quando o arquivo é um PDF', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<NovaSolicitacaoPage />, { wrapper: AppWrapper });
+    const pdf = new File(['%PDF'], 'laudo.pdf', { type: 'application/pdf' });
+
+    // Act
+    await userEvent.upload(screen.getByLabelText('Foto do problema'), pdf, { applyAccept: false });
+    const recusa = screen.getByText(/Tipo de arquivo não permitido/);
+
+    // Assert
+    expect(recusa.className.split(' ')).toContain('text-danger-fg');
   });
 });
 

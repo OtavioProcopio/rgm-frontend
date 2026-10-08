@@ -29,12 +29,16 @@ describe('GaleriaFotoThumb', () => {
   });
 
   it('shows a capa indicator when principal', () => {
-    const { container } = render(<GaleriaFotoThumb foto={{ ...foto, principal: true }} onClick={vi.fn()} />);
+    const { container } = render(
+      <GaleriaFotoThumb foto={{ ...foto, principal: true }} onClick={vi.fn()} />,
+    );
     expect(container.querySelector('svg')).toBeDefined();
   });
 
   it('shows an overlay with the extra count when overlayCount is set', () => {
-    const { container } = render(<GaleriaFotoThumb foto={foto} overlayCount={3} onClick={vi.fn()} />);
+    const { container } = render(
+      <GaleriaFotoThumb foto={foto} overlayCount={3} onClick={vi.fn()} />,
+    );
     expect(within(container).getByText('+3')).toBeDefined();
     expect(
       within(container).getByRole('button', { name: /ver galeria completa \(mais 3 fotos\)/i }),
@@ -46,5 +50,19 @@ describe('GaleriaFotoThumb', () => {
     const img = container.querySelector('img') as HTMLImageElement;
     fireEvent.error(img);
     expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('deve mostrar a contagem extra com o texto sobre foto quando há mais fotos', () => {
+    // Arrange
+    const extras = 3;
+
+    // Act
+    const { container } = render(
+      <GaleriaFotoThumb foto={foto} overlayCount={extras} onClick={vi.fn()} />,
+    );
+
+    // Assert
+    const contagem = within(container).getByText(`+${extras}`);
+    expect(contagem.className.split(' ')).toContain('text-on-solid');
   });
 });

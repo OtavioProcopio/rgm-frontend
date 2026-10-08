@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -47,5 +47,25 @@ describe('MaquinaActionsMenu', () => {
     );
     await userEvent.click(within(container).getByText('Ativar'));
     expect(onAtivar).toHaveBeenCalledWith({ ...maquina, ativo: false });
+  });
+
+  it('deve mostrar o link Renomear com superfície suave e texto principal pelos papéis', () => {
+    // Arrange
+    const botaoSecundario = ['bg-surface-muted', 'text-fg'];
+
+    // Act
+    render(
+      <MemoryRouter>
+        <MaquinaActionsMenu
+          maquina={maquina}
+          onAtivar={vi.fn<(alvo: typeof maquina) => void>()}
+          onDesativar={vi.fn<(alvo: typeof maquina) => void>()}
+        />
+      </MemoryRouter>,
+    );
+
+    // Assert
+    const link = screen.getByRole('link', { name: 'Renomear' });
+    expect(link.className.split(' ')).toEqual(expect.arrayContaining(botaoSecundario));
   });
 });

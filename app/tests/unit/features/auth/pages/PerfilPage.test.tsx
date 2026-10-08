@@ -127,6 +127,44 @@ describe('PerfilPage — botões de mostrar senha', () => {
   });
 });
 
+describe('PerfilPage — molduras de cartão', () => {
+  const USUARIO = { nome: 'Otávio', email: 'o@o.com', perfil: 'ADMINISTRADOR' };
+  const MOLDURA_DE_CARTAO = ['border-line', 'bg-surface'];
+
+  async function abrirPerfil() {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: USUARIO,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  it('deve usar a moldura de cartão na seção de dados do perfil quando o perfil é carregado', async () => {
+    // Arrange
+    await abrirPerfil();
+
+    // Act
+    const secao = screen.getByRole('heading', { name: USUARIO.nome }).closest('.rounded-xl');
+
+    // Assert
+    expect(secao?.className.split(' ')).toEqual(expect.arrayContaining(MOLDURA_DE_CARTAO));
+  });
+
+  it('deve usar a moldura de cartão na seção de troca de senha quando o perfil é carregado', async () => {
+    // Arrange
+    await abrirPerfil();
+
+    // Act
+    const secao = screen.getByRole('heading', { name: 'Alterar Senha' }).closest('.rounded-xl');
+
+    // Assert
+    expect(secao?.className.split(' ')).toEqual(expect.arrayContaining(MOLDURA_DE_CARTAO));
+  });
+});
+
 describe('PerfilPage — troca de senha', () => {
   const USUARIO = { id: 'u-1', nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR', ativo: true };
 
@@ -235,6 +273,30 @@ describe('PerfilPage — troca de senha', () => {
 
     // Assert
     expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve pintar o aviso com o papel de sucesso quando a troca de senha dá certo', async () => {
+    // Arrange
+    const papelDeSucesso = ['border-success', 'bg-success-soft', 'text-success-fg'];
+
+    // Act
+    await trocarSenha(comCredenciais);
+
+    // Assert
+    const aviso = (await screen.findByText('Senha alterada com sucesso!')).closest('div');
+    expect(aviso?.className.split(' ')).toEqual(expect.arrayContaining(papelDeSucesso));
+  });
+
+  it('deve pintar o aviso com o papel de perigo quando a API recusa a troca', async () => {
+    // Arrange
+    const papelDePerigo = ['border-danger', 'bg-danger-soft', 'text-danger-fg'];
+
+    // Act
+    await trocarSenha(recusada);
+
+    // Assert
+    const aviso = (await screen.findByText('Senha atual incorreta.')).closest('div');
+    expect(aviso?.className.split(' ')).toEqual(expect.arrayContaining(papelDePerigo));
   });
 
   it('deve não mostrar o sucesso quando a API recusa a troca', async () => {

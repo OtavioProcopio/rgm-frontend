@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useSemAtualizacao } from '@/features/solicitacoes/hooks/useSemAtualizacao';
@@ -16,6 +16,13 @@ vi.mock('@/features/solicitacoes/hooks/useSolicitacaoEvents', () => ({
 vi.mock('@/features/solicitacoes/hooks/useSemAtualizacao', () => ({
   useSemAtualizacao: vi.fn().mockReturnValue(false),
 }));
+
+const USUARIO = { nome: 'Ge', perfil: 'GESTOR' } as const;
+const NOME_DO_LOGO = 'RGM Auto Parts';
+const PLACA_DO_LOGO = 'bg-logo-plate';
+const CONTROLE_DE_TEMA = /^Tema: /;
+
+const classes = (elemento: Element) => elemento.className.split(' ');
 
 afterEach(() => {
   cleanup();
@@ -45,5 +52,31 @@ describe('AppLayout', () => {
     // Assert
     const cabecalho = screen.getByRole('banner');
     expect(cabecalho.textContent).toContain('Sem atualização automática');
+  });
+
+  it('deve mostrar o logo sobre a placa do papel logo-plate quando a barra lateral é montada', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: USUARIO });
+
+    // Act
+    render(<AppLayout />, { wrapper: AppWrapper });
+
+    // Assert
+    const logo = within(screen.getByRole('complementary')).getByRole('img', { name: NOME_DO_LOGO });
+    expect(classes(logo.parentElement!)).toContain(PLACA_DO_LOGO);
+  });
+
+  it('deve mostrar o controle de tema quando o cabeçalho é montado', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: USUARIO });
+
+    // Act
+    render(<AppLayout />, { wrapper: AppWrapper });
+
+    // Assert
+    const controles = within(screen.getByRole('banner')).getAllByRole('button', {
+      name: CONTROLE_DE_TEMA,
+    });
+    expect(controles).toHaveLength(1);
   });
 });

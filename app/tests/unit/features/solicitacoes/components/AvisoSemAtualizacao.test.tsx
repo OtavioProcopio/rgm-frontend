@@ -23,6 +23,20 @@ describe('AvisoSemAtualizacao', () => {
     expect(screen.getByRole('status').textContent).toBe('Sem atualização automática');
   });
 
+  it('deve usar o fundo e o texto de alerta quando o aviso é mostrado', () => {
+    // Arrange
+    vi.mocked(useSemAtualizacao).mockReturnValue(true);
+
+    // Act
+    render(<AvisoSemAtualizacao />);
+    const aviso = screen.getByText('Sem atualização automática');
+
+    // Assert
+    expect(aviso.className.split(' ')).toEqual(
+      expect.arrayContaining(['bg-warning-soft', 'text-warning-fg']),
+    );
+  });
+
   it('deve manter a região de status vazia quando há atualização automática', () => {
     // Arrange
     vi.mocked(useSemAtualizacao).mockReturnValue(false);

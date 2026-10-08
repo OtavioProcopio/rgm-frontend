@@ -11,7 +11,12 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 import { useRedefinirSenhaUsuario } from '@/features/admin/usuarios/hooks/useRedefinirSenhaUsuario';
 import { useUsuario } from '@/features/admin/usuarios/hooks/useUsuario';
 import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
+import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 import { MENSAGEM_DA_SENHA, TAMANHO_MINIMO_DA_SENHA } from '@/shared/lib/senha';
+
+/** O prestador externo não tem login: a tela não o oferece como nível de acesso. */
+const PERFIS_COM_LOGIN = Object.entries(rotuloDoPerfil).filter(([perfil]) => perfil !== 'EXTERNO');
+const TEXTO_DE_ERRO = 'text-danger-fg';
 
 vi.mock('@/features/admin/usuarios/hooks/useUsuario', () => ({
   useUsuario: vi.fn().mockReturnValue({ data: undefined, isLoading: true, error: null }),
@@ -108,4 +113,46 @@ describe('EditarUsuarioPage — redefinição de senha', () => {
     // Assert
     expect(redefinir).toHaveBeenCalledWith({ id: ID_DO_USUARIO, novaSenha });
   });
+
+  it('deve mostrar a recusa com o texto de erro do tema quando a senha é curta demais', async () => {
+    // Arrange
+    abrirPagina();
+    const senhaCurta = 'a'.repeat(TAMANHO_MINIMO_DA_SENHA - 1);
+
+    // Act
+    await userEvent.type(screen.getByLabelText('Nova Senha'), senhaCurta);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Senha' }));
+
+    // Assert
+    const aviso = screen.getByText(MENSAGEM_DA_SENHA).closest('div')!;
+    expect(aviso.className.split(' ')).toContain(TEXTO_DE_ERRO);
+  });
+});
+
+describe('EditarUsuarioPage — nível de acesso', () => {
+  /** Abre a página de um usuário com login, que é quem tem o seletor de perfil. */
+  function abrirPagina() {
+    vi.mocked(useUsuario).mockReturnValue({
+      data: { id: '1', nome: 'João', email: 'j@j.com', perfil: 'OPERADOR', ativo: true },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useUsuario>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/usuarios/1'] });
+    render(<EditarUsuarioPage />, { wrapper: AppWrapper });
+    return screen.getByLabelText('Perfil');
+  }
+
+  it.each(PERFIS_COM_LOGIN)(
+    'deve mostrar o rótulo da fonte única quando a opção de perfil é %s',
+    (perfil, rotulo) => {
+      // Arrange
+      const seletor = abrirPagina();
+
+      // Act
+      const opcao = seletor.querySelector(`option[value="${perfil}"]`);
+
+      // Assert
+      expect(opcao?.textContent).toBe(rotulo);
+    },
+  );
 });

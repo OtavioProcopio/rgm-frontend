@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -31,13 +31,19 @@ vi.mock('@/features/admin/modelos/hooks/useGaleriaModelo', () => ({
   useGaleriaModelo: vi.fn().mockReturnValue({ data: fotos, isLoading: false, error: null }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useAdicionarFotoGaleria', () => ({
-  useAdicionarFotoGaleria: vi.fn().mockReturnValue({ mutateAsync: adicionarMutateAsync, isPending: false }),
+  useAdicionarFotoGaleria: vi
+    .fn()
+    .mockReturnValue({ mutateAsync: adicionarMutateAsync, isPending: false }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useEditarFotoGaleria', () => ({
-  useEditarFotoGaleria: vi.fn().mockReturnValue({ mutateAsync: editarMutateAsync, isPending: false }),
+  useEditarFotoGaleria: vi
+    .fn()
+    .mockReturnValue({ mutateAsync: editarMutateAsync, isPending: false }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useRemoverFotoGaleria', () => ({
-  useRemoverFotoGaleria: vi.fn().mockReturnValue({ mutateAsync: removerMutateAsync, isPending: false }),
+  useRemoverFotoGaleria: vi
+    .fn()
+    .mockReturnValue({ mutateAsync: removerMutateAsync, isPending: false }),
 }));
 
 afterEach(() => {
@@ -108,7 +114,9 @@ describe('GaleriaModelo', () => {
   it('opens the add-photo modal and submits a new photo', async () => {
     const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
     await userEvent.click(within(container).getByRole('button', { name: /^adicionar foto$/i }));
-    expect(within(container).getByRole('dialog', { name: /adicionar foto à galeria/i })).toBeDefined();
+    expect(
+      within(container).getByRole('dialog', { name: /adicionar foto à galeria/i }),
+    ).toBeDefined();
 
     await userEvent.type(within(container).getByLabelText(/identificação/i), 'Nova foto');
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -123,7 +131,9 @@ describe('GaleriaModelo', () => {
       file,
       identificacao: 'Nova foto',
     });
-    expect(within(container).queryByRole('dialog', { name: /adicionar foto à galeria/i })).toBeNull();
+    expect(
+      within(container).queryByRole('dialog', { name: /adicionar foto à galeria/i }),
+    ).toBeNull();
   });
 
   it('removes a photo from within the carousel', async () => {
@@ -133,5 +143,99 @@ describe('GaleriaModelo', () => {
     const confirmButtons = within(container).getAllByRole('button', { name: /remover/i });
     await userEvent.click(confirmButtons[confirmButtons.length - 1]);
     expect(removerMutateAsync).toHaveBeenCalledWith({ modeloId: 'm1', fotoId: 'f1' });
+  });
+});
+
+const NOME_DO_DIALOGO = `Galeria de fotos: ${fotos[0].identificacao}`;
+const NOME_DA_MINIATURA = `Ver foto: ${fotos[0].identificacao}`;
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+async function abrirGaleriaPor(nomeDoControle: string) {
+  render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+  await userEvent.click(screen.getByRole('button', { name: nomeDoControle }));
+}
+
+describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
+  it('deve ser anunciada como diálogo modal com o nome da foto exibida quando a galeria completa abre', async () => {
+    // Act
+    await abrirGaleriaPor('Ver galeria completa');
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve levar o foco para dentro da galeria quando a galeria completa abre', async () => {
+    // Act
+    await abrirGaleriaPor('Ver galeria completa');
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    expect(dialogo.contains(document.activeElement)).toBe(true);
+  });
+
+  it('deve levar o foco ao primeiro controle da galeria quando Tab é apertado no último', async () => {
+    // Arrange
+    await abrirGaleriaPor('Ver galeria completa');
+    const controles = within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO })).getAllByRole(
+      'button',
+    );
+    controles[controles.length - 1].focus();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(controles[0]);
+  });
+
+  it('deve fechar a galeria completa quando Esc é apertado', async () => {
+    // Arrange
+    await abrirGaleriaPor('Ver galeria completa');
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve devolver o foco ao botão da galeria completa quando ela fecha', async () => {
+    // Arrange
+    await abrirGaleriaPor('Ver galeria completa');
+    within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO }))
+      .getByRole('button', { name: 'Fechar' })
+      .focus();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Ver galeria completa' }),
+    );
+  });
+
+  it('deve devolver o foco à miniatura que abriu quando a foto ampliada fecha', async () => {
+    // Arrange
+    await abrirGaleriaPor(NOME_DA_MINIATURA);
+    within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO }))
+      .getByRole('button', { name: 'Fechar' })
+      .focus();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: NOME_DA_MINIATURA }));
+  });
+
+  it('deve usar o fundo de sobreposição de foto quando a galeria completa abre', async () => {
+    // Act
+    await abrirGaleriaPor('Ver galeria completa');
+
+    // Assert
+    const fundo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO }).parentElement!;
+    expect(classes(fundo)).toContain('bg-scrim');
   });
 });

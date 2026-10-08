@@ -38,13 +38,28 @@ afterEach(cleanup);
 describe('SolicitacaoAcoes', () => {
   it('deve mostrar só Devolver e Encerrar quando a API informa as ações DEVOLVER e ENCERRAR', () => {
     // Arrange
-    const informada = criarSolicitacao({ status: 'A_FAZER', acoesPermitidas: ['DEVOLVER', 'ENCERRAR'] });
+    const informada = criarSolicitacao({
+      status: 'A_FAZER',
+      acoesPermitidas: ['DEVOLVER', 'ENCERRAR'],
+    });
 
     // Act
     montar(informada, gestor);
 
     // Assert
     expect(rotulosDosBotoes()).toEqual(['Devolver', 'Encerrar']);
+  });
+
+  it('deve usar o texto secundário no título da seção quando há ação permitida', () => {
+    // Arrange
+    const informada = criarSolicitacao({ status: 'A_FAZER', acoesPermitidas: ['ENCERRAR'] });
+
+    // Act
+    montar(informada, gestor);
+    const titulo = screen.getByRole('heading', { name: 'Ações' });
+
+    // Assert
+    expect(titulo.className.split(' ')).toContain('text-fg-muted');
   });
 
   it('deve mostrar Triar quando a API não informa as ações, o usuário é gestor e o status é A Fazer', () => {
@@ -96,7 +111,9 @@ describe('SolicitacaoAcoes', () => {
     // Arrange
     montar(criarSolicitacao({ status: 'EM_VALIDACAO' }), gestor);
     await userEvent.click(screen.getByRole('button', { name: 'Devolver' }));
-    const formulario = screen.getByLabelText('Motivo da devolução *').closest('form') as HTMLElement;
+    const formulario = screen
+      .getByLabelText('Motivo da devolução *')
+      .closest('form') as HTMLElement;
 
     // Act
     await userEvent.click(within(formulario).getByRole('button', { name: 'Cancelar' }));
@@ -134,9 +151,12 @@ describe('SolicitacaoAcoes', () => {
   it('deve manter a ação aberta quando a solicitação muda de status e a ação deixa de ser permitida', async () => {
     // Arrange
     const { AppWrapper } = createAppWrapper({ user: gestor });
-    const { rerender } = render(<SolicitacaoAcoes solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })} />, {
-      wrapper: AppWrapper,
-    });
+    const { rerender } = render(
+      <SolicitacaoAcoes solicitacao={criarSolicitacao({ status: 'EM_VALIDACAO' })} />,
+      {
+        wrapper: AppWrapper,
+      },
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Devolver' }));
 
     // Act
@@ -181,10 +201,14 @@ describe('SolicitacaoAcoes — tempo real', () => {
     const conexao = await abrirTriagemComEventos();
 
     // Act
-    act(() => conexao.emit('solicitacao', { tipo: 'editada', solicitacao: criarSolicitacao({ id: 's1' }) }));
+    act(() =>
+      conexao.emit('solicitacao', { tipo: 'editada', solicitacao: criarSolicitacao({ id: 's1' }) }),
+    );
 
     // Assert
-    expect((await screen.findByRole('status')).textContent).toContain('Atualizada por outro usuário');
+    expect((await screen.findByRole('status')).textContent).toContain(
+      'Atualizada por outro usuário',
+    );
     expect((screen.getByLabelText('Prioridade') as HTMLSelectElement).value).toBe('ALTA');
   });
 
@@ -193,7 +217,12 @@ describe('SolicitacaoAcoes — tempo real', () => {
     const conexao = await abrirTriagemComEventos();
 
     // Act
-    act(() => conexao.emit('solicitacao', { tipo: 'editada', solicitacao: criarSolicitacao({ id: 'outra' }) }));
+    act(() =>
+      conexao.emit('solicitacao', {
+        tipo: 'editada',
+        solicitacao: criarSolicitacao({ id: 'outra' }),
+      }),
+    );
 
     await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
 

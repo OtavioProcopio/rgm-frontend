@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Evidencia } from '@/features/evidencias/types/evidenciaTypes';
 import { EvidenciaPreview } from '@/features/evidencias/components/EvidenciaPreview';
@@ -20,6 +20,71 @@ const base: Evidencia = {
   tipo: 'GERAL',
   descricao: null,
 };
+
+describe('EvidenciaPreview — cores por papel', () => {
+  const pdf: Evidencia = { ...base, mimeType: 'application/pdf', nomeArquivo: 'doc.pdf' };
+
+  it('deve usar a borda e a superfície do tema na moldura quando a evidência é exibida', () => {
+    // Arrange
+    const moldura = ['border-line', 'bg-surface'];
+
+    // Act
+    const { container } = render(<EvidenciaPreview evidencia={base} />);
+
+    // Assert
+    expect(container.firstElementChild?.className.split(' ')).toEqual(
+      expect.arrayContaining(moldura),
+    );
+  });
+
+  it('deve usar a superfície suave e o texto secundário na miniatura quando o arquivo não é imagem', () => {
+    // Arrange
+    const miniatura = ['bg-surface-muted', 'text-fg-muted'];
+
+    // Act
+    render(<EvidenciaPreview evidencia={pdf} />);
+
+    // Assert
+    expect(screen.getByText('Arquivo').className.split(' ')).toEqual(
+      expect.arrayContaining(miniatura),
+    );
+  });
+
+  it('deve escrever o tamanho com o texto secundário quando a evidência é exibida', () => {
+    // Arrange
+    const evidencia: Evidencia = { ...base, tamanhoBytes: 512 };
+
+    // Act
+    render(<EvidenciaPreview evidencia={evidencia} />);
+
+    // Assert
+    expect(screen.getByText(`${evidencia.tamanhoBytes} B`).className.split(' ')).toContain(
+      'text-fg-muted',
+    );
+  });
+
+  it('deve escrever o atalho de abrir com a cor de destaque quando a evidência é exibida', () => {
+    // Act
+    render(<EvidenciaPreview evidencia={pdf} />);
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Abrir' }).className.split(' ')).toContain(
+      'text-accent',
+    );
+  });
+
+  it('deve realçar o botão de excluir com o papel de perigo ao passar o mouse quando a exclusão é permitida', () => {
+    // Arrange
+    const realceDePerigo = ['hover:bg-danger-soft', 'hover:text-danger-fg'];
+
+    // Act
+    render(<EvidenciaPreview evidencia={base} onDelete={vi.fn()} />);
+
+    // Assert
+    const excluir = screen.getByRole('button', { name: 'Excluir evidência' });
+    expect(excluir.className.split(' ')).toEqual(expect.arrayContaining(realceDePerigo));
+  });
+});
 
 describe('EvidenciaPreview', () => {
   it('renders filename', () => {

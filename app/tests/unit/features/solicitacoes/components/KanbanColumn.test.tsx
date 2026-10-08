@@ -4,7 +4,9 @@
 import { cleanup, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { ColumnConfig } from '@/features/solicitacoes/components/KanbanColumn';
+import { ETAPAS, FUNDO_NEUTRO, SELETOR_DO_PONTO, fundosDe } from '@tests/support/etapasDoQuadro';
+
+import { COLUMNS } from '@/features/solicitacoes/components/kanbanColunas';
 import { KanbanColumn } from '@/features/solicitacoes/components/KanbanColumn';
 
 vi.mock('@/features/solicitacoes/components/KanbanCard', () => ({
@@ -21,12 +23,9 @@ vi.mock('@/features/solicitacoes/components/KanbanCard', () => ({
   ),
 }));
 
-const config: ColumnConfig = {
-  status: 'A_FAZER',
-  label: 'A Fazer',
-  headerClass: 'bg-slate-100',
-  accentClass: 'bg-slate-50',
-};
+const configDe = (status: string) => COLUMNS.find((coluna) => coluna.status === status)!;
+const config = configDe('A_FAZER');
+const classes = (elemento: Element) => elemento.className.split(' ');
 
 const solicitacao = {
   id: '1',
@@ -72,8 +71,52 @@ describe('KanbanColumn', () => {
     const { container } = render(colunaBasica());
 
     // Assert
-    expect(within(container).getByText('A Fazer')).toBeDefined();
+    expect(within(container).getByText(config.label)).toBeDefined();
   });
+
+  it.each(ETAPAS)(
+    'deve mostrar o nome da etapa no cabeçalho quando a coluna é $status',
+    ({ status }) => {
+      // Arrange
+      const etapa = configDe(status);
+
+      // Act
+      const { container } = render(colunaBasica({ config: etapa }));
+
+      // Assert
+      expect(within(container).getByText(etapa.label).textContent).toBe(etapa.label);
+    },
+  );
+
+  it.each(ETAPAS)(
+    'deve usar o mesmo fundo neutro no cabeçalho quando a coluna é $status',
+    ({ status }) => {
+      // Arrange
+      const etapa = configDe(status);
+
+      // Act
+      const { container } = render(colunaBasica({ config: etapa }));
+
+      // Assert
+      const cabecalho = within(container).getByText(etapa.label).closest(`.${FUNDO_NEUTRO}`);
+      expect(fundosDe(cabecalho)).toEqual([FUNDO_NEUTRO]);
+    },
+  );
+
+  it.each(ETAPAS)(
+    'deve mostrar no cabeçalho um ponto com o papel $ponto quando a coluna é $status',
+    ({ status, ponto }) => {
+      // Arrange
+      const etapa = configDe(status);
+
+      // Act
+      const { container } = render(colunaBasica({ config: etapa }));
+
+      // Assert
+      const pontos = Array.from(container.querySelectorAll(SELETOR_DO_PONTO), classes);
+      expect(pontos).toEqual([expect.arrayContaining([ponto])]);
+    },
+  );
 
   it('deve dizer que não há solicitação quando a coluna está vazia', () => {
     // Act
@@ -96,7 +139,7 @@ describe('KanbanColumn', () => {
     const { container } = render(colunaBasica({ mobileView: true }));
 
     // Assert
-    expect(within(container).queryByText('A Fazer')).toBeNull();
+    expect(within(container).queryByText(config.label)).toBeNull();
   });
 
   function coluna(relacaoDe?: Parameters<typeof KanbanColumn>[0]['relacaoDe']) {
@@ -190,7 +233,9 @@ describe('KanbanColumn', () => {
     const { container } = render(colunaEmBlocos({ temMais: true, onCarregarMais }));
 
     // Act
-    within(container).getByRole('button', { name: /Carregar mais/ }).click();
+    within(container)
+      .getByRole('button', { name: /Carregar mais/ })
+      .click();
 
     // Assert
     expect(onCarregarMais).toHaveBeenCalledTimes(1);

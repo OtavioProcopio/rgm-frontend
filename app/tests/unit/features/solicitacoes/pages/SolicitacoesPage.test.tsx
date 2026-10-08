@@ -113,7 +113,9 @@ describe('SolicitacoesPage', () => {
     const userEvent = (await import('@testing-library/user-event')).default;
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
     vi.mocked(useSolicitacoes).mockReturnValue({
-      data: undefined, error: new Error('fail'), isLoading: false,
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
     } as ReturnType<typeof useSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper();
@@ -131,7 +133,9 @@ describe('SolicitacoesPage', () => {
   it('opens directly in lista view filtered by maquina from the URL', async () => {
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
     vi.mocked(useSolicitacoes).mockReturnValue({
-      data: undefined, error: null, isLoading: true,
+      data: undefined,
+      error: null,
+      isLoading: true,
     } as unknown as ReturnType<typeof useSolicitacoes>);
 
     const { AppWrapper } = createAppWrapper({
@@ -161,6 +165,33 @@ describe('SolicitacoesPage', () => {
     const alerta = await screen.findByRole('alert');
     expect(alerta.textContent).toBe(`Não foi possível exportar o PDF. ${recusa.message}`);
     expect(alerta.parentElement).toBe(botao.parentElement);
+  });
+});
+
+describe('SolicitacoesPage — cores por papel', () => {
+  it('deve pôr a troca de visão sobre a superfície com a borda do tema quando a página abre', () => {
+    // Arrange
+    const esperado = ['border-line', 'bg-surface'];
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const trocaDeVisao = screen.getByRole('button', { name: 'Kanban' }).parentElement;
+
+    // Assert
+    expect(trocaDeVisao?.className.split(' ')).toEqual(expect.arrayContaining(esperado));
+  });
+
+  it('deve mostrar a visão não escolhida no texto secundário quando a página abre no quadro', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const visaoNaoEscolhida = screen.getByRole('button', { name: 'Lista' });
+
+    // Assert
+    expect(visaoNaoEscolhida.className.split(' ')).toContain('text-fg-muted');
   });
 });
 

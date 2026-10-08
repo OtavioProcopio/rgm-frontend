@@ -6,6 +6,11 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
+import {
+  nomesDosTipos,
+  TAMANHO_MAXIMO_MB,
+  TIPOS_DE_EVIDENCIA,
+} from '@/shared/lib/arquivoPermitido';
 
 afterEach(cleanup);
 
@@ -40,6 +45,17 @@ describe('EvidenciaUploader', () => {
     expect(onUpload).toHaveBeenCalledWith(file);
   });
 
+  it('deve escrever os tipos aceitos e o limite com o texto secundário quando o envio é oferecido', () => {
+    // Arrange
+    const dica = `${nomesDosTipos(TIPOS_DE_EVIDENCIA)} — máx. ${TAMANHO_MAXIMO_MB} MB`;
+
+    // Act
+    render(<EvidenciaUploader onUpload={vi.fn()} />);
+
+    // Assert
+    expect(screen.getByText(dica).className.split(' ')).toContain('text-fg-muted');
+  });
+
   it('deve recusar listando os tipos aceitos, sem enviar, quando o arquivo é um executável', async () => {
     // Arrange
     const onUpload = vi.fn();
@@ -47,10 +63,16 @@ describe('EvidenciaUploader', () => {
     const executavel = makeFile('instalador.exe', 'application/x-msdownload', 100);
 
     // Act
-    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), executavel, { applyAccept: false });
+    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), executavel, {
+      applyAccept: false,
+    });
 
     // Assert
-    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG, GIF, WebP, PDF e MP4.')).toBeDefined();
+    expect(
+      screen.getByText(
+        'Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG, GIF, WebP, PDF e MP4.',
+      ),
+    ).toBeDefined();
     expect(onUpload).not.toHaveBeenCalled();
   });
 
@@ -97,5 +119,4 @@ describe('EvidenciaUploader', () => {
     expect(screen.queryByText(/não permitido/i)).toBeNull();
     expect(onUpload).toHaveBeenCalledWith(valido);
   });
-
 });

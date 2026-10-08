@@ -36,8 +36,18 @@ const RESUMO = {
 };
 
 const RANKING = [
-  { modeloId: 'm1', codigo: 'M01', tempoMedioResolucaoSegundos: 3600, intervaloMedioSegundos: 7200 },
-  { modeloId: 'm2', codigo: 'M02', tempoMedioResolucaoSegundos: 90000, intervaloMedioSegundos: null },
+  {
+    modeloId: 'm1',
+    codigo: 'M01',
+    tempoMedioResolucaoSegundos: 3600,
+    intervaloMedioSegundos: 7200,
+  },
+  {
+    modeloId: 'm2',
+    codigo: 'M02',
+    tempoMedioResolucaoSegundos: 90000,
+    intervaloMedioSegundos: null,
+  },
 ];
 
 function resumoResponde(estado: { data?: typeof RESUMO; isLoading?: boolean; isError?: boolean }) {
@@ -128,6 +138,108 @@ describe('ModelosTab — contagens pelo resumo da API', () => {
 
     // Assert
     expect(within(container).getByText('Nenhum modelo cadastrado.')).toBeDefined();
+  });
+});
+
+const TABELAS = [
+  { nome: 'modelos por máquina', colunas: ['Máquina', 'Modelos'] },
+  {
+    nome: 'ranking por tempo',
+    colunas: ['Código', 'Tempo médio de resolução', 'Intervalo médio entre solicitações'],
+  },
+];
+
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+function abrirComAsDuasTabelas(primeiraColuna: string) {
+  rankingCom(RANKING);
+  const { container } = abrir();
+  return within(container).getByRole('columnheader', { name: primeiraColuna }).closest('table')!;
+}
+
+describe('ModelosTab — tabelas pela peça de tabela', () => {
+  it.each(TABELAS)(
+    'deve rolar a tabela de $nome na horizontal dentro da moldura com a borda do papel',
+    ({ colunas }) => {
+      // Act
+      const tabela = abrirComAsDuasTabelas(colunas[0]);
+
+      // Assert
+      expect(classes(tabela.parentElement!)).toEqual(
+        expect.arrayContaining(['overflow-x-auto', 'border', 'border-line']),
+      );
+    },
+  );
+
+  it.each(TABELAS)(
+    'deve ter o cabeçalho da tabela de $nome com a superfície suave e o texto secundário',
+    ({ colunas }) => {
+      // Act
+      const tabela = abrirComAsDuasTabelas(colunas[0]);
+
+      // Assert
+      expect(classes(tabela.querySelector('thead')!)).toEqual(
+        expect.arrayContaining(['bg-surface-muted', 'text-fg-muted']),
+      );
+    },
+  );
+
+  it.each(TABELAS)(
+    'deve separar as linhas da tabela de $nome pelo papel de borda, sobre a superfície',
+    ({ colunas }) => {
+      // Act
+      const tabela = abrirComAsDuasTabelas(colunas[0]);
+
+      // Assert
+      expect(classes(tabela.querySelector('tbody')!)).toEqual(
+        expect.arrayContaining(['divide-line', 'bg-surface']),
+      );
+    },
+  );
+
+  it.each(TABELAS)(
+    'deve ter um cabeçalho de coluna para cada coluna da tabela de $nome',
+    ({ colunas }) => {
+      // Act
+      const tabela = abrirComAsDuasTabelas(colunas[0]);
+
+      // Assert
+      expect(
+        within(tabela)
+          .getAllByRole('columnheader')
+          .map((celula) => celula.textContent),
+      ).toEqual(colunas);
+    },
+  );
+
+  it.each(TABELAS)(
+    'deve marcar cada cabeçalho da tabela de $nome como cabeçalho de coluna',
+    ({ colunas }) => {
+      // Act
+      const tabela = abrirComAsDuasTabelas(colunas[0]);
+
+      // Assert
+      expect(
+        within(tabela)
+          .getAllByRole('columnheader')
+          .map((celula) => celula.getAttribute('scope')),
+      ).toEqual(colunas.map(() => 'col'));
+    },
+  );
+});
+
+describe('ModelosTab — textos pelos papéis', () => {
+  it('deve mostrar o aviso de nenhum modelo cadastrado com o texto secundário', () => {
+    // Arrange
+    resumoResponde({ data: { ...RESUMO, porMaquina: [] } });
+
+    // Act
+    const { container } = abrir();
+
+    // Assert
+    expect(classes(within(container).getByText('Nenhum modelo cadastrado.'))).toContain(
+      'text-fg-muted',
+    );
   });
 });
 

@@ -1,7 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { useState } from 'react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -196,5 +197,108 @@ describe('GaleriaCarousel', () => {
     // Assert
     expect(within(container).getByRole('dialog', { name: /galeria de fotos/i })).toBeDefined();
     expect(within(container).getByText('1 / 2')).toBeDefined();
+  });
+});
+
+const NOME_DO_DIALOGO = `Galeria de fotos: ${fotos[0].identificacao}`;
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+/** Página com um botão que abre o carrossel, para provar o foco ao abrir e ao fechar. */
+function PaginaComCarrossel() {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setAberto(true)}>
+        Abrir
+      </button>
+      {aberto ? (
+        <GaleriaCarousel
+          fotos={fotos}
+          initialIndex={0}
+          podeGerenciar
+          pendingFotoId={null}
+          isSavingGlobal={false}
+          isRemovingGlobal={false}
+          onDefinirCapa={vi.fn()}
+          onRenomear={vi.fn()}
+          onRemover={vi.fn()}
+          onClose={() => setAberto(false)}
+        />
+      ) : null}
+    </>
+  );
+}
+
+async function abrirCarrossel() {
+  render(<PaginaComCarrossel />);
+  await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+}
+
+describe('GaleriaCarousel como diálogo modal', () => {
+  it('deve ser anunciado como diálogo modal com o nome da foto exibida quando abre', async () => {
+    // Act
+    await abrirCarrossel();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve levar o foco para dentro do diálogo quando abre', async () => {
+    // Act
+    await abrirCarrossel();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
+    expect(dialogo.contains(document.activeElement)).toBe(true);
+  });
+
+  it('deve levar o foco ao primeiro controle quando Tab é apertado no último', async () => {
+    // Arrange
+    await abrirCarrossel();
+    const controles = within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO })).getAllByRole(
+      'button',
+    );
+    controles[controles.length - 1].focus();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(controles[0]);
+  });
+
+  it('deve fechar quando Esc é apertado', async () => {
+    // Arrange
+    await abrirCarrossel();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve devolver o foco ao controle que abriu quando fecha', async () => {
+    // Arrange
+    await abrirCarrossel();
+    within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO }))
+      .getByRole('button', { name: 'Fechar' })
+      .focus();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir' }));
+  });
+
+  it('deve usar o fundo de sobreposição de foto quando abre', async () => {
+    // Act
+    await abrirCarrossel();
+
+    // Assert
+    const fundo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO }).parentElement!;
+    expect(classes(fundo)).toContain('bg-scrim');
   });
 });

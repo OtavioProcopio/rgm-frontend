@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
 
@@ -34,10 +34,7 @@ function wrap(ui: React.ReactNode, auth: AuthContextValue, path = '/') {
 
 describe('ProtectedRoute', () => {
   it('renders outlet when authenticated', () => {
-    const { container } = wrap(
-      <ProtectedRoute />,
-      authValue(),
-    );
+    const { container } = wrap(<ProtectedRoute />, authValue());
     expect(container).toBeDefined();
   });
 
@@ -89,6 +86,51 @@ describe('ModeloManagementRoute', () => {
     );
     expect(within(container).getByText('Acesso negado')).toBeDefined();
   });
+});
+
+describe('rotas — aviso de acesso negado nas cores do tema', () => {
+  const OPERADOR = authValue({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+  const AVISOS: [string, React.ReactNode, string][] = [
+    [
+      'ProtectedRoute',
+      <ProtectedRoute allowedProfiles={['ADMINISTRADOR']} />,
+      'Seu perfil não possui acesso a esta área no frontend.',
+    ],
+    ['AdminRoute', <AdminRoute />, 'Seu perfil não possui permissão para acessar esta área.'],
+    [
+      'ModeloManagementRoute',
+      <ModeloManagementRoute />,
+      'Seu perfil não possui permissão para gerenciar modelos.',
+    ],
+  ];
+
+  it.each(AVISOS)(
+    'deve pintar o aviso com o papel de alerta em %s quando o perfil não tem acesso',
+    (_rota, elemento) => {
+      // Arrange
+      const papeisDeAlerta = ['border-warning', 'bg-warning-soft', 'text-warning-fg'];
+
+      // Act
+      wrap(elemento, OPERADOR);
+
+      // Assert
+      const aviso = screen.getByRole('heading', { name: 'Acesso negado' }).closest('section');
+      expect(aviso?.className.split(' ')).toEqual(expect.arrayContaining(papeisDeAlerta));
+    },
+  );
+
+  it.each(AVISOS)(
+    'deve explicar a recusa em %s quando o perfil não tem acesso',
+    (_rota, elemento, explicacao) => {
+      // Act
+      wrap(elemento, OPERADOR);
+
+      // Assert
+      expect(screen.getByText(explicacao).closest('section')).toBe(
+        screen.getByRole('heading', { name: 'Acesso negado' }).closest('section'),
+      );
+    },
+  );
 });
 
 describe('PublicOnlyRoute', () => {

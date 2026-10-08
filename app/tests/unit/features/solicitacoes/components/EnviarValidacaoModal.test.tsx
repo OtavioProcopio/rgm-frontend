@@ -10,7 +10,46 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 import { EnviarValidacaoModal } from '@/features/solicitacoes/components/EnviarValidacaoModal';
 import { LIMITES } from '@/shared/lib/limites';
 
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+function montar() {
+  const { AppWrapper } = createAppWrapper();
+  return render(
+    <EnviarValidacaoModal solicitacaoId="s1" onCancel={vi.fn()} onConfirm={vi.fn()} />,
+    { wrapper: AppWrapper },
+  );
+}
+
 afterEach(cleanup);
+
+describe('EnviarValidacaoModal — cores por papel', () => {
+  it('deve usar o fundo e a borda de informação quando o formulário é mostrado', () => {
+    // Act
+    const { container } = montar();
+
+    // Assert
+    expect(classes(container.firstElementChild!)).toEqual(
+      expect.arrayContaining(['bg-info-soft', 'border-info']),
+    );
+  });
+
+  it('deve usar o texto de informação quando mostra o título', () => {
+    // Act
+    montar();
+
+    // Assert
+    expect(classes(screen.getByRole('heading'))).toContain('text-info-fg');
+  });
+
+  it('deve usar o texto de perigo na marca de obrigatório quando a evidência é obrigatória', () => {
+    // Act
+    montar();
+    const marca = screen.getByText('*', { selector: 'span' });
+
+    // Assert
+    expect(classes(marca)).toContain('text-danger-fg');
+  });
+});
 
 describe('EnviarValidacaoModal', () => {
   it('requires an evidence upload before enabling submit by default', async () => {

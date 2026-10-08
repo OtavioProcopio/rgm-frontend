@@ -22,8 +22,9 @@ const OFICIAIS = Object.values(rotulos)
 const VALOR = '([A-Z][A-Z0-9_]+)';
 const TEXTO = '([\'"`])([^\'"`\\n]+)\\2';
 
-/** As três formas em que um arquivo liga um valor da API ao texto que a tela mostra. */
+/** As formas em que um arquivo liga um valor da API ao texto que a tela mostra. */
 const FORMAS = [
+  new RegExp(`\\b${VALOR}\\s*:\\s*\\{[^{}]*?\\blabel\\s*:\\s*${TEXTO}`, 'g'),
   new RegExp(`\\b${VALOR}\\s*:\\s*${TEXTO}`, 'g'),
   new RegExp(
     `\\bvalue\\s*:\\s*['"]${VALOR}(['"])\\s*,\\s*label\\s*:\\s*['"\`]([^'"\`\\n]+)['"\`]`,
@@ -69,6 +70,10 @@ describe('guarda de rótulo único por valor da API', () => {
     {
       nome: 'uma opção de lista escrita na tela',
       trecho: `value="${VALOR_DE_EXEMPLO}">${ROTULO_DE_EXEMPLO}<`,
+    },
+    {
+      nome: 'uma configuração por valor com o rótulo dentro',
+      trecho: `${VALOR_DE_EXEMPLO}: { variant: 'info', label: '${ROTULO_DE_EXEMPLO}'`,
     },
   ])('deve apontar o arquivo e o trecho quando o texto tem $nome', ({ trecho }) => {
     // Arrange

@@ -1,36 +1,59 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
+import { rotuloDoStatus } from '@/shared/lib/rotulos';
+
+const STATUS = [
+  { status: 'A_FAZER', variacao: 'neutral', fundo: 'bg-surface-muted', texto: 'text-fg-muted' },
+  { status: 'EM_ANDAMENTO', variacao: 'info', fundo: 'bg-info-soft', texto: 'text-info-fg' },
+  {
+    status: 'EM_VALIDACAO',
+    variacao: 'warning',
+    fundo: 'bg-warning-soft',
+    texto: 'text-warning-fg',
+  },
+  { status: 'CONCLUIDA', variacao: 'success', fundo: 'bg-success-soft', texto: 'text-success-fg' },
+  { status: 'CANCELADA', variacao: 'danger', fundo: 'bg-danger-soft', texto: 'text-danger-fg' },
+] as const;
+const CONCLUIDA = STATUS[3];
+
+const classes = (elemento: Element) => elemento.className.split(' ');
 
 afterEach(cleanup);
 
 describe('SolicitacaoStatusBadge', () => {
-  it('renders A_FAZER label', () => {
-    const { container } = render(<SolicitacaoStatusBadge status="A_FAZER" />);
-    expect(within(container).getByText('A fazer')).toBeDefined();
+  it.each(STATUS)(
+    'deve usar o selo na variação $variacao quando o status é $status',
+    ({ status, fundo, texto }) => {
+      // Act
+      render(<SolicitacaoStatusBadge status={status} />);
+
+      // Assert
+      const selo = screen.getByText(rotuloDoStatus[status]);
+      expect(classes(selo)).toEqual(expect.arrayContaining([fundo, texto]));
+    },
+  );
+
+  it.each(STATUS)('deve mostrar o rótulo do status quando o status é $status', ({ status }) => {
+    // Act
+    const { container } = render(<SolicitacaoStatusBadge status={status} />);
+
+    // Assert
+    expect(container.textContent).toBe(rotuloDoStatus[status]);
   });
 
-  it('renders EM_ANDAMENTO label', () => {
-    const { container } = render(<SolicitacaoStatusBadge status="EM_ANDAMENTO" />);
-    expect(within(container).getByText('Em andamento')).toBeDefined();
-  });
+  it('deve aceitar classes extras quando className é informado', () => {
+    // Arrange
+    const extra = 'ml-2';
 
-  it('renders EM_VALIDACAO label', () => {
-    const { container } = render(<SolicitacaoStatusBadge status="EM_VALIDACAO" />);
-    expect(within(container).getByText('Em validação')).toBeDefined();
-  });
+    // Act
+    render(<SolicitacaoStatusBadge status={CONCLUIDA.status} className={extra} />);
 
-  it('renders CONCLUIDA label', () => {
-    const { container } = render(<SolicitacaoStatusBadge status="CONCLUIDA" />);
-    expect(within(container).getByText('Concluída')).toBeDefined();
-  });
-
-  it('renders CANCELADA label', () => {
-    const { container } = render(<SolicitacaoStatusBadge status="CANCELADA" />);
-    expect(within(container).getByText('Cancelada')).toBeDefined();
+    // Assert
+    expect(classes(screen.getByText(rotuloDoStatus[CONCLUIDA.status]))).toContain(extra);
   });
 });

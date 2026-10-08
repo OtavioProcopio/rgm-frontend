@@ -1,1 +1,0 @@
-Area ainda nao migrada para as cores por papel. A tarefa de teste da area apaga este arquivo.
