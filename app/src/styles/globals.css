@@ -10,10 +10,45 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  color: #111827;
-  background: #f8fafc;
+  color: var(--fg);
+  background: var(--canvas);
 
-  /* Accent da marca (azul RGM) — aplicado em ambos os temas */
+  /* Papéis de cor do tema claro: o único lugar em que estes valores são escritos. */
+  --canvas: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #f1f5f9;
+  --line: #e2e8f0;
+  --line-strong: #7b8698;
+  --fg: #0f172a;
+  --fg-muted: #475569;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --on-accent: #ffffff;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-soft: #fef2f2;
+  --danger-fg: #b91c1c;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --warning-fg: #92400e;
+  --success: #047857;
+  --success-soft: #ecfdf5;
+  --success-fg: #047857;
+  --info: #2563eb;
+  --info-soft: #eff6ff;
+  --info-fg: #1d4ed8;
+  --on-solid: #ffffff;
+  --scrim: rgb(0 0 0 / 0.8);
+  --logo-plate: transparent;
+
+  /*
+   * Contorno de foco do teclado. Uma superfície que não acompanha o tema (o cartão branco
+   * do login) pode trocá-lo.
+   */
+  --foco: var(--accent);
+
+  /* Telas ainda não migradas para os papéis: accent da marca na paleta genérica. */
   --color-sky-400: #60a5fa;
   --color-sky-500: #3b82f6;
   --color-sky-600: #2563eb;
@@ -23,12 +58,71 @@
 .dark {
   color-scheme: dark;
 
-  /* Superfícies dark gray baseadas na identidade visual */
-  --color-slate-950: #0f1117; /* sidebar / inputs profundos */
-  --color-slate-900: #1a1d23; /* fundo da aplicação */
-  --color-slate-800: #21252e; /* superfícies / cards */
-  --color-slate-700: #323845; /* bordas */
-  --color-slate-200: #e2e8f0; /* texto claro suave */
+  /* Papéis de cor do tema escuro. */
+  --canvas: #1a1d23;
+  --surface: #21252e;
+  --surface-raised: #282d38;
+  --surface-muted: #2d323e;
+  --line: #3a4150;
+  --line-strong: #8791a3;
+  --fg: #f1f5f9;
+  --fg-muted: #a8b3c7;
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --on-accent: #0f1117;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-soft: #3b1d21;
+  --danger-fg: #fca5a5;
+  --warning: #b45309;
+  --warning-soft: #3a2e14;
+  --warning-fg: #fcd34d;
+  --success: #047857;
+  --success-soft: #12332a;
+  --success-fg: #6ee7b7;
+  --info: #2563eb;
+  --info-soft: #1c2c4a;
+  --info-fg: #93c5fd;
+  --on-solid: #ffffff;
+  --scrim: rgb(0 0 0 / 0.8);
+  --logo-plate: #f8fafc;
+
+  /* Telas ainda não migradas para os papéis: superfícies na paleta genérica. */
+  --color-slate-950: #0f1117;
+  --color-slate-900: #1a1d23;
+  --color-slate-800: #21252e;
+  --color-slate-700: #323845;
+  --color-slate-200: #e2e8f0;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-fg: var(--danger-fg);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-fg: var(--warning-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-fg: var(--success-fg);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-fg: var(--info-fg);
+  --color-on-solid: var(--on-solid);
+  --color-scrim: var(--scrim);
+  --color-logo-plate: var(--logo-plate);
 }
 
 * {
@@ -39,11 +133,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f8fafc;
-}
-
-.dark body {
-  background: #1a1d23;
+  background: var(--canvas);
 }
 
 a {
@@ -58,27 +148,18 @@ input {
 
 /*
  * Foco do teclado visível em todo controle, nos dois temas. `:focus-visible` não dispara
- * em clique nem em toque. Campos de texto têm o próprio anel de foco. A cor vem de `--foco`
- * para que uma superfície que não acompanha o tema (o cartão branco do login) possa trocá-la.
+ * em clique nem em toque. Campos de texto têm o próprio anel de foco.
  */
-:root {
-  --foco: var(--color-sky-600);
-}
-
-.dark {
-  --foco: var(--color-sky-400);
-}
-
 :where(
-    a,
-    button,
-    select,
-    summary,
-    input[type='checkbox'],
-    input[type='radio'],
-    [role='tab'],
-    [tabindex]:not([tabindex='-1'])
-  ):focus-visible {
+  a,
+  button,
+  select,
+  summary,
+  input[type='checkbox'],
+  input[type='radio'],
+  [role='tab'],
+  [tabindex]:not([tabindex='-1'])
+):focus-visible {
   outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
