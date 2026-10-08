@@ -207,6 +207,18 @@ describe('PerfilPage — selo de perfil', () => {
   });
 
   it.each(PERFIS)(
+    'deve escrever o perfil em caixa normal no selo quando o perfil é %s',
+    async (perfil) => {
+      // Act
+      await abrirPerfilDe(perfil);
+
+      // Assert
+      const selo = screen.getByText(rotuloDoPerfil[perfil]);
+      expect(selo.className.split(' ')).not.toContain('uppercase');
+    },
+  );
+
+  it.each(PERFIS)(
     'deve pintar o selo com a variação do perfil quando o perfil é %s',
     async (perfil) => {
       // Act
@@ -217,6 +229,89 @@ describe('PerfilPage — selo de perfil', () => {
       expect(selo.className.split(' ')).toEqual(expect.arrayContaining(CLASSES_DO_SELO[perfil]));
     },
   );
+});
+
+describe('PerfilPage — dados opcionais e métricas', () => {
+  async function abrirPerfilCom(usuario: object, metricas?: object) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { email: 'o@o.com', perfil: 'OPERADOR', ativo: true, ...usuario },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof usePerfil>);
+    vi.mocked(useMetricas).mockReturnValue({ data: metricas } as unknown as ReturnType<
+      typeof useMetricas
+    >);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  const METRICAS = {
+    totalModelos: 12,
+    totalSolicitacoes: 40,
+    solicitacoesAbertas: 3,
+    solicitacoesPendentes: 4,
+    tempoMedioResolucaoSegundos: 10800,
+  };
+
+  it('deve mostrar a data de criação por extenso quando o perfil traz criadoEm', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio', criadoEm: '2026-03-10T12:00:00Z' });
+
+    // Assert
+    expect(screen.getByText(/de março de 2026/)).toBeDefined();
+  });
+
+  it('deve mostrar um traço em Membro desde quando o perfil não traz criadoEm', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio' });
+
+    // Assert
+    expect(screen.getByText('Membro desde').nextElementSibling?.textContent).toBe('-');
+  });
+
+  it('deve mostrar a inicial U quando o perfil não traz nome', async () => {
+    // Act
+    await abrirPerfilCom({ nome: '' });
+
+    // Assert
+    expect(screen.getByText('U')).toBeDefined();
+  });
+
+  it('deve mostrar os totais e a soma de abertas e pendentes quando as métricas chegam', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+
+    // Assert
+    expect(screen.getByText('Total de Modelos').nextElementSibling?.textContent).toBe('12');
+    expect(screen.getByText('Total de Solicitações').nextElementSibling?.textContent).toBe('40');
+    expect(screen.getByText('Em Aberto / Pendentes').nextElementSibling?.textContent).toBe('7');
+  });
+
+  it('deve mostrar o tempo médio em horas quando a resolução média é positiva', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+
+    // Assert
+    expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('3h');
+  });
+
+  it('deve mostrar um travessão no tempo médio quando a resolução média é zero', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio' }, { ...METRICAS, tempoMedioResolucaoSegundos: 0 });
+
+    // Assert
+    expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('—');
+  });
+
+  it('deve esconder a visão geral quando as métricas não chegam', async () => {
+    // Act
+    await abrirPerfilCom({ nome: 'Otávio' });
+
+    // Assert
+    expect(screen.queryByText('Visão Geral do Sistema')).toBeNull();
+  });
 });
 
 describe('PerfilPage — troca de senha', () => {
@@ -327,6 +422,44 @@ describe('PerfilPage — troca de senha', () => {
 
     // Assert
     expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve mostrar a mensagem da API quando ela recusa a troca com erro de servidor', async () => {
+    // Arrange
+    const falha = () =>
+      Promise.reject(new ApiError({ status: 500, message: 'Serviço indisponível' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Serviço indisponível')).toBeDefined();
+  });
+
+  it('deve mostrar o aviso genérico da API quando o erro de servidor vem sem mensagem', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new ApiError({ status: 500, message: '' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Erro ao alterar senha.')).toBeDefined();
+  });
+
+  it('deve mostrar o aviso de tentar mais tarde quando a falha não vem da API', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new TypeError('rede fora'));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(
+      await screen.findByText(
+        'Não foi possível alterar a senha agora. Tente novamente mais tarde.',
+      ),
+    ).toBeDefined();
   });
 
   it('deve pintar o aviso com o papel de sucesso quando a troca de senha dá certo', async () => {

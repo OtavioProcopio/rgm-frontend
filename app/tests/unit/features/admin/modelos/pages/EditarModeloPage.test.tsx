@@ -41,7 +41,19 @@ describe('EditarModeloPage', () => {
   it('shows form when modelo is loaded', async () => {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' },
+      data: {
+        id: '1',
+        codigo: 'M01',
+        ativo: true,
+        descricao: 'Desc',
+        maquina: 'Injetora',
+        versao: 1,
+        observacoes: null,
+        temPendenciaAberta: false,
+        fotoCapaUrl: null,
+        criadoEm: '',
+        atualizadoEm: '',
+      },
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useModelo>);
@@ -53,7 +65,19 @@ describe('EditarModeloPage', () => {
   it('links back to modelo details', async () => {
     const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
     vi.mocked(useModelo).mockReturnValue({
-      data: { id: '1', codigo: 'M01', ativo: true, descricao: 'Desc', maquina: 'Injetora', versao: 1, observacoes: null, temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '' },
+      data: {
+        id: '1',
+        codigo: 'M01',
+        ativo: true,
+        descricao: 'Desc',
+        maquina: 'Injetora',
+        versao: 1,
+        observacoes: null,
+        temPendenciaAberta: false,
+        fotoCapaUrl: null,
+        criadoEm: '',
+        atualizadoEm: '',
+      },
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useModelo>);
@@ -62,5 +86,34 @@ describe('EditarModeloPage', () => {
     const backLink = within(container).getByRole('link', { name: 'Voltar' });
 
     expect(backLink.getAttribute('href')).toBe('/app/admin/modelos/1');
+  });
+
+  it('deve não mostrar Mais ações quando o cabeçalho tem só o Voltar', async () => {
+    // Arrange
+    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    vi.mocked(useModelo).mockReturnValue({
+      data: {
+        id: '1',
+        codigo: 'M01',
+        ativo: true,
+        descricao: 'Desc',
+        maquina: 'Injetora',
+        versao: 1,
+        observacoes: null,
+        temPendenciaAberta: false,
+        fotoCapaUrl: null,
+        criadoEm: '',
+        atualizadoEm: '',
+      },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useModelo>);
+
+    // Act
+    const { container } = renderPage();
+
+    // Assert
+    expect(within(container).getByRole('link', { name: 'Voltar' })).toBeDefined();
+    expect(within(container).queryByRole('button', { name: 'Mais ações' })).toBeNull();
   });
 });

@@ -52,6 +52,18 @@ describe('MaquinasPage', () => {
     expect(within(container).getByRole('link', { name: /nova máquina/i })).toBeDefined();
   });
 
+  it('deve não mostrar Mais ações quando o cabeçalho tem só o comando Nova máquina', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    const { container } = render(<MaquinasPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(within(container).getByRole('link', { name: 'Nova máquina' })).toBeDefined();
+    expect(within(container).queryByRole('button', { name: 'Mais ações' })).toBeNull();
+  });
+
   it('shows error state when request fails', async () => {
     const { useMaquinas } = await import('@/features/admin/modelos/hooks/useMaquinas');
     vi.mocked(useMaquinas).mockReturnValue({

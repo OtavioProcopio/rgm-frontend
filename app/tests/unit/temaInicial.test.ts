@@ -164,4 +164,12 @@ describe('tema aplicado antes da primeira tela', () => {
     // Assert
     expect(cabecalho).toContain('<script>');
   });
+
+  it('deve declarar viewport-fit=cover para a barra de abas respeitar a área segura', () => {
+    // Act
+    const meta = html.match(/<meta name="viewport" content="([^"]*)"/);
+
+    // Assert
+    expect(meta?.[1]).toContain('viewport-fit=cover');
+  });
 });

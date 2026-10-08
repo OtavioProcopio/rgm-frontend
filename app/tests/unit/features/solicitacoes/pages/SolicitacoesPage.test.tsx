@@ -124,12 +124,6 @@ describe('SolicitacoesPage', () => {
     expect(within(container).getByText(/não foi possível carregar/i)).toBeDefined();
   });
 
-  it('shows export pdf button', () => {
-    const { AppWrapper } = createAppWrapper();
-    const { container } = render(<SolicitacoesPage />, { wrapper: AppWrapper });
-    expect(within(container).getByRole('button', { name: /exportar pdf/i })).toBeDefined();
-  });
-
   it('opens directly in lista view filtered by maquina from the URL', async () => {
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
     vi.mocked(useSolicitacoes).mockReturnValue({
@@ -150,21 +144,233 @@ describe('SolicitacoesPage', () => {
     );
   });
 
-  it('deve mostrar o erro junto do botão de exportar quando a API responde com erro na exportação', async () => {
+  it('deve mostrar o erro junto do cabeçalho quando a exportação falha pelo menu', async () => {
     // Arrange
     const recusa = new ApiError({ status: 500, message: 'Falha ao gerar o relatório.' });
     vi.mocked(solicitacoesApi.exportar).mockRejectedValueOnce(recusa);
-    const { AppWrapper } = createAppWrapper();
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
     render(<SolicitacoesPage />, { wrapper: AppWrapper });
-    const botao = screen.getByRole('button', { name: 'Exportar PDF' });
+    await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
 
     // Act
-    await userEvent.click(botao);
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Exportar PDF' }));
 
     // Assert
-    const alerta = await screen.findByRole('alert');
-    expect(alerta.textContent).toBe(`Não foi possível exportar o PDF. ${recusa.message}`);
-    expect(alerta.parentElement).toBe(botao.parentElement);
+    const titulo = await screen.findByText('Exportação não concluída');
+    expect(titulo.tagName).toBe('H2');
+    expect(titulo.nextElementSibling?.textContent).toBe(
+      `Não foi possível exportar o PDF. ${recusa.message}`,
+    );
+  });
+});
+
+describe('SolicitacoesPage — ações do cabeçalho', () => {
+  it('deve mostrar "Nova solicitação" como botão e "Mais ações" quando o usuário pode criar', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+
+    // Act
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Nova solicitação' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Mais ações' })).toBeDefined();
+  });
+
+  it('deve manter "Exportar PDF" fora da barra quando o usuário pode criar', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+
+    // Act
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Exportar PDF' })).toBeNull();
+  });
+
+  it('deve mostrar "Exportar PDF" no menu quando "Mais ações" é aberto', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+
+    // Assert
+    expect(screen.getByRole('menuitem', { name: 'Exportar PDF' })).toBeDefined();
+  });
+
+  it('deve manter o alternador Kanban/Lista fora do menu quando o usuário pode criar', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Kanban' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Lista' })).toBeDefined();
+    expect(screen.queryByRole('menuitem', { name: 'Kanban' })).toBeNull();
+  });
+
+  it('deve exportar com os filtros atuais quando "Exportar PDF" é escolhido no menu', async () => {
+    // Arrange
+    vi.mocked(solicitacoesApi.exportar).mockClear();
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Exportar PDF' }));
+
+    // Assert
+    expect(solicitacoesApi.exportar).toHaveBeenCalledTimes(1);
+    expect(solicitacoesApi.exportar).toHaveBeenCalledWith({
+      page: 0,
+      size: 20,
+      maquina: undefined,
+    });
+  });
+
+  it('deve mostrar "Exportar PDF" como botão e nenhum "Mais ações" quando o usuário não pode criar', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({ user: null });
+
+    // Act
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Exportar PDF' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Mais ações' })).toBeNull();
+  });
+});
+
+describe('SolicitacoesPage — período vazio e lista vazia', () => {
+  async function abrirListaVazia(filtrar: boolean) {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }));
+    if (filtrar) {
+      await userEvent.click(screen.getByRole('button', { name: 'Filtrar pelo modelo m-9' }));
+    }
+  }
+
+  it('deve entregar ao quadro o início vazio quando a data inicial é apagada', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const campo = screen.getByLabelText('Criada a partir de');
+    await userEvent.type(campo, '2026-10-01');
+
+    // Act
+    await userEvent.clear(campo);
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve entregar ao quadro o fim vazio quando a data final é apagada', async () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    const campo = screen.getByLabelText('Criada até');
+    await userEvent.type(campo, '2026-10-07');
+
+    // Act
+    await userEvent.clear(campo);
+
+    // Assert
+    expect(screen.getByTestId('periodo-do-quadro').textContent).toBe('sem início | sem fim');
+  });
+
+  it('deve avisar que nada foi cadastrado quando a lista vem vazia sem filtros', async () => {
+    // Act
+    await abrirListaVazia(false);
+
+    // Assert
+    expect(screen.getByText('Nenhuma solicitação cadastrada ainda.')).toBeDefined();
+  });
+
+  it('deve avisar que os filtros não acharam nada quando a lista vem vazia com filtro de modelo', async () => {
+    // Act
+    await abrirListaVazia(true);
+
+    // Assert
+    expect(screen.getByText('Nenhuma solicitação com os filtros aplicados.')).toBeDefined();
+  });
+});
+
+describe('SolicitacoesPage — paginação da lista', () => {
+  async function abrirListaComTresPaginas() {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: {
+        content: [{ id: 's-1', titulo: 'Troca de molde' }],
+        page: 1,
+        totalPages: 3,
+        totalElements: 50,
+      },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper();
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }));
+    vi.mocked(useSolicitacoes).mockClear();
+    return useSolicitacoes;
+  }
+
+  it('deve mostrar um cartão por solicitação quando a lista tem resultados', async () => {
+    // Arrange
+    await abrirListaComTresPaginas();
+
+    // Act
+    const cartoes = screen.getAllByTestId('solicitacao-card');
+
+    // Assert
+    expect(cartoes).toHaveLength(1);
+    expect(cartoes[0].textContent).toBe('Troca de molde');
+  });
+
+  it('deve pedir a página seguinte quando Próxima é acionado', async () => {
+    // Arrange
+    const useSolicitacoes = await abrirListaComTresPaginas();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+
+    // Assert
+    expect(useSolicitacoes).toHaveBeenCalledTimes(1);
+    expect(useSolicitacoes).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, size: 20 }),
+      expect.anything(),
+    );
+  });
+
+  it('deve pedir a página anterior quando Anterior é acionado', async () => {
+    // Arrange
+    const useSolicitacoes = await abrirListaComTresPaginas();
+    await userEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+    vi.mocked(useSolicitacoes).mockClear();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+
+    // Assert
+    expect(useSolicitacoes).toHaveBeenCalledTimes(1);
+    expect(useSolicitacoes).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 0, size: 20 }),
+      expect.anything(),
+    );
   });
 });
 

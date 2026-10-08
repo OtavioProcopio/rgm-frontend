@@ -8,8 +8,9 @@ import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Input } from '@/shared/components/Input/Input';
-import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { PageHeader, type AcaoDoMenu } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 import { cn } from '@/shared/lib/cn';
 import { canOperateSolicitacoes } from '@/shared/lib/permissions';
 
@@ -37,6 +38,17 @@ export function SolicitacoesPage() {
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
+  const buscarPdf = (): Promise<Blob> => solicitacoesApi.exportar(filters);
+  const nomeDoPdf = (): string => `relatorio_solicitacoes_${Date.now()}.pdf`;
+  const { exportar, exportando, erro } = useExportarPdf({
+    buscar: buscarPdf,
+    nomeDoArquivo: nomeDoPdf,
+  });
+  const acaoExportar: AcaoDoMenu = {
+    rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
+    onSelect: exportar,
+    desabilitada: exportando,
+  };
 
   return (
     <section>
@@ -71,18 +83,20 @@ export function SolicitacoesPage() {
                 Lista
               </button>
             </div>
-            <ExportarPdfButton
-              buscar={() => solicitacoesApi.exportar(filters)}
-              nomeDoArquivo={() => `relatorio_solicitacoes_${Date.now()}.pdf`}
-            />
             {canCreate ? (
               <Link to="/app/solicitacoes/nova">
                 <Button>Nova solicitação</Button>
               </Link>
-            ) : null}
+            ) : (
+              <ExportarPdfButton buscar={buscarPdf} nomeDoArquivo={nomeDoPdf} />
+            )}
           </div>
         }
+        maisAcoes={canCreate ? [acaoExportar] : undefined}
       />
+      {canCreate && erro ? (
+        <ErrorState title="Exportação não concluída" description={erro} />
+      ) : null}
 
       {view === 'kanban' ? (
         <>

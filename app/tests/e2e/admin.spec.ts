@@ -48,14 +48,16 @@ test.describe('Admin — Modelos', () => {
 
     await loginAdmin(`/app/admin/modelos/${modelo.id}`);
 
-    await page.getByRole('button', { name: 'Desativar', exact: true }).click();
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Desativar', exact: true }).click();
     await expect(page.getByText('Desativar modelo')).toBeVisible();
-    await page.getByRole('button', { name: 'Desativar', exact: true }).last().click();
+    await page.getByRole('button', { name: 'Desativar', exact: true }).click();
     await expect(page.getByText('Inativo')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Ativar', exact: true }).click();
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Ativar', exact: true }).click();
     await expect(page.getByText('Ativar modelo')).toBeVisible();
-    await page.getByRole('button', { name: 'Ativar', exact: true }).last().click();
+    await page.getByRole('button', { name: 'Ativar', exact: true }).click();
     await expect(page.getByText('Ativo').first()).toBeVisible();
   });
 });

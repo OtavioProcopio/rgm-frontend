@@ -1,4 +1,4 @@
-.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage e2e check validate
+.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage cover-arquivos e2e check validate
 
 # CAMINHO= limita fmt, lint e test a um arquivo ou pasta, relativo a app/.
 # Exemplo: make test CAMINHO=tests/unit/shared/lib
@@ -47,6 +47,13 @@ cover: ## Rodar testes com relatório de cobertura V8 (coverage/); falha abaixo 
 	cd app && npm run test:coverage
 
 coverage: cover ## O mesmo que cover (nome antigo)
+
+# ARQUIVOS= lista (separada por espaço) de arquivos de src/ relativos a app/, medidos mesmo quando
+# a configuração de cobertura os exclui; exige 95% em cada um, não no conjunto.
+# Exemplo: make cover-arquivos ARQUIVOS="src/app/layouts/BarraLateral.tsx src/shared/hooks/useExportarPdf.ts"
+cover-arquivos: ## Cobertura por arquivo (95% em cada um) dos arquivos de ARQUIVOS=, inclusive os excluídos do cover
+	@test -n "$(ARQUIVOS)" || (echo "Informe ARQUIVOS=\"src/...\"" && exit 1)
+	cd app && npx vitest run --coverage --coverage.reporter=text --coverage.thresholds.perFile=true --coverage.exclude='**/*.d.ts' $(foreach a,$(ARQUIVOS),--coverage.include=$(a))
 
 e2e: ## Rodar os testes e2e do Playwright (frontend e backend no ar); aceita BASE_URL= e API_URL=; CAMINHO= escolhe o arquivo
 	cd app && npm run e2e -- $(CAMINHO)

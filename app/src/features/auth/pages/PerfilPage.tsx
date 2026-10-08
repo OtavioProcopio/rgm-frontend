@@ -143,7 +143,7 @@ export function PerfilPage() {
             <Badge
               variant={VARIACAO_DO_PERFIL[usuario.perfil]}
               icon={<Shield size={12} />}
-              className="mt-3 gap-1.5 border border-transparent font-semibold uppercase tracking-wider"
+              className="mt-3 gap-1.5 border border-transparent font-semibold"
             >
               {rotuloDoPerfil[usuario.perfil]}
             </Badge>
