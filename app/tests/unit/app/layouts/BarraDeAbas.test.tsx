@@ -141,6 +141,22 @@ describe('BarraDeAbas', () => {
     });
   });
 
+  it('deve manter o contorno de foco do projeto quando a aba recebe o foco do teclado', () => {
+    // Arrange
+    const destinos = destinosDeNavegacao('ADMINISTRADOR');
+
+    // Act
+    renderizar(destinos);
+
+    // Assert
+    screen.getAllByRole('link').forEach((link) => {
+      const desligadas = Array.from(link.classList).filter(
+        (classe) => classe.includes('outline-none') || classe.includes('ring-accent'),
+      );
+      expect(desligadas).toEqual([]);
+    });
+  });
+
   it('deve renderizar sem links quando a lista de destinos é vazia', () => {
     // Arrange
     const destinos: DestinoDeNavegacao[] = [];

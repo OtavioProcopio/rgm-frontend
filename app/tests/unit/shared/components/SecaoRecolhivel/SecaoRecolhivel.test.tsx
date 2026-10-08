@@ -18,6 +18,19 @@ function renderizar(id = 'filtros', resumo?: string) {
 }
 
 describe('SecaoRecolhivel', () => {
+  it('deve manter o contorno de foco do projeto quando o título recebe o foco do teclado', () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    const desligadas = Array.from(screen.getByRole('button').classList).filter(
+      (classe) => classe.includes('outline-none') || classe.includes('ring-accent'),
+    );
+
+    // Assert
+    expect(desligadas).toEqual([]);
+  });
+
   it('deve começar aberta quando não há estado guardado', () => {
     // Arrange
     renderizar();

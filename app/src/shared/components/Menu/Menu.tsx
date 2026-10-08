@@ -16,7 +16,7 @@ import { cn } from '@/shared/lib/cn';
 const ITENS = '[role^="menuitem"]:not([disabled])';
 
 const CLASSE_DO_ITEM =
-  'flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-surface-muted focus:bg-surface-muted focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:min-h-11';
+  'flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-surface-muted focus:bg-surface-muted focus-visible:outline-offset-[-2px] disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:min-h-11';
 
 const CLASSE_DO_BOTAO =
   'inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 text-sm font-medium text-fg transition-colors hover:bg-surface-muted pointer-coarse:min-h-11';

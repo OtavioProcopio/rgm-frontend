@@ -416,6 +416,20 @@ describe('Menu', () => {
     expect(item('Primeira').className).toContain('pointer-coarse:min-h-11');
   });
 
+  it('deve manter o contorno de foco do projeto quando um item recebe o foco do teclado', () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    abrir();
+
+    // Assert
+    const desligadas = ['Primeira', 'Segunda', 'Terceira'].flatMap((nome) =>
+      Array.from(item(nome).classList).filter((classe) => classe.includes('outline-none')),
+    );
+    expect(desligadas).toEqual([]);
+  });
+
   it('deve não animar quando o sistema pede redução de movimento', () => {
     // Arrange
     renderizar();
