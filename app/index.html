@@ -2,6 +2,20 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Aplica o tema antes de a primeira tela aparecer. A regra é a de
+      // src/shared/lib/theme.ts; tests/unit/temaInicial.test.ts confere que as duas decidem igual.
+      (function () {
+        var guardado = localStorage.getItem('rgm.theme');
+        var versaoAtual = localStorage.getItem('rgm.theme.defaulted') === '3';
+        var preferencia = versaoAtual ? guardado : guardado === 'light' ? 'light' : 'system';
+        var sistemaEscuro =
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var escuro = preferencia === 'dark' || (preferencia !== 'light' && sistemaEscuro);
+        document.documentElement.classList.toggle('dark', escuro);
+      })();
+    </script>
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/favicon-180.png" />
     <link rel="manifest" href="/site.webmanifest" />

@@ -1,7 +1,7 @@
 export const THEME_KEY = 'rgm.theme';
 const THEME_DEFAULTED_KEY = 'rgm.theme.defaulted';
 const THEME_DEFAULT_VERSION = '3';
-const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)';
+export const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)';
 
 export type Theme = 'light' | 'dark';
 export type ThemePreference = 'system' | Theme;

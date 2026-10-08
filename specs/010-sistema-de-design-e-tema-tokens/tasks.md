@@ -43,12 +43,12 @@ arquivo.
 
 ## Fase 3 — Tema e peças base
 
-- [ ] T011 Criar `TST/shared/hooks/useTema.test.ts`: devolve a preferência guardada; trocar a preferência aplica o tema e guarda; com `system`, mudança do sistema troca o tema sem recarregar; com `light`, mudança do sistema não troca; ao desmontar deixa de ouvir o sistema
-- [ ] T012 Criar `SRC/shared/hooks/useTema.ts`
-- [ ] T013 Criar `TST/temaInicial.test.ts`: o trecho de `app/index.html` aplica a classe do tema escuro nos mesmos casos em que `theme.ts` resolve escuro (sem nada guardado e sistema escuro; `dark` guardado; "escuro" antigo com sistema escuro) e não aplica nos demais; o trecho vem antes de qualquer folha de estilo ou módulo
-- [ ] T014 Alterar `app/index.html` e `SRC/main.tsx`
-- [ ] T015 Testes em `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx`: o botão abre um menu com "Sistema", "Claro" e "Escuro"; a opção ativa está marcada; escolher uma opção troca o tema e fecha o menu; setas movem entre as opções; Enter escolhe; Esc fecha e devolve o foco ao botão; clique fora fecha; o botão informa a opção ativa no nome acessível; área de toque de 44 px
-- [ ] T016 Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx`
+- [x] T011 Criar `TST/shared/hooks/useTema.test.ts`: devolve a preferência guardada; trocar a preferência aplica o tema e guarda; com `system`, mudança do sistema troca o tema sem recarregar; com `light`, mudança do sistema não troca; ao desmontar deixa de ouvir o sistema
+- [x] T012 Criar `SRC/shared/hooks/useTema.ts`
+- [x] T013 Criar `TST/temaInicial.test.ts`: o trecho de `app/index.html` aplica a classe do tema escuro nos mesmos casos em que `theme.ts` resolve escuro (sem nada guardado e sistema escuro; `dark` guardado; "escuro" antigo com sistema escuro) e não aplica nos demais; o trecho vem antes de qualquer folha de estilo ou módulo
+- [x] T014 Alterar `app/index.html` e `SRC/main.tsx`. `main.tsx` ficou como estava: `initializeTheme()` continua sendo quem grava a passagem única e a cor da barra do navegador; o trecho de `index.html` só aplica a classe
+- [x] T015 Testes em `TST/shared/components/ThemeToggle/ThemeToggle.test.tsx`: o botão abre um menu com "Sistema", "Claro" e "Escuro"; a opção ativa está marcada; escolher uma opção troca o tema e fecha o menu; setas movem entre as opções; Enter escolhe; Esc fecha e devolve o foco ao botão; clique fora fecha; o botão informa a opção ativa no nome acessível; área de toque de 44 px
+- [x] T016 Alterar `SRC/shared/components/ThemeToggle/ThemeToggle.tsx`
 - [ ] T017 Criar `TST/shared/components/Logo/Logo.test.tsx`: imagem com o nome "RGM Auto Parts"; a placa usa o papel `logo-plate`; aceita tamanho
 - [ ] T018 Criar `SRC/shared/components/Logo/Logo.tsx`
 - [ ] T019 Criar `TST/shared/components/Badge/Badge.test.tsx`: cada uma das seis variações usa o fundo e o texto do seu papel; mostra o texto recebido; aceita ícone; sem variação informada é neutro
