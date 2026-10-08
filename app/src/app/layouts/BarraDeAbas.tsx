@@ -36,8 +36,8 @@ function Aba({ destino }: { destino: DestinoDeNavegacao }) {
       end={destino.end}
       className={({ isActive }) =>
         cn(
-          'flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 px-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-          isActive ? 'font-semibold text-accent' : 'text-fg-muted',
+          'flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 border-t-2 px-0.5 text-[11px] leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+          isActive ? 'border-accent text-accent' : 'border-transparent text-fg-muted',
         )
       }
     >

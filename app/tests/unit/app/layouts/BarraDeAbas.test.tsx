@@ -109,7 +109,8 @@ describe('BarraDeAbas', () => {
     const ativa = screen.getByRole('link', { name: 'Solicitações' });
     expect(ativa.getAttribute('aria-current')).toBe('page');
     expect(ativa.classList.contains('text-accent')).toBe(true);
-    expect(ativa.classList.contains('font-semibold')).toBe(true);
+    expect(ativa.classList.contains('border-accent')).toBe(true);
+    expect(ativa.classList.contains('font-semibold')).toBe(false);
     const inativa = screen.getByRole('link', { name: 'Dashboard' });
     expect(inativa.getAttribute('aria-current')).toBeNull();
     expect(inativa.classList.contains('text-fg-muted')).toBe(true);
@@ -124,6 +125,20 @@ describe('BarraDeAbas', () => {
 
     // Assert
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeTruthy();
+  });
+
+  it('deve usar texto de 11 px nas abas quando o administrador tem 5 destinos em tela estreita', () => {
+    // Arrange
+    const destinos = destinosDeNavegacao('ADMINISTRADOR');
+
+    // Act
+    renderizar(destinos);
+
+    // Assert
+    screen.getAllByRole('link').forEach((link) => {
+      expect(link.classList.contains('text-[11px]')).toBe(true);
+      expect(link.classList.contains('text-xs')).toBe(false);
+    });
   });
 
   it('deve renderizar sem links quando a lista de destinos é vazia', () => {
