@@ -108,7 +108,7 @@ export function ModeloDetalhePage() {
         actions={
           gerencia ? (
             <Link to={`/app/admin/modelos/${id}/editar`}>
-              <Button variant="secondary">Editar</Button>
+              <Button>Editar</Button>
             </Link>
           ) : id ? (
             <ExportarPdfButton buscar={buscarFicha} nomeDoArquivo={nomeDaFicha} />

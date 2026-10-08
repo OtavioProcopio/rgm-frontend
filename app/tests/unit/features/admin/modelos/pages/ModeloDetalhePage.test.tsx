@@ -228,6 +228,17 @@ describe('ModeloDetalhePage (admin) — confirmações', () => {
     expect(screen.getByRole('button', { name: /mais ações/i })).toBeDefined();
   });
 
+  it('deve destacar Editar como a ação principal quando o usuário gerencia modelos', async () => {
+    // Arrange
+    await abrirDetalhe(true);
+
+    // Act
+    const botaoEditar = screen.getByRole('link', { name: 'Editar' }).querySelector('button');
+
+    // Assert
+    expect(botaoEditar?.classList.contains('bg-accent')).toBe(true);
+  });
+
   it.each(['Exportar PDF', 'Desativar'])(
     'deve esconder "%s" do cabeçalho quando o menu Mais ações está fechado',
     async (rotulo) => {
