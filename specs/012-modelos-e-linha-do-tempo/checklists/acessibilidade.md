@@ -3,6 +3,10 @@
 > Avalia a **qualidade da especificação**, não do código. `[x]` significa "requisito
 > aprovado por revisor humano". O agente não se autoaprova.
 
+> **Estado da revisão (2026-10-08):** igual ao de `requisitos.md`. As quatro lacunas daqui
+> (teclas das abas, foco ao expandir, data completa no toque e no leitor de tela, redução de
+> movimento) viraram RF-19 e RNF-13. As caixas continuam sem marca.
+
 ## Teclado e foco
 
 - [ ] O cartão inteiro do modelo abre por teclado (Enter) e tem contorno de foco visível (cenário "Cartão por teclado", RNF-05)

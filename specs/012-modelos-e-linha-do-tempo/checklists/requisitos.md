@@ -3,6 +3,13 @@
 > Avalia a **qualidade da especificação**, não do código. `[x]` significa "requisito
 > aprovado por revisor humano". O agente não se autoaprova.
 
+> **Estado da revisão (2026-10-08):** o usuário viu os itens e as sete lacunas e respondeu
+> "vamos implementar", pedindo também a issue rgm-backend#114 como prioridade principal. As
+> lacunas foram aceitas como propostas e viraram requisitos (RF-13, RF-17, RF-18, RF-19,
+> RNF-13); o campo de nomes da API e "quem abriu" pela atividade de abertura entraram em
+> RF-12. **As caixas continuam sem marca**: o usuário não as marcou item a item, e o agente
+> não as marca por ele. Registrado para o `/bu:converge` e o `/bu:review`.
+
 ## Completude
 
 - [ ] Todo requisito funcional (RF-01 a RF-17) tem ao menos um critério de aceite em DADO/QUANDO/ENTÃO

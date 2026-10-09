@@ -55,8 +55,13 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`.
 | Sem capa | o espaço da foto grande mostra as duas primeiras letras do código sobre superfície neutra, no mesmo tamanho da foto | espaço menor | RF-02; é o que o cartão da lista já faz |
 | Dados da ficha | grade compacta (`dl` de duas colunas) com máquina, tipo, criação e atualização; "Pendência aberta" vira selo ao lado de "Ativo"/"Inativo" | lista de rótulos em largura total | RF-04, RF-05; nenhum dado é removido (RNF-08) |
 | Cartão do modelo | `ModeloCard` vira um `Link` que envolve o cartão inteiro; foto em proporção 4:3; título é a descrição; código em fonte monoespaçada pequena; selos só "Inativo" e "Pendência aberta"; sai "Ver detalhes →" | botão dentro do cartão | RF-10, RF-11; um alvo só, por toque, clique e teclado |
-| Nomes de usuários | função pura `nomesDosUsuarios(ids, usuarios)` em `SRC/features/solicitacoes/lib/` que devolve o texto ("Ana, Bruno", ou "N responsáveis" quando algum nome falta) e `nomeDoUsuario(id, usuarios)`; os usuários vêm de `useResponsaveisDisponiveis` | endpoint novo; guardar nomes no cliente | RF-12 e a decisão do usuário; sem contrato novo (RNF-11) |
-| Resumo da solicitação | `SolicitacaoResumo` mostra status, prioridade, prazo (`situacaoDoPrazo`, que já existe), responsáveis, modelo com link e quem abriu, em grade; datas por `tempoRelativo` com `formatarDataHora` em `title`; o subtítulo da página deixa de mostrar segundos | recalcular prazo na tela | RF-12; o prazo continua só com o que a API informa |
+| Nomes de usuários | duas funções puras em `SRC/features/solicitacoes/lib/nomesDosUsuarios.ts`: `nomesDosResponsaveis(solicitacao, usuarios)` devolve "Ana, Bruno" ou "N responsáveis" quando algum nome falta, e `nomeDeQuemAbriu(solicitacao, atividades, usuarios)`. Ordem de busca do nome: (1) campo opcional da API `responsaveis` (`{ id, nome }[]`) e `abertaPorNome`, que a issue rgm-backend#114 vai passar a devolver; (2) para quem abriu, o `autorNome` da atividade `ABERTURA` do histórico, que todo perfil recebe; (3) para os responsáveis, a lista de `useResponsaveisDisponiveis` (só gestor e administrador). `Solicitacao` ganha os dois campos como opcionais | endpoint novo; guardar nomes no cliente; ler o texto do comentário de atribuição | RF-12 e a decisão do usuário (2026-10-08); sem contrato obrigatório novo (RNF-11, Princípio 9): o campo novo é opcional e a tela cai na reserva sem ele |
+| Resumo da solicitação | `SolicitacaoResumo` mostra status, prioridade, prazo (`situacaoDoPrazo`, que já existe), responsáveis, modelo com link e quem abriu, em grade; datas por `tempoRelativo`; o subtítulo da página deixa de mostrar segundos | recalcular prazo na tela | RF-12; o prazo continua só com o que a API informa |
+| Data completa acessível | todo horário vira `<time dateTime>` com o texto relativo visível, a data completa no `title` (ponteiro) e a mesma data completa num texto só para leitor de tela (`sr-only`); no toque, tocar no horário mostra a data completa (um `title` não aparece no toque) | só `title` | RF-19; leitor de tela e toque não têm ponteiro |
+| "Mostrar N anteriores" | o controle continua montado depois de expandir e passa a dizer "Mostrar menos", para o foco do teclado ficar nele; `aria-expanded` e `aria-controls` | remover o controle ao expandir | RF-19; o foco não se perde |
+| Erro da galeria | `GaleriaModelo` já mostra `ErrorState` quando a consulta falha; passa a oferecer o botão "Tentar novamente", que chama `refetch` da consulta; foto que não carrega já cai no ícone de imagem indisponível (`GaleriaFotoThumb`) e a foto grande faz o mesmo | esperar o `ErrorState` com `onRetry` da #126 | RF-18; a #126 fica para o `ErrorState` de todas as telas, e aqui só o botão da galeria |
+| Teclas das abas | `Abas` trata seta para a esquerda e para a direita (com volta), Home e End, move o foco para a aba e a abre | só clique | RF-19 |
+| Sem animação | trocar de aba, de foto e expandir o histórico não animam; o que tiver transição usa `motion-safe:` | animação sempre | RNF-13 |
 | Ação principal por etapa | tabela em `acoesSolicitacao.ts`: `A_FAZER → TRIAR`, `EM_ANDAMENTO → ENVIAR_VALIDACAO`, `EM_VALIDACAO → ENCERRAR`; função pura `separarAcoes(acoes, status)` devolve `{ principal, outras }`; com uma ação permitida só, ela é o botão (a de cancelar em perigo); com várias e a principal não permitida ao usuário, todas vão para o menu | escolher a principal em cada tela | RF-13; a regra mora em `lib/`, onde é medida (Princípio 10) |
 | Onde as ações aparecem | hook `useAcoesDoCabecalho(solicitacao)` devolve `{ principal, maisAcoes, dialogo }`; a página passa o botão em `actions`, a lista em `maisAcoes` do `PageHeader` (spec 011) e renderiza `dialogo`; o bloco "Ações" no corpo sai, e `SolicitacaoAcoes` com ele | manter o bloco e acrescentar o menu | RF-13, RNF-03; os diálogos de cada ação não mudam |
 | "Editar" e "Voltar" | "Editar" entra em `maisAcoes`; "Voltar" sai do cabeçalho e vira um link "← Voltar" acima do título; na edição, "Salvar" e "Cancelar" continuam em `actions`, sem menu | deixar "Editar" como principal | RNF-03 (uma principal e um menu); a principal é a ação de fluxo |
@@ -107,6 +112,7 @@ Prefixos: `SRC` = `app/src`; `TST` = `app/tests/unit`.
 | adapters/presenters | `SRC/features/solicitacoes/components/SolicitacaoResumo.tsx` | alterar | `TST/features/solicitacoes/components/SolicitacaoResumo.test.tsx` |
 | adapters/presenters | `SRC/features/solicitacoes/components/SolicitacaoAcoes.tsx` | remover (vira `useAcoesDoCabecalho`) | remover `TST/features/solicitacoes/components/SolicitacaoAcoes.test.tsx` |
 | adapters/presenters | `SRC/features/solicitacoes/pages/SolicitacaoDetalhePage.tsx` | alterar | `TST/features/solicitacoes/pages/SolicitacaoDetalhePage.test.tsx` |
+| core/domain | `SRC/features/solicitacoes/types/solicitacaoTypes.ts` | alterar (campos opcionais `responsaveis` e `abertaPorNome`) | — (só tipos) |
 | fora de `app/src` | `app/tests/e2e/*.spec.ts` que clicam em ação do detalhe (conferir `Devolver`, `Cancelar`, `Alterar responsáveis`, `Editar`, `Voltar`) | alterar | rodados por `make e2e` |
 | fora de `app/` | `openspec/README.md` | alterar (linhas da tabela, Princípio 12) | — |
 
@@ -150,8 +156,8 @@ Nenhum alvo novo. `make test`, `make cover-arquivos ARQUIVOS="src/..."` (criado 
 
 | Risco | Probabilidade | Mitigação |
 |---|---|---|
-| **R1.** A solicitação não mostra "quem abriu" para boa parte dos casos: a lista de usuários vem só de operadores e gestores ativos, e quem abriu pode ser administrador ou externo | alta | a spec já prevê omitir a linha; registrar na convergência quantos dos casos de teste caem na reserva; pedir à API o nome é uma issue de backend, fora desta spec |
-| **R2.** O operador nunca vê os nomes dos responsáveis (o hook só busca para quem gerencia): sempre "N responsáveis" | certa | é o comportamento especificado (RF-12); abrir issue para a API devolver nomes se a fábrica sentir falta |
+| **R1.** "Quem abriu" depende da atividade de abertura do histórico; solicitação antiga pode não tê-la | baixa | a spec prevê omitir a linha; o backend #114 passa a devolver `abertaPorNome` e resolve de vez |
+| **R2.** Até o backend #114 sair, o operador vê "N responsáveis" sem os nomes (o endpoint de usuários é só de gestor e administrador) | certa | comportamento especificado (RF-12); o front já lê `responsaveis` quando a API o devolve, então não precisa de nova entrega do front; **a issue rgm-backend#114 é a próxima depois desta spec** |
 | **R3.** Mudar `formatDuracao` altera textos do painel e dos indicadores ("0h" some em todo lugar) | média | testes de `solicitacaoMessages` e do painel ajustados; a mudança é só abaixo de 1 hora |
 | **R4.** Remover `SolicitacaoAcoes` e o bloco "Ações" quebra teste e e2e que clicam num botão que agora está no menu | alta | levantar as asserções afetadas antes (as tarefas listam os arquivos); e2e passam por "Mais ações" |
 | **R5.** Foto muito larga ou muito alta quebra a proporção da foto grande | média | `object-cover` em proporção fixa e o carrossel mostra a foto inteira; checar nas capturas |
@@ -194,6 +200,9 @@ Nenhum alvo novo. `make test`, `make cover-arquivos ARQUIVOS="src/..."` (criado 
 | RF-15 | `linhaDoTempo.ts` (`recolher`), `LinhaDoTempo` |
 | RF-16 | `SolicitacaoTimeline` (formulário no topo), `SolicitacaoDetalhePage` |
 | RF-17 | `useVoltar`, `SolicitacaoDetalhePage` |
+| RF-18 | `GaleriaModelo` (botão "Tentar novamente"), `GaleriaFotoThumb` |
+| RF-19 | `Abas` (teclas), `LinhaDoTempo` (controle que fica e data completa acessível), `data.ts` |
+| RNF-13 | `Abas`, `GaleriaModelo`, `LinhaDoTempo` (sem animação; `motion-safe:`) |
 | RNF-01 a RNF-04, RNF-07, RNF-12 | testes de componente e roteiro de medição da convergência |
 | RNF-05, RNF-06 | medição na convergência (toque, foco e contraste) |
 | RNF-08 | teste da ficha conferindo cada dado de hoje |

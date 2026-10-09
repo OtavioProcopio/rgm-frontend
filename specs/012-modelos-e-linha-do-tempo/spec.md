@@ -125,12 +125,14 @@ Depois desta entrega:
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-12 | O resumo deve mostrar status, prioridade, prazo ("vence em 5 h" ou "atrasada há 2 d"), responsáveis, modelo (com link) e quem abriu, com datas em forma relativa ("há 3 h") e a data completa, sem segundos, ao passar o ponteiro ou focar; a API informa só os identificadores, então os nomes de quem abriu e dos responsáveis vêm da lista de usuários que o front já carrega para os responsáveis disponíveis: com o nome conhecido, mostra o nome; sem ele, mostra "N responsáveis" no lugar dos responsáveis e omite a linha de quem abriu | obrigatório |
-| RF-13 | O detalhe deve ter uma única ação principal por etapa e perfil, e as demais ações no menu "Mais ações" (spec 011): "Triar" é a principal em "A fazer", "Enviar para validação" em "Em andamento" e "Encerrar" em "Em validação"; "Alterar responsáveis" e "Devolver" ficam no menu; "Cancelar", quando existir, fica no fim do menu, separada, em cor de perigo e confirmada | obrigatório |
+| RF-12 | O resumo deve mostrar status, prioridade, prazo ("vence em 5 h" ou "atrasada há 2 d"), responsáveis, modelo (com link) e quem abriu, com datas em forma relativa ("há 3 h") e a data completa, sem segundos, ao passar o ponteiro ou focar; a API da v1.5.0 informa só os identificadores, então os nomes vêm, nesta ordem: do campo de nomes que a API passe a informar (issue rgm-backend#114), da atividade "Solicitação aberta" do histórico (o autor dela é quem abriu, e todo perfil recebe essa atividade) e, para os responsáveis, da lista de usuários que o front já carrega para os responsáveis disponíveis (só gestor e administrador a recebem); sem nome conhecido, mostra "N responsáveis" no lugar dos responsáveis | obrigatório |
+| RF-13 | O detalhe deve ter uma única ação principal por etapa e perfil, e as demais ações no menu "Mais ações" (spec 011): "Triar" é a principal em "A fazer", "Enviar para validação" em "Em andamento" e "Encerrar" em "Em validação"; "Alterar responsáveis" e "Devolver" ficam no menu; "Cancelar", quando existir, fica no fim do menu, separada, em cor de perigo e confirmada; "Editar" (título e descrição) também fica no menu. Quando a ação principal da etapa não é permitida ao usuário, nenhuma ação fica em destaque e as permitidas vão ao menu; quando só uma ação é permitida, ela é o botão, sem menu | obrigatório |
 | RF-14 | O histórico da solicitação deve ser uma linha do tempo do mais recente para o mais antigo, agrupada por dia ("Hoje", "Ontem", a data), em que a mudança de status mostra os dois estados como selos, o autor aparece com iniciais e nome uma vez por evento, a hora aparece em forma relativa com a completa ao passar o ponteiro, o comentário aparece como balão com o texto em destaque e os eventos automáticos (atribuição, mudança de status) têm menos peso que comentários e evidências | obrigatório |
 | RF-15 | Numa linha do tempo longa, os eventos mais antigos devem ficar recolhidos atrás de "Mostrar N eventos anteriores": com mais de 10 eventos, ficam visíveis os 10 mais recentes; com 10 ou menos, todos | obrigatório |
 | RF-16 | O campo de comentário deve ficar junto da linha do tempo, ao alcance sem rolar até o fim da página, e só aparecer enquanto a solicitação pode receber comentário | obrigatório |
-| RF-17 | "Voltar" deve levar à tela de onde o usuário veio, e ao quadro de solicitações quando não houver tela anterior | obrigatório |
+| RF-17 | "Voltar" deve ser um link acima do título, fora do grupo de ações do cabeçalho, e levar à tela de onde o usuário veio, e ao quadro de solicitações quando não houver tela anterior | obrigatório |
+| RF-18 | Quando a galeria do modelo não carrega, a ficha deve mostrar o erro no lugar das fotos, com "Tentar novamente", e o restante da ficha deve continuar funcionando; foto que não abre mostra um ícone de imagem indisponível no lugar dela | obrigatório |
+| RF-19 | As abas devem ser operáveis por teclado (setas entre as abas, Home e End), o painel que não está aberto não deve entrar na ordem de tabulação, e o foco deve permanecer em "Mostrar N eventos anteriores" depois de expandir; a data completa de um evento deve estar disponível também como texto para leitor de tela e para toque, e não só ao passar o ponteiro | obrigatório |
 
 ## Requisitos não funcionais
 
@@ -148,6 +150,7 @@ Depois desta entrega:
 | RNF-10 | Dependências | 0 dependências novas |
 | RNF-11 | Compatibilidade | funciona com a API v1.5.0 em produção; nenhuma mudança de contrato; onde o dado novo falta, a tela mostra o que tem (Princípio 9) |
 | RNF-12 | Ordem do histórico | 100% das linhas do tempo, da ficha e da solicitação, do mais recente para o mais antigo |
+| RNF-13 | Movimento | 0 ms de animação ao trocar de aba, trocar de foto e expandir o histórico quando o usuário pediu redução de movimento; no máximo 200 ms nos demais casos |
 
 ## Critérios de aceite
 
@@ -288,11 +291,26 @@ Funcionalidade: Modelos e linha do tempo
     Quando o usuário abre o detalhe
     Então o resumo mostra o nome do responsável
 
+  Cenário: Nome do responsável vindo da API
+    Dado uma solicitação cuja resposta traz a lista de responsáveis com nome
+    Quando o usuário abre o detalhe
+    Então o resumo mostra os nomes dos responsáveis
+    Mas não depende da lista de usuários carregada pelo front
+
   Cenário: Nome do responsável desconhecido
-    Dado uma solicitação com dois responsáveis que não estão na lista carregada
+    Dado um operador abrindo uma solicitação com dois responsáveis, sem nomes na resposta da API
     Quando o usuário abre o detalhe
     Então o resumo mostra "2 responsáveis"
-    E a linha de quem abriu não aparece se o nome também não é conhecido
+
+  Cenário: Quem abriu pela atividade de abertura
+    Dado uma solicitação cujo histórico tem a atividade "Solicitação aberta" feita por uma pessoa
+    Quando o usuário, de qualquer perfil, abre o detalhe
+    Então o resumo mostra o nome dessa pessoa como quem abriu
+
+  Cenário: Quem abriu sem a atividade de abertura
+    Dado uma solicitação cujo histórico não traz a atividade de abertura e sem nome na resposta da API
+    Quando o usuário abre o detalhe
+    Então a linha de quem abriu não aparece
 
   Cenário: Prazo vencido
     Dado uma solicitação atrasada há dois dias
@@ -368,7 +386,65 @@ Funcionalidade: Modelos e linha do tempo
     Quando ele aciona "Voltar"
     Então vai ao quadro de solicitações
 
+  Cenário: Galeria que não carrega
+    Dado a ficha de um modelo cuja galeria de fotos falha ao carregar
+    Quando o usuário abre a ficha
+    Então no lugar das fotos aparece o erro, com o botão "Tentar novamente"
+    E o restante da ficha continua funcionando
+    Mas a ficha não fica em branco
+
+  Cenário: Foto que não abre
+    Dado a ficha de um modelo cuja foto de capa não carrega a imagem
+    Quando o usuário abre a ficha
+    Então no lugar da foto aparece o ícone de imagem indisponível
+
+  Cenário: Principal não permitida ao usuário
+    Dado um operador que não é responsável por uma solicitação em andamento
+    Quando o usuário abre o detalhe
+    Então nenhuma ação fica em destaque
+    E as ações que ele pode fazer estão em "Mais ações"
+
+  Cenário: Uma única ação permitida
+    Dado um operador que abriu uma solicitação ainda sem responsável
+    Quando o usuário abre o detalhe
+    Então a única ação permitida aparece como botão
+    Mas não aparece o botão "Mais ações"
+
+  Cenário: Editar no menu
+    Dado um gestor numa solicitação em andamento
+    Quando o usuário abre "Mais ações"
+    Então "Editar" está entre as ações
+
+  Cenário: Voltar como link
+    Dado o detalhe de uma solicitação
+    Quando a tela carrega
+    Então "Voltar" é um link acima do título
+    Mas não está no grupo de ações do cabeçalho
+
   # Acessibilidade
+
+  Cenário: Abas por teclado
+    Dado o foco na aba "Resumo" da ficha do modelo
+    Quando o usuário aperta a seta para a direita
+    Então o foco vai para a aba "Histórico" e ela abre
+    E o painel que não está aberto não entra na ordem de tabulação
+
+  Cenário: Foco depois de expandir o histórico
+    Dado uma linha do tempo com eventos recolhidos
+    Quando o usuário aciona "Mostrar eventos anteriores" pelo teclado
+    Então os eventos aparecem
+    E o foco continua no controle de expandir
+
+  Cenário: Data completa para leitor de tela
+    Dado um evento de três horas atrás
+    Quando o leitor de tela lê o evento
+    Então ele lê "há 3 h" e a data e hora completas, sem segundos
+    E a data completa também está disponível a quem usa toque
+
+  Cenário: Redução de movimento
+    Dado um usuário que pediu redução de movimento ao sistema
+    Quando ele troca de aba, troca de foto ou expande o histórico
+    Então a mudança acontece sem animação
 
   Cenário: Alvos de toque
     Dado um aparelho de toque em 390 px
@@ -411,3 +487,5 @@ Já decidido, sem pergunta:
 | RF-06: onde fica "Adicionar foto"? | Botão junto da foto, não no menu | 2026-10-08 |
 | RF-11: a mudança do cartão vale para qual lista? | Só os cartões da lista de operação; a tabela da administração não muda | 2026-10-08 |
 | RF-15: a partir de quantos eventos a linha do tempo recolhe os antigos? | Mais de 10: mostra os 10 mais recentes | 2026-10-08 |
+| RF-12: o operador pode ver os nomes dos responsáveis? | Sim, pelo backend: issue rgm-backend#114 (principal, a próxima depois do front) devolve `responsaveis` e `abertaPorNome`; o front já lê o campo e cai em "N responsáveis" sem ele; "quem abriu" vem do autor da atividade de abertura, sem esperar o backend | 2026-10-08 |
+| Sete lacunas dos checklists (galeria que falha, principal não permitida, "Editar" e "Voltar", teclas das abas, foco ao expandir, data completa no toque, redução de movimento): o que fazer? | "Vamos implementar" depois de ver a proposta de cada uma; aceitas como propostas, viraram RF-13, RF-17, RF-18, RF-19 e RNF-13 | 2026-10-08 |
