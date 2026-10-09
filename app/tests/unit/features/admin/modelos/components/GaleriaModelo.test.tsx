@@ -1,34 +1,40 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GaleriaModelo } from '@/features/admin/modelos/components/GaleriaModelo';
+import { useGaleriaModelo } from '@/features/admin/modelos/hooks/useGaleriaModelo';
 
-const { fotos, adicionarMutateAsync, editarMutateAsync, removerMutateAsync } = vi.hoisted(() => {
-  const fotos = [
-    {
-      id: 'f1',
-      modeloId: 'm1',
-      publicUrl: 'http://minio/f1.jpg',
-      identificacao: 'Parte 1',
-      principal: true,
-      enviadaPorUsuarioId: 'u1',
-      criadoEm: '2026-01-01T00:00:00Z',
-    },
-  ];
-  return {
-    fotos,
-    adicionarMutateAsync: vi.fn().mockResolvedValue(fotos[0]),
-    editarMutateAsync: vi.fn().mockResolvedValue(fotos[0]),
-    removerMutateAsync: vi.fn().mockResolvedValue(undefined),
-  };
-});
+const { fotos, refetch, adicionarMutateAsync, editarMutateAsync, removerMutateAsync } = vi.hoisted(
+  () => {
+    const fotos = [
+      {
+        id: 'f1',
+        modeloId: 'm1',
+        publicUrl: 'http://minio/f1.jpg',
+        identificacao: 'Parte 1',
+        principal: true,
+        enviadaPorUsuarioId: 'u1',
+        criadoEm: '2026-01-01T00:00:00Z',
+      },
+    ];
+    return {
+      fotos,
+      refetch: vi.fn(),
+      adicionarMutateAsync: vi.fn().mockResolvedValue(fotos[0]),
+      editarMutateAsync: vi.fn().mockResolvedValue(fotos[0]),
+      removerMutateAsync: vi.fn().mockResolvedValue(undefined),
+    };
+  },
+);
 
 vi.mock('@/features/admin/modelos/hooks/useGaleriaModelo', () => ({
-  useGaleriaModelo: vi.fn().mockReturnValue({ data: fotos, isLoading: false, error: null }),
+  useGaleriaModelo: vi
+    .fn()
+    .mockReturnValue({ data: fotos, isLoading: false, error: null, refetch }),
 }));
 vi.mock('@/features/admin/modelos/hooks/useAdicionarFotoGaleria', () => ({
   useAdicionarFotoGaleria: vi
@@ -46,119 +52,337 @@ vi.mock('@/features/admin/modelos/hooks/useRemoverFotoGaleria', () => ({
     .mockReturnValue({ mutateAsync: removerMutateAsync, isPending: false }),
 }));
 
+type Resultado = { data?: typeof fotos; isLoading?: boolean; error?: Error | null };
+
+function simularGaleria({ data, isLoading = false, error = null }: Resultado) {
+  vi.mocked(useGaleriaModelo).mockReturnValue({
+    data,
+    isLoading,
+    error,
+    refetch,
+  } as unknown as ReturnType<typeof useGaleriaModelo>);
+}
+
+function criarFotos(quantidade: number, indiceDaCapa: number | null) {
+  return Array.from({ length: quantidade }, (_, i) => ({
+    ...fotos[0],
+    id: `f${i}`,
+    identificacao: `Foto ${i}`,
+    principal: i === indiceDaCapa,
+  }));
+}
+
+function renderizar(podeGerenciar = true) {
+  return render(<GaleriaModelo modeloId="m1" codigo="ab-123" podeGerenciar={podeGerenciar} />);
+}
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  simularGaleria({ data: fotos });
 });
 
-describe('GaleriaModelo', () => {
-  it('renders a thumbnail for each photo in the gallery', () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    expect(within(container).getByRole('button', { name: /ver foto: parte 1/i })).toBeDefined();
+describe('GaleriaModelo com a foto grande', () => {
+  it('deve mostrar a capa como foto grande quando a galeria tem capa', () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 3) });
+
+    // Act
+    renderizar();
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ampliar foto: Foto 3' })).toBeDefined();
   });
 
-  it('shows "Ver galeria completa" and "Adicionar foto" when podeGerenciar is true', () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    expect(within(container).getByRole('button', { name: /ver galeria completa/i })).toBeDefined();
-    expect(within(container).getByRole('button', { name: /adicionar foto/i })).toBeDefined();
+  it('deve mostrar a primeira foto como foto grande quando a galeria não tem capa', () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, null) });
+
+    // Act
+    renderizar();
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ampliar foto: Foto 0' })).toBeDefined();
   });
 
-  it('hides "Adicionar foto" but keeps "Ver galeria completa" when podeGerenciar is false', () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar={false} />);
-    expect(within(container).getByRole('button', { name: /ver galeria completa/i })).toBeDefined();
-    expect(within(container).queryByRole('button', { name: /adicionar foto/i })).toBeNull();
+  it('deve usar a proporção 4:3 na largura toda quando a foto grande aparece', () => {
+    // Act
+    renderizar();
+
+    // Assert
+    const grande = screen.getByRole('button', { name: 'Ampliar foto: Parte 1' });
+    expect(grande.className.split(' ')).toEqual(expect.arrayContaining(['aspect-[4/3]', 'w-full']));
   });
 
-  it('shows a "+N" overlay on the 4th thumbnail when there are more than 4 photos', async () => {
-    const { useGaleriaModelo } = await import('@/features/admin/modelos/hooks/useGaleriaModelo');
-    const manyFotos = Array.from({ length: 6 }, (_, i) => ({
-      ...fotos[0],
-      id: `f${i}`,
-      identificacao: `Foto ${i}`,
-      principal: i === 0,
-    }));
-    vi.mocked(useGaleriaModelo).mockReturnValueOnce({
-      data: manyFotos,
-      isLoading: false,
-      error: null,
-    } as unknown as ReturnType<typeof useGaleriaModelo>);
+  it('deve trocar a foto grande quando uma miniatura é escolhida', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    renderizar();
 
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    expect(within(container).getByText('+2')).toBeDefined();
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 2' }));
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ampliar foto: Foto 2' })).toBeDefined();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('shows empty state when there are no photos', async () => {
-    const { useGaleriaModelo } = await import('@/features/admin/modelos/hooks/useGaleriaModelo');
-    vi.mocked(useGaleriaModelo).mockReturnValueOnce({
-      data: [],
-      isLoading: false,
-      error: null,
-    } as unknown as ReturnType<typeof useGaleriaModelo>);
+  it('deve marcar a miniatura como ativa quando ela é escolhida', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    renderizar();
 
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    expect(within(container).getByText(/nenhuma foto na galeria/i)).toBeDefined();
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 2' }));
+
+    // Assert
+    const miniatura = screen.getByRole('button', { name: 'Ver foto: Foto 2' });
+    expect(miniatura.getAttribute('aria-current')).toBe('true');
   });
 
-  it('opens the carousel when a thumbnail is clicked', async () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    await userEvent.click(within(container).getByRole('button', { name: /ver foto: parte 1/i }));
-    expect(within(container).getByRole('dialog', { name: /galeria de fotos/i })).toBeDefined();
+  it('deve manter a estrela de capa na miniatura da capa quando outra miniatura é escolhida', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    renderizar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 2' }));
+
+    // Assert
+    const capa = screen.getByRole('button', { name: 'Ver foto: Foto 0' });
+    expect(capa.querySelector('svg.lucide-star')).not.toBeNull();
   });
 
-  it('opens the carousel via "Ver galeria completa"', async () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    await userEvent.click(within(container).getByRole('button', { name: /ver galeria completa/i }));
-    expect(within(container).getByRole('dialog', { name: /galeria de fotos/i })).toBeDefined();
+  it('deve abrir o carrossel na foto atual quando a foto grande é tocada', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    renderizar();
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 2' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Ampliar foto: Foto 2' }));
+
+    // Assert
+    expect(screen.getByRole('dialog', { name: 'Galeria de fotos: Foto 2' })).toBeDefined();
   });
 
-  it('opens the add-photo modal and submits a new photo', async () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+  it('deve mostrar o ícone de imagem indisponível quando a foto grande falha ao carregar', () => {
+    // Arrange
+    renderizar();
+    const grande = screen.getByRole('button', { name: 'Ampliar foto: Parte 1' });
+
+    // Act
+    fireEvent.error(within(grande).getByRole('img'));
+
+    // Assert
+    expect(grande.querySelector('svg.lucide-image-off')).not.toBeNull();
+  });
+
+  it('deve manter uma foto válida como ativa quando a lista encolhe', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    const { rerender } = renderizar();
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 4' }));
+
+    // Act
+    simularGaleria({ data: criarFotos(2, null) });
+    rerender(<GaleriaModelo modeloId="m1" codigo="ab-123" podeGerenciar />);
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Ampliar foto: Foto 1' })).toBeDefined();
+  });
+});
+
+describe('GaleriaModelo com as miniaturas', () => {
+  it('deve mostrar seis miniaturas quando há oito fotos', () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(8, 0) });
+
+    // Act
+    renderizar();
+
+    // Assert
+    expect(screen.getAllByRole('button', { name: /^Ver foto: / })).toHaveLength(5);
+    expect(screen.getByRole('button', { name: /^Ver galeria completa/ })).toBeDefined();
+  });
+
+  it('deve mostrar +2 na sexta miniatura quando há oito fotos', () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(8, 0) });
+
+    // Act
+    renderizar();
+
+    // Assert
+    const sexta = screen.getByRole('button', { name: /^Ver galeria completa/ });
+    expect(within(sexta).getByText('+2')).toBeDefined();
+  });
+
+  it('deve abrir o carrossel na sexta foto quando a miniatura com +2 é acionada', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(8, 0) });
+    renderizar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: /^Ver galeria completa/ }));
+
+    // Assert
+    expect(screen.getByRole('dialog', { name: 'Galeria de fotos: Foto 5' })).toBeDefined();
+  });
+
+  it('deve mostrar Adicionar foto junto das miniaturas quando pode gerenciar', () => {
+    // Act
+    renderizar(true);
+
+    // Assert
+    const adicionar = screen.getByRole('button', { name: 'Adicionar foto' });
+    const miniatura = screen.getByRole('button', { name: 'Ver foto: Parte 1' });
+    expect(adicionar.getAttribute('type')).toBe('button');
+    expect(adicionar.parentElement).toBe(miniatura.parentElement);
+  });
+
+  it('deve esconder Adicionar foto quando não pode gerenciar', () => {
+    // Act
+    renderizar(false);
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Adicionar foto' })).toBeNull();
+  });
+
+  it('deve não mostrar Ver galeria completa quando a galeria tem poucas fotos', () => {
+    // Act
+    renderizar();
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Ver galeria completa' })).toBeNull();
+  });
+});
+
+describe('GaleriaModelo sem fotos', () => {
+  it('deve mostrar as duas primeiras letras do código em maiúsculas quando não há fotos', () => {
+    // Arrange
+    simularGaleria({ data: [] });
+
+    // Act
+    renderizar(false);
+
+    // Assert
+    expect(screen.getByText('AB')).toBeDefined();
+    expect(screen.getByText(/nenhuma foto na galeria deste modelo/i)).toBeDefined();
+  });
+
+  it('deve mostrar Adicionar foto quando não há fotos e pode gerenciar', () => {
+    // Arrange
+    simularGaleria({ data: [] });
+
+    // Act
+    renderizar(true);
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Adicionar foto' })).toBeDefined();
+  });
+
+  it('deve esconder Adicionar foto quando não há fotos e não pode gerenciar', () => {
+    // Arrange
+    simularGaleria({ data: [] });
+
+    // Act
+    renderizar(false);
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Adicionar foto' })).toBeNull();
+  });
+});
+
+describe('GaleriaModelo com a consulta em erro', () => {
+  it('deve mostrar o erro e Tentar novamente quando a galeria falha', () => {
+    // Arrange
+    simularGaleria({ data: undefined, error: new Error('falha') });
+
+    // Act
+    renderizar();
+
+    // Assert
+    expect(screen.getByText('Não foi possível carregar a galeria')).toBeDefined();
+    const tentar = screen.getByRole('button', { name: 'Tentar novamente' });
+    expect(tentar.getAttribute('type')).toBe('button');
+  });
+
+  it('deve chamar refetch uma vez quando Tentar novamente é acionado', async () => {
+    // Arrange
+    simularGaleria({ data: undefined, error: new Error('falha') });
+    renderizar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(refetch).toHaveBeenCalledWith();
+  });
+});
+
+describe('GaleriaModelo com ações', () => {
+  it('deve abrir o modal e enviar a nova foto quando o formulário é preenchido', async () => {
+    // Arrange
+    const { container } = renderizar();
     await userEvent.click(within(container).getByRole('button', { name: /^adicionar foto$/i }));
-    expect(
-      within(container).getByRole('dialog', { name: /adicionar foto à galeria/i }),
-    ).toBeDefined();
-
     await userEvent.type(within(container).getByLabelText(/identificação/i), 'Nova foto');
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['a'], 'foto.png', { type: 'image/png' });
     await userEvent.upload(fileInput, file);
+    const botoes = within(container).getAllByRole('button', { name: /adicionar foto/i });
 
-    const submitButtons = within(container).getAllByRole('button', { name: /adicionar foto/i });
-    await userEvent.click(submitButtons[submitButtons.length - 1]);
+    // Act
+    await userEvent.click(botoes[botoes.length - 1]);
 
+    // Assert
+    expect(adicionarMutateAsync).toHaveBeenCalledTimes(1);
     expect(adicionarMutateAsync).toHaveBeenCalledWith({
       modeloId: 'm1',
       file,
       identificacao: 'Nova foto',
     });
-    expect(
-      within(container).queryByRole('dialog', { name: /adicionar foto à galeria/i }),
-    ).toBeNull();
+    expect(screen.queryByRole('dialog', { name: /adicionar foto à galeria/i })).toBeNull();
   });
 
-  it('removes a photo from within the carousel', async () => {
-    const { container } = render(<GaleriaModelo modeloId="m1" podeGerenciar />);
-    await userEvent.click(within(container).getByRole('button', { name: /ver galeria completa/i }));
+  it('deve remover a foto quando a remoção é confirmada no carrossel', async () => {
+    // Arrange
+    const { container } = renderizar();
+    await userEvent.click(within(container).getByRole('button', { name: 'Ampliar foto: Parte 1' }));
     await userEvent.click(within(container).getByRole('button', { name: /remover foto/i }));
-    const confirmButtons = within(container).getAllByRole('button', { name: /remover/i });
-    await userEvent.click(confirmButtons[confirmButtons.length - 1]);
+    const confirmar = within(container).getAllByRole('button', { name: /remover/i });
+
+    // Act
+    await userEvent.click(confirmar[confirmar.length - 1]);
+
+    // Assert
+    expect(removerMutateAsync).toHaveBeenCalledTimes(1);
     expect(removerMutateAsync).toHaveBeenCalledWith({ modeloId: 'm1', fotoId: 'f1' });
+  });
+
+  it('deve não usar a classe outline-none quando a galeria é exibida', () => {
+    // Act
+    const { container } = renderizar();
+
+    // Assert
+    expect(container.innerHTML).not.toContain('outline-none');
   });
 });
 
 const NOME_DO_DIALOGO = `Galeria de fotos: ${fotos[0].identificacao}`;
-const NOME_DA_MINIATURA = `Ver foto: ${fotos[0].identificacao}`;
+const NOME_DA_FOTO_GRANDE = `Ampliar foto: ${fotos[0].identificacao}`;
 const classes = (elemento: Element) => elemento.className.split(' ');
 
 async function abrirGaleriaPor(nomeDoControle: string) {
-  render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+  renderizar();
   await userEvent.click(screen.getByRole('button', { name: nomeDoControle }));
 }
 
 describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
   it('deve ser anunciada como diálogo modal com o nome da foto exibida quando a galeria completa abre', async () => {
     // Act
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
 
     // Assert
     const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
@@ -167,7 +391,7 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
 
   it('deve levar o foco para dentro da galeria quando a galeria completa abre', async () => {
     // Act
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
 
     // Assert
     const dialogo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO });
@@ -176,7 +400,7 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
 
   it('deve levar o foco ao primeiro controle da galeria quando Tab é apertado no último', async () => {
     // Arrange
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
     const controles = within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO })).getAllByRole(
       'button',
     );
@@ -191,7 +415,7 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
 
   it('deve fechar a galeria completa quando Esc é apertado', async () => {
     // Arrange
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
 
     // Act
     await userEvent.keyboard('{Escape}');
@@ -200,9 +424,9 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('deve devolver o foco ao botão da galeria completa quando ela fecha', async () => {
+  it('deve devolver o foco à foto grande quando a foto ampliada fecha', async () => {
     // Arrange
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
     within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO }))
       .getByRole('button', { name: 'Fechar' })
       .focus();
@@ -211,28 +435,12 @@ describe('GaleriaModelo com a galeria completa como diálogo modal', () => {
     await userEvent.keyboard('{Escape}');
 
     // Assert
-    expect(document.activeElement).toBe(
-      screen.getByRole('button', { name: 'Ver galeria completa' }),
-    );
-  });
-
-  it('deve devolver o foco à miniatura que abriu quando a foto ampliada fecha', async () => {
-    // Arrange
-    await abrirGaleriaPor(NOME_DA_MINIATURA);
-    within(screen.getByRole('dialog', { name: NOME_DO_DIALOGO }))
-      .getByRole('button', { name: 'Fechar' })
-      .focus();
-
-    // Act
-    await userEvent.keyboard('{Escape}');
-
-    // Assert
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: NOME_DA_MINIATURA }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: NOME_DA_FOTO_GRANDE }));
   });
 
   it('deve usar o fundo de sobreposição de foto quando a galeria completa abre', async () => {
     // Act
-    await abrirGaleriaPor('Ver galeria completa');
+    await abrirGaleriaPor(NOME_DA_FOTO_GRANDE);
 
     // Assert
     const fundo = screen.getByRole('dialog', { name: NOME_DO_DIALOGO }).parentElement!;
@@ -244,7 +452,7 @@ const NOME_DO_MODAL_DE_ADICIONAR = 'Adicionar foto à galeria';
 const NOME_DE_QUEM_ABRE_O_MODAL = 'Adicionar foto';
 
 async function abrirModalDeAdicionar() {
-  render(<GaleriaModelo modeloId="m1" podeGerenciar />);
+  renderizar();
   await userEvent.click(screen.getByRole('button', { name: NOME_DE_QUEM_ABRE_O_MODAL }));
 }
 

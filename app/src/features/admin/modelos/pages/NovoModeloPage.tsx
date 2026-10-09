@@ -43,7 +43,7 @@ export function NovoModeloPage({ backPath }: Props) {
           title="Modelo cadastrado"
           description="Adicione fotos à galeria agora, se quiser, ou siga para o detalhe do modelo."
         />
-        <GaleriaModelo modeloId={modeloCriado.id} podeGerenciar />
+        <GaleriaModelo modeloId={modeloCriado.id} codigo={modeloCriado.codigo} podeGerenciar />
         <div className="mt-4">
           <Button type="button" onClick={handleIrParaDetalhe}>
             Ir para o detalhe do modelo

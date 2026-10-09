@@ -182,7 +182,13 @@ export function ModeloDetalhePage() {
               Fotos de apresentação e estado atual do modelo. Independente do histórico de
               evidências — marque uma foto como capa para destacá-la nas listagens.
             </p>
-            {id ? <GaleriaModelo modeloId={id} podeGerenciar={podeGerenciarFoto} /> : null}
+            {id ? (
+              <GaleriaModelo
+                modeloId={id}
+                codigo={modelo.codigo}
+                podeGerenciar={podeGerenciarFoto}
+              />
+            ) : null}
           </div>
           <div>
             <h2 className="mb-1 text-lg font-semibold text-fg">Visão geral das solicitações</h2>

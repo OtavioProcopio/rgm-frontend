@@ -10,7 +10,7 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 import { NovoModeloPage } from '@/features/admin/modelos/pages/NovoModeloPage';
 
 const { mutateAsync, navigate } = vi.hoisted(() => ({
-  mutateAsync: vi.fn().mockResolvedValue({ id: '123' }),
+  mutateAsync: vi.fn().mockResolvedValue({ id: '123', codigo: 'M01' }),
   navigate: vi.fn(),
 }));
 
@@ -28,8 +28,21 @@ vi.mock('@/features/admin/modelos/components/ModeloForm', () => ({
   ),
 }));
 vi.mock('@/features/admin/modelos/components/GaleriaModelo', () => ({
-  GaleriaModelo: ({ modeloId, podeGerenciar }: { modeloId: string; podeGerenciar: boolean }) => (
-    <div data-testid="galeria-modelo" data-modelo-id={modeloId} data-pode-gerenciar={String(podeGerenciar)} />
+  GaleriaModelo: ({
+    modeloId,
+    codigo,
+    podeGerenciar,
+  }: {
+    modeloId: string;
+    codigo: string;
+    podeGerenciar: boolean;
+  }) => (
+    <div
+      data-testid="galeria-modelo"
+      data-modelo-id={modeloId}
+      data-codigo={codigo}
+      data-pode-gerenciar={String(podeGerenciar)}
+    />
   ),
 }));
 
@@ -58,6 +71,7 @@ describe('NovoModeloPage', () => {
     expect(within(container).getByText('Modelo cadastrado')).toBeDefined();
     const galeria = within(container).getByTestId('galeria-modelo');
     expect(galeria.dataset.modeloId).toBe('123');
+    expect(galeria.dataset.codigo).toBe('M01');
     expect(galeria.dataset.podeGerenciar).toBe('true');
   });
 
@@ -67,7 +81,9 @@ describe('NovoModeloPage', () => {
     const { container } = render(<NovoModeloPage />, { wrapper: AppWrapper });
 
     await user.click(within(container).getByRole('button', { name: 'Salvar' }));
-    await user.click(within(container).getByRole('button', { name: 'Ir para o detalhe do modelo' }));
+    await user.click(
+      within(container).getByRole('button', { name: 'Ir para o detalhe do modelo' }),
+    );
 
     expect(navigate).toHaveBeenCalledWith('/app/admin/modelos/123');
   });

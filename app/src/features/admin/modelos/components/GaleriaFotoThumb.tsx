@@ -32,7 +32,7 @@ export function GaleriaFotoThumb({ foto, overlayCount, ativa = false, onClick }:
         <img
           src={foto.publicUrl}
           alt={foto.identificacao}
-          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-105"
           onError={() => setImgError(true)}
         />
       ) : (

@@ -172,4 +172,21 @@ describe('GaleriaFotoThumb', () => {
     // Assert
     expect(botao.className).not.toContain('outline-none');
   });
+
+  it('deve animar só sob motion-safe quando renderizada', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    const classes = Array.from(container.querySelectorAll('*')).flatMap((elemento) =>
+      Array.from(elemento.classList),
+    );
+
+    // Assert
+    const semProtecao = classes.filter(
+      (classe) =>
+        /(^|:)(transition|duration|animate)/.test(classe) && !classe.startsWith('motion-safe:'),
+    );
+    expect(semProtecao).toEqual([]);
+  });
 });

@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Images, Plus, X } from 'lucide-react';
+import { ImageOff, Plus, X } from 'lucide-react';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Dialog } from '@/shared/components/Dialog/Dialog';
-import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 
@@ -15,16 +14,132 @@ import { useEditarFotoGaleria } from '../hooks/useEditarFotoGaleria';
 import { useGaleriaModelo } from '../hooks/useGaleriaModelo';
 import { useRemoverFotoGaleria } from '../hooks/useRemoverFotoGaleria';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
+import type { FotoGaleria } from '../types/galeriaTypes';
 
-const PREVIEW_COUNT = 4;
+const MAX_MINIATURAS = 6;
+const BLOCO_GRANDE = 'aspect-[4/3] w-full overflow-hidden rounded-lg';
 
 type Props = {
   modeloId: string;
+  codigo: string;
   podeGerenciar: boolean;
 };
 
-export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
-  const { data: fotos, isLoading, error } = useGaleriaModelo(modeloId);
+function indiceDaFotoAtiva(fotos: FotoGaleria[], escolhida: number | null): number {
+  if (escolhida !== null) return Math.min(escolhida, fotos.length - 1);
+  return Math.max(
+    0,
+    fotos.findIndex((foto) => foto.principal),
+  );
+}
+
+function BotaoAdicionar({ onClick }: { onClick: () => void }) {
+  return (
+    <Button type="button" className="self-center" onClick={onClick}>
+      <Plus size={16} className="mr-1.5 -ml-0.5" /> Adicionar foto
+    </Button>
+  );
+}
+
+function GaleriaErro({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return (
+    <div className="space-y-3">
+      <ErrorState
+        title="Não foi possível carregar a galeria"
+        description={getModeloErrorMessage(error)}
+      />
+      <Button type="button" variant="secondary" onClick={onRetry}>
+        Tentar novamente
+      </Button>
+    </div>
+  );
+}
+
+function FotoGrande({ foto, onAmpliar }: { foto: FotoGaleria; onAmpliar: () => void }) {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onAmpliar}
+      aria-label={`Ampliar foto: ${foto.identificacao}`}
+      className={`${BLOCO_GRANDE} block bg-surface-muted`}
+    >
+      {!imgError ? (
+        <img
+          src={foto.publicUrl}
+          alt={foto.identificacao}
+          className="h-full w-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-fg-muted">
+          <ImageOff size={32} />
+        </div>
+      )}
+    </button>
+  );
+}
+
+type SemFotosProps = { codigo: string; podeGerenciar: boolean; onAdicionar: () => void };
+
+function SemFotos({ codigo, podeGerenciar, onAdicionar }: SemFotosProps) {
+  return (
+    <div className="space-y-3">
+      <div className={`${BLOCO_GRANDE} flex items-center justify-center bg-surface-muted`}>
+        <span className="text-5xl font-bold text-fg-muted">{codigo.slice(0, 2).toUpperCase()}</span>
+      </div>
+      <p className="sr-only">Nenhuma foto na galeria deste modelo</p>
+      {podeGerenciar ? (
+        <div className="flex justify-center">
+          <BotaoAdicionar onClick={onAdicionar} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type MiniaturasProps = {
+  fotos: FotoGaleria[];
+  indiceAtivo: number;
+  podeGerenciar: boolean;
+  onEscolher: (indice: number) => void;
+  onAbrir: (indice: number) => void;
+  onAdicionar: () => void;
+};
+
+function Miniaturas({
+  fotos,
+  indiceAtivo,
+  podeGerenciar,
+  onEscolher,
+  onAbrir,
+  onAdicionar,
+}: MiniaturasProps) {
+  const resto = fotos.length - MAX_MINIATURAS;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {fotos.slice(0, MAX_MINIATURAS).map((foto, i) => {
+        const ehMais = resto > 0 && i === MAX_MINIATURAS - 1;
+        return (
+          <GaleriaFotoThumb
+            key={foto.id}
+            foto={foto}
+            ativa={i === indiceAtivo}
+            overlayCount={ehMais ? resto : undefined}
+            onClick={() => (ehMais ? onAbrir(i) : onEscolher(i))}
+          />
+        );
+      })}
+      {podeGerenciar ? <BotaoAdicionar onClick={onAdicionar} /> : null}
+    </div>
+  );
+}
+
+export function GaleriaModelo({ modeloId, codigo, podeGerenciar }: Props) {
+  const { data: fotos, isLoading, error, refetch } = useGaleriaModelo(modeloId);
+  const [escolhida, setEscolhida] = useState<number | null>(null);
   const adicionarFoto = useAdicionarFotoGaleria();
   const editarFoto = useEditarFotoGaleria();
   const removerFoto = useRemoverFotoGaleria();
@@ -80,58 +195,33 @@ export function GaleriaModelo({ modeloId, podeGerenciar }: Props) {
   }
 
   const temFotos = !!fotos && fotos.length > 0;
-  const extras = fotos && fotos.length > PREVIEW_COUNT ? fotos.length - PREVIEW_COUNT : 0;
+  const indiceAtivo = temFotos ? indiceDaFotoAtiva(fotos, escolhida) : 0;
+  const abrirAdicionar = () => setShowAddModal(true);
 
   return (
     <div className="space-y-4">
       {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
       {isLoading ? <LoadingState title="Carregando galeria..." /> : null}
-      {error ? (
-        <ErrorState
-          title="Não foi possível carregar a galeria"
-          description={getModeloErrorMessage(error)}
-        />
-      ) : null}
+      {error ? <GaleriaErro error={error} onRetry={() => void refetch()} /> : null}
 
       {temFotos ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {fotos.slice(0, PREVIEW_COUNT).map((foto, i) => (
-              <GaleriaFotoThumb
-                key={foto.id}
-                foto={foto}
-                overlayCount={i === PREVIEW_COUNT - 1 ? extras : undefined}
-                onClick={() => setCarouselIndex(i)}
-              />
-            ))}
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => setCarouselIndex(0)}>
-              <Images size={16} className="mr-1.5 -ml-0.5" /> Ver galeria completa
-            </Button>
-            {podeGerenciar ? (
-              <Button onClick={() => setShowAddModal(true)}>
-                <Plus size={16} className="mr-1.5 -ml-0.5" /> Adicionar foto
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      ) : !isLoading ? (
-        <EmptyState
-          title="Nenhuma foto na galeria deste modelo"
-          description={
-            podeGerenciar
-              ? 'Adicione fotos para apresentar o estado atual do ferramental.'
-              : undefined
-          }
-        />
-      ) : null}
-      {podeGerenciar && !temFotos ? (
-        <div className="flex justify-center">
-          <Button type="button" onClick={() => setShowAddModal(true)}>
-            <Plus size={16} className="mr-1.5 -ml-0.5" /> Adicionar foto
-          </Button>
-        </div>
+        <>
+          <FotoGrande
+            key={fotos[indiceAtivo].id}
+            foto={fotos[indiceAtivo]}
+            onAmpliar={() => setCarouselIndex(indiceAtivo)}
+          />
+          <Miniaturas
+            fotos={fotos}
+            indiceAtivo={indiceAtivo}
+            podeGerenciar={podeGerenciar}
+            onEscolher={setEscolhida}
+            onAbrir={setCarouselIndex}
+            onAdicionar={abrirAdicionar}
+          />
+        </>
+      ) : !isLoading && !error ? (
+        <SemFotos codigo={codigo} podeGerenciar={podeGerenciar} onAdicionar={abrirAdicionar} />
       ) : null}
 
       {showAddModal ? (
