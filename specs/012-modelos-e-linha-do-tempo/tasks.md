@@ -320,3 +320,20 @@ em 7 testes novos (o `vitest.config.ts` já define jsdom); não foi removida.
 
 Veredito: **convergido, com os checklists pendentes de revisão humana**. Tarefas acrescentadas: nenhuma.
 
+
+### Rodada 4 — 2026-10-09
+
+Reconvergência em `f43e282` (depois dos commits de review). Nenhum requisito novo.
+
+**`make validate`, saída real:** `178 passed` arquivos, `2552 passed` testes, cobertura 99,87% de
+instruções, 99,67% de ramos, 100% de funções, 99,85% de linhas; build concluído. Os requisitos
+RF-01 a RF-19 e RNF-01 a RNF-13 seguem com o estado e a evidência das Rodadas 1 a 3; nenhum
+arquivo de requisito mudou desde então (só refatoração e testes).
+
+**Checklists:** `requisitos.md` (23 itens) e `acessibilidade.md` (14 de 15) marcados a pedido do
+usuário, depois de conferir cada item contra a spec, o código e os testes. Correção de texto em
+`requisitos.md`: as faixas "RF-01 a RF-17" e "RNF-01 a RNF-12" passaram a "RF-01 a RF-19" e
+"RNF-01 a RNF-13", que é o que a spec tem hoje. **Aberto:** em `acessibilidade.md`, "Trocar a foto
+grande por uma miniatura mantém o foco na miniatura escolhida" — nenhum teste cobre; fica sem marca.
+
+Veredito: **convergido, com 1 item de acessibilidade sem teste**. Tarefas acrescentadas: nenhuma.
