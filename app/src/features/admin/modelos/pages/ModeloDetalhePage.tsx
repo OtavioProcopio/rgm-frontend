@@ -4,6 +4,8 @@ import { Link, useParams } from 'react-router';
 import { modelosApi } from '../api/modelosApi';
 
 import { useAuth } from '@/app/providers/authContext';
+import { Abas } from '@/shared/components/Abas/Abas';
+import { Badge } from '@/shared/components/Badge/Badge';
 import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { Card } from '@/shared/components/Card/Card';
@@ -16,14 +18,13 @@ import { cn } from '@/shared/lib/cn';
 import { canManageModelos } from '@/shared/lib/permissions';
 import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
 
-import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useResumoDasSolicitacoesDoModelo } from '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import { formatDuracao } from '@/features/solicitacoes/lib/solicitacaoMessages';
-import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
+import { HistoricoDoModelo } from '../components/HistoricoDoModelo';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import type { ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
+import type { Modelo, ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
@@ -154,34 +155,7 @@ export function ModeloDetalhePage() {
       ) : null}
       {modelo ? (
         <div className="space-y-6">
-          <Card className="rounded-md p-5 shadow-none">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-semibold text-fg">
-                {modelo.codigo} v{modelo.versao}
-              </h2>
-              <ModeloStatusBadge ativo={modelo.ativo} />
-            </div>
-            <p className="mt-3 text-fg-muted">{modelo.descricao}</p>
-            <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-              <Detail label="Máquina / Encaixe" value={modelo.maquina} />
-              <Detail
-                label="Tipo do Modelo"
-                value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
-              />
-              <Detail label="Pendência aberta" value={modelo.temPendenciaAberta ? 'Sim' : 'Não'} />
-              <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
-              <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
-            </dl>
-            {modelo.observacoes ? (
-              <p className="mt-5 text-sm text-fg-muted">{modelo.observacoes}</p>
-            ) : null}
-          </Card>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">Galeria de fotos</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Fotos de apresentação e estado atual do modelo. Independente do histórico de
-              evidências — marque uma foto como capa para destacá-la nas listagens.
-            </p>
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
             {id ? (
               <GaleriaModelo
                 modeloId={id}
@@ -189,63 +163,95 @@ export function ModeloDetalhePage() {
                 podeGerenciar={podeGerenciarFoto}
               />
             ) : null}
+            <IdentificacaoDoModelo modelo={modelo} />
           </div>
-          <div>
-            <h2 className="mb-1 text-lg font-semibold text-fg">Visão geral das solicitações</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Indicadores consolidados de todos os chamados vinculados a este modelo.
-            </p>
-            {erroNoResumo ? (
-              <p role="alert" className="text-sm text-danger-fg">
-                Não foi possível carregar o resumo das solicitações deste modelo.
-              </p>
-            ) : carregandoResumo || !resumoDasSolicitacoes ? (
-              <p role="status" className="text-sm text-fg-muted">
-                Carregando o resumo das solicitações...
-              </p>
-            ) : (
-              <ModeloDashboard resumo={resumoDasSolicitacoes} />
-            )}
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">Eventos do Modelo</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções
-              concluídas neste modelo.
-            </p>
-            <EventosModeloList eventos={eventosData ?? []} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">
-              Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
-            </h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já
-              encerrados) vinculados a este modelo.
-            </p>
-            {solicitacoesPage?.content?.length ? (
-              <ul className="divide-y divide-line rounded-md border border-line">
-                {solicitacoesPage.content.map((s) => (
-                  <li key={s.id}>
-                    <Link
-                      to={`/app/solicitacoes/${s.id}`}
-                      className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-muted"
-                    >
-                      <span className="text-sm font-medium text-fg">{s.titulo}</span>
-                      <SolicitacaoStatusBadge status={s.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-fg-muted">
-                Nenhuma solicitação registrada para este modelo.
-              </p>
-            )}
-          </div>
+          <Abas
+            rotulo="Detalhes do modelo"
+            abas={[
+              {
+                id: 'resumo',
+                rotulo: 'Resumo',
+                conteudo: (
+                  <ResumoDoModelo
+                    observacoes={modelo.observacoes}
+                    resumo={resumoDasSolicitacoes}
+                    carregando={carregandoResumo}
+                    comErro={erroNoResumo}
+                  />
+                ),
+              },
+              {
+                id: 'historico',
+                rotulo: 'Histórico',
+                conteudo: (
+                  <HistoricoDoModelo
+                    eventos={eventosData ?? []}
+                    solicitacoes={solicitacoesPage?.content ?? []}
+                    totalDeSolicitacoes={solicitacoesPage?.totalElements}
+                  />
+                ),
+              },
+            ]}
+          />
         </div>
       ) : null}
     </section>
+  );
+}
+
+function IdentificacaoDoModelo({ modelo }: { modelo: Modelo }) {
+  return (
+    <Card className="rounded-md p-5 shadow-none">
+      <h2 className="text-2xl font-semibold text-fg">
+        <span className="font-mono">{modelo.codigo}</span> v{modelo.versao}
+      </h2>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <ModeloStatusBadge ativo={modelo.ativo} />
+        {modelo.temPendenciaAberta ? <Badge variant="warning">Pendência aberta</Badge> : null}
+      </div>
+      <p className="mt-3 text-fg-muted">{modelo.descricao}</p>
+      <DadosDoModelo modelo={modelo} />
+    </Card>
+  );
+}
+
+function DadosDoModelo({ modelo }: { modelo: Modelo }) {
+  return (
+    <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+      <Detail label="Máquina / Encaixe" value={modelo.maquina} />
+      <Detail
+        label="Tipo do Modelo"
+        value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
+      />
+      <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
+      <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
+    </dl>
+  );
+}
+
+type ResumoDoModeloProps = {
+  observacoes?: string | null;
+  resumo?: ResumoDasSolicitacoesDoModelo;
+  carregando: boolean;
+  comErro: boolean;
+};
+
+function ResumoDoModelo({ observacoes, resumo, carregando, comErro }: ResumoDoModeloProps) {
+  return (
+    <div className="space-y-6">
+      {observacoes ? <p className="text-sm text-fg-muted">{observacoes}</p> : null}
+      {comErro ? (
+        <p role="alert" className="text-sm text-danger-fg">
+          Não foi possível carregar o resumo das solicitações deste modelo.
+        </p>
+      ) : carregando || !resumo ? (
+        <p role="status" className="text-sm text-fg-muted">
+          Carregando o resumo das solicitações...
+        </p>
+      ) : (
+        <ModeloDashboard resumo={resumo} />
+      )}
+    </div>
   );
 }
 
@@ -261,18 +267,20 @@ function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo }) 
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} tom="destaque" />
       <KpiCard
         label="Tempo médio de resolução"
-        value={
-          tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'
-        }
+        value={duracaoOuVazio(tempoMedioResolucaoSegundos)}
         tom="neutro"
       />
       <KpiCard
         label="Intervalo médio entre solicitações"
-        value={intervaloMedioSegundos != null ? formatDuracao(intervaloMedioSegundos) : '—'}
+        value={duracaoOuVazio(intervaloMedioSegundos)}
         tom="neutro"
       />
     </div>
   );
+}
+
+function duracaoOuVazio(segundos: number | null | undefined): string {
+  return segundos != null ? formatDuracao(segundos) : 'Sem dados ainda';
 }
 
 const TONS_DO_INDICADOR = {

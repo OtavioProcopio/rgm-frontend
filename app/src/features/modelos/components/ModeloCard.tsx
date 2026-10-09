@@ -9,32 +9,42 @@ type Props = {
   linkBase?: string;
 };
 
+function Capa({ modelo }: { modelo: Modelo }) {
+  if (modelo.fotoCapaUrl) {
+    return <img src={modelo.fotoCapaUrl} alt="" className="aspect-[4/3] w-full object-cover" />;
+  }
+  return (
+    <div className="flex aspect-[4/3] w-full items-center justify-center bg-surface-muted">
+      <span className="text-3xl font-bold text-fg-muted">{modelo.codigo.slice(0, 2)}</span>
+    </div>
+  );
+}
+
+function Selos({ modelo }: { modelo: Modelo }) {
+  if (modelo.ativo && !modelo.temPendenciaAberta) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {modelo.ativo ? null : <Badge variant="neutral">Inativo</Badge>}
+      {modelo.temPendenciaAberta ? <Badge variant="warning">Pendência aberta</Badge> : null}
+    </div>
+  );
+}
+
 export function ModeloCard({ modelo, linkBase = '/app/modelos' }: Props) {
   return (
-    <Card className="group flex flex-col overflow-hidden transition-shadow hover:shadow-md">
-      {modelo.fotoCapaUrl ? (
-        <img src={modelo.fotoCapaUrl} alt={modelo.codigo} className="h-36 w-full object-cover" />
-      ) : (
-        <div className="flex h-36 w-full items-center justify-center bg-surface-muted">
-          <span className="text-3xl font-bold text-fg-muted">{modelo.codigo.slice(0, 2)}</span>
+    <Link
+      to={`${linkBase}/${modelo.id}`}
+      aria-label={`${modelo.descricao}, ${modelo.codigo}`}
+      className="block"
+    >
+      <Card className="flex flex-col overflow-hidden hover:shadow-md motion-safe:transition-shadow">
+        <Capa modelo={modelo} />
+        <div className="flex flex-1 flex-col p-4">
+          <p className="line-clamp-2 font-semibold text-fg">{modelo.descricao}</p>
+          <p className="mt-1 font-mono text-xs text-fg-muted">{modelo.codigo}</p>
+          <Selos modelo={modelo} />
         </div>
-      )}
-      <div className="flex flex-1 flex-col p-4">
-        <p className="font-semibold text-fg">{modelo.codigo}</p>
-        <p className="mt-1 line-clamp-2 text-sm text-fg-muted">{modelo.descricao}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge variant={modelo.ativo ? 'success' : 'neutral'}>
-            {modelo.ativo ? 'Ativo' : 'Inativo'}
-          </Badge>
-          {modelo.temPendenciaAberta ? <Badge variant="warning">Pendência aberta</Badge> : null}
-        </div>
-        <Link
-          to={`${linkBase}/${modelo.id}`}
-          className="mt-auto inline-flex items-end pt-3 text-xs font-medium pointer-coarse:min-h-11 text-accent transition-colors hover:underline"
-        >
-          Ver detalhes →
-        </Link>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }

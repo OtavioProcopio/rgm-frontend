@@ -35,11 +35,11 @@ vi.mock('@/features/admin/modelos/hooks/useDesativarModelo', () => ({
 vi.mock('@/features/admin/modelos/hooks/useAtivarModelo', () => ({
   useAtivarModelo: vi.fn().mockReturnValue({ mutateAsync: vi.fn(), isPending: false }),
 }));
-vi.mock('@/features/admin/modelos/components/EventosModeloList', () => ({
-  EventosModeloList: vi.fn(() => <div />),
+vi.mock('@/features/admin/modelos/components/HistoricoDoModelo', () => ({
+  HistoricoDoModelo: vi.fn(() => <div data-testid="historico-modelo" />),
 }));
 vi.mock('@/features/admin/modelos/components/GaleriaModelo', () => ({
-  GaleriaModelo: () => <div data-testid="galeria-modelo" />,
+  GaleriaModelo: vi.fn(() => <div data-testid="galeria-modelo" />),
 }));
 
 beforeEach(async () => {
@@ -142,7 +142,17 @@ describe('ModeloDetalhePage (admin)', () => {
     expect(within(cartao).getByText(valor)).toBeDefined();
   });
 
-  it('deve mostrar "—" nos dois tempos quando o resumo não traz tempo', async () => {
+  it('deve mostrar "12 min" no tempo médio quando a resolução média é de 12 minutos', async () => {
+    // Act
+    const { container } = await abrirComResumo({ ...RESUMO, tempoMedioResolucaoSegundos: 720 });
+
+    // Assert
+    const cartao = within(container).getByText('Tempo médio de resolução')
+      .parentElement as HTMLElement;
+    expect(within(cartao).getByText('12 min')).toBeDefined();
+  });
+
+  it('deve mostrar "Sem dados ainda" nos dois tempos quando o resumo não traz tempo', async () => {
     // Act
     const { container } = await abrirComResumo({
       ...RESUMO,
@@ -151,7 +161,8 @@ describe('ModeloDetalhePage (admin)', () => {
     });
 
     // Assert
-    expect(within(container).getAllByText('—')).toHaveLength(2);
+    expect(within(container).getAllByText('Sem dados ainda')).toHaveLength(2);
+    expect(within(container).queryByText('—')).toBeNull();
   });
 
   it('deve mostrar taxa de sucesso de 0% quando o modelo não tem solicitações', async () => {
@@ -546,17 +557,214 @@ describe('ModeloDetalhePage (admin) — corpo da ficha', () => {
     expect(observacoes.tagName).toBe('P');
   });
 
-  it('deve mostrar o rótulo do tipo e a pendência aberta quando o modelo tem tipo e pendência', async () => {
+  it('deve mostrar o rótulo do tipo quando o modelo tem tipo', async () => {
     // Arrange
-    await abrirFicha({ tipo: 'RESINA', temPendenciaAberta: true });
+    await abrirFicha({ tipo: 'RESINA' });
 
     // Act
     const tipo = screen.getByText('Tipo do Modelo').parentElement as HTMLElement;
-    const pendencia = screen.getByText('Pendência aberta').parentElement as HTMLElement;
 
     // Assert
     expect(within(tipo).getByText('Resina')).toBeDefined();
-    expect(within(pendencia).getByText('Sim')).toBeDefined();
+  });
+
+  it('deve mostrar o código e a versão em destaque quando o modelo é carregado', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const titulo = screen.getByRole('heading', { name: /M01.*v1/ });
+
+    // Assert
+    expect(titulo.textContent).toContain('v1');
+    expect(within(titulo).getByText('M01')).toBeDefined();
+  });
+
+  it('deve usar fonte monoespaçada no código quando o modelo é carregado', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const codigo = screen.getByText('M01');
+
+    // Assert
+    expect(codigo.classList.contains('font-mono')).toBe(true);
+  });
+
+  it('deve mostrar os selos Ativo e Pendência aberta quando o modelo está ativo e tem pendência', async () => {
+    // Arrange
+    await abrirFicha({ ativo: true, temPendenciaAberta: true });
+
+    // Act
+    const ativo = screen.getByText('Ativo');
+    const pendencia = screen.getByText('Pendência aberta');
+
+    // Assert
+    expect(ativo).toBeDefined();
+    expect(pendencia).toBeDefined();
+  });
+
+  it('deve não mostrar o selo de pendência quando o modelo não tem pendência aberta', async () => {
+    // Arrange
+    await abrirFicha({ temPendenciaAberta: false });
+
+    // Act
+    const pendencia = screen.queryByText('Pendência aberta');
+
+    // Assert
+    expect(pendencia).toBeNull();
+  });
+
+  it('deve mostrar o selo Inativo quando o modelo está inativo', async () => {
+    // Arrange
+    await abrirFicha({ ativo: false });
+
+    // Act
+    const inativo = screen.getByText('Inativo');
+
+    // Assert
+    expect(inativo).toBeDefined();
+  });
+
+  it('deve mostrar a máquina na grade de dados quando o modelo tem máquina', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const maquina = screen.getByText('Máquina / Encaixe').parentElement as HTMLElement;
+
+    // Assert
+    expect(within(maquina).getByText('Prensa PH-200')).toBeDefined();
+  });
+
+  it.each(['Criado em', 'Atualizado em'])(
+    'deve mostrar "%s" com a data formatada quando o modelo é carregado',
+    async (rotulo) => {
+      // Arrange
+      await abrirFicha({});
+
+      // Act
+      const item = screen.getByText(rotulo).parentElement as HTMLElement;
+
+      // Assert
+      expect(item.querySelector('dd')?.textContent).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+    },
+  );
+
+  it('deve não mostrar "Pendência aberta: Sim" na grade de dados quando há pendência', async () => {
+    // Arrange
+    await abrirFicha({ temPendenciaAberta: true });
+
+    // Act
+    const dados = document.querySelectorAll('dt');
+
+    // Assert
+    const rotulos = Array.from(dados).map((dt) => dt.textContent);
+    expect(rotulos).not.toContain('Pendência aberta');
+    expect(screen.queryByText('Sim')).toBeNull();
+  });
+
+  it('deve entregar à galeria o id e o código quando o modelo é carregado', async () => {
+    // Arrange
+    const { GaleriaModelo } = await import('@/features/admin/modelos/components/GaleriaModelo');
+    vi.mocked(GaleriaModelo).mockClear();
+
+    // Act
+    await abrirFicha({});
+
+    // Assert
+    expect(vi.mocked(GaleriaModelo).mock.calls[0][0]).toEqual({
+      modeloId: '1',
+      codigo: 'M01',
+      podeGerenciar: true,
+    });
+  });
+
+  it('deve oferecer as abas Resumo e Histórico, sem Solicitações, quando o modelo é carregado', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const abas = screen.getAllByRole('tab').map((aba) => aba.textContent);
+
+    // Assert
+    expect(abas).toEqual(['Resumo', 'Histórico']);
+    expect(screen.queryByRole('tab', { name: 'Solicitações' })).toBeNull();
+  });
+
+  it('deve abrir a aba Resumo por padrão quando o modelo é carregado', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const resumo = screen.getByRole('tab', { name: 'Resumo' });
+
+    // Assert
+    expect(resumo.getAttribute('aria-selected')).toBe('true');
+    const painelDoHistorico = screen.getByTestId('historico-modelo').closest('[role="tabpanel"]');
+    expect(painelDoHistorico?.hasAttribute('hidden')).toBe(true);
+  });
+
+  it('deve nomear o conjunto de abas como Detalhes do modelo quando o modelo é carregado', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const lista = screen.getByRole('tablist', { name: 'Detalhes do modelo' });
+
+    // Assert
+    expect(lista).toBeDefined();
+  });
+
+  it('deve mostrar os indicadores no Resumo quando o resumo das solicitações é carregado', async () => {
+    // Arrange
+    const { useResumoDasSolicitacoesDoModelo } =
+      await import('@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo');
+    vi.mocked(useResumoDasSolicitacoesDoModelo).mockReturnValue({
+      data: {
+        total: 40,
+        emAberto: 6,
+        concluidas: 30,
+        canceladas: 4,
+        tempoMedioResolucaoSegundos: 720,
+        intervaloMedioSegundos: 3600,
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useResumoDasSolicitacoesDoModelo>);
+    await abrirFicha({});
+
+    // Act
+    const total = screen.getByText('Total');
+
+    // Assert
+    expect(total).toBeDefined();
+    expect(screen.getByText('12 min')).toBeDefined();
+  });
+
+  it('deve entregar eventos, solicitações e total ao histórico quando a aba Histórico é escolhida', async () => {
+    // Arrange
+    const { HistoricoDoModelo } =
+      await import('@/features/admin/modelos/components/HistoricoDoModelo');
+    const { useEventosModelo } = await import('@/features/admin/modelos/hooks/useEventosModelo');
+    const eventos = [{ id: 'e1' }];
+    const solicitacoes = [{ id: 's1', titulo: 'Trocar pino', status: 'CONCLUIDA' }];
+    vi.mocked(useEventosModelo).mockReturnValue({ data: eventos } as unknown as ReturnType<
+      typeof useEventosModelo
+    >);
+    vi.mocked(HistoricoDoModelo).mockClear();
+    await abrirFicha({}, { content: solicitacoes, totalElements: 7 });
+
+    // Act
+    await userEvent.click(screen.getByRole('tab', { name: 'Histórico' }));
+
+    // Assert
+    expect(screen.getByTestId('historico-modelo')).toBeDefined();
+    expect(vi.mocked(HistoricoDoModelo).mock.calls.at(-1)?.[0]).toEqual({
+      eventos,
+      solicitacoes,
+      totalDeSolicitacoes: 7,
+    });
   });
 
   it('deve mostrar "Não definido" no tipo quando o modelo não tem tipo', async () => {
@@ -570,64 +778,26 @@ describe('ModeloDetalhePage (admin) — corpo da ficha', () => {
     expect(within(tipo).getByText('Não definido')).toBeDefined();
   });
 
-  it('deve listar as solicitações com link e status quando o histórico tem itens', async () => {
+  it('deve entregar listas vazias ao histórico quando eventos e solicitações ainda não foram carregados', async () => {
     // Arrange
-    await abrirFicha(
-      {},
-      {
-        content: [{ id: 's1', titulo: 'Trocar pino', status: 'CONCLUIDA' }],
-        totalElements: 1,
-      },
-    );
-
-    // Act
-    const link = screen.getByRole('link', { name: /Trocar pino/ });
-
-    // Assert
-    expect(link.getAttribute('href')).toBe('/app/solicitacoes/s1');
-    expect(within(link).getByText('Concluída')).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'Histórico de Solicitações (1)' })).toBeDefined();
-  });
-
-  it('deve avisar que não há solicitações quando o histórico está vazio', async () => {
-    // Arrange
-    await abrirFicha({});
-
-    // Act
-    const aviso = screen.getByText('Nenhuma solicitação registrada para este modelo.');
-
-    // Assert
-    expect(aviso).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'Histórico de Solicitações (0)' })).toBeDefined();
-  });
-
-  it('deve entregar lista vazia à lista de eventos quando os eventos ainda não foram carregados', async () => {
-    // Arrange
+    const { HistoricoDoModelo } =
+      await import('@/features/admin/modelos/components/HistoricoDoModelo');
     const { useEventosModelo } = await import('@/features/admin/modelos/hooks/useEventosModelo');
-    const { EventosModeloList } =
-      await import('@/features/admin/modelos/components/EventosModeloList');
     vi.mocked(useEventosModelo).mockReturnValue({
       data: undefined,
     } as unknown as ReturnType<typeof useEventosModelo>);
-    vi.mocked(EventosModeloList).mockClear();
-
-    // Act
-    await abrirFicha({});
-
-    // Assert
-    expect(vi.mocked(EventosModeloList).mock.calls[0][0]).toEqual({ eventos: [] });
-  });
-
-  it('deve mostrar zero solicitações quando o histórico ainda não foi carregado', async () => {
-    // Arrange
+    vi.mocked(HistoricoDoModelo).mockClear();
     await abrirFicha({}, null as unknown as Record<string, unknown>);
 
     // Act
-    const titulo = screen.getByRole('heading', { name: 'Histórico de Solicitações (0)' });
+    await userEvent.click(screen.getByRole('tab', { name: 'Histórico' }));
 
     // Assert
-    expect(titulo).toBeDefined();
-    expect(screen.getByText('Nenhuma solicitação registrada para este modelo.')).toBeDefined();
+    expect(vi.mocked(HistoricoDoModelo).mock.calls.at(-1)?.[0]).toEqual({
+      eventos: [],
+      solicitacoes: [],
+      totalDeSolicitacoes: undefined,
+    });
   });
 
   it('deve esconder a galeria e as ações do cabeçalho quando a rota não tem id', async () => {

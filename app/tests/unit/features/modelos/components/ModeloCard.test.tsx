@@ -1,8 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { Modelo } from '@/features/admin/modelos/types/modeloTypes';
@@ -28,145 +29,170 @@ const baseModelo: Modelo = {
 
 const classes = (elemento: Element) => elemento.className.split(' ');
 
-function renderCard(modelo: Partial<Modelo> = {}) {
+function renderCard(modelo: Partial<Modelo> = {}, linkBase?: string) {
   const { container } = render(
     <MemoryRouter>
-      <ModeloCard modelo={{ ...baseModelo, ...modelo }} />
+      <ModeloCard modelo={{ ...baseModelo, ...modelo }} linkBase={linkBase} />
     </MemoryRouter>,
   );
-  return within(container);
+  return { cartao: within(container), container };
 }
 
 describe('ModeloCard', () => {
-  it('renders codigo and descricao', () => {
-    const c = renderCard();
+  it('deve ter um único link para o detalhe quando renderizado com o linkBase padrão', () => {
+    // Act
+    const { cartao } = renderCard();
 
-    expect(c.getByText('MDL-001')).toBeDefined();
-    expect(c.getByText(/modelo de teste/i)).toBeDefined();
+    // Assert
+    const links = cartao.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe('/app/modelos/1');
   });
 
-  it('shows badge Ativo when modelo is active', () => {
-    const c = renderCard({ ativo: true });
+  it('deve apontar o link para o linkBase informado quando ele é fornecido', () => {
+    // Act
+    const { cartao } = renderCard({}, '/app/admin/modelos');
 
-    expect(c.getByText('Ativo')).toBeDefined();
+    // Assert
+    expect(cartao.getByRole('link').getAttribute('href')).toBe('/app/admin/modelos/1');
   });
 
-  it('shows badge Inativo when modelo is inactive', () => {
-    const c = renderCard({ ativo: false });
+  it('deve nomear o link pela descrição e pelo código quando renderizado', () => {
+    // Act
+    const { cartao } = renderCard();
 
-    expect(c.getByText('Inativo')).toBeDefined();
+    // Assert
+    const nome = `${baseModelo.descricao}, ${baseModelo.codigo}`;
+    expect(cartao.getByRole('link', { name: nome })).toBeDefined();
   });
 
-  it('shows pendência badge when temPendenciaAberta is true', () => {
-    const c = renderCard({ temPendenciaAberta: true });
+  it('deve omitir o texto Ver detalhes quando renderizado', () => {
+    // Act
+    const { cartao } = renderCard();
 
-    expect(c.getByText(/pendência aberta/i)).toBeDefined();
+    // Assert
+    expect(cartao.queryByText(/ver detalhes/i)).toBeNull();
   });
 
-  it('hides pendência badge when temPendenciaAberta is false', () => {
-    const c = renderCard({ temPendenciaAberta: false });
+  it('deve usar a descrição como título quando renderizado', () => {
+    // Act
+    const { cartao } = renderCard();
 
-    expect(c.queryByText(/pendência aberta/i)).toBeNull();
-  });
-
-  it('renders link to detail page with default linkBase', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <ModeloCard modelo={baseModelo} />
-      </MemoryRouter>,
+    // Assert
+    expect(classes(cartao.getByText(baseModelo.descricao))).toEqual(
+      expect.arrayContaining(['line-clamp-2', 'font-semibold', 'text-fg']),
     );
-
-    const link = within(container).getByRole('link', { name: /ver detalhes/i });
-    expect(link.getAttribute('href')).toBe('/app/modelos/1');
   });
 
-  it('uses custom linkBase when provided', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <ModeloCard modelo={baseModelo} linkBase="/app/admin/modelos" />
-      </MemoryRouter>,
+  it('deve mostrar o código em fonte monoespaçada quando renderizado', () => {
+    // Act
+    const { cartao } = renderCard();
+
+    // Assert
+    expect(classes(cartao.getByText(baseModelo.codigo))).toEqual(
+      expect.arrayContaining(['font-mono', 'text-xs', 'text-fg-muted']),
     );
-
-    const link = within(container).getByRole('link', { name: /ver detalhes/i });
-    expect(link.getAttribute('href')).toBe('/app/admin/modelos/1');
   });
 
-  it('shows initials placeholder when fotoCapaUrl is null', () => {
-    const c = renderCard({ fotoCapaUrl: null });
+  it('deve ter a moldura de cartão com hover de sombra quando renderizado', () => {
+    // Arrange
+    const esperado = ['rounded-xl', 'border', 'border-line', 'bg-surface', 'hover:shadow-md'];
 
-    expect(c.getByText('MD')).toBeDefined();
+    // Act
+    const { cartao } = renderCard();
+
+    // Assert
+    const moldura = cartao.getByRole('link').firstElementChild as HTMLElement;
+    expect(classes(moldura)).toEqual(expect.arrayContaining(esperado));
   });
 
-  it('renders image when fotoCapaUrl is provided', () => {
-    const c = renderCard({ fotoCapaUrl: 'https://example.com/foto.jpg' });
+  it('deve omitir o selo Ativo quando o modelo está ativo e sem pendência', () => {
+    // Act
+    const { cartao } = renderCard({ ativo: true, temPendenciaAberta: false });
 
-    const img = c.getByRole('img', { name: 'MDL-001' });
+    // Assert
+    expect(cartao.queryByText('Ativo')).toBeNull();
+    expect(cartao.queryByText('Pendência aberta')).toBeNull();
+  });
+
+  it('deve mostrar o selo Inativo neutro quando o modelo está inativo', () => {
+    // Act
+    const { cartao } = renderCard({ ativo: false });
+
+    // Assert
+    expect(classes(cartao.getByText('Inativo'))).toEqual(
+      expect.arrayContaining(['bg-surface-muted', 'text-fg-muted']),
+    );
+  });
+
+  it('deve mostrar o selo Pendência aberta de alerta quando há pendência aberta', () => {
+    // Act
+    const { cartao } = renderCard({ temPendenciaAberta: true });
+
+    // Assert
+    expect(classes(cartao.getByText('Pendência aberta'))).toEqual(
+      expect.arrayContaining(['bg-warning-soft', 'text-warning-fg']),
+    );
+  });
+
+  it('deve mostrar a imagem em proporção 4/3 quando há foto de capa', () => {
+    // Act
+    const { container } = renderCard({ fotoCapaUrl: 'https://example.com/foto.jpg' });
+
+    // Assert
+    const img = container.querySelector('img') as HTMLImageElement;
     expect(img.getAttribute('src')).toBe('https://example.com/foto.jpg');
+    expect(classes(img)).toEqual(
+      expect.arrayContaining(['aspect-[4/3]', 'w-full', 'object-cover']),
+    );
   });
 
-  it('deve ter a moldura da peça de cartão, com superfície, borda e canto pelos papéis', () => {
-    // Arrange
-    const moldura = ['rounded-xl', 'border', 'border-line', 'bg-surface'];
-
+  it('deve mostrar as duas primeiras letras do código quando não há foto de capa', () => {
     // Act
-    const { container } = render(
+    const { cartao, container } = renderCard({ fotoCapaUrl: null });
+
+    // Assert
+    expect(cartao.getByText('MD')).toBeDefined();
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('deve navegar para o detalhe quando Enter é pressionado no link focado', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    render(
       <MemoryRouter>
-        <ModeloCard modelo={baseModelo} />
+        <Routes>
+          <Route path="/" element={<ModeloCard modelo={baseModelo} />} />
+          <Route path="/app/modelos/:id" element={<p>Detalhe aberto</p>} />
+        </Routes>
       </MemoryRouter>,
     );
 
+    // Act
+    await user.tab();
+    await user.keyboard('{Enter}');
+
     // Assert
-    expect(classes(container.firstElementChild as HTMLElement)).toEqual(
-      expect.arrayContaining(moldura),
-    );
+    expect(screen.getByText('Detalhe aberto')).toBeDefined();
   });
 
-  it('deve mostrar o código com o texto principal pelo papel', () => {
+  it('deve omitir outline-none quando renderizado', () => {
     // Act
-    const cartao = renderCard();
+    const { container } = renderCard();
 
     // Assert
-    expect(classes(cartao.getByText(baseModelo.codigo))).toContain('text-fg');
+    const todas = Array.from(container.querySelectorAll('*')).flatMap(classes);
+    expect(todas).not.toContain('outline-none');
   });
 
-  it('deve mostrar a descrição com o texto secundário pelo papel', () => {
+  it('deve usar transição apenas com motion-safe quando renderizado', () => {
     // Act
-    const cartao = renderCard();
+    const { container } = renderCard();
 
     // Assert
-    expect(classes(cartao.getByText(baseModelo.descricao))).toContain('text-fg-muted');
-  });
-
-  it.each([
-    { ativo: true, rotulo: 'Ativo', variacao: ['bg-success-soft', 'text-success-fg'] },
-    { ativo: false, rotulo: 'Inativo', variacao: ['bg-surface-muted', 'text-fg-muted'] },
-  ])(
-    'deve mostrar a situação $rotulo pelos papéis quando ativo é $ativo',
-    ({ ativo, rotulo, variacao }) => {
-      // Act
-      const cartao = renderCard({ ativo });
-
-      // Assert
-      expect(classes(cartao.getByText(rotulo))).toEqual(expect.arrayContaining(variacao));
-    },
-  );
-
-  it('deve mostrar a pendência aberta pelos papéis de alerta, com texto', () => {
-    // Arrange
-    const alerta = ['bg-warning-soft', 'text-warning-fg'];
-
-    // Act
-    const cartao = renderCard({ temPendenciaAberta: true });
-
-    // Assert
-    expect(classes(cartao.getByText('Pendência aberta'))).toEqual(expect.arrayContaining(alerta));
-  });
-
-  it('deve mostrar o link de detalhes com a cor de destaque pelo papel', () => {
-    // Act
-    const cartao = renderCard();
-
-    // Assert
-    expect(classes(cartao.getByRole('link', { name: /ver detalhes/i }))).toContain('text-accent');
+    const todas = Array.from(container.querySelectorAll('*')).flatMap(classes);
+    const soltas = todas.filter((c) => /^transition/.test(c));
+    expect(soltas).toEqual([]);
+    expect(todas).toContain('motion-safe:transition-shadow');
   });
 });
