@@ -6,17 +6,22 @@ import type { FotoGaleria } from '../types/galeriaTypes';
 type Props = {
   foto: FotoGaleria;
   overlayCount?: number;
+  ativa?: boolean;
   onClick: () => void;
 };
 
-export function GaleriaFotoThumb({ foto, overlayCount, onClick }: Props) {
+const BASE = 'group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border';
+const CONTORNO_ATIVA = 'border-accent ring-2 ring-accent';
+
+export function GaleriaFotoThumb({ foto, overlayCount, ativa = false, onClick }: Props) {
   const [imgError, setImgError] = useState(false);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-line focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      aria-current={ativa ? 'true' : undefined}
+      className={`${BASE} ${ativa ? CONTORNO_ATIVA : 'border-line'}`}
       aria-label={
         overlayCount
           ? `Ver galeria completa (mais ${overlayCount} fotos)`
