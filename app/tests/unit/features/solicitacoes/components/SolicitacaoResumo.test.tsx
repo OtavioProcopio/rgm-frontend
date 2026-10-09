@@ -104,6 +104,20 @@ describe('SolicitacaoResumo — rótulos dos valores da API', () => {
   );
 });
 
+describe('SolicitacaoResumo — data de abertura malformada', () => {
+  it('deve mostrar o resumo sem horário de abertura quando criadaEm é malformado', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ criadaEm: 'lixo' });
+
+    // Act
+    const { container } = montar(solicitacao);
+
+    // Assert
+    expect(screen.getByText('Status')).toBeDefined();
+    expect(container.querySelector('time')).toBeNull();
+  });
+});
+
 describe('SolicitacaoResumo — cores por papel', () => {
   it('deve usar a borda do papel de divisória quando o resumo é mostrado', () => {
     // Arrange

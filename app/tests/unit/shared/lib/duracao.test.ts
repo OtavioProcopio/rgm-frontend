@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatarDuracao } from '@/shared/lib/duracao';
+import { escalarDuracao, formatarDuracao } from '@/shared/lib/duracao';
 
 const MINUTO = 60_000;
 const HORA = 60 * MINUTO;
 const DIA = 24 * HORA;
+
+describe('escalarDuracao', () => {
+  it.each([
+    [20_000, { valor: 0, unidade: 'min' }],
+    [59 * MINUTO, { valor: 59, unidade: 'min' }],
+    [47 * HORA, { valor: 47, unidade: 'h' }],
+    [48 * HORA, { valor: 2, unidade: 'd' }],
+  ])('deve devolver o valor truncado e a unidade quando a duração é %i ms', (ms, esperado) => {
+    // Arrange
+    const entrada = ms;
+
+    // Act
+    const resultado = escalarDuracao(entrada);
+
+    // Assert
+    expect(resultado).toEqual(esperado);
+  });
+});
 
 describe('formatarDuracao', () => {
   it('deve escrever 1 min quando a duração é menor que 1 minuto', () => {

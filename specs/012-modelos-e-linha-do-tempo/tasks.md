@@ -300,3 +300,23 @@ agora devolve `null` (não mostra prazo). Antes mostrava "No prazo" ou "Fora do 
 
 Veredito: **convergido**. Tarefas acrescentadas: nenhuma.
 
+### Rodada 3 — 2026-10-09
+
+Correções do 4º `/bu:review`, que reprovou a Rodada 2. Nenhum requisito novo.
+
+| Achado do review | Estado | Evidência |
+|---|---|---|
+| Funções com mais de 20 linhas em arquivos tocados | realizado | `GaleriaModelo`, `GaleriaFotoThumb`, `NovoModeloPage`, `SolicitacaoResumo`, `regraLocal`, `LinhaDoTempo` e `DetalheDaSolicitacao` divididos em subcomponentes e hooks; só `GaleriaModelo` ficou com 28 linhas (5 de hooks e 17 de JSX) |
+| Duas escadas de tempo iguais | realizado | `app/src/shared/lib/duracao.ts` (`escalarDuracao`, `LIMITE_EM_HORAS_MS`), usada por `formatarDuracao` e `tempoRelativo`; `filtrosDaColuna.ts` usa `DIA_MS` |
+| Data inválida derruba a tela | realizado | `isoValido` em `data.ts`; os adaptadores `historicoDaSolicitacao` e `historicoDoModelo` descartam itens malformados; `SolicitacaoResumo` mostra "—" e o detalhe omite o subtítulo; 5 testes novos falharam antes e passaram depois |
+| `make fmt` não era no-op | realizado | `kanban.spec.ts` e `solicitacao-criacao.spec.ts` formatados |
+| Testes sem A/A/A visíveis | realizado | `LinhaDoTempo.test.tsx`: ação no corpo de cada teste |
+| Checklists sem caixa marcada | **aberto, é do revisor humano** | `checklists/requisitos.md` e `checklists/acessibilidade.md`: o agente não marca |
+
+**Fora desta rodada, de propósito:** o literal `86_400_000` em `SolicitacoesTab.tsx` (dashboard)
+segue como está. O arquivo já tinha 83,33% de ramos e a #144 o reescreve; trocar o literal nele
+exigiria cobrir ramos que não são desta spec. A diretiva `@vitest-environment jsdom` é redundante
+em 7 testes novos (o `vitest.config.ts` já define jsdom); não foi removida.
+
+Veredito: **convergido, com os checklists pendentes de revisão humana**. Tarefas acrescentadas: nenhuma.
+

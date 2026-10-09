@@ -1,4 +1,12 @@
-import { test, expect, apiPost, apiPatch, apiGet, apiAnexarServicoRealizado, MAQUINA_CATALOGO } from './fixtures';
+import {
+  test,
+  expect,
+  apiPost,
+  apiPatch,
+  apiGet,
+  apiAnexarServicoRealizado,
+  MAQUINA_CATALOGO,
+} from './fixtures';
 
 const ts = () => Date.now();
 
@@ -30,7 +38,11 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     responsavelId = responsavel?.id ?? '';
   });
 
-  async function criarSolicitacao(request: Parameters<typeof apiPost>[0], token: string, titulo: string) {
+  async function criarSolicitacao(
+    request: Parameters<typeof apiPost>[0],
+    token: string,
+    titulo: string,
+  ) {
     const sol = await apiPost<{ id: string }>(
       request,
       '/solicitacoes',
@@ -41,14 +53,21 @@ test.describe('Fluxo Kanban — Solicitações', () => {
   }
 
   async function triar(request: Parameters<typeof apiPatch>[0], token: string, id: string) {
-    await apiPatch(request, `/solicitacoes/${id}/triar`, { prioridade: 'MEDIA', responsavelIds: [responsavelId] }, token);
+    await apiPatch(
+      request,
+      `/solicitacoes/${id}/triar`,
+      { prioridade: 'MEDIA', responsavelIds: [responsavelId] },
+      token,
+    );
   }
 
   async function selecionarModeloNoCombobox(page: import('@playwright/test').Page) {
     // O seletor busca na API pelo código: digita o código para o modelo do teste aparecer.
     await page.getByLabel('Modelo', { exact: true }).click();
     await page.getByLabel('Modelo', { exact: true }).pressSequentially(modeloCodigo);
-    await page.getByRole('button', { name: new RegExp(`${modeloCodigo} - ${modeloDescricao}`) }).click();
+    await page
+      .getByRole('button', { name: new RegExp(`${modeloCodigo} - ${modeloDescricao}`) })
+      .click();
   }
 
   /** Escopo do modal "Enviar para validação" — a página também tem seu próprio uploader de evidências. */
@@ -121,7 +140,9 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     const enviar = modal.getByRole('button', { name: 'Enviar para validação' });
     await expect(enviar).toBeDisabled();
 
-    await modal.locator('textarea[name="comentario"]').fill('Serviço realizado conforme solicitado');
+    await modal
+      .locator('textarea[name="comentario"]')
+      .fill('Serviço realizado conforme solicitado');
     await modal.locator('input[type="file"]').setInputFiles({
       name: 'servico.png',
       mimeType: 'image/png',

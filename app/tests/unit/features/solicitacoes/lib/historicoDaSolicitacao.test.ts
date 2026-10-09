@@ -26,6 +26,21 @@ function atividade(parcial: Partial<AtividadeSolicitacao> = {}): AtividadeSolici
 }
 
 describe('historicoDaSolicitacao', () => {
+  it('deve descartar a atividade e manter as demais quando criadaEm é malformado', () => {
+    // Arrange
+    const entrada = [
+      atividade({ id: 'boa-1' }),
+      atividade({ id: 'ruim', criadaEm: 'lixo' }),
+      atividade({ id: 'boa-2' }),
+    ];
+
+    // Act
+    const itens = historicoDaSolicitacao(entrada);
+
+    // Assert
+    expect(itens.map((item) => item.id)).toEqual(['boa-1', 'boa-2']);
+  });
+
   it.each<TipoAtividadeSolicitacao>([
     'ABERTURA',
     'ATRIBUICAO',

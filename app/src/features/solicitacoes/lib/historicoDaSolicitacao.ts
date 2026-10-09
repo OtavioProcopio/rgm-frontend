@@ -3,6 +3,7 @@ import type {
   StatusSolicitacao,
   TipoAtividadeSolicitacao,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
+import { isoValido } from '@/shared/lib/data';
 import { rotuloDoTipoDeAtividade } from '@/shared/lib/rotulos';
 
 export type PesoDoItem = 'destaque' | 'discreto';
@@ -58,5 +59,5 @@ function itemDe(atividade: AtividadeSolicitacao): ItemDoHistorico {
 export function historicoDaSolicitacao(
   atividades: readonly AtividadeSolicitacao[],
 ): ItemDoHistorico[] {
-  return atividades.map(itemDe);
+  return atividades.filter((atividade) => isoValido(atividade.criadaEm)).map(itemDe);
 }

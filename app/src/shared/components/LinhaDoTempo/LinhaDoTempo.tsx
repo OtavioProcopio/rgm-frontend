@@ -145,21 +145,33 @@ function BotaoDeRecolhimento({ expandido, ocultos, alvo, alternar }: BotaoProps)
   );
 }
 
-export function LinhaDoTempo({ itens, rotulo, vazio, agoraMs }: Props) {
+function useEstadoDaLinha(agoraMs: number | undefined) {
   const idListas: string = useId();
   const [expandido, definirExpandido] = useState<boolean>(false);
   const [montadoEm] = useState<number>(() => Date.now());
-  if (itens.length === 0) return <>{vazio ?? null}</>;
-  const agora: number = agoraMs ?? montadoEm;
-  const { grupos, ocultos } = recolherGrupos(agruparPorDia(itens, agora), expandido);
   const alternar = (): void => definirExpandido(!expandido);
+  return { idListas, expandido, alternar, agora: agoraMs ?? montadoEm };
+}
+
+type ListaProps = { id: string; grupos: GrupoDoDia<ItemDaLinhaDoTempo>[]; agoraMs: number };
+
+function ListaDeGrupos({ id, grupos, agoraMs }: ListaProps) {
+  return (
+    <div id={id}>
+      {grupos.map((g: GrupoDoDia<ItemDaLinhaDoTempo>) => (
+        <Grupo key={g.chave} grupo={g} agoraMs={agoraMs} />
+      ))}
+    </div>
+  );
+}
+
+export function LinhaDoTempo({ itens, rotulo, vazio, agoraMs }: Props) {
+  const { idListas, expandido, alternar, agora } = useEstadoDaLinha(agoraMs);
+  if (itens.length === 0) return <>{vazio ?? null}</>;
+  const { grupos, ocultos } = recolherGrupos(agruparPorDia(itens, agora), expandido);
   return (
     <section aria-label={rotulo} className="w-full max-w-[720px]">
-      <div id={idListas}>
-        {grupos.map((g: GrupoDoDia<ItemDaLinhaDoTempo>) => (
-          <Grupo key={g.chave} grupo={g} agoraMs={agora} />
-        ))}
-      </div>
+      <ListaDeGrupos id={idListas} grupos={grupos} agoraMs={agora} />
       {itens.length > LIMITE_VISIVEL && (
         <BotaoDeRecolhimento
           expandido={expandido}

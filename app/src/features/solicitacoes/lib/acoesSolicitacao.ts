@@ -35,6 +35,21 @@ export function acoesPermitidas(
   return regraLocal(solicitacao, ator);
 }
 
+function acoesDeQuemGerencia(status: StatusSolicitacao): AcaoSolicitacao[] {
+  const acoes: AcaoSolicitacao[] = [
+    status === 'A_FAZER' ? 'TRIAR' : 'ALTERAR_RESPONSAVEIS',
+    'CANCELAR',
+  ];
+  if (status === 'EM_VALIDACAO') acoes.push('DEVOLVER', 'ENCERRAR');
+  return acoes;
+}
+
+function operadorPodeCancelar(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): boolean {
+  const abriu = !!ator.id && solicitacao.abertaPorUsuarioId === ator.id;
+  const semResponsaveis = solicitacao.responsavelIds.length === 0;
+  return ator.perfil === 'OPERADOR' && solicitacao.status === 'A_FAZER' && abriu && semResponsaveis;
+}
+
 function regraLocal(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): Set<AcaoSolicitacao> {
   const acoes = new Set<AcaoSolicitacao>();
   const { status } = solicitacao;
@@ -43,22 +58,12 @@ function regraLocal(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): Se
   const gerencia = ator.perfil === 'ADMINISTRADOR' || ator.perfil === 'GESTOR';
   const operador = ator.perfil === 'OPERADOR';
   const responsavel = !!ator.id && solicitacao.responsavelIds.includes(ator.id);
-  const abriu = !!ator.id && solicitacao.abertaPorUsuarioId === ator.id;
 
-  if (gerencia) {
-    acoes.add(status === 'A_FAZER' ? 'TRIAR' : 'ALTERAR_RESPONSAVEIS');
-    acoes.add('CANCELAR');
-    if (status === 'EM_VALIDACAO') {
-      acoes.add('DEVOLVER');
-      acoes.add('ENCERRAR');
-    }
-  }
+  if (gerencia) acoesDeQuemGerencia(status).forEach((acao) => acoes.add(acao));
   if (status === 'EM_ANDAMENTO' && (gerencia || (operador && responsavel))) {
     acoes.add('ENVIAR_VALIDACAO');
   }
-  if (operador && status === 'A_FAZER' && abriu && solicitacao.responsavelIds.length === 0) {
-    acoes.add('CANCELAR');
-  }
+  if (operadorPodeCancelar(solicitacao, ator)) acoes.add('CANCELAR');
   return acoes;
 }
 

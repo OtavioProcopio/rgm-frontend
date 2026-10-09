@@ -25,6 +25,8 @@ type Props = {
   podeGerenciar: boolean;
 };
 
+type DefinirErro = (mensagem: string | null) => void;
+
 function indiceDaFotoAtiva(fotos: FotoGaleria[], escolhida: number | null): number {
   if (escolhida !== null) return Math.min(escolhida, fotos.length - 1);
   return Math.max(
@@ -55,6 +57,17 @@ function GaleriaErro({ error, onRetry }: { error: unknown; onRetry: () => void }
   );
 }
 
+function ImagemDaFoto({ foto, onError }: { foto: FotoGaleria; onError: () => void }) {
+  return (
+    <img
+      src={foto.publicUrl}
+      alt={foto.identificacao}
+      className="h-full w-full object-cover"
+      onError={onError}
+    />
+  );
+}
+
 function FotoGrande({ foto, onAmpliar }: { foto: FotoGaleria; onAmpliar: () => void }) {
   const [imgError, setImgError] = useState(false);
 
@@ -65,19 +78,20 @@ function FotoGrande({ foto, onAmpliar }: { foto: FotoGaleria; onAmpliar: () => v
       aria-label={`Ampliar foto: ${foto.identificacao}`}
       className={`${BLOCO_GRANDE} block bg-surface-muted`}
     >
-      {!imgError ? (
-        <img
-          src={foto.publicUrl}
-          alt={foto.identificacao}
-          className="h-full w-full object-cover"
-          onError={() => setImgError(true)}
-        />
+      {imgError ? (
+        <FalhaDaImagem />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-fg-muted">
-          <ImageOff size={32} />
-        </div>
+        <ImagemDaFoto foto={foto} onError={() => setImgError(true)} />
       )}
     </button>
+  );
+}
+
+function FalhaDaImagem() {
+  return (
+    <div className="flex h-full w-full items-center justify-center text-fg-muted">
+      <ImageOff size={32} />
+    </div>
   );
 }
 
@@ -137,135 +151,206 @@ function Miniaturas({
   );
 }
 
-export function GaleriaModelo({ modeloId, codigo, podeGerenciar }: Props) {
-  const { data: fotos, isLoading, error, refetch } = useGaleriaModelo(modeloId);
+type ComFotosProps = {
+  fotos: FotoGaleria[];
+  podeGerenciar: boolean;
+  onAbrirCarousel: (indice: number) => void;
+  onAdicionar: () => void;
+};
+
+function ComFotos({ fotos, podeGerenciar, onAbrirCarousel, onAdicionar }: ComFotosProps) {
   const [escolhida, setEscolhida] = useState<number | null>(null);
-  const adicionarFoto = useAdicionarFotoGaleria();
+  const indiceAtivo = indiceDaFotoAtiva(fotos, escolhida);
+  const ativa = fotos[indiceAtivo];
+  return (
+    <>
+      <FotoGrande key={ativa.id} foto={ativa} onAmpliar={() => onAbrirCarousel(indiceAtivo)} />
+      <Miniaturas
+        fotos={fotos}
+        indiceAtivo={indiceAtivo}
+        podeGerenciar={podeGerenciar}
+        onEscolher={setEscolhida}
+        onAbrir={onAbrirCarousel}
+        onAdicionar={onAdicionar}
+      />
+    </>
+  );
+}
+
+type Galeria = {
+  data?: FotoGaleria[];
+  isLoading: boolean;
+  error: unknown;
+  refetch: () => unknown;
+};
+
+type ConteudoProps = {
+  galeria: Galeria;
+  codigo: string;
+  podeGerenciar: boolean;
+  onAbrirCarousel: (indice: number) => void;
+  onAdicionar: () => void;
+};
+
+function FotosOuVazio({ galeria, codigo, ...resto }: ConteudoProps) {
+  const { data: fotos, isLoading, error } = galeria;
+  if (fotos && fotos.length > 0) return <ComFotos fotos={fotos} {...resto} />;
+  if (isLoading || error) return null;
+  return (
+    <SemFotos codigo={codigo} podeGerenciar={resto.podeGerenciar} onAdicionar={resto.onAdicionar} />
+  );
+}
+
+/** Executa uma ação sobre uma foto, marcando-a como pendente e reportando falhas. */
+function useExecutorDeFoto(definirErro: DefinirErro) {
+  const [pendingFotoId, setPendingFotoId] = useState<string | null>(null);
+
+  async function executar(fotoId: string, acao: () => Promise<unknown>): Promise<void> {
+    definirErro(null);
+    setPendingFotoId(fotoId);
+    try {
+      await acao();
+    } catch (err) {
+      definirErro(getModeloErrorMessage(err));
+    } finally {
+      setPendingFotoId(null);
+    }
+  }
+
+  return { pendingFotoId, executar };
+}
+
+function useAcoesDeFoto(modeloId: string, definirErro: DefinirErro) {
   const editarFoto = useEditarFotoGaleria();
   const removerFoto = useRemoverFotoGaleria();
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [pendingFotoId, setPendingFotoId] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [carouselIndex, setCarouselIndex] = useState<number | null>(null);
+  const { pendingFotoId, executar } = useExecutorDeFoto(definirErro);
 
-  async function handleAdicionar(file: File, identificacao: string) {
-    setActionError(null);
+  const editar = (fotoId: string, payload: { principal: true } | { identificacao: string }) =>
+    executar(fotoId, () => editarFoto.mutateAsync({ modeloId, fotoId, payload }));
+
+  return {
+    pendingFotoId,
+    isSaving: editarFoto.isPending,
+    isRemoving: removerFoto.isPending,
+    definirCapa: (fotoId: string) => editar(fotoId, { principal: true }),
+    renomear: (fotoId: string, identificacao: string) => editar(fotoId, { identificacao }),
+    remover: (fotoId: string) =>
+      executar(fotoId, () => removerFoto.mutateAsync({ modeloId, fotoId })),
+  };
+}
+
+function useAdicaoDeFoto(modeloId: string, definirErro: DefinirErro) {
+  const adicionarFoto = useAdicionarFotoGaleria();
+  const [aberto, setAberto] = useState(false);
+
+  async function adicionar(file: File, identificacao: string): Promise<void> {
+    definirErro(null);
     try {
       await adicionarFoto.mutateAsync({ modeloId, file, identificacao });
-      setShowAddModal(false);
+      setAberto(false);
     } catch (err) {
-      setActionError(getModeloErrorMessage(err));
+      definirErro(getModeloErrorMessage(err));
     }
   }
 
-  async function handleDefinirCapa(fotoId: string) {
-    setActionError(null);
-    setPendingFotoId(fotoId);
-    try {
-      await editarFoto.mutateAsync({ modeloId, fotoId, payload: { principal: true } });
-    } catch (err) {
-      setActionError(getModeloErrorMessage(err));
-    } finally {
-      setPendingFotoId(null);
-    }
-  }
+  return { aberto, setAberto, adicionar, isPending: adicionarFoto.isPending };
+}
 
-  async function handleRenomear(fotoId: string, identificacao: string) {
-    setActionError(null);
-    setPendingFotoId(fotoId);
-    try {
-      await editarFoto.mutateAsync({ modeloId, fotoId, payload: { identificacao } });
-    } catch (err) {
-      setActionError(getModeloErrorMessage(err));
-    } finally {
-      setPendingFotoId(null);
-    }
-  }
+type EstadoProps = { actionError: string | null; galeria: Galeria };
 
-  async function handleRemover(fotoId: string) {
-    setActionError(null);
-    setPendingFotoId(fotoId);
-    try {
-      await removerFoto.mutateAsync({ modeloId, fotoId });
-    } catch (err) {
-      setActionError(getModeloErrorMessage(err));
-    } finally {
-      setPendingFotoId(null);
-    }
-  }
-
-  const temFotos = !!fotos && fotos.length > 0;
-  const indiceAtivo = temFotos ? indiceDaFotoAtiva(fotos, escolhida) : 0;
-  const abrirAdicionar = () => setShowAddModal(true);
-
+function EstadoDaGaleria({ actionError, galeria }: EstadoProps) {
+  const { isLoading, error, refetch } = galeria;
   return (
-    <div className="space-y-4">
+    <>
       {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
       {isLoading ? <LoadingState title="Carregando galeria..." /> : null}
       {error ? <GaleriaErro error={error} onRetry={() => void refetch()} /> : null}
+    </>
+  );
+}
 
-      {temFotos ? (
-        <>
-          <FotoGrande
-            key={fotos[indiceAtivo].id}
-            foto={fotos[indiceAtivo]}
-            onAmpliar={() => setCarouselIndex(indiceAtivo)}
-          />
-          <Miniaturas
-            fotos={fotos}
-            indiceAtivo={indiceAtivo}
-            podeGerenciar={podeGerenciar}
-            onEscolher={setEscolhida}
-            onAbrir={setCarouselIndex}
-            onAdicionar={abrirAdicionar}
-          />
-        </>
-      ) : !isLoading && !error ? (
-        <SemFotos codigo={codigo} podeGerenciar={podeGerenciar} onAdicionar={abrirAdicionar} />
-      ) : null}
+type CarouselProps = {
+  fotos: FotoGaleria[];
+  indice: number | null;
+  podeGerenciar: boolean;
+  acoes: ReturnType<typeof useAcoesDeFoto>;
+  onClose: () => void;
+};
 
-      {showAddModal ? (
-        <Dialog
-          titulo="Adicionar foto à galeria"
-          bloqueado={adicionarFoto.isPending}
-          onClose={() => setShowAddModal(false)}
-        >
-          <div className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-fg">Adicionar foto à galeria</h3>
-              <button
-                type="button"
-                disabled={adicionarFoto.isPending}
-                onClick={() => setShowAddModal(false)}
-                className="rounded-md p-1 text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Fechar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <AdicionarFotoGaleriaForm
-              isSubmitting={adicionarFoto.isPending}
-              onSubmit={handleAdicionar}
-              onCancel={() => setShowAddModal(false)}
-            />
-          </div>
-        </Dialog>
-      ) : null}
+function CarouselDaGaleria({ fotos, indice, podeGerenciar, acoes, onClose }: CarouselProps) {
+  if (indice === null || fotos.length === 0) return null;
+  return (
+    <GaleriaCarousel
+      fotos={fotos}
+      initialIndex={indice}
+      podeGerenciar={podeGerenciar}
+      pendingFotoId={acoes.pendingFotoId}
+      isSavingGlobal={acoes.isSaving}
+      isRemovingGlobal={acoes.isRemoving}
+      onDefinirCapa={acoes.definirCapa}
+      onRenomear={acoes.renomear}
+      onRemover={acoes.remover}
+      onClose={onClose}
+    />
+  );
+}
 
-      {carouselIndex !== null && temFotos ? (
-        <GaleriaCarousel
-          fotos={fotos}
-          initialIndex={carouselIndex}
-          podeGerenciar={podeGerenciar}
-          pendingFotoId={pendingFotoId}
-          isSavingGlobal={editarFoto.isPending}
-          isRemovingGlobal={removerFoto.isPending}
-          onDefinirCapa={handleDefinirCapa}
-          onRenomear={handleRenomear}
-          onRemover={handleRemover}
-          onClose={() => setCarouselIndex(null)}
-        />
-      ) : null}
+function CabecalhoDoDialog({ bloqueado, onClose }: { bloqueado: boolean; onClose: () => void }) {
+  return (
+    <div className="mb-4 flex items-center justify-between">
+      <h3 className="text-base font-semibold text-fg">Adicionar foto à galeria</h3>
+      <button
+        type="button"
+        disabled={bloqueado}
+        onClick={onClose}
+        className="rounded-md p-1 text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Fechar"
+      >
+        <X size={18} />
+      </button>
+    </div>
+  );
+}
+
+function DialogAdicionar({ adicao }: { adicao: ReturnType<typeof useAdicaoDeFoto> }) {
+  const { aberto, setAberto, adicionar, isPending } = adicao;
+  if (!aberto) return null;
+  const fechar = (): void => setAberto(false);
+  return (
+    <Dialog titulo="Adicionar foto à galeria" bloqueado={isPending} onClose={fechar}>
+      <div className="p-5">
+        <CabecalhoDoDialog bloqueado={isPending} onClose={fechar} />
+        <AdicionarFotoGaleriaForm isSubmitting={isPending} onSubmit={adicionar} onCancel={fechar} />
+      </div>
+    </Dialog>
+  );
+}
+
+export function GaleriaModelo({ modeloId, codigo, podeGerenciar }: Props) {
+  const galeria = useGaleriaModelo(modeloId);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState<number | null>(null);
+  const acoes = useAcoesDeFoto(modeloId, setActionError);
+  const adicao = useAdicaoDeFoto(modeloId, setActionError);
+
+  return (
+    <div className="space-y-4">
+      <EstadoDaGaleria actionError={actionError} galeria={galeria} />
+      <FotosOuVazio
+        galeria={galeria}
+        codigo={codigo}
+        podeGerenciar={podeGerenciar}
+        onAbrirCarousel={setCarouselIndex}
+        onAdicionar={() => adicao.setAberto(true)}
+      />
+      <DialogAdicionar adicao={adicao} />
+      <CarouselDaGaleria
+        fotos={galeria.data ?? []}
+        indice={carouselIndex}
+        podeGerenciar={podeGerenciar}
+        acoes={acoes}
+        onClose={() => setCarouselIndex(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,9 @@
-import { DIA_MS, HORA_MS, MINUTO_MS } from './duracao';
+import { escalarDuracao, MINUTO_MS, type DuracaoEscalada } from './duracao';
 
-const LIMITE_EM_HORAS_MS = 48 * HORA_MS;
+/** Diz se o texto é uma data que as funções deste módulo aceitam (sem lançar). */
+export function isoValido(iso: string): boolean {
+  return !Number.isNaN(new Date(iso).getTime());
+}
 
 function isoParaMs(iso: string): number {
   const ms: number = new Date(iso).getTime();
@@ -13,9 +16,8 @@ function isoParaMs(iso: string): number {
 export function tempoRelativo(iso: string, agoraMs: number): string {
   const decorrido: number = agoraMs - isoParaMs(iso);
   if (decorrido < MINUTO_MS) return 'agora';
-  if (decorrido < HORA_MS) return `há ${Math.floor(decorrido / MINUTO_MS)} min`;
-  if (decorrido < LIMITE_EM_HORAS_MS) return `há ${Math.floor(decorrido / HORA_MS)} h`;
-  return `há ${Math.floor(decorrido / DIA_MS)} d`;
+  const { valor, unidade }: DuracaoEscalada = escalarDuracao(decorrido);
+  return `há ${valor} ${unidade}`;
 }
 
 export function formatarDataHora(iso: string): string {

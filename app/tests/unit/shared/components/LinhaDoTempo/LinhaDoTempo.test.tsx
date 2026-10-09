@@ -266,50 +266,68 @@ describe('LinhaDoTempo', () => {
     expect(screen.getByRole('button', { name: 'Mostrar 5 eventos anteriores' })).toBeTruthy();
   });
 
-  async function acionarBotaoPeloTeclado(): Promise<HTMLElement> {
-    const user = userEvent.setup();
+  function montarComBotaoFocado(): HTMLElement {
     renderizar(criarVarios(15));
     const botao: HTMLElement = screen.getByRole('button', { name: /Mostrar 5 eventos/ });
     botao.focus();
-    await user.keyboard('{Enter}');
     return botao;
   }
 
   it('deve mostrar todos os eventos quando o botão é acionado pelo teclado', async () => {
-    // Arrange / Act
-    await acionarBotaoPeloTeclado();
+    // Arrange
+    const user = userEvent.setup();
+    montarComBotaoFocado();
+
+    // Act
+    await user.keyboard('{Enter}');
 
     // Assert
     expect(screen.getAllByRole('listitem')).toHaveLength(15);
   });
 
   it('deve manter o mesmo botão montado quando é acionado pelo teclado', async () => {
-    // Arrange / Act
-    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+    // Arrange
+    const user = userEvent.setup();
+    const botao: HTMLElement = montarComBotaoFocado();
+
+    // Act
+    await user.keyboard('{Enter}');
 
     // Assert
     expect(botao.isConnected).toBe(true);
   });
 
   it('deve trocar o rótulo para Mostrar menos quando o botão é acionado pelo teclado', async () => {
-    // Arrange / Act
-    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+    // Arrange
+    const user = userEvent.setup();
+    const botao: HTMLElement = montarComBotaoFocado();
+
+    // Act
+    await user.keyboard('{Enter}');
 
     // Assert
     expect(botao.textContent).toBe('Mostrar menos');
   });
 
   it('deve marcar aria-expanded como verdadeiro quando o botão é acionado pelo teclado', async () => {
-    // Arrange / Act
-    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+    // Arrange
+    const user = userEvent.setup();
+    const botao: HTMLElement = montarComBotaoFocado();
+
+    // Act
+    await user.keyboard('{Enter}');
 
     // Assert
     expect(botao.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('deve manter o foco no botão quando é acionado pelo teclado', async () => {
-    // Arrange / Act
-    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+    // Arrange
+    const user = userEvent.setup();
+    const botao: HTMLElement = montarComBotaoFocado();
+
+    // Act
+    await user.keyboard('{Enter}');
 
     // Assert
     expect(document.activeElement).toBe(botao);

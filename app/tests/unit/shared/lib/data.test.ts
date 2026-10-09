@@ -3,7 +3,13 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { chaveDoDia, formatarDataHora, rotuloDoDia, tempoRelativo } from '@/shared/lib/data';
+import {
+  chaveDoDia,
+  formatarDataHora,
+  isoValido,
+  rotuloDoDia,
+  tempoRelativo,
+} from '@/shared/lib/data';
 
 const SEGUNDO = 1000;
 const MINUTO = 60 * SEGUNDO;
@@ -171,6 +177,30 @@ describe('chaveDoDia', () => {
 
     // Assert
     expect(resultado).toBe('2026-01-05');
+  });
+});
+
+describe('isoValido', () => {
+  it('deve retornar verdadeiro quando o texto é uma data ISO 8601', () => {
+    // Arrange
+    const iso = '2026-10-09T14:30:00Z';
+
+    // Act
+    const resultado = isoValido(iso);
+
+    // Assert
+    expect(resultado).toBe(true);
+  });
+
+  it('deve retornar falso quando o texto não é uma data', () => {
+    // Arrange
+    const iso = 'lixo';
+
+    // Act
+    const resultado = isoValido(iso);
+
+    // Assert
+    expect(resultado).toBe(false);
   });
 });
 

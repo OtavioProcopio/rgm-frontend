@@ -39,6 +39,33 @@ function criarSolicitacao(sobrescrita: Partial<Solicitacao> = {}): Solicitacao {
 }
 
 describe('historicoDoModelo', () => {
+  it('deve descartar o evento e manter os demais itens quando criadoEm é malformado', () => {
+    // Arrange
+    const eventos = [
+      criarEvento({ id: 'ev-ruim', criadoEm: 'lixo' }),
+      criarEvento({ id: 'ev-bom' }),
+    ];
+    const solicitacoes = [criarSolicitacao()];
+
+    // Act
+    const itens = historicoDoModelo(eventos, solicitacoes);
+
+    // Assert
+    expect(itens.map((item) => item.id)).toEqual(['ev-bom', 'solicitacao-sol-1']);
+  });
+
+  it('deve descartar a solicitacao e manter o evento quando criadaEm é malformado', () => {
+    // Arrange
+    const eventos = [criarEvento()];
+    const solicitacoes = [criarSolicitacao({ criadaEm: 'lixo' })];
+
+    // Act
+    const itens = historicoDoModelo(eventos, solicitacoes);
+
+    // Assert
+    expect(itens.map((item) => item.id)).toEqual(['ev-1']);
+  });
+
   it('deve cobrir a solicitacao quando o evento a relaciona', () => {
     // Arrange
     const eventos = [criarEvento({ solicitacaoRelacionadaId: 'sol-1' })];

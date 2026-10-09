@@ -406,6 +406,18 @@ describe('SolicitacaoDetalhePage', () => {
     expect(subtitulo.textContent).not.toMatch(/\d{2}:\d{2}/);
   });
 
+  it('deve mostrar o título sem a abertura quando criadaEm é malformado', () => {
+    // Arrange
+    const solicitacao = { ...mockSolicitacao, criadaEm: 'lixo' };
+
+    // Act
+    const tela = abrirComoGestor(solicitacao);
+
+    // Assert
+    expect(tela.getByText('Reparo na Máquina A')).toBeDefined();
+    expect(tela.queryByText(/^Aberta há/)).toBeNull();
+  });
+
   it('shows solicitacao tipo and descricao', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({

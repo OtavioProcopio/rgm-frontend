@@ -9,7 +9,7 @@ import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { useVoltar } from '@/shared/hooks/useVoltar';
-import { tempoRelativo } from '@/shared/lib/data';
+import { isoValido, tempoRelativo } from '@/shared/lib/data';
 import { canManageSolicitacoes } from '@/shared/lib/permissions';
 
 import { ComentarioForm } from '../components/ComentarioForm';
@@ -59,23 +59,30 @@ export function SolicitacaoDetalhePage() {
   return <DetalheDaSolicitacao solicitacao={solicitacao} />;
 }
 
-function DetalheDaSolicitacao({ solicitacao }: { solicitacao: Solicitacao }) {
-  const { id } = solicitacao;
+type EstadoDoDetalhe = ReturnType<typeof useEstadoDoDetalhe>;
+
+function useEstadoDoDetalhe(solicitacao: Solicitacao) {
   const [actionError, setActionError] = useState<string | null>(null);
-  const { data: atividades = [], isLoading: carregandoAtividades } = useAtividades(id);
+  const { data: atividades = [], isLoading: carregandoAtividades } = useAtividades(solicitacao.id);
   const permissoes = usePermissoesDaSolicitacao(solicitacao);
   const edicao = useEdicaoDaSolicitacao(solicitacao, setActionError);
   const editar = permissoes.canEdit && !edicao.isEditing ? { aoAcionar: edicao.iniciar } : null;
   const acoes = useAcoesDoCabecalho(solicitacao, editar);
+  return {
+    actionError,
+    setActionError,
+    atividades,
+    carregandoAtividades,
+    permissoes,
+    edicao,
+    acoes,
+  };
+}
 
+function EvidenciasEHistorico({ id, estado }: { id: string; estado: EstadoDoDetalhe }) {
+  const { setActionError, atividades, carregandoAtividades, permissoes } = estado;
   return (
-    <section className="space-y-6">
-      <BotaoVoltar />
-      <CabecalhoDaSolicitacao solicitacao={solicitacao} edicao={edicao} acoes={acoes} />
-      {acoes.dialogo}
-      <ErroDeAcao mensagem={actionError} />
-      <InformacoesDaSolicitacao solicitacao={solicitacao} edicao={edicao} atividades={atividades} />
-      <DescarteDaEdicao edicao={edicao} />
+    <>
       <EvidenciasDaSolicitacao
         id={id}
         podeAnexar={permissoes.canAnexarEvidencia}
@@ -88,6 +95,23 @@ function DetalheDaSolicitacao({ solicitacao }: { solicitacao: Solicitacao }) {
         encerrada={permissoes.isTerminal}
         aoFalhar={setActionError}
       />
+    </>
+  );
+}
+
+function DetalheDaSolicitacao({ solicitacao }: { solicitacao: Solicitacao }) {
+  const estado = useEstadoDoDetalhe(solicitacao);
+  const { actionError, atividades, edicao, acoes } = estado;
+
+  return (
+    <section className="space-y-6">
+      <BotaoVoltar />
+      <CabecalhoDaSolicitacao solicitacao={solicitacao} edicao={edicao} acoes={acoes} />
+      {acoes.dialogo}
+      <ErroDeAcao mensagem={actionError} />
+      <InformacoesDaSolicitacao solicitacao={solicitacao} edicao={edicao} atividades={atividades} />
+      <DescarteDaEdicao edicao={edicao} />
+      <EvidenciasEHistorico id={solicitacao.id} estado={estado} />
     </section>
   );
 }
@@ -246,6 +270,10 @@ type PropsDoCabecalho = {
   acoes: AcoesDoCabecalho;
 };
 
+function descricaoDaAbertura(criadaEm: string, agora: number): string | undefined {
+  return isoValido(criadaEm) ? `Aberta ${tempoRelativo(criadaEm, agora)}` : undefined;
+}
+
 function CabecalhoDaSolicitacao({ solicitacao, edicao, acoes }: PropsDoCabecalho) {
   const [agora] = useState(() => Date.now());
   const editando = edicao.isEditing;
@@ -255,7 +283,7 @@ function CabecalhoDaSolicitacao({ solicitacao, edicao, acoes }: PropsDoCabecalho
       description={
         editando
           ? 'Atualize o título e a descrição da solicitação.'
-          : `Aberta ${tempoRelativo(solicitacao.criadaEm, agora)}`
+          : descricaoDaAbertura(solicitacao.criadaEm, agora)
       }
       maisAcoes={editando ? undefined : acoes.maisAcoes}
       actions={<AcoesDoCabecalhoDaSolicitacao edicao={edicao} principal={acoes.principal} />}

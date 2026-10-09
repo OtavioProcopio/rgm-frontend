@@ -18,7 +18,11 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await apiPost(
       request,
       '/modelos',
-      { codigo: modeloExistenteCodigo, descricao: modeloExistenteDescricao, maquina: MAQUINA_CATALOGO },
+      {
+        codigo: modeloExistenteCodigo,
+        descricao: modeloExistenteDescricao,
+        maquina: MAQUINA_CATALOGO,
+      },
       token,
     );
   });
@@ -192,7 +196,9 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await page.selectOption('select[name="tipo"]', 'REPARO');
     await page.getByLabel('Modelo', { exact: true }).click();
     await page
-      .getByRole('button', { name: new RegExp(`${modeloExistenteCodigo} - ${modeloExistenteDescricao}`) })
+      .getByRole('button', {
+        name: new RegExp(`${modeloExistenteCodigo} - ${modeloExistenteDescricao}`),
+      })
       .click();
     await page.click('button:has-text("Abrir solicitação")');
     await expect(page.getByText('A fazer')).toBeVisible();
@@ -226,7 +232,12 @@ test.describe('Solicitação tipo CRIACAO — regressão de bugs corrigidos', ()
       token,
     );
 
-    await apiPatch(request, `/solicitacoes/${sol.id}/cancelar`, { motivo: 'Não precisa mais' }, token);
+    await apiPatch(
+      request,
+      `/solicitacoes/${sol.id}/cancelar`,
+      { motivo: 'Não precisa mais' },
+      token,
+    );
   });
 
   test('métricas do dashboard não quebram com CRIACAO sem modelo (bug real corrigido)', async ({

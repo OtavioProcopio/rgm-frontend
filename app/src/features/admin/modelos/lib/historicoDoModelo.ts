@@ -3,6 +3,7 @@ import type {
   Solicitacao,
   StatusSolicitacao,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
+import { isoValido } from '@/shared/lib/data';
 
 export type ItemDoHistoricoDoModelo = {
   id: string;
@@ -53,6 +54,9 @@ export function historicoDoModelo(
   eventos.forEach((evento) => {
     if (evento.solicitacaoRelacionadaId) cobertas.add(evento.solicitacaoRelacionadaId);
   });
-  const naoCobertas = solicitacoes.filter((solicitacao) => !cobertas.has(solicitacao.id));
-  return [...eventos.map(itemDoEvento), ...naoCobertas.map(itemDaSolicitacao)];
+  const naoCobertas = solicitacoes.filter(
+    (solicitacao) => !cobertas.has(solicitacao.id) && isoValido(solicitacao.criadaEm),
+  );
+  const validos = eventos.filter((evento) => isoValido(evento.criadoEm));
+  return [...validos.map(itemDoEvento), ...naoCobertas.map(itemDaSolicitacao)];
 }
