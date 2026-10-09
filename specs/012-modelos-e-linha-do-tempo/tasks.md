@@ -53,10 +53,10 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 4 — Hooks
 
-- [ ] T020 [P] Criar `TST/shared/hooks/useVoltar.test.tsx`: com tela anterior (`location.key` diferente de `default`) volta no histórico; sem tela anterior vai à reserva informada
-- [ ] T021 [P] Criar `SRC/shared/hooks/useVoltar.ts`
-- [ ] T022 [P] Criar `TST/features/solicitacoes/hooks/useAcoesDoCabecalho.test.tsx`: devolve a ação principal da etapa como botão e as demais em `maisAcoes`, com "Cancelar" por último e em perigo; "Editar" entra em `maisAcoes`; escolher uma ação abre o diálogo dela e fechar o diálogo o remove; sem ação permitida não devolve nada; migrar os casos úteis de `SolicitacaoAcoes.test.tsx`
-- [ ] T023 [P] Criar `SRC/features/solicitacoes/hooks/useAcoesDoCabecalho.ts`
+- [x] T020 [P] Criar `TST/shared/hooks/useVoltar.test.tsx`: com tela anterior (`location.key` diferente de `default`) volta no histórico; sem tela anterior vai à reserva informada
+- [x] T021 [P] Criar `SRC/shared/hooks/useVoltar.ts`
+- [x] T022 [P] Criar `TST/features/solicitacoes/hooks/useAcoesDoCabecalho.test.tsx`: devolve a ação principal da etapa como botão e as demais em `maisAcoes`, com "Cancelar" por último e em perigo; "Editar" entra em `maisAcoes`; escolher uma ação abre o diálogo dela e fechar o diálogo o remove; sem ação permitida não devolve nada; migrar os casos úteis de `SolicitacaoAcoes.test.tsx`
+- [x] T023 [P] Criar `SRC/features/solicitacoes/hooks/useAcoesDoCabecalho.ts`
 
 ## Fase 5 — Peças
 
