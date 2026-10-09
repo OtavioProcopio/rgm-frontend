@@ -13,7 +13,7 @@
 - [x] As abas "Resumo" e "Histórico" são operáveis só com teclado e o painel escondido não entra na ordem de tabulação [LACUNA: a spec não diz as teclas das abas; o plano adota setas, Home e End]
 - [x] O controle "Mostrar N eventos anteriores" é alcançável por teclado e o foco não se perde ao expandir [LACUNA: a spec não diz onde fica o foco depois de expandir]
 - [x] A galeria ampliada continua abrindo no diálogo que já prende o foco, fecha com Esc e devolve o foco a quem abriu (RF-03)
-- [ ] Trocar a foto grande por uma miniatura mantém o foco na miniatura escolhida
+- [x] Trocar a foto grande por uma miniatura mantém o foco na miniatura escolhida
 
 ## Leitor de tela e texto
 

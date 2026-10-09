@@ -140,6 +140,19 @@ describe('GaleriaModelo com a foto grande', () => {
     expect(miniatura.getAttribute('aria-current')).toBe('true');
   });
 
+  it('deve manter o foco na miniatura quando ela é escolhida', async () => {
+    // Arrange
+    simularGaleria({ data: criarFotos(5, 0) });
+    renderizar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 2' }));
+
+    // Assert
+    const miniatura = screen.getByRole('button', { name: 'Ver foto: Foto 2' });
+    expect(document.activeElement).toBe(miniatura);
+  });
+
   it('deve manter a estrela de capa na miniatura da capa quando outra miniatura é escolhida', async () => {
     // Arrange
     simularGaleria({ data: criarFotos(5, 0) });

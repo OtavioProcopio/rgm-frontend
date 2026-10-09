@@ -337,3 +337,12 @@ usuário, depois de conferir cada item contra a spec, o código e os testes. Cor
 grande por uma miniatura mantém o foco na miniatura escolhida" — nenhum teste cobre; fica sem marca.
 
 Veredito: **convergido, com 1 item de acessibilidade sem teste**. Tarefas acrescentadas: nenhuma.
+
+### Rodada 5 — 2026-10-09
+
+Fecha o item aberto da Rodada 4. Teste novo em `GaleriaModelo.test.tsx` ("deve manter o foco na
+miniatura quando ela é escolhida"); `make test` do arquivo com 46 passando, `make lint` sem erro.
+O teste passou de primeira, porque o comportamento já existia (as miniaturas não são recriadas na
+troca); não o vi falhar. Caixa do `acessibilidade.md` marcada: 15 de 15.
+
+Veredito: **convergido**. Tarefas acrescentadas: nenhuma.
