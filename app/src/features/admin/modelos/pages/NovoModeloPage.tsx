@@ -33,7 +33,7 @@ export function NovoModeloPage({ backPath }: Props) {
   }
 
   function handleIrParaDetalhe() {
-    if (modeloCriado) navigate(`/app/admin/modelos/${modeloCriado.id}`);
+    navigate(`/app/admin/modelos/${modeloCriado!.id}`);
   }
 
   if (modeloCriado) {
