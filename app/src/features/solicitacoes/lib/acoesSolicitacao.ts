@@ -112,6 +112,31 @@ export function botoesDeAcao(acoes: ReadonlySet<AcaoSolicitacao>): BotaoDeAcao[]
   );
 }
 
+export const PRINCIPAL_POR_STATUS: Partial<Record<StatusSolicitacao, AcaoSolicitacao>> = {
+  A_FAZER: 'TRIAR',
+  EM_ANDAMENTO: 'ENVIAR_VALIDACAO',
+  EM_VALIDACAO: 'ENCERRAR',
+};
+
+export type AcoesSeparadas = { principal: AcaoSolicitacao | null; outras: AcaoSolicitacao[] };
+
+/**
+ * Separa a ação em destaque das demais. A principal é a da etapa; sem ela, só se destaca
+ * a ação que for a única permitida. "Cancelar" some quando há "Encerrar" e fica sempre por último.
+ */
+export function separarAcoes(
+  acoes: ReadonlySet<AcaoSolicitacao>,
+  status: StatusSolicitacao,
+): AcoesSeparadas {
+  const ordenadas = botoesDeAcao(acoes).map((botao) => botao.acao);
+  const daEtapa = PRINCIPAL_POR_STATUS[status];
+  const principal = ordenadas.length === 1 ? ordenadas[0] : (daEtapa ?? null);
+  if (principal === null || !ordenadas.includes(principal)) {
+    return { principal: null, outras: ordenadas };
+  }
+  return { principal, outras: ordenadas.filter((acao) => acao !== principal) };
+}
+
 /** Nome da ação para a tela: rótulo de botão e nome do diálogo. */
 export function rotuloDaAcao(acao: AcaoSolicitacao): string {
   return BOTOES.find((botao) => botao.acao === acao)!.rotulo;

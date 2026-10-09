@@ -28,6 +28,12 @@ export function mensagemFotoNaoEnviadaAntes(error: unknown): string {
 }
 
 export function formatDuracao(segundos: number): string {
+  if (segundos < 60) {
+    return `${Math.floor(segundos)} s`;
+  }
+  if (segundos < 3600) {
+    return `${Math.floor(segundos / 60)} min`;
+  }
   const horas = segundos / 3600;
   if (horas < 24) {
     return `${Math.round(horas)}h`;

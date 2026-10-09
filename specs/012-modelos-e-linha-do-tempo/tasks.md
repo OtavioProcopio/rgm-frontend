@@ -22,20 +22,20 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 0 — Linha de base
 
-- [ ] T001 Roteiro de medição em `/root/rgm/evidencias/012-frontend/medir012.cjs` (backend real local e Vite): em 1440 × 900 e 390 × 844, grava a largura da foto de capa na ficha do modelo e o vazio ao lado (RNF-01), o que aparece acima da primeira dobra (RNF-02), os botões do cabeçalho da ficha e do detalhe da solicitação (RNF-03), a ordem dos eventos do histórico (RNF-12), a largura da coluna de texto do histórico (RNF-04) e as moldura (RNF-07); roda em `946342a` (worktree com `node_modules` por link e `dist` próprio servido com proxy para o backend) e guarda o resultado "antes"
+- [x] T001 Roteiro de medição em `/root/rgm/evidencias/012-frontend/medir012.cjs` (backend real local e Vite): em 1440 × 900 e 390 × 844, grava a largura da foto de capa na ficha do modelo e o vazio ao lado (RNF-01), o que aparece acima da primeira dobra (RNF-02), os botões do cabeçalho da ficha e do detalhe da solicitação (RNF-03), a ordem dos eventos do histórico (RNF-12), a largura da coluna de texto do histórico (RNF-04) e as moldura (RNF-07); roda em `946342a` (worktree com `node_modules` por link e `dist` próprio servido com proxy para o backend) e guarda o resultado "antes"
 
 ## Fase 1 — Domínio (regras puras)
 
-- [ ] T002 [P] Criar `TST/shared/lib/data.test.ts`: `tempoRelativo` ("agora" abaixo de 1 min, "há N min", "há N h", "há N d") com o relógio recebido; `formatarDataHora` sem segundos, em pt-BR; `rotuloDoDia` devolve "Hoje", "Ontem" e a data nos demais dias, na fronteira da meia-noite e no fuso do navegador
-- [ ] T003 [P] Criar `SRC/shared/lib/data.ts`
-- [ ] T004 [P] Criar `TST/shared/lib/duracao.test.ts`: `formatarDuracao` (milissegundos) dá minutos abaixo de 1 h, horas abaixo de 48 h e dias depois; mínimo de 1 min; mesmos casos do teste atual de `prazoSolicitacao`
-- [ ] T005 [P] Criar `SRC/shared/lib/duracao.ts` (recebe `formatarDuracao`, sem mudar o comportamento)
-- [ ] T006 [P] Alterar `TST/features/solicitacoes/lib/solicitacaoMessages.test.ts`: `formatDuracao` (segundos) escreve "N s" abaixo de 1 min, "N min" abaixo de 1 h ("12 min", nunca "0h"), "Nh" abaixo de 24 h e "Nd Nh" depois (RF-09)
-- [ ] T007 [P] Alterar `SRC/features/solicitacoes/lib/solicitacaoMessages.ts`
-- [ ] T008 [P] Alterar `TST/features/solicitacoes/lib/acoesSolicitacao.test.ts`: `separarAcoes(acoes, status)` devolve a principal da etapa (`A_FAZER` → `TRIAR`, `EM_ANDAMENTO` → `ENVIAR_VALIDACAO`, `EM_VALIDACAO` → `ENCERRAR`) e as outras; principal não permitida ao usuário deixa `principal` nulo e tudo em `outras`; com uma única ação permitida, ela é a principal; `CANCELAR` fica por último e é a única destrutiva; `CANCELAR` some quando há `ENCERRAR` (como hoje); solicitação encerrada ou cancelada não tem ação
-- [ ] T009 [P] Alterar `SRC/features/solicitacoes/lib/acoesSolicitacao.ts`
-- [ ] T010 [P] Criar `TST/features/solicitacoes/lib/nomesDosUsuarios.test.ts`: `nomesDosResponsaveis` usa o campo `responsaveis` da API quando existe; senão a lista de usuários; senão devolve "N responsáveis" (com "1 responsável" no singular) e nada para lista vazia; `nomeDeQuemAbriu` usa `abertaPorNome`, depois o autor da atividade `ABERTURA`, depois a lista de usuários, e devolve nulo quando nenhum conhece
-- [ ] T011 [P] Criar `SRC/features/solicitacoes/lib/nomesDosUsuarios.ts` e acrescentar os campos opcionais `responsaveis` (`{ id, nome }[]`) e `abertaPorNome` a `Solicitacao` em `SRC/features/solicitacoes/types/solicitacaoTypes.ts`
+- [x] T002 [P] Criar `TST/shared/lib/data.test.ts`: `tempoRelativo` ("agora" abaixo de 1 min, "há N min", "há N h", "há N d") com o relógio recebido; `formatarDataHora` sem segundos, em pt-BR; `rotuloDoDia` devolve "Hoje", "Ontem" e a data nos demais dias, na fronteira da meia-noite e no fuso do navegador
+- [x] T003 [P] Criar `SRC/shared/lib/data.ts`
+- [x] T004 [P] Criar `TST/shared/lib/duracao.test.ts`: `formatarDuracao` (milissegundos) dá minutos abaixo de 1 h, horas abaixo de 48 h e dias depois; mínimo de 1 min; mesmos casos do teste atual de `prazoSolicitacao`
+- [x] T005 [P] Criar `SRC/shared/lib/duracao.ts` (recebe `formatarDuracao`, sem mudar o comportamento)
+- [x] T006 [P] Alterar `TST/features/solicitacoes/lib/solicitacaoMessages.test.ts`: `formatDuracao` (segundos) escreve "N s" abaixo de 1 min, "N min" abaixo de 1 h ("12 min", nunca "0h"), "Nh" abaixo de 24 h e "Nd Nh" depois (RF-09)
+- [x] T007 [P] Alterar `SRC/features/solicitacoes/lib/solicitacaoMessages.ts`
+- [x] T008 [P] Alterar `TST/features/solicitacoes/lib/acoesSolicitacao.test.ts`: `separarAcoes(acoes, status)` devolve a principal da etapa (`A_FAZER` → `TRIAR`, `EM_ANDAMENTO` → `ENVIAR_VALIDACAO`, `EM_VALIDACAO` → `ENCERRAR`) e as outras; principal não permitida ao usuário deixa `principal` nulo e tudo em `outras`; com uma única ação permitida, ela é a principal; `CANCELAR` fica por último e é a única destrutiva; `CANCELAR` some quando há `ENCERRAR` (como hoje); solicitação encerrada ou cancelada não tem ação
+- [x] T009 [P] Alterar `SRC/features/solicitacoes/lib/acoesSolicitacao.ts`
+- [x] T010 [P] Criar `TST/features/solicitacoes/lib/nomesDosUsuarios.test.ts`: `nomesDosResponsaveis` usa o campo `responsaveis` da API quando existe; senão a lista de usuários; senão devolve "N responsáveis" (com "1 responsável" no singular) e nada para lista vazia; `nomeDeQuemAbriu` usa `abertaPorNome`, depois o autor da atividade `ABERTURA`, depois a lista de usuários, e devolve nulo quando nenhum conhece
+- [x] T011 [P] Criar `SRC/features/solicitacoes/lib/nomesDosUsuarios.ts` e acrescentar os campos opcionais `responsaveis` (`{ id, nome }[]`) e `abertaPorNome` a `Solicitacao` em `SRC/features/solicitacoes/types/solicitacaoTypes.ts`
 
 ## Fase 2 — Domínio dependente
 

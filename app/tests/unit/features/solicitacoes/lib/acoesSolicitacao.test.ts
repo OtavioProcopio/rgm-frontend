@@ -7,6 +7,7 @@ import {
   botoesDeAcao,
   proximoStatus,
   rotuloDaAcao,
+  separarAcoes,
   type AcaoSolicitacao,
   type AtorSolicitacao,
 } from '@/features/solicitacoes/lib/acoesSolicitacao';
@@ -18,7 +19,11 @@ const externo: AtorSolicitacao = { id: 'ex', perfil: 'EXTERNO' };
 
 function solicitacao(
   status: StatusSolicitacao,
-  extra: { abertaPorUsuarioId?: string; responsavelIds?: string[]; acoesPermitidas?: string[] | null } = {},
+  extra: {
+    abertaPorUsuarioId?: string;
+    responsavelIds?: string[];
+    acoesPermitidas?: string[] | null;
+  } = {},
 ) {
   return { status, abertaPorUsuarioId: 'outro', responsavelIds: [], ...extra };
 }
@@ -41,7 +46,9 @@ describe('acoesPermitidas', () => {
 
   it('deve ignorar ação que esta tela não trata quando a API informa as ações', () => {
     // Arrange
-    const informada = solicitacao('EM_ANDAMENTO', { acoesPermitidas: ['COMENTAR', 'EDITAR', 'CANCELAR'] });
+    const informada = solicitacao('EM_ANDAMENTO', {
+      acoesPermitidas: ['COMENTAR', 'EDITAR', 'CANCELAR'],
+    });
 
     // Act
     const acoes = acoesPermitidas(informada, operador);
@@ -140,7 +147,10 @@ describe('acoesPermitidas', () => {
 
   it('deve não permitir nada quando o perfil é externo ou está ausente', () => {
     // Arrange
-    const aberta = solicitacao('EM_ANDAMENTO', { abertaPorUsuarioId: 'ex', responsavelIds: ['ex'] });
+    const aberta = solicitacao('EM_ANDAMENTO', {
+      abertaPorUsuarioId: 'ex',
+      responsavelIds: ['ex'],
+    });
 
     // Act
     const doExterno = acoesPermitidas(aberta, externo);
@@ -205,7 +215,12 @@ describe('proximoStatus', () => {
 describe('botoesDeAcao', () => {
   it('deve oferecer Encerrar sem Cancelar quando as duas ações são permitidas', () => {
     // Arrange
-    const acoes = new Set<AcaoSolicitacao>(['CANCELAR', 'ENCERRAR', 'DEVOLVER', 'ALTERAR_RESPONSAVEIS']);
+    const acoes = new Set<AcaoSolicitacao>([
+      'CANCELAR',
+      'ENCERRAR',
+      'DEVOLVER',
+      'ALTERAR_RESPONSAVEIS',
+    ]);
 
     // Act
     const rotulos = botoesDeAcao(acoes).map((botao) => botao.rotulo);
@@ -232,6 +247,114 @@ describe('botoesDeAcao', () => {
     // Assert
     expect(botoes).toEqual([]);
   });
+});
+
+describe('separarAcoes', () => {
+  it('deve destacar Triar e deixar Cancelar nas outras quando o gestor está em A_FAZER', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>(['TRIAR', 'CANCELAR']);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'A_FAZER');
+
+    // Assert
+    expect(separadas).toEqual({ principal: 'TRIAR', outras: ['CANCELAR'] });
+  });
+
+  it('deve destacar Enviar para validação quando o gestor está em EM_ANDAMENTO', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>([
+      'CANCELAR',
+      'ENVIAR_VALIDACAO',
+      'ALTERAR_RESPONSAVEIS',
+    ]);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'EM_ANDAMENTO');
+
+    // Assert
+    expect(separadas).toEqual({
+      principal: 'ENVIAR_VALIDACAO',
+      outras: ['ALTERAR_RESPONSAVEIS', 'CANCELAR'],
+    });
+  });
+
+  it('deve destacar Encerrar e omitir Cancelar quando o gestor está em EM_VALIDACAO', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>([
+      'ALTERAR_RESPONSAVEIS',
+      'DEVOLVER',
+      'ENCERRAR',
+      'CANCELAR',
+    ]);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'EM_VALIDACAO');
+
+    // Assert
+    expect(separadas).toEqual({
+      principal: 'ENCERRAR',
+      outras: ['ALTERAR_RESPONSAVEIS', 'DEVOLVER'],
+    });
+  });
+
+  it('deve destacar a única ação quando o operador responsável está em EM_ANDAMENTO', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>(['ENVIAR_VALIDACAO']);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'EM_ANDAMENTO');
+
+    // Assert
+    expect(separadas).toEqual({ principal: 'ENVIAR_VALIDACAO', outras: [] });
+  });
+
+  it('deve destacar Cancelar quando ela é a única ação do operador que abriu em A_FAZER', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>(['CANCELAR']);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'A_FAZER');
+
+    // Assert
+    expect(separadas).toEqual({ principal: 'CANCELAR', outras: [] });
+  });
+
+  it('deve deixar a principal nula quando faltam a ação da etapa e há várias ações', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>(['CANCELAR', 'ALTERAR_RESPONSAVEIS']);
+
+    // Act
+    const separadas = separarAcoes(acoes, 'EM_ANDAMENTO');
+
+    // Assert
+    expect(separadas).toEqual({ principal: null, outras: ['ALTERAR_RESPONSAVEIS', 'CANCELAR'] });
+  });
+
+  it('deve devolver principal nula e nenhuma outra quando o conjunto é vazio', () => {
+    // Arrange
+    const acoes = new Set<AcaoSolicitacao>();
+
+    // Act
+    const separadas = separarAcoes(acoes, 'A_FAZER');
+
+    // Assert
+    expect(separadas).toEqual({ principal: null, outras: [] });
+  });
+
+  it.each(['CONCLUIDA', 'CANCELADA'] as const)(
+    'deve deixar a principal nula quando o status é %s e há várias ações',
+    (status) => {
+      // Arrange
+      const acoes = new Set<AcaoSolicitacao>(['ALTERAR_RESPONSAVEIS', 'CANCELAR']);
+
+      // Act
+      const separadas = separarAcoes(acoes, status);
+
+      // Assert
+      expect(separadas).toEqual({ principal: null, outras: ['ALTERAR_RESPONSAVEIS', 'CANCELAR'] });
+    },
+  );
 });
 
 describe('rotuloDaAcao', () => {

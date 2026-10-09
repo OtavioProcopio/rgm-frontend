@@ -1,17 +1,9 @@
 export type StatusSolicitacao =
-  | 'A_FAZER'
-  | 'EM_ANDAMENTO'
-  | 'EM_VALIDACAO'
-  | 'CONCLUIDA'
-  | 'CANCELADA';
+  'A_FAZER' | 'EM_ANDAMENTO' | 'EM_VALIDACAO' | 'CONCLUIDA' | 'CANCELADA';
 export type PrioridadeSolicitacao = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
 export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA' | 'CRIACAO';
 export type TipoAtividadeSolicitacao =
-  | 'ABERTURA'
-  | 'ATRIBUICAO'
-  | 'MUDANCA_STATUS'
-  | 'COMENTARIO'
-  | 'EVIDENCIA_ADICIONADA';
+  'ABERTURA' | 'ATRIBUICAO' | 'MUDANCA_STATUS' | 'COMENTARIO' | 'EVIDENCIA_ADICIONADA';
 
 export type Solicitacao = {
   id: string;
@@ -42,6 +34,9 @@ export type Solicitacao = {
   tempoResolucaoSegundos?: number | null;
   /** Só vem no detalhe, a partir da v1.6.0 do backend. Ausente em listagens e eventos. */
   acoesPermitidas?: string[] | null;
+  /** Só vêm quando a API os informa (issue rgm-backend#114); ausentes na v1.5.0. */
+  responsaveis?: { id: string; nome: string }[] | null;
+  abertaPorNome?: string | null;
 };
 
 export type AtividadeSolicitacao = {
@@ -168,4 +163,3 @@ export type MetricasPorModeloFilters = {
   page: number;
   size: number;
 };
-
