@@ -45,7 +45,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('useAcoesDoCabecalho', () => {
-  it('deve ter Triar como principal e Editar e Cancelar no menu quando o gestor vê A Fazer', () => {
+  it('deve ter Triar como rótulo da principal quando o gestor vê A Fazer', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
     permitir('TRIAR', 'CANCELAR');
@@ -55,11 +55,77 @@ describe('useAcoesDoCabecalho', () => {
 
     // Assert
     expect(result.current.principal?.rotulo).toBe('Triar');
+  });
+
+  it('deve ter a variante primary na principal quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(result.current.principal?.variante).toBe('primary');
+  });
+
+  it('deve ter Editar e Cancelar no menu quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(rotulosDoMenu(result.current.maisAcoes)).toEqual(['Editar', 'Cancelar']);
+  });
+
+  it('deve marcar Cancelar como perigo no menu quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(result.current.maisAcoes[1].perigo).toBe(true);
+  });
+
+  it('deve não marcar Editar como perigo no menu quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(result.current.maisAcoes[0].perigo).toBeUndefined();
+  });
+
+  it('deve consultar as ações permitidas uma única vez quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(acoesDe).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve consultar as ações permitidas com a solicitação quando o gestor vê A Fazer', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR', 'CANCELAR');
+
+    // Act
+    montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(acoesDe).toHaveBeenCalledWith(solicitacao);
   });
 
@@ -93,7 +159,7 @@ describe('useAcoesDoCabecalho', () => {
     expect(result.current.maisAcoes).toEqual([]);
   });
 
-  it('deve ter principal nula e menu com Editar e Cancelar quando quem abriu pode editar e cancelar', () => {
+  it('deve ter principal nula quando quem abriu pode editar e cancelar', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
     permitir('CANCELAR');
@@ -103,11 +169,33 @@ describe('useAcoesDoCabecalho', () => {
 
     // Assert
     expect(result.current.principal).toBeNull();
+  });
+
+  it('deve ter menu com Editar e Cancelar quando quem abriu pode editar e cancelar', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(rotulosDoMenu(result.current.maisAcoes)).toEqual(['Editar', 'Cancelar']);
+  });
+
+  it('deve marcar Cancelar como perigo quando quem abriu pode editar e cancelar', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
     expect(result.current.maisAcoes[1].perigo).toBe(true);
   });
 
-  it('deve ter Cancelar como principal em variante danger e menu vazio quando é a única ação', () => {
+  it('deve ter Cancelar como rótulo da principal quando é a única ação', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
     permitir('CANCELAR');
@@ -117,29 +205,96 @@ describe('useAcoesDoCabecalho', () => {
 
     // Assert
     expect(result.current.principal?.rotulo).toBe('Cancelar');
+  });
+
+  it('deve ter a variante danger na principal quando Cancelar é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao);
+
+    // Assert
     expect(result.current.principal?.variante).toBe('danger');
+  });
+
+  it('deve ter menu vazio quando Cancelar é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('CANCELAR');
+
+    // Act
+    const { result } = montar(solicitacao);
+
+    // Assert
     expect(result.current.maisAcoes).toEqual([]);
   });
 
-  it('deve ter Editar como principal quando é a única ação', () => {
+  it('deve ter Editar como rótulo da principal quando é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir();
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
+    expect(result.current.principal?.rotulo).toBe('Editar');
+  });
+
+  it('deve ter a variante primary na principal quando Editar é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir();
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
+    expect(result.current.principal?.variante).toBe('primary');
+  });
+
+  it('deve ter menu vazio quando Editar é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir();
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
+    expect(result.current.maisAcoes).toEqual([]);
+  });
+
+  it('deve chamar a edição uma vez quando a principal Editar é acionada', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
     const editar = { aoAcionar: vi.fn() };
     permitir();
+    const { result } = montar(solicitacao, editar);
 
     // Act
-    const { result } = montar(solicitacao, editar);
     act(() => result.current.principal?.aoAcionar());
 
     // Assert
-    expect(result.current.principal?.rotulo).toBe('Editar');
-    expect(result.current.principal?.variante).toBe('primary');
-    expect(result.current.maisAcoes).toEqual([]);
     expect(editar.aoAcionar).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve não abrir diálogo quando a principal Editar é acionada', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir();
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Act
+    act(() => result.current.principal?.aoAcionar());
+
+    // Assert
     expect(result.current.dialogo).toBeNull();
   });
 
-  it('deve não ter ação nenhuma quando nada é permitido e não há Editar', () => {
+  it('deve ter principal nula quando nada é permitido e não há Editar', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'CONCLUIDA' });
     permitir();
@@ -149,11 +304,33 @@ describe('useAcoesDoCabecalho', () => {
 
     // Assert
     expect(result.current.principal).toBeNull();
+  });
+
+  it('deve ter menu vazio quando nada é permitido e não há Editar', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'CONCLUIDA' });
+    permitir();
+
+    // Act
+    const { result } = montar(solicitacao, null);
+
+    // Assert
     expect(result.current.maisAcoes).toEqual([]);
+  });
+
+  it('deve não ter diálogo quando nada é permitido e não há Editar', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'CONCLUIDA' });
+    permitir();
+
+    // Act
+    const { result } = montar(solicitacao, null);
+
+    // Assert
     expect(result.current.dialogo).toBeNull();
   });
 
-  it('deve abrir e fechar o diálogo da ação quando a principal é acionada', () => {
+  it('deve abrir o diálogo do componente DialogoDaAcao quando a principal é acionada', () => {
     // Arrange
     const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
     permitir('TRIAR');
@@ -161,13 +338,52 @@ describe('useAcoesDoCabecalho', () => {
 
     // Act
     act(() => result.current.principal?.aoAcionar());
+
+    // Assert
     const aberto = result.current.dialogo as ReactElement<Record<string, unknown>>;
+    expect(aberto.type).toBe(DialogoDaAcao);
+  });
+
+  it('deve abrir o diálogo da ação TRIAR quando a principal é acionada', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR');
+    const { result } = montar(solicitacao);
+
+    // Act
+    act(() => result.current.principal?.aoAcionar());
+
+    // Assert
+    const aberto = result.current.dialogo as ReactElement<Record<string, unknown>>;
+    expect(aberto.props.acao).toBe('TRIAR');
+  });
+
+  it('deve abrir o diálogo com a solicitação quando a principal é acionada', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR');
+    const { result } = montar(solicitacao);
+
+    // Act
+    act(() => result.current.principal?.aoAcionar());
+
+    // Assert
+    const aberto = result.current.dialogo as ReactElement<Record<string, unknown>>;
+    expect(aberto.props.solicitacao).toBe(solicitacao);
+  });
+
+  it('deve fechar o diálogo da ação quando o diálogo aberto pede para fechar', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'A_FAZER' });
+    permitir('TRIAR');
+    const { result } = montar(solicitacao);
+    act(() => result.current.principal?.aoAcionar());
+    const aberto = result.current.dialogo as ReactElement<Record<string, unknown>>;
+
+    // Act
     act(() => (aberto.props.onClose as () => void)());
 
     // Assert
-    expect(aberto.type).toBe(DialogoDaAcao);
-    expect(aberto.props.acao).toBe('TRIAR');
-    expect(aberto.props.solicitacao).toBe(solicitacao);
     expect(result.current.dialogo).toBeNull();
   });
 

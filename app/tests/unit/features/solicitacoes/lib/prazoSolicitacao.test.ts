@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
 import {
-  formatarDuracao,
   idadeEmDias,
   prazoDoResumo,
   situacaoDoPrazo,
 } from '@/features/solicitacoes/lib/prazoSolicitacao';
+import { formatarDuracao } from '@/shared/lib/duracao';
 
 const HORA = 3_600_000;
 const ABERTURA = Date.parse('2026-10-01T12:00:00Z');
@@ -132,6 +132,31 @@ describe('situacaoDoPrazo', () => {
   });
 });
 
+describe('situacaoDoPrazo com prazo muito distante', () => {
+  it('deve ficar sem selo quando a aberta tem muito prazo restante', () => {
+    // Arrange
+    const aberta = emAndamento(48);
+    const agora = ABERTURA + 2 * HORA;
+
+    // Act
+    const situacao = situacaoDoPrazo(aberta, agora);
+
+    // Assert
+    expect(situacao).toBeNull();
+  });
+
+  it('deve ficar sem selo quando o prazo limite não é uma data válida', () => {
+    // Arrange
+    const malformada = emAndamento(24, { prazoLimite: 'lixo' });
+
+    // Act
+    const situacao = situacaoDoPrazo(malformada, ABERTURA + 20 * HORA);
+
+    // Assert
+    expect(situacao).toBeNull();
+  });
+});
+
 describe('prazoDoResumo', () => {
   it('deve mostrar quanto falta, sem destaque, quando a aberta tem muito prazo restante', () => {
     // Arrange
@@ -143,7 +168,17 @@ describe('prazoDoResumo', () => {
 
     // Assert
     expect(resumo).toEqual({ tom: 'neutro', rotulo: 'Vence em 46 h' });
-    expect(situacaoDoPrazo(aberta, agora)).toBeNull();
+  });
+
+  it('deve devolver nulo quando o prazo limite não é uma data válida', () => {
+    // Arrange
+    const malformada = emAndamento(24, { prazoLimite: 'lixo' });
+
+    // Act
+    const resumo = prazoDoResumo(malformada, ABERTURA + 2 * HORA);
+
+    // Assert
+    expect(resumo).toBeNull();
   });
 
   it('deve mostrar quanto falta, com atenção, quando resta um quarto do prazo ou menos', () => {

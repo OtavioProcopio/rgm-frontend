@@ -247,20 +247,24 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByRole('button', { name: /encerrar/i })).toBeDefined();
   });
 
-  it('shows Devolver in Mais ações for GESTOR when in EM_VALIDACAO', async () => {
+  it('deve mostrar Devolver em Mais ações quando o gestor vê a solicitação Em Validação', async () => {
+    // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
-
     const { AppWrapper } = createAppWrapper({
       user: { nome: 'G', perfil: 'GESTOR' },
       initialEntries: ['/solicitacoes/s1'],
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Act
     await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
+
+    // Assert
     expect(within(container).getByRole('menuitem', { name: /devolver/i })).toBeDefined();
   });
 
@@ -415,7 +419,8 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByText(/verificar pressão/i)).toBeDefined();
   });
 
-  it('opens triagem modal and calls handleTriar', async () => {
+  it('deve triar com prioridade e responsáveis quando a triagem é confirmada no modal', async () => {
+    // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     const { useTriarSolicitacao } =
       await import('@/features/solicitacoes/hooks/useTriarSolicitacao');
@@ -436,8 +441,13 @@ describe('SolicitacaoDetalhePage', () => {
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /triar/i }));
+
+    // Act
     await userEvent.click(within(container).getByText('confirmar-triagem'));
-    expect(triarMock).toHaveBeenCalled();
+
+    // Assert
+    expect(triarMock).toHaveBeenCalledTimes(1);
+    expect(triarMock).toHaveBeenCalledWith({ prioridade: 'ALTA', responsavelIds: [] });
   });
 
   it('opens enviarValidacao modal when button is clicked', async () => {
@@ -467,7 +477,8 @@ describe('SolicitacaoDetalhePage', () => {
     within(container).getByText(/Descrição do serviço realizado/i);
   });
 
-  it('opens encerramento modal and calls handleEncerrar', async () => {
+  it('deve encerrar com conclusão e comentário quando o encerramento é confirmado no modal', async () => {
+    // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     const { useEncerrarSolicitacao } =
       await import('@/features/solicitacoes/hooks/useEncerrarSolicitacao');
@@ -488,11 +499,17 @@ describe('SolicitacaoDetalhePage', () => {
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: /encerrar/i }));
+
+    // Act
     await userEvent.click(within(container).getByText('confirmar-encerramento'));
-    expect(encerrarMock).toHaveBeenCalled();
+
+    // Assert
+    expect(encerrarMock).toHaveBeenCalledTimes(1);
+    expect(encerrarMock).toHaveBeenCalledWith({ concluir: true, comentario: 'ok' });
   });
 
-  it('opens devolucao modal and calls handleDevolver', async () => {
+  it('deve devolver com o motivo quando a devolução é confirmada no modal', async () => {
+    // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     const { useDevolverSolicitacao } =
       await import('@/features/solicitacoes/hooks/useDevolverSolicitacao');
@@ -514,11 +531,17 @@ describe('SolicitacaoDetalhePage', () => {
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
     await userEvent.click(within(container).getByRole('menuitem', { name: /devolver/i }));
+
+    // Act
     await userEvent.click(within(container).getByText('confirmar-devolucao'));
-    expect(devolverMock).toHaveBeenCalled();
+
+    // Assert
+    expect(devolverMock).toHaveBeenCalledTimes(1);
+    expect(devolverMock).toHaveBeenCalledWith({ motivo: 'errado' });
   });
 
-  it('calls handleComentario when submitted', async () => {
+  it('deve registrar o comentário quando o formulário de comentário é enviado', async () => {
+    // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     const { useRegistrarComentario } =
       await import('@/features/solicitacoes/hooks/useRegistrarComentario');
@@ -535,8 +558,13 @@ describe('SolicitacaoDetalhePage', () => {
 
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Act
     await userEvent.click(within(container).getByText('enviar-comentario'));
-    expect(comentarMock).toHaveBeenCalled();
+
+    // Assert
+    expect(comentarMock).toHaveBeenCalledTimes(1);
+    expect(comentarMock).toHaveBeenCalledWith({ comentario: 'ok' });
   });
 
   it('shows evidence list and uploader', async () => {

@@ -1,10 +1,17 @@
-const MINUTO_MS = 60 * 1000;
-const HORA_MS = 60 * MINUTO_MS;
-const DIA_MS = 24 * HORA_MS;
+import { DIA_MS, HORA_MS, MINUTO_MS } from './duracao';
+
 const LIMITE_EM_HORAS_MS = 48 * HORA_MS;
 
+function isoParaMs(iso: string): number {
+  const ms: number = new Date(iso).getTime();
+  if (Number.isNaN(ms)) {
+    throw new RangeError(`Data inválida: "${iso}"; esperado ISO 8601, como 2026-10-09T14:30:00Z`);
+  }
+  return ms;
+}
+
 export function tempoRelativo(iso: string, agoraMs: number): string {
-  const decorrido: number = agoraMs - new Date(iso).getTime();
+  const decorrido: number = agoraMs - isoParaMs(iso);
   if (decorrido < MINUTO_MS) return 'agora';
   if (decorrido < HORA_MS) return `há ${Math.floor(decorrido / MINUTO_MS)} min`;
   if (decorrido < LIMITE_EM_HORAS_MS) return `há ${Math.floor(decorrido / HORA_MS)} h`;
@@ -13,7 +20,7 @@ export function tempoRelativo(iso: string, agoraMs: number): string {
 
 export function formatarDataHora(iso: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-    new Date(iso),
+    isoParaMs(iso),
   );
 }
 
@@ -27,7 +34,7 @@ function chaveDaData(data: Date): string {
 }
 
 export function chaveDoDia(iso: string): string {
-  return chaveDaData(new Date(iso));
+  return chaveDaData(new Date(isoParaMs(iso)));
 }
 
 export function rotuloDoDia(iso: string, agoraMs: number): string {
@@ -36,5 +43,5 @@ export function rotuloDoDia(iso: string, agoraMs: number): string {
   if (chave === chaveDaData(hoje)) return 'Hoje';
   const ontem: Date = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 1);
   if (chave === chaveDaData(ontem)) return 'Ontem';
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(iso));
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(isoParaMs(iso));
 }

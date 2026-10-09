@@ -31,10 +31,38 @@ import { useEventosModelo } from '../hooks/useEventosModelo';
 import { useModelo } from '../hooks/useModelo';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 
+type AcaoDeConfirmacao = 'desativar' | 'ativar';
+type Mutacao = { mutateAsync: (id: string) => Promise<unknown> };
+
 export function ModeloDetalhePage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { data: modelo, error, isLoading } = useModelo(id);
+  const dados = useDadosDoModelo(id);
+  const podeGerenciarFoto = canManageModelos(user?.perfil);
+
+  return (
+    <section>
+      <CabecalhoDoModelo id={id} modelo={modelo} gerencia={Boolean(id) && podeGerenciarFoto} />
+      {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
+      {error ? (
+        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
+      ) : null}
+      {modelo ? (
+        <CorpoDoModelo
+          id={id}
+          modelo={modelo}
+          podeGerenciarFoto={podeGerenciarFoto}
+          dados={dados}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+// ── Dados das abas ───────────────────────────────────────────
+
+function useDadosDoModelo(id: string | undefined) {
   const { data: eventosData } = useEventosModelo(id);
   const { data: solicitacoesPage } = useSolicitacoes(
     { modeloId: id, page: 0, size: 50 },
@@ -45,158 +73,222 @@ export function ModeloDetalhePage() {
     isLoading: carregandoResumo,
     isError: erroNoResumo,
   } = useResumoDasSolicitacoesDoModelo(id);
+  return { eventosData, solicitacoesPage, resumoDasSolicitacoes, carregandoResumo, erroNoResumo };
+}
+
+type DadosDoModelo = ReturnType<typeof useDadosDoModelo>;
+
+// ── Ativar, desativar e exportar ─────────────────────────────
+
+async function executarAcao(mutacao: Mutacao, id: string): Promise<string | null> {
+  try {
+    await mutacao.mutateAsync(id);
+    return null;
+  } catch (mutationError) {
+    return getModeloErrorMessage(mutationError);
+  }
+}
+
+function useConfirmacaoDoModelo(id: string | undefined) {
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
-  const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
+  const [showConfirm, setShowConfirm] = useState<AcaoDeConfirmacao | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const podeGerenciarFoto = canManageModelos(user?.perfil);
 
-  async function handleConfirmAction() {
+  async function confirmar() {
     if (!id || !showConfirm) return;
     setActionError(null);
-    try {
-      if (showConfirm === 'desativar') {
-        await desativarModelo.mutateAsync(id);
-      } else {
-        await ativarModelo.mutateAsync(id);
-      }
-      setShowConfirm(null);
-    } catch (mutationError) {
-      setActionError(getModeloErrorMessage(mutationError));
-      setShowConfirm(null);
-    }
+    setActionError(
+      await executarAcao(showConfirm === 'desativar' ? desativarModelo : ativarModelo, id),
+    );
+    setShowConfirm(null);
   }
 
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
+  return { showConfirm, setShowConfirm, actionError, confirmar, isMutating };
+}
+
+type ConfirmacaoDoModelo = ReturnType<typeof useConfirmacaoDoModelo>;
+
+function useExportacaoDoModelo(id: string | undefined, modelo: Modelo | undefined) {
   const buscarFicha = () => modelosApi.exportarFicha(id ?? '');
   const nomeDaFicha = () => `ficha-modelo-${modelo?.codigo ?? id}.pdf`;
-  const {
-    exportar,
-    exportando,
-    erro: erroDaExportacao,
-  } = useExportarPdf({
+  const { exportar, exportando, erro } = useExportarPdf({
     buscar: buscarFicha,
     nomeDoArquivo: nomeDaFicha,
   });
-  const gerencia = Boolean(id) && podeGerenciarFoto;
+  return { buscarFicha, nomeDaFicha, exportar, exportando, erro };
+}
 
-  const maisAcoes: AcaoDoMenu[] = [
-    {
-      rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
-      onSelect: exportar,
-      desabilitada: exportando,
-    },
-    ...(modelo?.ativo === true
-      ? [
-          {
-            rotulo: 'Desativar',
-            perigo: true,
-            onSelect: () => setShowConfirm('desativar'),
-            desabilitada: isMutating,
-          },
-        ]
-      : []),
-    ...(modelo?.ativo === false
-      ? [{ rotulo: 'Ativar', onSelect: () => setShowConfirm('ativar'), desabilitada: isMutating }]
-      : []),
-  ];
+type ExportacaoDoModelo = ReturnType<typeof useExportacaoDoModelo>;
+
+function acoesDeAtivacao(
+  ativo: boolean | undefined,
+  ocupado: boolean,
+  pedir: (a: AcaoDeConfirmacao) => void,
+): AcaoDoMenu[] {
+  if (ativo === true) {
+    const desativar = { rotulo: 'Desativar', perigo: true, desabilitada: ocupado };
+    return [{ ...desativar, onSelect: () => pedir('desativar') }];
+  }
+  if (ativo === false) {
+    return [{ rotulo: 'Ativar', onSelect: () => pedir('ativar'), desabilitada: ocupado }];
+  }
+  return [];
+}
+
+function montarMaisAcoes(
+  ficha: ExportacaoDoModelo,
+  confirmacao: ConfirmacaoDoModelo,
+  modelo: Modelo | undefined,
+): AcaoDoMenu[] {
+  const exportar: AcaoDoMenu = {
+    rotulo: ficha.exportando ? 'Exportando...' : 'Exportar PDF',
+    onSelect: ficha.exportar,
+    desabilitada: ficha.exportando,
+  };
+  const { isMutating, setShowConfirm } = confirmacao;
+  return [exportar, ...acoesDeAtivacao(modelo?.ativo, isMutating, setShowConfirm)];
+}
+
+// ── Cabeçalho ────────────────────────────────────────────────
+
+type PropsDoCabecalho = { id: string | undefined; modelo: Modelo | undefined; gerencia: boolean };
+
+function CabecalhoDoModelo({ id, modelo, gerencia }: PropsDoCabecalho) {
+  const confirmacao = useConfirmacaoDoModelo(id);
+  const ficha = useExportacaoDoModelo(id, modelo);
+  const maisAcoes = montarMaisAcoes(ficha, confirmacao, modelo);
 
   return (
-    <section>
+    <>
       <PageHeader
         title="Detalhe do modelo"
         description="Consulte dados, eventos e a galeria de fotos do modelo."
-        actions={
-          gerencia ? (
-            <Link to={`/app/admin/modelos/${id}/editar`}>
-              <Button>Editar</Button>
-            </Link>
-          ) : id ? (
-            <ExportarPdfButton buscar={buscarFicha} nomeDoArquivo={nomeDaFicha} />
-          ) : null
-        }
+        actions={<AcaoPrincipalDoModelo id={id} gerencia={gerencia} ficha={ficha} />}
         maisAcoes={gerencia ? maisAcoes : undefined}
       />
-      {erroDaExportacao && gerencia ? (
-        <div className="mb-4">
-          <ErrorState title="Exportação não concluída" description={erroDaExportacao} />
-        </div>
-      ) : null}
-      {actionError ? (
-        <div className="mb-4">
-          <ErrorState title="Operação não concluída" description={actionError} />
-        </div>
-      ) : null}
-      {showConfirm === 'desativar' ? (
-        <ConfirmDialog
-          title="Desativar modelo"
-          message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
-          confirmLabel="Desativar"
-          variant="danger"
-          isPending={isMutating}
-          onCancel={() => setShowConfirm(null)}
-          onConfirm={handleConfirmAction}
-        />
-      ) : null}
-      {showConfirm === 'ativar' ? (
-        <ConfirmDialog
-          title="Ativar modelo"
-          message={`Deseja ativar o modelo ${modelo?.codigo}?`}
-          confirmLabel="Ativar"
-          variant="warning"
-          isPending={isMutating}
-          onCancel={() => setShowConfirm(null)}
-          onConfirm={handleConfirmAction}
-        />
-      ) : null}
-      {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
-      {error ? (
-        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
-      ) : null}
-      {modelo ? (
-        <div className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
-            {id ? (
-              <GaleriaModelo
-                modeloId={id}
-                codigo={modelo.codigo}
-                podeGerenciar={podeGerenciarFoto}
-              />
-            ) : null}
-            <IdentificacaoDoModelo modelo={modelo} />
-          </div>
-          <Abas
-            rotulo="Detalhes do modelo"
-            abas={[
-              {
-                id: 'resumo',
-                rotulo: 'Resumo',
-                conteudo: (
-                  <ResumoDoModelo
-                    observacoes={modelo.observacoes}
-                    resumo={resumoDasSolicitacoes}
-                    carregando={carregandoResumo}
-                    comErro={erroNoResumo}
-                  />
-                ),
-              },
-              {
-                id: 'historico',
-                rotulo: 'Histórico',
-                conteudo: (
-                  <HistoricoDoModelo
-                    eventos={eventosData ?? []}
-                    solicitacoes={solicitacoesPage?.content ?? []}
-                    totalDeSolicitacoes={solicitacoesPage?.totalElements}
-                  />
-                ),
-              },
-            ]}
-          />
-        </div>
-      ) : null}
-    </section>
+      <ErroDoModelo titulo="Exportação não concluída" mensagem={gerencia ? ficha.erro : null} />
+      <ErroDoModelo titulo="Operação não concluída" mensagem={confirmacao.actionError} />
+      <DialogosDoModelo codigo={modelo?.codigo} confirmacao={confirmacao} />
+    </>
   );
+}
+
+type PropsDaAcaoPrincipal = {
+  id: string | undefined;
+  gerencia: boolean;
+  ficha: ExportacaoDoModelo;
+};
+
+function AcaoPrincipalDoModelo({ id, gerencia, ficha }: PropsDaAcaoPrincipal) {
+  if (gerencia) {
+    return (
+      <Link to={`/app/admin/modelos/${id}/editar`}>
+        <Button>Editar</Button>
+      </Link>
+    );
+  }
+  if (!id) return null;
+  return <ExportarPdfButton buscar={ficha.buscarFicha} nomeDoArquivo={ficha.nomeDaFicha} />;
+}
+
+function ErroDoModelo({ titulo, mensagem }: { titulo: string; mensagem: string | null }) {
+  if (!mensagem) return null;
+  return (
+    <div className="mb-4">
+      <ErrorState title={titulo} description={mensagem} />
+    </div>
+  );
+}
+
+type PropsDosDialogos = { codigo: string | undefined; confirmacao: ConfirmacaoDoModelo };
+
+function DialogosDoModelo({ codigo, confirmacao }: PropsDosDialogos) {
+  const { showConfirm, setShowConfirm, confirmar, isMutating } = confirmacao;
+  const comum = {
+    isPending: isMutating,
+    onCancel: () => setShowConfirm(null),
+    onConfirm: confirmar,
+  };
+  if (showConfirm === 'desativar') return <DialogoDeDesativar {...comum} />;
+  if (showConfirm === 'ativar') return <DialogoDeAtivar codigo={codigo} {...comum} />;
+  return null;
+}
+
+type PropsDoDialogo = { isPending: boolean; onCancel: () => void; onConfirm: () => void };
+
+function DialogoDeDesativar(props: PropsDoDialogo) {
+  return (
+    <ConfirmDialog
+      title="Desativar modelo"
+      message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+      confirmLabel="Desativar"
+      variant="danger"
+      {...props}
+    />
+  );
+}
+
+function DialogoDeAtivar({ codigo, ...props }: PropsDoDialogo & { codigo: string | undefined }) {
+  return (
+    <ConfirmDialog
+      title="Ativar modelo"
+      message={`Deseja ativar o modelo ${codigo}?`}
+      confirmLabel="Ativar"
+      variant="warning"
+      {...props}
+    />
+  );
+}
+
+// ── Corpo (grade e abas) ─────────────────────────────────────
+
+type PropsDoCorpo = {
+  id: string | undefined;
+  modelo: Modelo;
+  podeGerenciarFoto: boolean;
+  dados: DadosDoModelo;
+};
+
+function CorpoDoModelo({ id, modelo, podeGerenciarFoto, dados }: PropsDoCorpo) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+        {id ? (
+          <GaleriaModelo modeloId={id} codigo={modelo.codigo} podeGerenciar={podeGerenciarFoto} />
+        ) : null}
+        <IdentificacaoDoModelo modelo={modelo} />
+      </div>
+      <Abas
+        rotulo="Detalhes do modelo"
+        abas={[abaDeResumo(modelo, dados), abaDeHistorico(dados)]}
+      />
+    </div>
+  );
+}
+
+function abaDeResumo(modelo: Modelo, dados: DadosDoModelo) {
+  const conteudo = (
+    <ResumoDoModelo
+      observacoes={modelo.observacoes}
+      resumo={dados.resumoDasSolicitacoes}
+      carregando={dados.carregandoResumo}
+      comErro={dados.erroNoResumo}
+    />
+  );
+  return { id: 'resumo', rotulo: 'Resumo', conteudo };
+}
+
+function abaDeHistorico({ eventosData, solicitacoesPage }: DadosDoModelo) {
+  const conteudo = (
+    <HistoricoDoModelo
+      eventos={eventosData ?? []}
+      solicitacoes={solicitacoesPage?.content ?? []}
+      totalDeSolicitacoes={solicitacoesPage?.totalElements}
+    />
+  );
+  return { id: 'historico', rotulo: 'Histórico', conteudo };
 }
 
 function IdentificacaoDoModelo({ modelo }: { modelo: Modelo }) {

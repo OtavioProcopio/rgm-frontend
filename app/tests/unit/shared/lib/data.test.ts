@@ -10,6 +10,8 @@ const MINUTO = 60 * SEGUNDO;
 const HORA = 60 * MINUTO;
 const DIA = 24 * HORA;
 
+const MENSAGEM_LIXO = 'Data inválida: "lixo"; esperado ISO 8601, como 2026-10-09T14:30:00Z';
+
 const AGORA = new Date(2026, 9, 8, 15, 0).getTime();
 
 function isoAntes(deslocamentoMs: number): string {
@@ -108,9 +110,33 @@ describe('tempoRelativo', () => {
     // Assert
     expect(resultado).toBe('agora');
   });
+
+  it('deve lançar RangeError com o valor recebido quando a data é inválida', () => {
+    // Arrange
+    const iso = 'lixo';
+
+    // Act
+    const chamada = () => tempoRelativo(iso, AGORA);
+
+    // Assert
+    expect(chamada).toThrow(RangeError);
+    expect(chamada).toThrow(MENSAGEM_LIXO);
+  });
 });
 
 describe('formatarDataHora', () => {
+  it('deve lançar RangeError com o valor recebido quando a data é inválida', () => {
+    // Arrange
+    const iso = 'lixo';
+
+    // Act
+    const chamada = () => formatarDataHora(iso);
+
+    // Assert
+    expect(chamada).toThrow(RangeError);
+    expect(chamada).toThrow(MENSAGEM_LIXO);
+  });
+
   it('deve formatar dia, mês, ano e hora sem segundos quando recebe um instante', () => {
     // Arrange
     const iso = new Date(2026, 9, 8, 15, 7, 45).toISOString();
@@ -124,6 +150,18 @@ describe('formatarDataHora', () => {
 });
 
 describe('chaveDoDia', () => {
+  it('deve lançar RangeError com o valor recebido quando a data é inválida', () => {
+    // Arrange
+    const iso = 'lixo';
+
+    // Act
+    const chamada = () => chaveDoDia(iso);
+
+    // Assert
+    expect(chamada).toThrow(RangeError);
+    expect(chamada).toThrow(MENSAGEM_LIXO);
+  });
+
   it('deve retornar AAAA-MM-DD no fuso local quando recebe um instante', () => {
     // Arrange
     const iso = isoLocal(2026, 0, 5, 23, 30);
@@ -137,6 +175,18 @@ describe('chaveDoDia', () => {
 });
 
 describe('rotuloDoDia', () => {
+  it('deve lançar RangeError com o valor recebido quando a data é inválida', () => {
+    // Arrange
+    const iso = 'lixo';
+
+    // Act
+    const chamada = () => rotuloDoDia(iso, AGORA);
+
+    // Assert
+    expect(chamada).toThrow(RangeError);
+    expect(chamada).toThrow(MENSAGEM_LIXO);
+  });
+
   it('deve retornar "Hoje" quando o instante é do mesmo dia local', () => {
     // Arrange
     const iso = isoLocal(2026, 9, 8, 9, 0);

@@ -277,3 +277,26 @@ indicador, dado ou endpoint novo foi criado.
   banco local, só para as capturas.
 
 Veredito: **convergido**. Tarefas acrescentadas: nenhuma além das listadas acima (todas feitas).
+
+### Rodada 2 — 2026-10-09
+
+Correções do 3º `/bu:review` (que reprovou a Rodada 1). Nenhum requisito novo; só qualidade.
+
+| Achado do review | Estado | Evidência |
+|---|---|---|
+| Testes sem marcadores Arrange/Act/Assert e com mais de um comportamento | realizado | testes de `useAcoesDoCabecalho`, `nomesDosUsuarios`, `prazoSolicitacao`, `SolicitacaoDetalhePage`, `LinhaDoTempo`, `data`, `linhaDoTempo` reescritos em `app/tests/unit/` |
+| Regra do prazo duplicada | realizado | `app/src/features/solicitacoes/lib/prazoSolicitacao.ts` (`semPrazoParaMostrar`, `prazoDaConcluida`, `atrasadaHa`, `venceEm`) |
+| Reexport e constantes de tempo repetidas | realizado | `app/src/shared/lib/duracao.ts` exporta `MINUTO_MS`, `HORA_MS`, `DIA_MS`; `data.ts` importa deles |
+| Data inválida silenciosa | realizado | `isoParaMs` em `app/src/shared/lib/data.ts` lança `RangeError` com o formato esperado |
+| Agrupamento por dia feito mais de uma vez | realizado | `agruparPorDia` roda uma vez; `recolherGrupos` em `app/src/shared/lib/linhaDoTempo.ts` só corta |
+| Funções de página com mais de 200 linhas | realizado | `DetalheDaSolicitacao` (~245 → 32 linhas) e `ModeloDetalhePage` (~166 → 25 linhas), divididas em subcomponentes e hooks no mesmo arquivo; os 307 testes das duas pastas de páginas passam sem alteração |
+
+**Mudança de comportamento (registrada):** uma solicitação concluída com `prazoLimite` malformado
+agora devolve `null` (não mostra prazo). Antes mostrava "No prazo" ou "Fora do prazo".
+
+**Gates:** `make typecheck` sem erro; `make lint CAMINHO=src` com 0 erros e 1 aviso preexistente
+(`react-hooks/incompatible-library` em arquivo não tocado); `make test` com 178 arquivos e
+2541 testes passando; `make cover-arquivos` dos 7 fontes alterados com ramos entre 95,16% e 98,27%.
+
+Veredito: **convergido**. Tarefas acrescentadas: nenhuma.
+

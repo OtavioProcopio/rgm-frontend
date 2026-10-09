@@ -3,7 +3,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { agruparPorDia, LIMITE_VISIVEL, recolher } from '@/shared/lib/linhaDoTempo';
+import { agruparPorDia, LIMITE_VISIVEL, recolherGrupos } from '@/shared/lib/linhaDoTempo';
+import type { GrupoDoDia } from '@/shared/lib/linhaDoTempo';
 
 type Item = { em: string; id: string };
 
@@ -13,8 +14,9 @@ function item(id: string, ano: number, mes: number, dia: number, hora: number, m
   return { id, em: new Date(ano, mes, dia, hora, min).toISOString() };
 }
 
-function numeros(quantidade: number): number[] {
-  return Array.from({ length: quantidade }, (_: unknown, indice: number) => indice + 1);
+function grupo(chave: string, quantidade: number): GrupoDoDia<number> {
+  const itens: number[] = Array.from({ length: quantidade }, (_: unknown, i: number) => i);
+  return { chave, rotulo: chave, itens };
 }
 
 describe('agruparPorDia', () => {
@@ -103,60 +105,104 @@ describe('agruparPorDia', () => {
   });
 });
 
-describe('recolher', () => {
-  it('deve deixar 10 visíveis e 1 oculto quando há 11 itens recolhidos', () => {
+describe('recolherGrupos', () => {
+  it('deve deixar 10 itens visíveis quando há 11 itens em 2 dias', () => {
     // Arrange
-    const itens = numeros(11);
+    const grupos = [grupo('recente', 6), grupo('antigo', 5)];
 
     // Act
-    const resultado = recolher(itens, false);
+    const resultado = recolherGrupos(grupos, false);
 
     // Assert
-    expect(resultado.visiveis).toEqual(numeros(10));
+    expect(resultado.grupos.map((g) => g.itens.length)).toEqual([6, 4]);
+  });
+
+  it('deve informar 1 item oculto quando há 11 itens em 2 dias', () => {
+    // Arrange
+    const grupos = [grupo('recente', 6), grupo('antigo', 5)];
+
+    // Act
+    const resultado = recolherGrupos(grupos, false);
+
+    // Assert
     expect(resultado.ocultos).toBe(1);
   });
 
-  it('deve mostrar todos quando há exatamente 10 itens', () => {
+  it('deve descartar o grupo mais antigo quando todos os seus itens ficam ocultos', () => {
     // Arrange
-    const itens = numeros(LIMITE_VISIVEL);
+    const grupos = [grupo('recente', 10), grupo('antigo', 2)];
 
     // Act
-    const resultado = recolher(itens, false);
+    const resultado = recolherGrupos(grupos, false);
 
     // Assert
-    expect(resultado).toEqual({ visiveis: itens, ocultos: 0 });
+    expect(resultado.grupos.map((g) => g.chave)).toEqual(['recente']);
   });
 
-  it('deve mostrar todos quando há 3 itens', () => {
+  it('deve informar os itens do grupo descartado como ocultos quando o grupo some', () => {
     // Arrange
-    const itens = numeros(3);
+    const grupos = [grupo('recente', 10), grupo('antigo', 2)];
 
     // Act
-    const resultado = recolher(itens, false);
+    const resultado = recolherGrupos(grupos, false);
 
     // Assert
-    expect(resultado).toEqual({ visiveis: itens, ocultos: 0 });
+    expect(resultado.ocultos).toBe(2);
   });
 
-  it('deve mostrar todos quando está expandido', () => {
+  it('deve devolver tudo quando há exatamente 10 itens', () => {
     // Arrange
-    const itens = numeros(25);
+    const grupos = [grupo('recente', 4), grupo('antigo', LIMITE_VISIVEL - 4)];
 
     // Act
-    const resultado = recolher(itens, true);
+    const resultado = recolherGrupos(grupos, false);
 
     // Assert
-    expect(resultado).toEqual({ visiveis: itens, ocultos: 0 });
+    expect(resultado).toEqual({ grupos, ocultos: 0 });
+  });
+
+  it('deve devolver tudo quando está expandido', () => {
+    // Arrange
+    const grupos = [grupo('recente', 12), grupo('antigo', 13)];
+
+    // Act
+    const resultado = recolherGrupos(grupos, true);
+
+    // Assert
+    expect(resultado).toEqual({ grupos, ocultos: 0 });
   });
 
   it('deve respeitar o limite informado quando é personalizado', () => {
     // Arrange
-    const itens = numeros(8);
+    const grupos = [grupo('recente', 4), grupo('antigo', 4)];
 
     // Act
-    const resultado = recolher(itens, false, 5);
+    const resultado = recolherGrupos(grupos, false, 5);
 
     // Assert
-    expect(resultado).toEqual({ visiveis: numeros(5), ocultos: 3 });
+    expect(resultado.ocultos).toBe(3);
+  });
+
+  it('deve preservar os grupos recebidos quando recolhe', () => {
+    // Arrange
+    const grupos = [grupo('recente', 8), grupo('antigo', 8)];
+    const copia = structuredClone(grupos);
+
+    // Act
+    recolherGrupos(grupos, false);
+
+    // Assert
+    expect(grupos).toEqual(copia);
+  });
+
+  it('deve retornar lista vazia e nenhum oculto quando não há grupos', () => {
+    // Arrange
+    const grupos: GrupoDoDia<number>[] = [];
+
+    // Act
+    const resultado = recolherGrupos(grupos, false);
+
+    // Assert
+    expect(resultado).toEqual({ grupos: [], ocultos: 0 });
   });
 });

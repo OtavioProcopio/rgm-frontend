@@ -24,11 +24,19 @@ export function agruparPorDia<T extends { em: string }>(
   return [...grupos.values()];
 }
 
-export function recolher<T>(
-  itens: readonly T[],
+export function recolherGrupos<T>(
+  grupos: GrupoDoDia<T>[],
   expandido: boolean,
   limite: number = LIMITE_VISIVEL,
-): { visiveis: T[]; ocultos: number } {
-  if (expandido || itens.length <= limite) return { visiveis: [...itens], ocultos: 0 };
-  return { visiveis: itens.slice(0, limite), ocultos: itens.length - limite };
+): { grupos: GrupoDoDia<T>[]; ocultos: number } {
+  const total: number = grupos.reduce((soma: number, g: GrupoDoDia<T>) => soma + g.itens.length, 0);
+  if (expandido || total <= limite) return { grupos, ocultos: 0 };
+  const visiveis: GrupoDoDia<T>[] = [];
+  let restante: number = limite;
+  for (const g of grupos) {
+    if (restante <= 0) break;
+    visiveis.push({ ...g, itens: g.itens.slice(0, restante) });
+    restante -= g.itens.length;
+  }
+  return { grupos: visiveis, ocultos: total - limite };
 }

@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { cn } from '@/shared/lib/cn';
 import { formatarDataHora, tempoRelativo } from '@/shared/lib/data';
-import { LIMITE_VISIVEL, agruparPorDia, recolher } from '@/shared/lib/linhaDoTempo';
+import { LIMITE_VISIVEL, agruparPorDia, recolherGrupos } from '@/shared/lib/linhaDoTempo';
 import type { GrupoDoDia } from '@/shared/lib/linhaDoTempo';
 
 export type ItemDaLinhaDoTempo = {
@@ -151,17 +151,16 @@ export function LinhaDoTempo({ itens, rotulo, vazio, agoraMs }: Props) {
   const [montadoEm] = useState<number>(() => Date.now());
   if (itens.length === 0) return <>{vazio ?? null}</>;
   const agora: number = agoraMs ?? montadoEm;
-  const plana: ItemDaLinhaDoTempo[] = agruparPorDia(itens, agora).flatMap((g) => g.itens);
-  const { visiveis, ocultos } = recolher(plana, expandido);
+  const { grupos, ocultos } = recolherGrupos(agruparPorDia(itens, agora), expandido);
   const alternar = (): void => definirExpandido(!expandido);
   return (
     <section aria-label={rotulo} className="w-full max-w-[720px]">
       <div id={idListas}>
-        {agruparPorDia(visiveis, agora).map((g: GrupoDoDia<ItemDaLinhaDoTempo>) => (
+        {grupos.map((g: GrupoDoDia<ItemDaLinhaDoTempo>) => (
           <Grupo key={g.chave} grupo={g} agoraMs={agora} />
         ))}
       </div>
-      {plana.length > LIMITE_VISIVEL && (
+      {itens.length > LIMITE_VISIVEL && (
         <BotaoDeRecolhimento
           expandido={expandido}
           ocultos={ocultos}

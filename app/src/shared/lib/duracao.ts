@@ -1,6 +1,6 @@
-const MINUTO_MS = 60_000;
-const HORA_MS = 60 * MINUTO_MS;
-const DIA_MS = 24 * HORA_MS;
+export const MINUTO_MS = 60_000;
+export const HORA_MS = 60 * MINUTO_MS;
+export const DIA_MS = 24 * HORA_MS;
 
 /** Minutos abaixo de 1 hora, horas abaixo de 48 horas, dias a partir daí. */
 export function formatarDuracao(ms: number): string {

@@ -181,20 +181,48 @@ describe('LinhaDoTempo', () => {
     expect(screen.getByText('Balão de comentário')).toBeTruthy();
   });
 
-  it('deve mostrar o horário relativo com a data completa no title e no texto sr-only quando há eventos', () => {
+  it('deve renderizar o horário relativo como elemento time quando há eventos', () => {
     // Arrange
     const em: string = emIso(0, 10);
-    const completa: string = formatarDataHora(em);
+
+    // Act
+    renderizar([criarItem('a', em)]);
+
+    // Assert
+    expect(screen.getByText('há 2 h').tagName).toBe('TIME');
+  });
+
+  it('deve expor o instante no atributo datetime quando há eventos', () => {
+    // Arrange
+    const em: string = emIso(0, 10);
+
+    // Act
+    renderizar([criarItem('a', em)]);
+
+    // Assert
+    expect(screen.getByText('há 2 h').getAttribute('datetime')).toBe(em);
+  });
+
+  it('deve mostrar a data completa no title do horário quando há eventos', () => {
+    // Arrange
+    const em: string = emIso(0, 10);
+
+    // Act
+    renderizar([criarItem('a', em)]);
+
+    // Assert
+    expect(screen.getByText('há 2 h').getAttribute('title')).toBe(formatarDataHora(em));
+  });
+
+  it('deve mostrar a data completa no texto sr-only quando há eventos', () => {
+    // Arrange
+    const em: string = emIso(0, 10);
 
     // Act
     const { container } = renderizar([criarItem('a', em)]);
 
     // Assert
-    const horario: HTMLElement = screen.getByText('há 2 h');
-    expect(horario.tagName).toBe('TIME');
-    expect(horario.getAttribute('datetime')).toBe(em);
-    expect(horario.getAttribute('title')).toBe(completa);
-    expect(container.querySelector('.sr-only')?.textContent).toBe(completa);
+    expect(container.querySelector('.sr-only')?.textContent).toBe(formatarDataHora(em));
   });
 
   it('deve mostrar a data completa visível quando o horário é acionado', async () => {
@@ -238,21 +266,52 @@ describe('LinhaDoTempo', () => {
     expect(screen.getByRole('button', { name: 'Mostrar 5 eventos anteriores' })).toBeTruthy();
   });
 
-  it('deve mostrar todos mantendo o mesmo botão focado quando o botão é acionado pelo teclado', async () => {
-    // Arrange
+  async function acionarBotaoPeloTeclado(): Promise<HTMLElement> {
     const user = userEvent.setup();
     renderizar(criarVarios(15));
     const botao: HTMLElement = screen.getByRole('button', { name: /Mostrar 5 eventos/ });
     botao.focus();
-
-    // Act
     await user.keyboard('{Enter}');
+    return botao;
+  }
+
+  it('deve mostrar todos os eventos quando o botão é acionado pelo teclado', async () => {
+    // Arrange / Act
+    await acionarBotaoPeloTeclado();
 
     // Assert
     expect(screen.getAllByRole('listitem')).toHaveLength(15);
+  });
+
+  it('deve manter o mesmo botão montado quando é acionado pelo teclado', async () => {
+    // Arrange / Act
+    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+
+    // Assert
     expect(botao.isConnected).toBe(true);
+  });
+
+  it('deve trocar o rótulo para Mostrar menos quando o botão é acionado pelo teclado', async () => {
+    // Arrange / Act
+    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+
+    // Assert
     expect(botao.textContent).toBe('Mostrar menos');
+  });
+
+  it('deve marcar aria-expanded como verdadeiro quando o botão é acionado pelo teclado', async () => {
+    // Arrange / Act
+    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+
+    // Assert
     expect(botao.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('deve manter o foco no botão quando é acionado pelo teclado', async () => {
+    // Arrange / Act
+    const botao: HTMLElement = await acionarBotaoPeloTeclado();
+
+    // Assert
     expect(document.activeElement).toBe(botao);
   });
 
