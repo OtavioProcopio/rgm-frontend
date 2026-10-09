@@ -109,9 +109,9 @@ Depois desta entrega:
 | RF-03 | As demais fotos da galeria devem aparecer como miniaturas abaixo da foto grande; escolher uma miniatura deve trocar a foto grande por ela; tocar na foto grande deve abrir a galeria ampliada no diálogo que já existe | obrigatório |
 | RF-04 | A identificação deve mostrar o código e a versão em destaque, com o código em fonte monoespaçada, a descrição logo abaixo e os selos de estado ("Ativo" ou "Inativo", e "Pendência aberta" quando houver) ao lado | obrigatório |
 | RF-05 | Máquina, tipo, criação e atualização devem aparecer numa grade compacta de duas colunas, ao lado ou abaixo da foto, sem ocupar a largura toda | obrigatório |
-| RF-06 | A ação principal da ficha continua sendo "Editar", com as demais em "Mais ações" (spec 011); "Adicionar foto" fica onde a decisão de Ambiguidades determinar [NECESSITA ESCLARECIMENTO: "Adicionar foto" fica no menu "Mais ações", como a #145 propõe, ou num botão junto da foto?] | obrigatório |
-| RF-07 | O conteúdo abaixo da identificação deve estar organizado em Resumo, Histórico e Solicitações, de modo que o usuário vá direto a um deles [NECESSITA ESCLARECIMENTO: abas que trocam o conteúdo, âncoras fixas numa página só, ou seções recolhíveis?] | obrigatório |
-| RF-08 | O histórico da ficha deve ser uma linha do tempo só, do mais recente para o mais antigo, agrupada por dia, em que cada solicitação aparece uma vez e leva à solicitação [NECESSITA ESCLARECIMENTO: o que entra nela: só os eventos do modelo, ou também a abertura de cada solicitação que não tem evento?] | obrigatório |
+| RF-06 | A ação principal da ficha continua sendo "Editar", com as demais em "Mais ações" (spec 011); "Adicionar foto" é um botão junto da foto, ao lado das miniaturas, só para quem pode gerenciar as fotos, e não entra no menu | obrigatório |
+| RF-07 | O conteúdo abaixo da identificação deve estar em duas abas, "Resumo" e "Histórico", que trocam o conteúdo na mesma página: "Resumo" traz as observações e os indicadores das solicitações do modelo; "Histórico" traz a linha do tempo de RF-08. A lista de solicitações do modelo deixa de ser um bloco à parte e passa a fazer parte do histórico | obrigatório |
+| RF-08 | O histórico da ficha deve ser uma linha do tempo só, do mais recente para o mais antigo, agrupada por dia, com os eventos do modelo e a abertura de cada solicitação, em que cada solicitação aparece uma vez (pelo evento dela, se houver; senão pela abertura, com o status) e leva à solicitação | obrigatório |
 | RF-09 | Os indicadores da ficha devem mostrar durações menores que uma hora em minutos (e menores que um minuto em segundos), e "Sem dados ainda" quando a API não informa valor, nunca "0h" | obrigatório |
 
 ### Lista de modelos
@@ -119,16 +119,16 @@ Depois desta entrega:
 | ID | Requisito | Prioridade |
 |---|---|---|
 | RF-10 | Cada cartão da lista de modelos deve mostrar a foto de capa maior que hoje, a descrição como título, o código em fonte monoespaçada e menor, e selo só para o que foge do normal ("Inativo", "Pendência aberta"); o selo "Ativo" não aparece | obrigatório |
-| RF-11 | O cartão inteiro deve abrir o modelo, por toque, clique e teclado, e o texto "Ver detalhes →" deve sair [NECESSITA ESCLARECIMENTO: a mudança vale só para o cartão da lista de operação, ou também para a tabela da lista de administração?] | obrigatório |
+| RF-11 | O cartão inteiro deve abrir o modelo, por toque, clique e teclado, e o texto "Ver detalhes →" deve sair; a mudança vale para os cartões da lista de operação e não altera a tabela da lista de administração | obrigatório |
 
 ### Detalhe da solicitação
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-12 | O resumo deve mostrar status, prioridade, prazo ("vence em 5 h" ou "atrasada há 2 d"), responsáveis, modelo (com link) e quem abriu, com datas em forma relativa ("há 3 h") e a data completa, sem segundos, ao passar o ponteiro ou focar [NECESSITA ESCLARECIMENTO: a API informa só os identificadores de quem abriu e dos responsáveis; como mostrar os nomes sem campo novo?] | obrigatório |
-| RF-13 | O detalhe deve ter uma única ação principal por etapa e perfil, e as demais ações no menu "Mais ações" (spec 011), com "Cancelar", quando existir, separada, em cor de perigo e confirmada [NECESSITA ESCLARECIMENTO: a ação principal de "A fazer" é "Triar", de "Em andamento" é "Enviar para validação" e de "Em validação" é "Encerrar", com "Alterar responsáveis" e "Devolver" no menu?] | obrigatório |
+| RF-12 | O resumo deve mostrar status, prioridade, prazo ("vence em 5 h" ou "atrasada há 2 d"), responsáveis, modelo (com link) e quem abriu, com datas em forma relativa ("há 3 h") e a data completa, sem segundos, ao passar o ponteiro ou focar; a API informa só os identificadores, então os nomes de quem abriu e dos responsáveis vêm da lista de usuários que o front já carrega para os responsáveis disponíveis: com o nome conhecido, mostra o nome; sem ele, mostra "N responsáveis" no lugar dos responsáveis e omite a linha de quem abriu | obrigatório |
+| RF-13 | O detalhe deve ter uma única ação principal por etapa e perfil, e as demais ações no menu "Mais ações" (spec 011): "Triar" é a principal em "A fazer", "Enviar para validação" em "Em andamento" e "Encerrar" em "Em validação"; "Alterar responsáveis" e "Devolver" ficam no menu; "Cancelar", quando existir, fica no fim do menu, separada, em cor de perigo e confirmada | obrigatório |
 | RF-14 | O histórico da solicitação deve ser uma linha do tempo do mais recente para o mais antigo, agrupada por dia ("Hoje", "Ontem", a data), em que a mudança de status mostra os dois estados como selos, o autor aparece com iniciais e nome uma vez por evento, a hora aparece em forma relativa com a completa ao passar o ponteiro, o comentário aparece como balão com o texto em destaque e os eventos automáticos (atribuição, mudança de status) têm menos peso que comentários e evidências | obrigatório |
-| RF-15 | Numa linha do tempo longa, os eventos mais antigos devem ficar recolhidos atrás de "Mostrar N eventos anteriores" [NECESSITA ESCLARECIMENTO: a partir de quantos eventos recolhe, e quantos ficam visíveis?] | obrigatório |
+| RF-15 | Numa linha do tempo longa, os eventos mais antigos devem ficar recolhidos atrás de "Mostrar N eventos anteriores": com mais de 10 eventos, ficam visíveis os 10 mais recentes; com 10 ou menos, todos | obrigatório |
 | RF-16 | O campo de comentário deve ficar junto da linha do tempo, ao alcance sem rolar até o fim da página, e só aparecer enquanto a solicitação pode receber comentário | obrigatório |
 | RF-17 | "Voltar" deve levar à tela de onde o usuário veio, e ao quadro de solicitações quando não houver tela anterior | obrigatório |
 
@@ -205,10 +205,23 @@ Funcionalidade: Modelos e linha do tempo
     Quando a tela carrega
     Então o cabeçalho mostra "Editar" como ação principal e o botão "Mais ações"
 
-  Cenário: Ir direto ao histórico
+  Cenário: Abas Resumo e Histórico
     Dado a ficha de um modelo
-    Quando o usuário escolhe "Histórico"
-    Então o histórico fica à vista sem rolar por todo o conteúdo anterior
+    Quando a ficha abre
+    Então existem as abas "Resumo" e "Histórico", com "Resumo" aberta
+    E escolher "Histórico" troca o conteúdo pela linha do tempo, na mesma página
+    Mas não existe uma aba "Solicitações"
+
+  Cenário: Adicionar foto junto da foto
+    Dado a ficha de um modelo aberta por quem pode gerenciar as fotos
+    Quando a ficha abre
+    Então o botão "Adicionar foto" aparece junto das miniaturas
+    Mas não aparece no menu "Mais ações"
+
+  Cenário: Sem permissão para fotos
+    Dado a ficha de um modelo aberta por quem não pode gerenciar as fotos
+    Quando a ficha abre
+    Então o botão "Adicionar foto" não aparece
 
   Cenário: Histórico único do modelo
     Dado um modelo com uma solicitação concluída que gerou um evento
@@ -216,6 +229,12 @@ Funcionalidade: Modelos e linha do tempo
     Então a solicitação aparece uma vez
     E ela leva à solicitação
     Mas não aparece também numa segunda lista
+
+  Cenário: Solicitação sem evento no histórico
+    Dado um modelo com uma solicitação aberta que ainda não gerou evento
+    Quando o usuário abre o histórico da ficha
+    Então a abertura da solicitação aparece com o status dela
+    E leva à solicitação
 
   Cenário: Histórico do mais recente para o mais antigo
     Dado um modelo com eventos de três dias diferentes
@@ -263,6 +282,17 @@ Funcionalidade: Modelos e linha do tempo
     Dado uma solicitação em andamento, com prioridade alta, responsável e prazo
     Quando o usuário abre o detalhe
     Então o resumo mostra status, prioridade, prazo, responsáveis, modelo com link e quem abriu
+
+  Cenário: Nome do responsável conhecido
+    Dado uma solicitação com um responsável que está na lista de responsáveis disponíveis
+    Quando o usuário abre o detalhe
+    Então o resumo mostra o nome do responsável
+
+  Cenário: Nome do responsável desconhecido
+    Dado uma solicitação com dois responsáveis que não estão na lista carregada
+    Quando o usuário abre o detalhe
+    Então o resumo mostra "2 responsáveis"
+    E a linha de quem abriu não aparece se o nome também não é conhecido
 
   Cenário: Prazo vencido
     Dado uma solicitação atrasada há dois dias
@@ -348,15 +378,7 @@ Funcionalidade: Modelos e linha do tempo
 
 ## Ambiguidades
 
-Pontos não resolvidos, marcados no lugar onde faltaram:
-
-1. [NECESSITA ESCLARECIMENTO: "Adicionar foto" fica no menu "Mais ações" ou num botão junto da foto?] (RF-06)
-2. [NECESSITA ESCLARECIMENTO: o conteúdo da ficha se organiza em abas, em âncoras fixas ou em seções recolhíveis?] (RF-07)
-3. [NECESSITA ESCLARECIMENTO: o que entra na linha do tempo do modelo: só os eventos, ou também a abertura de cada solicitação sem evento?] (RF-08)
-4. [NECESSITA ESCLARECIMENTO: a mudança do cartão vale só para a lista de operação, ou também para a tabela da administração?] (RF-11)
-5. [NECESSITA ESCLARECIMENTO: como mostrar os nomes de quem abriu e dos responsáveis, se a API informa só os identificadores?] (RF-12)
-6. [NECESSITA ESCLARECIMENTO: a ação principal por etapa é "Triar", "Enviar para validação" e "Encerrar", com "Alterar responsáveis" e "Devolver" no menu?] (RF-13)
-7. [NECESSITA ESCLARECIMENTO: a partir de quantos eventos a linha do tempo recolhe os antigos, e quantos ficam visíveis?] (RF-15)
+Nenhuma em aberto; as respostas estão em **Esclarecimentos**.
 
 Já decidido, sem pergunta:
 
@@ -377,3 +399,15 @@ Já decidido, sem pergunta:
 - Nenhuma tela de detalhe tem mais de uma ação em destaque.
 - As medições de 1440 × 900 e 390 × 844 passam e ficam guardadas para as próximas specs
   visuais.
+
+## Esclarecimentos
+
+| Pergunta | Resposta do usuário | Data |
+|---|---|---|
+| RF-12: como mostrar os nomes de quem abriu e dos responsáveis, se a API informa só os identificadores? | Resolver pela lista de usuários que o front já carrega (responsáveis disponíveis); sem o nome, "N responsáveis" e a linha de quem abriu some | 2026-10-08 |
+| RF-08: o que entra na linha do tempo única do modelo? | Eventos do modelo e a abertura de cada solicitação, cada uma uma vez | 2026-10-08 |
+| RF-07: como organizar o conteúdo abaixo da identificação? | Duas abas, Resumo e Histórico; a lista de solicitações vira parte do histórico | 2026-10-08 |
+| RF-13: a ação principal por etapa? | "Triar", "Enviar para validação" e "Encerrar"; "Alterar responsáveis" e "Devolver" no menu | 2026-10-08 |
+| RF-06: onde fica "Adicionar foto"? | Botão junto da foto, não no menu | 2026-10-08 |
+| RF-11: a mudança do cartão vale para qual lista? | Só os cartões da lista de operação; a tabela da administração não muda | 2026-10-08 |
+| RF-15: a partir de quantos eventos a linha do tempo recolhe os antigos? | Mais de 10: mostra os 10 mais recentes | 2026-10-08 |
