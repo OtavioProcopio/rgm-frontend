@@ -1,10 +1,11 @@
+import { DIA_MS } from '@/shared/lib/duracao';
+
 import type { SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
 
 /** Quantas solicitações cada coluna do quadro carrega por vez. */
 export const TAMANHO_DO_BLOCO = 20;
 
 const DIAS_DAS_ENCERRADAS = 30;
-const UM_DIA_MS = 86_400_000;
 
 /** Filtros que o usuário escolhe para o quadro inteiro. */
 export type FiltrosDoQuadro = Pick<
@@ -24,8 +25,8 @@ export function colunaLimitadaAos30Dias(status: StatusSolicitacao, quadro: Filtr
  * que entra na chave da consulta, não mude a cada vez que o quadro é desenhado.
  */
 export function inicioDosUltimos30Dias(agora: Date): string {
-  const dia = Math.floor(agora.getTime() / UM_DIA_MS) - DIAS_DAS_ENCERRADAS;
-  return new Date(dia * UM_DIA_MS).toISOString();
+  const dia = Math.floor(agora.getTime() / DIA_MS) - DIAS_DAS_ENCERRADAS;
+  return new Date(dia * DIA_MS).toISOString();
 }
 
 /** Filtros da listagem para um bloco de uma coluna do quadro. */

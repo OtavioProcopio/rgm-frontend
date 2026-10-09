@@ -65,4 +65,128 @@ describe('GaleriaFotoThumb', () => {
     const contagem = within(container).getByText(`+${extras}`);
     expect(contagem.className.split(' ')).toContain('text-on-solid');
   });
+
+  it('deve marcar aria-current e o contorno quando ativa', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} ativa onClick={vi.fn()} />);
+
+    // Act
+    const botao = within(container).getByRole('button');
+
+    // Assert
+    expect(botao.getAttribute('aria-current')).toBe('true');
+    expect(botao.className.split(' ')).toEqual(
+      expect.arrayContaining(['border-accent', 'ring-2', 'ring-accent']),
+    );
+  });
+
+  it('deve omitir aria-current quando não ativa', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    const botao = within(container).getByRole('button');
+
+    // Assert
+    expect(botao.hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('deve mostrar o ícone de imagem indisponível quando a imagem falha', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    fireEvent.error(container.querySelector('img') as HTMLImageElement);
+
+    // Assert
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('svg.lucide-image-off')).not.toBeNull();
+  });
+
+  it('deve mostrar a estrela quando a foto é a capa', () => {
+    // Arrange
+    const capa = { ...foto, principal: true };
+
+    // Act
+    const { container } = render(<GaleriaFotoThumb foto={capa} onClick={vi.fn()} />);
+
+    // Assert
+    expect(container.querySelector('svg.lucide-star')).not.toBeNull();
+  });
+
+  it('deve ocultar a estrela quando a foto não é a capa', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    const estrela = container.querySelector('svg.lucide-star');
+
+    // Assert
+    expect(estrela).toBeNull();
+  });
+
+  it('deve ocultar o +N quando overlayCount não é informado', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    const contagem = within(container).queryByText(/^\+\d+$/);
+
+    // Assert
+    expect(contagem).toBeNull();
+  });
+
+  it('deve nomear o botão pela galeria completa quando overlayCount é informado', () => {
+    // Arrange
+    const { container } = render(
+      <GaleriaFotoThumb foto={foto} overlayCount={5} onClick={vi.fn()} />,
+    );
+
+    // Act
+    const botao = within(container).getByRole('button');
+
+    // Assert
+    expect(botao.getAttribute('aria-label')).toBe('Ver galeria completa (mais 5 fotos)');
+    expect(within(container).getByText('+5')).toBeDefined();
+  });
+
+  it('deve chamar onClick uma vez quando o botão é clicado', async () => {
+    // Arrange
+    const onClick = vi.fn();
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={onClick} />);
+
+    // Act
+    await userEvent.click(within(container).getByRole('button'));
+
+    // Assert
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve não ter outline-none quando renderizada', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} ativa onClick={vi.fn()} />);
+
+    // Act
+    const botao = within(container).getByRole('button');
+
+    // Assert
+    expect(botao.className).not.toContain('outline-none');
+  });
+
+  it('deve animar só sob motion-safe quando renderizada', () => {
+    // Arrange
+    const { container } = render(<GaleriaFotoThumb foto={foto} onClick={vi.fn()} />);
+
+    // Act
+    const classes = Array.from(container.querySelectorAll('*')).flatMap((elemento) =>
+      Array.from(elemento.classList),
+    );
+
+    // Assert
+    const semProtecao = classes.filter(
+      (classe) =>
+        /(^|:)(transition|duration|animate)/.test(classe) && !classe.startsWith('motion-safe:'),
+    );
+    expect(semProtecao).toEqual([]);
+  });
 });

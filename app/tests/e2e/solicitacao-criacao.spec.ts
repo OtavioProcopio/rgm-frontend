@@ -18,7 +18,11 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await apiPost(
       request,
       '/modelos',
-      { codigo: modeloExistenteCodigo, descricao: modeloExistenteDescricao, maquina: MAQUINA_CATALOGO },
+      {
+        codigo: modeloExistenteCodigo,
+        descricao: modeloExistenteDescricao,
+        maquina: MAQUINA_CATALOGO,
+      },
       token,
     );
   });
@@ -110,7 +114,8 @@ test.describe('Solicitação tipo CRIACAO', () => {
 
     // O evento CADASTRO aparece no prontuário do modelo recém-criado.
     await link.click();
-    await expect(page.getByText(codigo)).toBeVisible();
+    await expect(page.getByText(codigo).first()).toBeVisible();
+    await page.getByRole('tab', { name: 'Histórico' }).click();
     await expect(page.getByText('Modelo cadastrado')).toBeVisible();
   });
 
@@ -131,7 +136,8 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await page.click('button:has-text("Abrir solicitação")');
     await expect(page.getByText('A fazer')).toBeVisible();
 
-    await page.click('button:has-text("Cancelar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Cancelar' }).click();
     await page.locator('textarea[name="comentario"]').first().fill('Não precisa mais');
     await page.click('button:has-text("Cancelar solicitação")');
 
@@ -190,12 +196,15 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await page.selectOption('select[name="tipo"]', 'REPARO');
     await page.getByLabel('Modelo', { exact: true }).click();
     await page
-      .getByRole('button', { name: new RegExp(`${modeloExistenteCodigo} - ${modeloExistenteDescricao}`) })
+      .getByRole('button', {
+        name: new RegExp(`${modeloExistenteCodigo} - ${modeloExistenteDescricao}`),
+      })
       .click();
     await page.click('button:has-text("Abrir solicitação")');
     await expect(page.getByText('A fazer')).toBeVisible();
 
-    await page.click('button:has-text("Editar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Editar' }).click();
     await expect(page.getByText(/não pode ser alterado/i)).toBeVisible();
     // Não há nenhum <select> de tipo no formulário de edição.
     await expect(page.locator('select[name="tipo"]')).toHaveCount(0);
@@ -223,7 +232,12 @@ test.describe('Solicitação tipo CRIACAO — regressão de bugs corrigidos', ()
       token,
     );
 
-    await apiPatch(request, `/solicitacoes/${sol.id}/cancelar`, { motivo: 'Não precisa mais' }, token);
+    await apiPatch(
+      request,
+      `/solicitacoes/${sol.id}/cancelar`,
+      { motivo: 'Não precisa mais' },
+      token,
+    );
   });
 
   test('métricas do dashboard não quebram com CRIACAO sem modelo (bug real corrigido)', async ({

@@ -35,6 +35,21 @@ export function acoesPermitidas(
   return regraLocal(solicitacao, ator);
 }
 
+function acoesDeQuemGerencia(status: StatusSolicitacao): AcaoSolicitacao[] {
+  const acoes: AcaoSolicitacao[] = [
+    status === 'A_FAZER' ? 'TRIAR' : 'ALTERAR_RESPONSAVEIS',
+    'CANCELAR',
+  ];
+  if (status === 'EM_VALIDACAO') acoes.push('DEVOLVER', 'ENCERRAR');
+  return acoes;
+}
+
+function operadorPodeCancelar(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): boolean {
+  const abriu = !!ator.id && solicitacao.abertaPorUsuarioId === ator.id;
+  const semResponsaveis = solicitacao.responsavelIds.length === 0;
+  return ator.perfil === 'OPERADOR' && solicitacao.status === 'A_FAZER' && abriu && semResponsaveis;
+}
+
 function regraLocal(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): Set<AcaoSolicitacao> {
   const acoes = new Set<AcaoSolicitacao>();
   const { status } = solicitacao;
@@ -43,22 +58,12 @@ function regraLocal(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): Se
   const gerencia = ator.perfil === 'ADMINISTRADOR' || ator.perfil === 'GESTOR';
   const operador = ator.perfil === 'OPERADOR';
   const responsavel = !!ator.id && solicitacao.responsavelIds.includes(ator.id);
-  const abriu = !!ator.id && solicitacao.abertaPorUsuarioId === ator.id;
 
-  if (gerencia) {
-    acoes.add(status === 'A_FAZER' ? 'TRIAR' : 'ALTERAR_RESPONSAVEIS');
-    acoes.add('CANCELAR');
-    if (status === 'EM_VALIDACAO') {
-      acoes.add('DEVOLVER');
-      acoes.add('ENCERRAR');
-    }
-  }
+  if (gerencia) acoesDeQuemGerencia(status).forEach((acao) => acoes.add(acao));
   if (status === 'EM_ANDAMENTO' && (gerencia || (operador && responsavel))) {
     acoes.add('ENVIAR_VALIDACAO');
   }
-  if (operador && status === 'A_FAZER' && abriu && solicitacao.responsavelIds.length === 0) {
-    acoes.add('CANCELAR');
-  }
+  if (operadorPodeCancelar(solicitacao, ator)) acoes.add('CANCELAR');
   return acoes;
 }
 
@@ -110,6 +115,31 @@ export function botoesDeAcao(acoes: ReadonlySet<AcaoSolicitacao>): BotaoDeAcao[]
   return BOTOES.filter(
     (botao) => acoes.has(botao.acao) && !(botao.acao === 'CANCELAR' && acoes.has('ENCERRAR')),
   );
+}
+
+export const PRINCIPAL_POR_STATUS: Partial<Record<StatusSolicitacao, AcaoSolicitacao>> = {
+  A_FAZER: 'TRIAR',
+  EM_ANDAMENTO: 'ENVIAR_VALIDACAO',
+  EM_VALIDACAO: 'ENCERRAR',
+};
+
+export type AcoesSeparadas = { principal: AcaoSolicitacao | null; outras: AcaoSolicitacao[] };
+
+/**
+ * Separa a ação em destaque das demais. A principal é a da etapa; sem ela, só se destaca
+ * a ação que for a única permitida. "Cancelar" some quando há "Encerrar" e fica sempre por último.
+ */
+export function separarAcoes(
+  acoes: ReadonlySet<AcaoSolicitacao>,
+  status: StatusSolicitacao,
+): AcoesSeparadas {
+  const ordenadas = botoesDeAcao(acoes).map((botao) => botao.acao);
+  const daEtapa = PRINCIPAL_POR_STATUS[status];
+  const principal = ordenadas.length === 1 ? ordenadas[0] : (daEtapa ?? null);
+  if (principal === null || !ordenadas.includes(principal)) {
+    return { principal: null, outras: ordenadas };
+  }
+  return { principal, outras: ordenadas.filter((acao) => acao !== principal) };
 }
 
 /** Nome da ação para a tela: rótulo de botão e nome do diálogo. */

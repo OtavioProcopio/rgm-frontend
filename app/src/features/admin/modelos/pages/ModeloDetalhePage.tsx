@@ -4,6 +4,8 @@ import { Link, useParams } from 'react-router';
 import { modelosApi } from '../api/modelosApi';
 
 import { useAuth } from '@/app/providers/authContext';
+import { Abas } from '@/shared/components/Abas/Abas';
+import { Badge } from '@/shared/components/Badge/Badge';
 import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { Card } from '@/shared/components/Card/Card';
@@ -16,24 +18,51 @@ import { cn } from '@/shared/lib/cn';
 import { canManageModelos } from '@/shared/lib/permissions';
 import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
 
-import { SolicitacaoStatusBadge } from '@/features/solicitacoes/components/SolicitacaoStatusBadge';
 import { useResumoDasSolicitacoesDoModelo } from '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
 import { formatDuracao } from '@/features/solicitacoes/lib/solicitacaoMessages';
-import { EventosModeloList } from '../components/EventosModeloList';
 import { GaleriaModelo } from '../components/GaleriaModelo';
+import { HistoricoDoModelo } from '../components/HistoricoDoModelo';
 import { ModeloStatusBadge } from '../components/ModeloStatusBadge';
-import type { ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
+import type { Modelo, ResumoDasSolicitacoesDoModelo } from '../types/modeloTypes';
 import { useDesativarModelo } from '../hooks/useDesativarModelo';
 import { useAtivarModelo } from '../hooks/useAtivarModelo';
 import { useEventosModelo } from '../hooks/useEventosModelo';
 import { useModelo } from '../hooks/useModelo';
 import { getModeloErrorMessage } from '../lib/modeloMessages';
 
+type AcaoDeConfirmacao = 'desativar' | 'ativar';
+type Mutacao = { mutateAsync: (id: string) => Promise<unknown> };
+
 export function ModeloDetalhePage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { data: modelo, error, isLoading } = useModelo(id);
+  const dados = useDadosDoModelo(id);
+  const podeGerenciarFoto = canManageModelos(user?.perfil);
+
+  return (
+    <section>
+      <CabecalhoDoModelo id={id} modelo={modelo} gerencia={Boolean(id) && podeGerenciarFoto} />
+      {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
+      {error ? (
+        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
+      ) : null}
+      {modelo ? (
+        <CorpoDoModelo
+          id={id}
+          modelo={modelo}
+          podeGerenciarFoto={podeGerenciarFoto}
+          dados={dados}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+// ── Dados das abas ───────────────────────────────────────────
+
+function useDadosDoModelo(id: string | undefined) {
   const { data: eventosData } = useEventosModelo(id);
   const { data: solicitacoesPage } = useSolicitacoes(
     { modeloId: id, page: 0, size: 50 },
@@ -44,202 +73,277 @@ export function ModeloDetalhePage() {
     isLoading: carregandoResumo,
     isError: erroNoResumo,
   } = useResumoDasSolicitacoesDoModelo(id);
+  return { eventosData, solicitacoesPage, resumoDasSolicitacoes, carregandoResumo, erroNoResumo };
+}
+
+type DadosDoModelo = ReturnType<typeof useDadosDoModelo>;
+
+// ── Ativar, desativar e exportar ─────────────────────────────
+
+async function executarAcao(mutacao: Mutacao, id: string): Promise<string | null> {
+  try {
+    await mutacao.mutateAsync(id);
+    return null;
+  } catch (mutationError) {
+    return getModeloErrorMessage(mutationError);
+  }
+}
+
+function useConfirmacaoDoModelo(id: string | undefined) {
   const desativarModelo = useDesativarModelo();
   const ativarModelo = useAtivarModelo();
-  const [showConfirm, setShowConfirm] = useState<'desativar' | 'ativar' | null>(null);
+  const [showConfirm, setShowConfirm] = useState<AcaoDeConfirmacao | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const podeGerenciarFoto = canManageModelos(user?.perfil);
 
-  async function handleConfirmAction() {
+  async function confirmar() {
     if (!id || !showConfirm) return;
     setActionError(null);
-    try {
-      if (showConfirm === 'desativar') {
-        await desativarModelo.mutateAsync(id);
-      } else {
-        await ativarModelo.mutateAsync(id);
-      }
-      setShowConfirm(null);
-    } catch (mutationError) {
-      setActionError(getModeloErrorMessage(mutationError));
-      setShowConfirm(null);
-    }
+    setActionError(
+      await executarAcao(showConfirm === 'desativar' ? desativarModelo : ativarModelo, id),
+    );
+    setShowConfirm(null);
   }
 
   const isMutating = desativarModelo.isPending || ativarModelo.isPending;
+  return { showConfirm, setShowConfirm, actionError, confirmar, isMutating };
+}
+
+type ConfirmacaoDoModelo = ReturnType<typeof useConfirmacaoDoModelo>;
+
+function useExportacaoDoModelo(id: string | undefined, modelo: Modelo | undefined) {
   const buscarFicha = () => modelosApi.exportarFicha(id ?? '');
   const nomeDaFicha = () => `ficha-modelo-${modelo?.codigo ?? id}.pdf`;
-  const {
-    exportar,
-    exportando,
-    erro: erroDaExportacao,
-  } = useExportarPdf({
+  const { exportar, exportando, erro } = useExportarPdf({
     buscar: buscarFicha,
     nomeDoArquivo: nomeDaFicha,
   });
-  const gerencia = Boolean(id) && podeGerenciarFoto;
+  return { buscarFicha, nomeDaFicha, exportar, exportando, erro };
+}
 
-  const maisAcoes: AcaoDoMenu[] = [
-    {
-      rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
-      onSelect: exportar,
-      desabilitada: exportando,
-    },
-    ...(modelo?.ativo === true
-      ? [
-          {
-            rotulo: 'Desativar',
-            perigo: true,
-            onSelect: () => setShowConfirm('desativar'),
-            desabilitada: isMutating,
-          },
-        ]
-      : []),
-    ...(modelo?.ativo === false
-      ? [{ rotulo: 'Ativar', onSelect: () => setShowConfirm('ativar'), desabilitada: isMutating }]
-      : []),
-  ];
+type ExportacaoDoModelo = ReturnType<typeof useExportacaoDoModelo>;
+
+function acoesDeAtivacao(
+  ativo: boolean | undefined,
+  ocupado: boolean,
+  pedir: (a: AcaoDeConfirmacao) => void,
+): AcaoDoMenu[] {
+  if (ativo === true) {
+    const desativar = { rotulo: 'Desativar', perigo: true, desabilitada: ocupado };
+    return [{ ...desativar, onSelect: () => pedir('desativar') }];
+  }
+  if (ativo === false) {
+    return [{ rotulo: 'Ativar', onSelect: () => pedir('ativar'), desabilitada: ocupado }];
+  }
+  return [];
+}
+
+function montarMaisAcoes(
+  ficha: ExportacaoDoModelo,
+  confirmacao: ConfirmacaoDoModelo,
+  modelo: Modelo | undefined,
+): AcaoDoMenu[] {
+  const exportar: AcaoDoMenu = {
+    rotulo: ficha.exportando ? 'Exportando...' : 'Exportar PDF',
+    onSelect: ficha.exportar,
+    desabilitada: ficha.exportando,
+  };
+  const { isMutating, setShowConfirm } = confirmacao;
+  return [exportar, ...acoesDeAtivacao(modelo?.ativo, isMutating, setShowConfirm)];
+}
+
+// ── Cabeçalho ────────────────────────────────────────────────
+
+type PropsDoCabecalho = { id: string | undefined; modelo: Modelo | undefined; gerencia: boolean };
+
+function CabecalhoDoModelo({ id, modelo, gerencia }: PropsDoCabecalho) {
+  const confirmacao = useConfirmacaoDoModelo(id);
+  const ficha = useExportacaoDoModelo(id, modelo);
+  const maisAcoes = montarMaisAcoes(ficha, confirmacao, modelo);
 
   return (
-    <section>
+    <>
       <PageHeader
         title="Detalhe do modelo"
         description="Consulte dados, eventos e a galeria de fotos do modelo."
-        actions={
-          gerencia ? (
-            <Link to={`/app/admin/modelos/${id}/editar`}>
-              <Button>Editar</Button>
-            </Link>
-          ) : id ? (
-            <ExportarPdfButton buscar={buscarFicha} nomeDoArquivo={nomeDaFicha} />
-          ) : null
-        }
+        actions={<AcaoPrincipalDoModelo id={id} gerencia={gerencia} ficha={ficha} />}
         maisAcoes={gerencia ? maisAcoes : undefined}
       />
-      {erroDaExportacao && gerencia ? (
-        <div className="mb-4">
-          <ErrorState title="Exportação não concluída" description={erroDaExportacao} />
-        </div>
-      ) : null}
-      {actionError ? (
-        <div className="mb-4">
-          <ErrorState title="Operação não concluída" description={actionError} />
-        </div>
-      ) : null}
-      {showConfirm === 'desativar' ? (
-        <ConfirmDialog
-          title="Desativar modelo"
-          message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
-          confirmLabel="Desativar"
-          variant="danger"
-          isPending={isMutating}
-          onCancel={() => setShowConfirm(null)}
-          onConfirm={handleConfirmAction}
-        />
-      ) : null}
-      {showConfirm === 'ativar' ? (
-        <ConfirmDialog
-          title="Ativar modelo"
-          message={`Deseja ativar o modelo ${modelo?.codigo}?`}
-          confirmLabel="Ativar"
-          variant="warning"
-          isPending={isMutating}
-          onCancel={() => setShowConfirm(null)}
-          onConfirm={handleConfirmAction}
-        />
-      ) : null}
-      {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
-      {error ? (
-        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
-      ) : null}
-      {modelo ? (
-        <div className="space-y-6">
-          <Card className="rounded-md p-5 shadow-none">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-semibold text-fg">
-                {modelo.codigo} v{modelo.versao}
-              </h2>
-              <ModeloStatusBadge ativo={modelo.ativo} />
-            </div>
-            <p className="mt-3 text-fg-muted">{modelo.descricao}</p>
-            <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-              <Detail label="Máquina / Encaixe" value={modelo.maquina} />
-              <Detail
-                label="Tipo do Modelo"
-                value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
-              />
-              <Detail label="Pendência aberta" value={modelo.temPendenciaAberta ? 'Sim' : 'Não'} />
-              <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
-              <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
-            </dl>
-            {modelo.observacoes ? (
-              <p className="mt-5 text-sm text-fg-muted">{modelo.observacoes}</p>
-            ) : null}
-          </Card>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">Galeria de fotos</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Fotos de apresentação e estado atual do modelo. Independente do histórico de
-              evidências — marque uma foto como capa para destacá-la nas listagens.
-            </p>
-            {id ? <GaleriaModelo modeloId={id} podeGerenciar={podeGerenciarFoto} /> : null}
-          </div>
-          <div>
-            <h2 className="mb-1 text-lg font-semibold text-fg">Visão geral das solicitações</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Indicadores consolidados de todos os chamados vinculados a este modelo.
-            </p>
-            {erroNoResumo ? (
-              <p role="alert" className="text-sm text-danger-fg">
-                Não foi possível carregar o resumo das solicitações deste modelo.
-              </p>
-            ) : carregandoResumo || !resumoDasSolicitacoes ? (
-              <p role="status" className="text-sm text-fg-muted">
-                Carregando o resumo das solicitações...
-              </p>
-            ) : (
-              <ModeloDashboard resumo={resumoDasSolicitacoes} />
-            )}
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">Eventos do Modelo</h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Histórico cronológico de modificações físicas, atualizações cadastrais e intervenções
-              concluídas neste modelo.
-            </p>
-            <EventosModeloList eventos={eventosData ?? []} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-fg">
-              Histórico de Solicitações ({solicitacoesPage?.totalElements ?? 0})
-            </h2>
-            <p className="mb-3 text-xs text-fg-muted">
-              Todos os chamados de manutenção e ordens de serviço (ativos no Kanban ou já
-              encerrados) vinculados a este modelo.
-            </p>
-            {solicitacoesPage?.content?.length ? (
-              <ul className="divide-y divide-line rounded-md border border-line">
-                {solicitacoesPage.content.map((s) => (
-                  <li key={s.id}>
-                    <Link
-                      to={`/app/solicitacoes/${s.id}`}
-                      className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-muted"
-                    >
-                      <span className="text-sm font-medium text-fg">{s.titulo}</span>
-                      <SolicitacaoStatusBadge status={s.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-fg-muted">
-                Nenhuma solicitação registrada para este modelo.
-              </p>
-            )}
-          </div>
-        </div>
-      ) : null}
-    </section>
+      <ErroDoModelo titulo="Exportação não concluída" mensagem={gerencia ? ficha.erro : null} />
+      <ErroDoModelo titulo="Operação não concluída" mensagem={confirmacao.actionError} />
+      <DialogosDoModelo codigo={modelo?.codigo} confirmacao={confirmacao} />
+    </>
+  );
+}
+
+type PropsDaAcaoPrincipal = {
+  id: string | undefined;
+  gerencia: boolean;
+  ficha: ExportacaoDoModelo;
+};
+
+function AcaoPrincipalDoModelo({ id, gerencia, ficha }: PropsDaAcaoPrincipal) {
+  if (gerencia) {
+    return (
+      <Link to={`/app/admin/modelos/${id}/editar`}>
+        <Button>Editar</Button>
+      </Link>
+    );
+  }
+  if (!id) return null;
+  return <ExportarPdfButton buscar={ficha.buscarFicha} nomeDoArquivo={ficha.nomeDaFicha} />;
+}
+
+function ErroDoModelo({ titulo, mensagem }: { titulo: string; mensagem: string | null }) {
+  if (!mensagem) return null;
+  return (
+    <div className="mb-4">
+      <ErrorState title={titulo} description={mensagem} />
+    </div>
+  );
+}
+
+type PropsDosDialogos = { codigo: string | undefined; confirmacao: ConfirmacaoDoModelo };
+
+function DialogosDoModelo({ codigo, confirmacao }: PropsDosDialogos) {
+  const { showConfirm, setShowConfirm, confirmar, isMutating } = confirmacao;
+  const comum = {
+    isPending: isMutating,
+    onCancel: () => setShowConfirm(null),
+    onConfirm: confirmar,
+  };
+  if (showConfirm === 'desativar') return <DialogoDeDesativar {...comum} />;
+  if (showConfirm === 'ativar') return <DialogoDeAtivar codigo={codigo} {...comum} />;
+  return null;
+}
+
+type PropsDoDialogo = { isPending: boolean; onCancel: () => void; onConfirm: () => void };
+
+function DialogoDeDesativar(props: PropsDoDialogo) {
+  return (
+    <ConfirmDialog
+      title="Desativar modelo"
+      message="Modelos inativos não devem ser usados em novas solicitações. Deseja continuar?"
+      confirmLabel="Desativar"
+      variant="danger"
+      {...props}
+    />
+  );
+}
+
+function DialogoDeAtivar({ codigo, ...props }: PropsDoDialogo & { codigo: string | undefined }) {
+  return (
+    <ConfirmDialog
+      title="Ativar modelo"
+      message={`Deseja ativar o modelo ${codigo}?`}
+      confirmLabel="Ativar"
+      variant="warning"
+      {...props}
+    />
+  );
+}
+
+// ── Corpo (grade e abas) ─────────────────────────────────────
+
+type PropsDoCorpo = {
+  id: string | undefined;
+  modelo: Modelo;
+  podeGerenciarFoto: boolean;
+  dados: DadosDoModelo;
+};
+
+function CorpoDoModelo({ id, modelo, podeGerenciarFoto, dados }: PropsDoCorpo) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+        {id ? (
+          <GaleriaModelo modeloId={id} codigo={modelo.codigo} podeGerenciar={podeGerenciarFoto} />
+        ) : null}
+        <IdentificacaoDoModelo modelo={modelo} />
+      </div>
+      <Abas
+        rotulo="Detalhes do modelo"
+        abas={[abaDeResumo(modelo, dados), abaDeHistorico(dados)]}
+      />
+    </div>
+  );
+}
+
+function abaDeResumo(modelo: Modelo, dados: DadosDoModelo) {
+  const conteudo = (
+    <ResumoDoModelo
+      observacoes={modelo.observacoes}
+      resumo={dados.resumoDasSolicitacoes}
+      carregando={dados.carregandoResumo}
+      comErro={dados.erroNoResumo}
+    />
+  );
+  return { id: 'resumo', rotulo: 'Resumo', conteudo };
+}
+
+function abaDeHistorico({ eventosData, solicitacoesPage }: DadosDoModelo) {
+  const conteudo = (
+    <HistoricoDoModelo
+      eventos={eventosData ?? []}
+      solicitacoes={solicitacoesPage?.content ?? []}
+      totalDeSolicitacoes={solicitacoesPage?.totalElements}
+    />
+  );
+  return { id: 'historico', rotulo: 'Histórico', conteudo };
+}
+
+function IdentificacaoDoModelo({ modelo }: { modelo: Modelo }) {
+  return (
+    <Card className="rounded-md p-5 shadow-none lg:self-start">
+      <h2 className="text-2xl font-semibold text-fg">
+        <span className="font-mono">{modelo.codigo}</span> v{modelo.versao}
+      </h2>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <ModeloStatusBadge ativo={modelo.ativo} />
+        {modelo.temPendenciaAberta ? <Badge variant="warning">Pendência aberta</Badge> : null}
+      </div>
+      <p className="mt-3 text-fg-muted">{modelo.descricao}</p>
+      <DadosDoModelo modelo={modelo} />
+    </Card>
+  );
+}
+
+function DadosDoModelo({ modelo }: { modelo: Modelo }) {
+  return (
+    <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+      <Detail label="Máquina / Encaixe" value={modelo.maquina} />
+      <Detail
+        label="Tipo do Modelo"
+        value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
+      />
+      <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
+      <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />
+    </dl>
+  );
+}
+
+type ResumoDoModeloProps = {
+  observacoes?: string | null;
+  resumo?: ResumoDasSolicitacoesDoModelo;
+  carregando: boolean;
+  comErro: boolean;
+};
+
+function ResumoDoModelo({ observacoes, resumo, carregando, comErro }: ResumoDoModeloProps) {
+  return (
+    <div className="space-y-6">
+      {observacoes ? <p className="text-sm text-fg-muted">{observacoes}</p> : null}
+      {comErro ? (
+        <p role="alert" className="text-sm text-danger-fg">
+          Não foi possível carregar o resumo das solicitações deste modelo.
+        </p>
+      ) : carregando || !resumo ? (
+        <p role="status" className="text-sm text-fg-muted">
+          Carregando o resumo das solicitações...
+        </p>
+      ) : (
+        <ModeloDashboard resumo={resumo} />
+      )}
+    </div>
   );
 }
 
@@ -255,18 +359,20 @@ function ModeloDashboard({ resumo }: { resumo: ResumoDasSolicitacoesDoModelo }) 
       <KpiCard label="Taxa de sucesso" value={`${taxaSucesso}%`} tom="destaque" />
       <KpiCard
         label="Tempo médio de resolução"
-        value={
-          tempoMedioResolucaoSegundos != null ? formatDuracao(tempoMedioResolucaoSegundos) : '—'
-        }
+        value={duracaoOuVazio(tempoMedioResolucaoSegundos)}
         tom="neutro"
       />
       <KpiCard
         label="Intervalo médio entre solicitações"
-        value={intervaloMedioSegundos != null ? formatDuracao(intervaloMedioSegundos) : '—'}
+        value={duracaoOuVazio(intervaloMedioSegundos)}
         tom="neutro"
       />
     </div>
   );
+}
+
+function duracaoOuVazio(segundos: number | null | undefined): string {
+  return segundos != null ? formatDuracao(segundos) : 'Sem dados ainda';
 }
 
 const TONS_DO_INDICADOR = {

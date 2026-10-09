@@ -1,4 +1,12 @@
-import { test, expect, apiPost, apiPatch, apiGet, apiAnexarServicoRealizado, MAQUINA_CATALOGO } from './fixtures';
+import {
+  test,
+  expect,
+  apiPost,
+  apiPatch,
+  apiGet,
+  apiAnexarServicoRealizado,
+  MAQUINA_CATALOGO,
+} from './fixtures';
 
 const ts = () => Date.now();
 
@@ -30,7 +38,11 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     responsavelId = responsavel?.id ?? '';
   });
 
-  async function criarSolicitacao(request: Parameters<typeof apiPost>[0], token: string, titulo: string) {
+  async function criarSolicitacao(
+    request: Parameters<typeof apiPost>[0],
+    token: string,
+    titulo: string,
+  ) {
     const sol = await apiPost<{ id: string }>(
       request,
       '/solicitacoes',
@@ -41,14 +53,21 @@ test.describe('Fluxo Kanban — Solicitações', () => {
   }
 
   async function triar(request: Parameters<typeof apiPatch>[0], token: string, id: string) {
-    await apiPatch(request, `/solicitacoes/${id}/triar`, { prioridade: 'MEDIA', responsavelIds: [responsavelId] }, token);
+    await apiPatch(
+      request,
+      `/solicitacoes/${id}/triar`,
+      { prioridade: 'MEDIA', responsavelIds: [responsavelId] },
+      token,
+    );
   }
 
   async function selecionarModeloNoCombobox(page: import('@playwright/test').Page) {
     // O seletor busca na API pelo código: digita o código para o modelo do teste aparecer.
     await page.getByLabel('Modelo', { exact: true }).click();
     await page.getByLabel('Modelo', { exact: true }).pressSequentially(modeloCodigo);
-    await page.getByRole('button', { name: new RegExp(`${modeloCodigo} - ${modeloDescricao}`) }).click();
+    await page
+      .getByRole('button', { name: new RegExp(`${modeloCodigo} - ${modeloDescricao}`) })
+      .click();
   }
 
   /** Escopo do modal "Enviar para validação" — a página também tem seu próprio uploader de evidências. */
@@ -99,7 +118,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.locator('input[name="responsavelIds"]').first().check();
     await page.click('button:has-text("Confirmar triagem")');
 
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
   });
 
   test('envio para validação: EM_ANDAMENTO → EM_VALIDACAO (exige evidência para REENGENHARIA)', async ({
@@ -121,7 +140,9 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     const enviar = modal.getByRole('button', { name: 'Enviar para validação' });
     await expect(enviar).toBeDisabled();
 
-    await modal.locator('textarea[name="comentario"]').fill('Serviço realizado conforme solicitado');
+    await modal
+      .locator('textarea[name="comentario"]')
+      .fill('Serviço realizado conforme solicitado');
     await modal.locator('input[type="file"]').setInputFiles({
       name: 'servico.png',
       mimeType: 'image/png',
@@ -131,7 +152,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await expect(enviar).toBeEnabled();
     await enviar.click();
 
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
   });
 
   test('devolver: EM_VALIDACAO → EM_ANDAMENTO', async ({ page, loginAdmin, request, token }) => {
@@ -146,14 +167,15 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     );
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
-    await page.click('button:has-text("Devolver")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Devolver' }).click();
     await expect(page.getByText('Devolver solicitação')).toBeVisible();
     await page.fill('textarea[name="motivo"]', 'Falta ajuste antes de validar');
     await page.click('button:has-text("Confirmar devolução")');
 
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
   });
 
   test('concluir: EM_VALIDACAO → CONCLUIDA', async ({ page, loginAdmin, request, token }) => {
@@ -168,7 +190,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     );
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
     await page.click('button:has-text("Encerrar")');
     await page.locator('textarea[name="comentario"]').first().fill('Concluído via Playwright');
@@ -182,7 +204,8 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await triar(request, token, id);
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await page.click('button:has-text("Cancelar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Cancelar' }).click();
     await page.locator('textarea[name="comentario"]').first().fill('Cancelado via Playwright');
     await page.click('button:has-text("Cancelar solicitação")');
 
@@ -216,7 +239,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.selectOption('select[name="prioridade"]', 'URGENTE');
     await page.locator('input[name="responsavelIds"]').first().check();
     await page.click('button:has-text("Confirmar triagem")');
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
 
     // Validação (com evidência, exigida para REENGENHARIA)
     await page.click('button:has-text("Enviar para validação")');
@@ -229,7 +252,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     });
     await expect(page.getByText('Evidência anexada com sucesso')).toBeVisible({ timeout: 15000 });
     await modal.getByRole('button', { name: 'Enviar para validação' }).click();
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
     // Conclusão
     await page.click('button:has-text("Encerrar")');

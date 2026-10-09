@@ -1,18 +1,31 @@
+import { DIA_MS, formatarDuracao } from '@/shared/lib/duracao';
+
 import type { Solicitacao } from '../types/solicitacaoTypes';
 
 export type TomDoPrazo = 'neutro' | 'atencao' | 'atraso' | 'ok';
 
 export type SituacaoDoPrazo = { tom: TomDoPrazo; rotulo: string };
 
-const MINUTO_MS = 60_000;
-const HORA_MS = 60 * MINUTO_MS;
-const DIA_MS = 24 * HORA_MS;
+/** Prazo ausente, malformado ou de solicitação cancelada: não há o que mostrar. */
+function semPrazoParaMostrar(solicitacao: Solicitacao): boolean {
+  const { status, prazoLimite } = solicitacao;
+  if (status === 'CANCELADA' || !prazoLimite) return true;
+  return Number.isNaN(Date.parse(prazoLimite));
+}
 
-/** Minutos abaixo de 1 hora, horas abaixo de 48 horas, dias a partir daí. */
-export function formatarDuracao(ms: number): string {
-  if (ms < HORA_MS) return `${Math.max(1, Math.floor(ms / MINUTO_MS))} min`;
-  if (ms < 2 * DIA_MS) return `${Math.floor(ms / HORA_MS)} h`;
-  return `${Math.floor(ms / DIA_MS)} d`;
+function prazoDaConcluida(atrasada: boolean | undefined): SituacaoDoPrazo {
+  return atrasada ? { tom: 'atraso', rotulo: 'Fora do prazo' } : { tom: 'ok', rotulo: 'No prazo' };
+}
+
+function atrasadaHa(restanteMs: number): SituacaoDoPrazo {
+  return { tom: 'atraso', rotulo: `Atrasada há ${formatarDuracao(-restanteMs)}` };
+}
+
+function venceEm(restanteMs: number, totalMs: number): SituacaoDoPrazo {
+  return {
+    tom: restanteMs <= totalMs / 4 ? 'atencao' : 'neutro',
+    rotulo: `Vence em ${formatarDuracao(restanteMs)}`,
+  };
 }
 
 /**
@@ -20,26 +33,33 @@ export function formatarDuracao(ms: number): string {
  * `atrasada`). Sem esses dados não há selo: o prazo não é recalculado na tela.
  */
 export function situacaoDoPrazo(solicitacao: Solicitacao, agoraMs: number): SituacaoDoPrazo | null {
-  const { status, prazoLimite, atrasada } = solicitacao;
-  if (status === 'CANCELADA' || !prazoLimite) return null;
+  if (semPrazoParaMostrar(solicitacao)) return null;
+  if (solicitacao.status === 'CONCLUIDA') return prazoDaConcluida(solicitacao.atrasada);
 
-  if (status === 'CONCLUIDA') {
-    return atrasada ? { tom: 'atraso', rotulo: 'Fora do prazo' } : { tom: 'ok', rotulo: 'No prazo' };
-  }
-
-  const prazoMs = Date.parse(prazoLimite);
+  const prazoMs = Date.parse(solicitacao.prazoLimite as string);
   const restanteMs = prazoMs - agoraMs;
-  if (restanteMs <= 0) {
-    return { tom: 'atraso', rotulo: `Atrasada há ${formatarDuracao(-restanteMs)}` };
-  }
-  if (atrasada) return { tom: 'atraso', rotulo: 'Atrasada' };
+  if (restanteMs <= 0) return atrasadaHa(restanteMs);
+  if (solicitacao.atrasada) return { tom: 'atraso', rotulo: 'Atrasada' };
 
   const totalMs = prazoMs - Date.parse(solicitacao.criadaEm);
   if (restanteMs > totalMs / 2) return null;
-  return {
-    tom: restanteMs <= totalMs / 4 ? 'atencao' : 'neutro',
-    rotulo: `Vence em ${formatarDuracao(restanteMs)}`,
-  };
+  return venceEm(restanteMs, totalMs);
+}
+
+/**
+ * O prazo no resumo da solicitação: diferente do card, aparece sempre que a API informa
+ * `prazoLimite`, mesmo com muito prazo restante.
+ */
+export function prazoDoResumo(solicitacao: Solicitacao, agoraMs: number): SituacaoDoPrazo | null {
+  if (semPrazoParaMostrar(solicitacao)) return null;
+  if (solicitacao.status === 'CONCLUIDA') return prazoDaConcluida(solicitacao.atrasada);
+
+  const prazoMs = Date.parse(solicitacao.prazoLimite as string);
+  const restanteMs = prazoMs - agoraMs;
+  if (restanteMs <= 0) return atrasadaHa(restanteMs);
+  if (solicitacao.atrasada) return { tom: 'atraso', rotulo: 'Atrasada' };
+
+  return venceEm(restanteMs, prazoMs - Date.parse(solicitacao.criadaEm));
 }
 
 /** Dias inteiros desde a abertura; nulo em solicitação encerrada, que não envelhece mais. */

@@ -52,7 +52,61 @@ describe('solicitacaoMessages', () => {
   it('formatDuracao shows hours when under 24h', () => {
     expect(formatDuracao(3600)).toBe('1h');
     expect(formatDuracao(7200)).toBe('2h');
-    expect(formatDuracao(0)).toBe('0h');
+  });
+
+  it('deve mostrar minutos quando a duração é de 12 minutos', () => {
+    // Arrange
+    const segundos: number = 12 * 60;
+
+    // Act
+    const texto: string = formatDuracao(segundos);
+
+    // Assert
+    expect(texto).toBe('12 min');
+  });
+
+  it('deve mostrar segundos quando a duração é de 45 segundos', () => {
+    // Arrange
+    const segundos: number = 45;
+
+    // Act
+    const texto: string = formatDuracao(segundos);
+
+    // Assert
+    expect(texto).toBe('45 s');
+  });
+
+  it('deve mostrar "0 s" quando a duração é zero', () => {
+    // Arrange
+    const segundos: number = 0;
+
+    // Act
+    const texto: string = formatDuracao(segundos);
+
+    // Assert
+    expect(texto).toBe('0 s');
+  });
+
+  it('deve mostrar 59 min quando a duração é de 3599 segundos', () => {
+    // Arrange
+    const segundos: number = 3599;
+
+    // Act
+    const texto: string = formatDuracao(segundos);
+
+    // Assert
+    expect(texto).toBe('59 min');
+  });
+
+  it('deve mostrar 1h quando a duração é de 3600 segundos', () => {
+    // Arrange
+    const segundos: number = 3600;
+
+    // Act
+    const texto: string = formatDuracao(segundos);
+
+    // Assert
+    expect(texto).toBe('1h');
   });
 
   it('formatDuracao shows days and hours when 24h or more', () => {
