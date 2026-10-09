@@ -92,8 +92,8 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 - [x] T047 [P] Acrescentar as linhas desta feature à tabela de `openspec/README.md`
 - [x] T048 Medição "depois" com `medir012.cjs` na branch e comparação com a T001: RNF-01, RNF-02, RNF-03, RNF-04, RNF-07, RNF-12, mais toque, foco e contraste dos elementos novos (RNF-05, RNF-06) e capturas da ficha (com foto, sem foto, em 390 px), do cartão da lista e do detalhe da solicitação nos dois temas; registrar na convergência
 - [x] T049 Rodar a feature contra o backend de `develop` (ambiente local): ficha com foto e abas, histórico único, detalhe com ação principal e menu, comentário e "Voltar", e a suíte `make e2e`; registrar na convergência
-- [ ] T050 `make cover-arquivos ARQUIVOS="<todos os arquivos de src/ alterados ou criados>"` com 95% em cada um (RNF-09) e `app/package.json` sem pacote novo (RNF-10)
-- [ ] T051 `make validate` verde
+- [x] T050 `make cover-arquivos ARQUIVOS="<todos os arquivos de src/ alterados ou criados>"` com 95% em cada um (RNF-09) e `app/package.json` sem pacote novo (RNF-10)
+- [x] T051 `make validate` verde
 
 ## Cenários da spec × teste
 
@@ -191,3 +191,89 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 > Seção **append-only**, escrita por `/bu:converge`. Cada rodada acrescenta um bloco;
 > nada é reescrito.
+
+### Rodada 1 — 2026-10-09
+
+Verificação em `feat/modelos-e-linha-do-tempo`. **`make validate`, saída real:** `178 passed`
+arquivos, `2504 passed` testes, cobertura 99,87% de instruções, 99,67% de ramos, 100% de
+funções, 99,85% de linhas, lint com 0 erros (1 aviso antigo em `NovaSolicitacaoPage.tsx`),
+typecheck limpo, build ok, saída 0. **`make cover-arquivos` nos 23 arquivos de `src/`
+alterados:** saída 0, 99,81% de instruções, 98,51% de ramos, 100% de funções e de linhas, nenhum
+arquivo abaixo de 95% (o pior é `NovoModeloPage` depois de sair uma guarda morta; `ModeloDetalhePage`
+com 95,31% de ramos e `LinhaDoTempo` com 95,45% são os mais apertados). `app/package.json` e
+`package-lock.json` sem diferença contra `946342a`. **e2e contra o backend de `develop`:**
+rodada completa com 42 passando e 6 falhando; cinco das falhas eram roteiros presos ao desenho
+antigo (status duplicado como selo no histórico, histórico agora na aba "Histórico") e foram
+corrigidas e reexecutadas por arquivo (`kanban` 9, `rastreabilidade` 3, `solicitacao-criacao` 8,
+todos passando); a sexta é `evidencias.spec.ts:78`, a issue #138, anterior a esta feature.
+Medições antes (`946342a`) e depois, em 1440 × 900 e 390 × 844, com backend real, em
+`/root/rgm/evidencias/012-frontend/` (`antes.json`, `depois.json`, `medir012.cjs`,
+`medir012b.cjs`, `capturas-finais/`).
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01 | realizado | `GaleriaModelo.tsx` (foto `aspect-[4/3]` em largura total da coluna) e `ModeloDetalhePage.tsx` (grade `lg:grid-cols-[5fr_4fr]`); medição: foto de 78 × 78 px para 596 × 447 px (54% da largura útil), e 358 × 269 px (100%) no celular |
+| RF-02 | realizado | `GaleriaModelo.test.tsx` (sem fotos: duas letras do `codigo`); `NovoModeloPage` passa `codigo` |
+| RF-03 | realizado | `GaleriaFotoThumb.tsx` (`ativa`, `aria-current`), `GaleriaModelo.tsx` (escolher troca, foto grande abre o carrossel); testes de troca, de "+N" e de ampliar |
+| RF-04 | realizado | `ModeloDetalhePage.tsx` (`IdentificacaoDoModelo`: código `font-mono`, versão, selos, descrição); teste de identificação; captura `ficha-1440-light.png` |
+| RF-05 | realizado | `DadosDoModelo` em grade de duas colunas; "Pendência aberta" virou selo; teste de dados |
+| RF-06 | realizado | "Editar" principal e "Mais ações" (spec 011); "Adicionar foto" junto das miniaturas em `GaleriaModelo.tsx`, só com permissão; testes de permissão |
+| RF-07 | realizado | `Abas.tsx` (`role=tablist`, `tab`, `tabpanel`); `ModeloDetalhePage.tsx` com "Resumo" e "Histórico" e nenhuma aba "Solicitações"; medição lista `["Resumo","Histórico"]` |
+| RF-08 | realizado | `historicoDoModelo.ts` (evento cobre a solicitação; sem evento vira abertura), `HistoricoDoModelo.tsx`, `LinhaDoTempo.tsx`; medição: 10 datas do mais recente ao mais antigo |
+| RF-09 | realizado | `solicitacaoMessages.ts` (`formatDuracao`: "N s", "N min"), `ModeloDetalhePage.tsx` ("Sem dados ainda"); captura mostra "2 s" e "3 s" no lugar de "0h" |
+| RF-10 | realizado | `ModeloCard.tsx` (foto 4:3, descrição como título, código `font-mono`, selos só "Inativo" e "Pendência aberta"); `ModeloCard.test.tsx`; captura `lista-modelos-1440-light.png` |
+| RF-11 | realizado | `ModeloCard.tsx` (cartão inteiro é `Link`, `h-full`; sem "Ver detalhes"); teste de Enter; tabela da administração não alterada |
+| RF-12 | realizado | `SolicitacaoResumo.tsx` (prazo por `prazoDoResumo`, responsáveis, quem abriu, horário relativo), `nomesDosUsuarios.ts`; captura mostra "Vence em 37 h", "Aberta por Administrador há 34 h" |
+| RF-13 | realizado | `acoesSolicitacao.ts` (`separarAcoes`), `useAcoesDoCabecalho.ts`, `SolicitacaoDetalhePage.tsx`; medição: cabeçalho de `["Editar","Voltar"]` para `["Encerrar","Mais ações"]` e botões de ação no corpo de 3 para 0 |
+| RF-14 | realizado | `historicoDaSolicitacao.ts`, `SolicitacaoTimeline.tsx`, `LinhaDoTempo.tsx`; captura mostra grupo por dia, selos "Em andamento → Em validação", balão de comentário, iniciais e nome |
+| RF-15 | realizado | `linhaDoTempo.ts` (`recolher`, `LIMITE_VISIVEL = 10`), `LinhaDoTempo.tsx` (controle que fica e vira "Mostrar menos"); medição: 13 atividades mostram 10 |
+| RF-16 | realizado | `SolicitacaoTimeline.tsx` (`formulario` antes da linha do tempo); medição `comentarioAcima=true` em 390 px |
+| RF-17 | realizado | `useVoltar.ts`; "Voltar" acima do título, fora do cabeçalho de ações (medição: `Voltar no cabeçalho: false`) |
+| RF-18 | realizado | `GaleriaModelo.tsx` (`GaleriaErro` com "Tentar novamente" que chama `refetch`), `GaleriaFotoThumb.tsx` (ícone de imagem indisponível); testes de erro, de imagem que falha e de novo teste de falha de cada ação |
+| RF-19 | realizado | `Abas.tsx` (setas, Home, End), `LinhaDoTempo.tsx` (botão que fica; `<time>` com `title` e `sr-only`; horário acionável por toque); testes de teclado e de data completa |
+| RNF-01 | realizado | medição: foto de 596 px é 54% da largura útil em 1440 × 900 e 100% em 390 × 844, acima da primeira dobra; o cartão de identificação deixou de esticar (`lg:self-start`), sem vazio ao lado |
+| RNF-02 | realizado | `medir012b.cjs`: status, prazo, responsáveis e ação principal abaixo de 299 px (de 900) em 1440 e de 415 px (de 844) em 390; foto, código, selos e "Editar" acima da dobra |
+| RNF-03 | realizado | medição: detalhe da solicitação em validação com `["Encerrar","Mais ações"]`; ficha com `["Editar","Mais ações"]` |
+| RNF-04 | realizado | medição: coluna do histórico de 1096 px para 720 px (1440) e 358 px (390); 13 eventos legíveis sem rolagem horizontal |
+| RNF-05 | realizado | `medir012b.cjs` em 390 px com toque: 4 controles abaixo de 44 px, todos da seção de evidências ("Abrir" e "Excluir evidência"), que a spec manda não mexer; 0 controles novos (o título de evento que é link foi corrigido: `pointer-coarse:min-h-11`); contorno de foco global mantido (`outline-none` e `ring-accent` proibidos por teste) |
+| RNF-06 | realizado | `medir012b.cjs`: 0 textos abaixo do limite de contraste em 83, 62 e 46 textos das três telas, nos dois temas, em 1440 e 390 px |
+| RNF-07 | realizado | medição: no máximo 1 nível de moldura nas três telas, nos dois tamanhos |
+| RNF-08 | realizado | `ModeloDetalhePage.test.tsx` confere máquina, tipo, criado, atualizado, observações, selos e indicadores; nenhum dado de hoje removido |
+| RNF-09 | realizado | `make cover-arquivos`: saída 0 nos 23 arquivos |
+| RNF-10 | realizado | `git diff 946342a -- app/package.json app/package-lock.json` vazio |
+| RNF-11 | realizado | nenhum `*Api.ts` nem contrato tocado; `responsaveis` e `abertaPorNome` são opcionais, com reserva "N responsáveis" e linha omitida |
+| RNF-12 | realizado | medição: histórico do modelo do mais recente ao mais antigo (antes: `false`; depois: `true`); `linhaDoTempo.test.ts` cobre a ordem dentro do dia |
+| RNF-13 | realizado | testes de `motion-safe` em `LinhaDoTempo`, `Abas`, `GaleriaFotoThumb` e `GaleriaModelo`; a miniatura perdeu `transition-transform` solto |
+
+**Tarefas acrescentadas e achados do caminho (todos tratados nesta rodada):**
+`GaleriaFotoThumb` animava a miniatura fora de `motion-safe` (corrigido, RNF-13); o link do título
+na linha do tempo tinha 16 px de altura no toque (corrigido, RNF-05); `SolicitacaoTimeline` repetia a
+região "Histórico de atividades" (corrigido); `NovoModeloPage` também chamava a galeria e foi
+ajustada para passar `codigo`; o cartão de identificação esticava até a altura da foto
+(`lg:self-start`); os cartões da lista ficavam com alturas diferentes (`h-full`);
+`prazoSolicitacao.ts` tinha tipo incorreto em `prazoDaConcluida`, achado pelo typecheck; uma
+guarda morta de `NovoModeloPage` saiu para fechar 95% de ramos; roteiros e2e atualizados.
+
+**Excesso de escopo (registrado, nenhum viola o Fora de escopo):** os ajustes de
+`NovoModeloPage` (passar `codigo` e a guarda morta) e do cartão de identificação; nenhum
+indicador, dado ou endpoint novo foi criado.
+
+**Limites e decisões abertas, sem disfarce:**
+- **Backend (prioridade principal depois desta spec):** rgm-backend#114 (devolver `responsaveis` com
+  nome e `abertaPorNome`) e rgm-backend#115 (definir foto de capa responde 500: `UPDATE` sem
+  transação). Enquanto a #114 não sai, o operador vê "N responsáveis"; na captura, até o
+  administrador viu "1 responsável" porque o usuário não estava entre os 100 ativos que a tela
+  carrega. A #115 impede definir capa pelo carrossel; a ficha usa a primeira foto quando não há capa.
+- **Checklists:** `requisitos.md` e `acessibilidade.md` foram gerados e as sete lacunas viraram
+  requisitos, mas as caixas seguem sem marca (o usuário respondeu "vamos implementar", não marcou
+  item a item).
+- **Firefox:** não testado (não instala nesta VPS); o roteiro de medição usa Chromium.
+- **`LinhaDoTempo` fixa "agora" na montagem:** os horários relativos ("há 3 h") não se atualizam
+  com a página aberta; atualizam ao navegar ou recarregar.
+- **Evidências da solicitação:** "Abrir" e "Excluir evidência" seguem com alvo de toque pequeno;
+  fora do escopo (a spec manda mantê-las como estão); vale uma issue própria.
+- **`make validate`** continua sem `fmt`, `it` e `bdd` (legado, registrado na spec 011).
+- **Dados de teste:** subi 4 imagens geradas por mim na galeria do modelo `MDL-KBN-1791489466015` do
+  banco local, só para as capturas.
+
+Veredito: **convergido**. Tarefas acrescentadas: nenhuma além das listadas acima (todas feitas).
