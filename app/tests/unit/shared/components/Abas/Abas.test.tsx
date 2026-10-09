@@ -196,6 +196,18 @@ describe('Abas', () => {
     expect(aba('Resumo').getAttribute('aria-selected')).toBe('true');
   });
 
+  it('deve renderizar a lista sem abas quando abas é vazio', () => {
+    // Arrange
+    render(<Abas abas={[]} rotulo="Seções da peça" />);
+
+    // Act
+    const lista = screen.getByRole('tablist', { name: 'Seções da peça' });
+
+    // Assert
+    expect(lista.children).toHaveLength(0);
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+  });
+
   it('deve ter alvo de toque de 44 px quando renderizada', () => {
     // Arrange
     renderizar();

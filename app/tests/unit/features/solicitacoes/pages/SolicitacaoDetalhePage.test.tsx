@@ -12,6 +12,10 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { useEditarSolicitacao } from '@/features/solicitacoes/hooks/useEditarSolicitacao';
+import { useRegistrarComentario } from '@/features/solicitacoes/hooks/useRegistrarComentario';
+import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
+import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
+import { ApiError } from '@/shared/api/apiError';
 import { SolicitacaoResumo } from '@/features/solicitacoes/components/SolicitacaoResumo';
 import { useSolicitacao } from '@/features/solicitacoes/hooks/useSolicitacao';
 import { useVoltar } from '@/shared/hooks/useVoltar';
@@ -125,10 +129,20 @@ vi.mock('@/features/solicitacoes/components/ComentarioForm', () => ({
   ),
 }));
 vi.mock('@/features/evidencias/components/EvidenciaList', () => ({
-  EvidenciaList: () => <div data-testid="evidencia-list" />,
+  EvidenciaList: ({ onDelete }: { onDelete?: (id: string) => void }) => (
+    <div data-testid="evidencia-list">
+      {onDelete ? <button onClick={() => onDelete('ev1')}>excluir-evidencia</button> : null}
+    </div>
+  ),
 }));
 vi.mock('@/features/evidencias/components/EvidenciaUploader', () => ({
-  EvidenciaUploader: () => <div data-testid="evidencia-uploader" />,
+  EvidenciaUploader: ({ onUpload }: { onUpload: (f: File) => void }) => (
+    <div data-testid="evidencia-uploader">
+      <button onClick={() => onUpload(new File(['x'], 'foto.png', { type: 'image/png' }))}>
+        anexar-evidencia
+      </button>
+    </div>
+  ),
 }));
 vi.mock('@/features/admin/modelos/hooks/useModelo', () => ({
   useModelo: vi.fn().mockReturnValue({ data: undefined }),
@@ -804,5 +818,186 @@ describe('SolicitacaoDetalhePage — edição', () => {
     expect(tela.queryByRole('dialog')).toBeNull();
     expect(tela.queryByLabelText('Título')).toBeNull();
     expect(editar).not.toHaveBeenCalled();
+  });
+
+  it('deve mostrar o erro da ação e manter a edição aberta quando salvar falha', async () => {
+    // Arrange
+    const { editar, tela } = await abrirEdicao();
+    editar.mockRejectedValueOnce(new ApiError({ status: 409, message: 'Conflito ao salvar' }));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(editar).toHaveBeenCalledTimes(1);
+    expect(editar).toHaveBeenCalledWith({
+      titulo: mockSolicitacao.titulo,
+      descricao: mockSolicitacao.descricao,
+    });
+    expect(tela.getByText('Operação não concluída')).toBeDefined();
+    expect(tela.getByText('Conflito ao salvar')).toBeDefined();
+    expect(tela.getByLabelText('Título')).toBeDefined();
+  });
+});
+
+describe('SolicitacaoDetalhePage — comentário e evidências', () => {
+  function abrirComo(perfil: 'GESTOR' | 'OPERADOR', sobrescritas: Record<string, unknown> = {}) {
+    const mutacoes = {
+      comentar: vi.fn().mockResolvedValue(undefined),
+      upload: vi.fn().mockResolvedValue(undefined),
+      excluir: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(useRegistrarComentario).mockReturnValue({
+      mutateAsync: mutacoes.comentar,
+      isPending: false,
+    } as unknown as ReturnType<typeof useRegistrarComentario>);
+    vi.mocked(useUploadEvidencia).mockReturnValue({
+      mutateAsync: mutacoes.upload,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUploadEvidencia>);
+    vi.mocked(useDeleteEvidencia).mockReturnValue({
+      mutateAsync: mutacoes.excluir,
+      isPending: false,
+    } as unknown as ReturnType<typeof useDeleteEvidencia>);
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: { ...mockSolicitacao, ...sobrescritas },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'U', perfil },
+      initialEntries: ['/solicitacoes/s1'],
+    });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+    return { ...mutacoes, tela: within(container) };
+  }
+
+  it('deve mostrar o erro da ação quando enviar o comentário falha', async () => {
+    // Arrange
+    const { comentar, tela } = abrirComo('GESTOR');
+    comentar.mockRejectedValueOnce(new ApiError({ status: 500, message: 'Comentário recusado' }));
+
+    // Act
+    await userEvent.click(tela.getByText('enviar-comentario'));
+
+    // Assert
+    expect(comentar).toHaveBeenCalledTimes(1);
+    expect(comentar).toHaveBeenCalledWith({ comentario: 'ok' });
+    expect(tela.getByText('Comentário recusado')).toBeDefined();
+  });
+
+  it('deve usar a mensagem padrão quando o erro do comentário não é da API', async () => {
+    // Arrange
+    const { comentar, tela } = abrirComo('GESTOR');
+    comentar.mockRejectedValueOnce(new Error('rede'));
+
+    // Act
+    await userEvent.click(tela.getByText('enviar-comentario'));
+
+    // Assert
+    expect(comentar).toHaveBeenCalledTimes(1);
+    expect(tela.getByText('Ocorreu um erro inesperado.')).toBeDefined();
+  });
+
+  it('deve enviar o arquivo e não mostrar erro quando anexar a evidência dá certo', async () => {
+    // Arrange
+    const { upload, tela } = abrirComo('GESTOR');
+
+    // Act
+    await userEvent.click(tela.getByText('anexar-evidencia'));
+
+    // Assert
+    expect(upload).toHaveBeenCalledTimes(1);
+    const enviado = upload.mock.calls[0][0] as { file: File };
+    expect(enviado.file.name).toBe('foto.png');
+    expect(tela.queryByText('Operação não concluída')).toBeNull();
+  });
+
+  it('deve mostrar o erro da ação quando anexar a evidência falha', async () => {
+    // Arrange
+    const { upload, tela } = abrirComo('GESTOR');
+    upload.mockRejectedValueOnce(new ApiError({ status: 413, message: 'Arquivo grande demais' }));
+
+    // Act
+    await userEvent.click(tela.getByText('anexar-evidencia'));
+
+    // Assert
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(tela.getByText('Operação não concluída')).toBeDefined();
+    expect(tela.getByText('Arquivo grande demais')).toBeDefined();
+  });
+
+  it('deve excluir a evidência pelo identificador quando o gestor aciona excluir', async () => {
+    // Arrange
+    const { excluir, tela } = abrirComo('GESTOR');
+
+    // Act
+    await userEvent.click(tela.getByText('excluir-evidencia'));
+
+    // Assert
+    expect(excluir).toHaveBeenCalledTimes(1);
+    expect(excluir).toHaveBeenCalledWith('ev1');
+    expect(tela.queryByText('Operação não concluída')).toBeNull();
+  });
+
+  it('deve mostrar o erro da ação quando excluir a evidência falha', async () => {
+    // Arrange
+    const { excluir, tela } = abrirComo('GESTOR');
+    excluir.mockRejectedValueOnce(new ApiError({ status: 403, message: 'Sem permissão' }));
+
+    // Act
+    await userEvent.click(tela.getByText('excluir-evidencia'));
+
+    // Assert
+    expect(excluir).toHaveBeenCalledTimes(1);
+    expect(excluir).toHaveBeenCalledWith('ev1');
+    expect(tela.getByText('Sem permissão')).toBeDefined();
+  });
+
+  it('deve esconder anexar e excluir quando o operador não abriu nem é responsável', () => {
+    // Arrange
+    const sobrescritas = { abertaPorUsuarioId: 'outro', responsavelIds: [] };
+
+    // Act
+    const { tela } = abrirComo('OPERADOR', sobrescritas);
+
+    // Assert
+    expect(tela.queryByText('anexar-evidencia')).toBeNull();
+    expect(tela.queryByText('excluir-evidencia')).toBeNull();
+  });
+
+  it('deve permitir anexar quando o operador é o responsável pela solicitação', () => {
+    // Arrange
+    const sobrescritas = { abertaPorUsuarioId: 'outro', responsavelIds: ['u-admin'] };
+
+    // Act
+    const { tela } = abrirComo('OPERADOR', sobrescritas);
+
+    // Assert
+    expect(tela.getByText('anexar-evidencia')).toBeDefined();
+    expect(tela.getByText('excluir-evidencia')).toBeDefined();
+  });
+
+  it('deve permitir anexar quando o operador abriu a solicitação', () => {
+    // Arrange
+    const sobrescritas = { abertaPorUsuarioId: 'u-admin', responsavelIds: [] };
+
+    // Act
+    const { tela } = abrirComo('OPERADOR', sobrescritas);
+
+    // Assert
+    expect(tela.getByText('anexar-evidencia')).toBeDefined();
+  });
+
+  it('deve esconder anexar e excluir quando a solicitação está concluída', () => {
+    // Arrange
+    const sobrescritas = { status: 'CONCLUIDA' };
+
+    // Act
+    const { tela } = abrirComo('GESTOR', sobrescritas);
+
+    // Assert
+    expect(tela.queryByText('anexar-evidencia')).toBeNull();
+    expect(tela.queryByText('excluir-evidencia')).toBeNull();
   });
 });

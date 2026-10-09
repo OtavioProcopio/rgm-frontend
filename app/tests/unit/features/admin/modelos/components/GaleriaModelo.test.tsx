@@ -556,4 +556,166 @@ describe('GaleriaModelo com o modal de adicionar foto como diálogo modal', () =
     const fechar = within(dialogo).getByRole<HTMLButtonElement>('button', { name: 'Fechar' });
     expect(fechar.disabled).toBe(true);
   });
+
+  it('deve fechar o modal de adicionar quando Cancelar é clicado', async () => {
+    // Arrange
+    await abrirModalDeAdicionar();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }));
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve mostrar o erro e manter o modal aberto quando o envio da foto falha', async () => {
+    // Arrange
+    adicionarMutateAsync.mockRejectedValueOnce(new Error('falha'));
+    await abrirModalDeAdicionar();
+    const dialogo = screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR });
+    await userEvent.type(within(dialogo).getByLabelText(/identificação/i), 'Nova foto');
+    const arquivo = new File(['a'], 'foto.png', { type: 'image/png' });
+    await userEvent.upload(
+      dialogo.querySelector('input[type="file"]') as HTMLInputElement,
+      arquivo,
+    );
+    const botoes = within(dialogo).getAllByRole('button', { name: /adicionar foto/i });
+
+    // Act
+    await userEvent.click(botoes[botoes.length - 1]);
+
+    // Assert
+    expect(adicionarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(adicionarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      file: arquivo,
+      identificacao: 'Nova foto',
+    });
+    expect(screen.getByText('Operação não concluída')).toBeDefined();
+    expect(screen.getByRole('dialog', { name: NOME_DO_MODAL_DE_ADICIONAR })).toBeDefined();
+  });
+});
+
+const MENSAGEM_DE_FALHA = 'Não foi possível concluir a operação. Tente novamente.';
+
+async function abrirCarrosselNaSegundaFoto() {
+  simularGaleria({ data: criarFotos(2, 0) });
+  renderizar();
+  await userEvent.click(screen.getByRole('button', { name: 'Ver foto: Foto 1' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Ampliar foto: Foto 1' }));
+  return screen.getByRole('dialog', { name: 'Galeria de fotos: Foto 1' });
+}
+
+async function renomearPara(dialogo: HTMLElement, nome: string) {
+  await userEvent.click(within(dialogo).getByRole('button', { name: 'Renomear foto' }));
+  const campo = within(dialogo).getByRole('textbox');
+  await userEvent.clear(campo);
+  await userEvent.type(campo, nome);
+  await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar identificação' }));
+}
+
+async function confirmarRemocao(dialogo: HTMLElement) {
+  await userEvent.click(within(dialogo).getByRole('button', { name: 'Remover foto' }));
+  const botoes = screen.getAllByRole('button', { name: 'Remover' });
+  await userEvent.click(botoes[botoes.length - 1]);
+}
+
+describe('GaleriaModelo com as ações do carrossel', () => {
+  it('deve definir a foto como capa quando Definir capa é acionado', async () => {
+    // Arrange
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Definir capa' }));
+
+    // Assert
+    expect(editarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(editarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      fotoId: 'f1',
+      payload: { principal: true },
+    });
+    expect(screen.queryByText('Operação não concluída')).toBeNull();
+  });
+
+  it('deve mostrar o erro quando definir a capa falha', async () => {
+    // Arrange
+    editarMutateAsync.mockRejectedValueOnce(new Error('falha'));
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Definir capa' }));
+
+    // Assert
+    expect(editarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(editarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      fotoId: 'f1',
+      payload: { principal: true },
+    });
+    expect(screen.getByText('Operação não concluída')).toBeDefined();
+    expect(screen.getByText(MENSAGEM_DE_FALHA)).toBeDefined();
+  });
+
+  it('deve renomear a foto quando a nova identificação é salva', async () => {
+    // Arrange
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await renomearPara(dialogo, 'Nome novo');
+
+    // Assert
+    expect(editarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(editarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      fotoId: 'f1',
+      payload: { identificacao: 'Nome novo' },
+    });
+    expect(screen.queryByText('Operação não concluída')).toBeNull();
+  });
+
+  it('deve mostrar o erro quando renomear a foto falha', async () => {
+    // Arrange
+    editarMutateAsync.mockRejectedValueOnce(new Error('falha'));
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await renomearPara(dialogo, 'Nome novo');
+
+    // Assert
+    expect(editarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(editarMutateAsync).toHaveBeenCalledWith({
+      modeloId: 'm1',
+      fotoId: 'f1',
+      payload: { identificacao: 'Nome novo' },
+    });
+    expect(screen.getByText(MENSAGEM_DE_FALHA)).toBeDefined();
+  });
+
+  it('deve mostrar o erro quando remover a foto falha', async () => {
+    // Arrange
+    removerMutateAsync.mockRejectedValueOnce(new Error('falha'));
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await confirmarRemocao(dialogo);
+
+    // Assert
+    expect(removerMutateAsync).toHaveBeenCalledTimes(1);
+    expect(removerMutateAsync).toHaveBeenCalledWith({ modeloId: 'm1', fotoId: 'f1' });
+    expect(screen.getByText('Operação não concluída')).toBeDefined();
+    expect(screen.getByText(MENSAGEM_DE_FALHA)).toBeDefined();
+  });
+
+  it('deve fechar o carrossel quando Fechar é acionado', async () => {
+    // Arrange
+    const dialogo = await abrirCarrosselNaSegundaFoto();
+
+    // Act
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Fechar' }));
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
 });

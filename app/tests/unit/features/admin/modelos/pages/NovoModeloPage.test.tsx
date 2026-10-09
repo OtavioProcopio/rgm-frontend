@@ -87,4 +87,38 @@ describe('NovoModeloPage', () => {
 
     expect(navigate).toHaveBeenCalledWith('/app/admin/modelos/123');
   });
+
+  it('deve mostrar a mensagem de erro e manter o formulário quando a criação falha', async () => {
+    // Arrange
+    mutateAsync.mockRejectedValueOnce(new Error('falha'));
+    const user = userEvent.setup();
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<NovoModeloPage />, { wrapper: AppWrapper });
+
+    // Act
+    await user.click(within(container).getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(mutateAsync).toHaveBeenCalledWith({ codigo: 'M01' });
+    expect(within(container).getByText('Não foi possível criar o modelo')).toBeDefined();
+    expect(
+      within(container).getByText('Não foi possível concluir a operação. Tente novamente.'),
+    ).toBeDefined();
+    expect(within(container).getByRole('button', { name: 'Salvar' })).toBeDefined();
+    expect(within(container).queryByTestId('galeria-modelo')).toBeNull();
+  });
+
+  it('deve apontar o link de volta para o caminho informado quando backPath é passado', () => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    const { container } = render(<NovoModeloPage backPath="/app/outro" />, {
+      wrapper: AppWrapper,
+    });
+
+    // Assert
+    const link = within(container).getByRole('link', { name: /Voltar para modelos/ });
+    expect(link.getAttribute('href')).toBe('/app/outro');
+  });
 });

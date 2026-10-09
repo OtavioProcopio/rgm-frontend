@@ -282,6 +282,32 @@ describe('SolicitacaoTimeline — linha do tempo', () => {
     );
   });
 
+  it('deve mostrar o detalhe em texto secundário quando a atividade não é comentário e traz texto', () => {
+    // Arrange
+    const atividades = [umaAtividade({ tipo: 'EVIDENCIA_ADICIONADA', comentario: 'foto.png' })];
+
+    // Act
+    const { container } = renderizar(atividades);
+
+    // Assert
+    const detalhe = within(container).getByText('foto.png');
+    expect(classes(detalhe)).toEqual(expect.arrayContaining(['text-sm', 'text-fg-muted']));
+    expect(classes(detalhe)).not.toContain('bg-surface-muted');
+  });
+
+  it('deve mostrar o título comum sem selos quando a mudança de status não traz os dois status', () => {
+    // Arrange
+    const atividades = [umaAtividade({ tipo: 'MUDANCA_STATUS', deStatus: null, paraStatus: null })];
+
+    // Act
+    const { container } = renderizar(atividades);
+
+    // Assert
+    expect(within(container).getByText(rotuloDoTipoDeAtividade.MUDANCA_STATUS)).toBeDefined();
+    expect(within(container).queryByText('para')).toBeNull();
+    expect(container.querySelectorAll('li svg')).toHaveLength(1);
+  });
+
   it('deve mostrar a atribuição com menos peso quando a atividade é atribuição', () => {
     // Arrange
     const atividades = [umaAtividade({ tipo: 'ATRIBUICAO' })];
