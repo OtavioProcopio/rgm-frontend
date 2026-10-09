@@ -3,7 +3,8 @@
  */
 import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { ancestralComum } from '@tests/support/ancestralComum';
@@ -11,7 +12,9 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { SolicitacaoDetalhePage } from '@/features/solicitacoes/pages/SolicitacaoDetalhePage';
 import { useEditarSolicitacao } from '@/features/solicitacoes/hooks/useEditarSolicitacao';
+import { SolicitacaoResumo } from '@/features/solicitacoes/components/SolicitacaoResumo';
 import { useSolicitacao } from '@/features/solicitacoes/hooks/useSolicitacao';
+import { useVoltar } from '@/shared/hooks/useVoltar';
 import { LIMITES } from '@/shared/lib/limites';
 
 vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
@@ -87,8 +90,16 @@ vi.mock('@/features/solicitacoes/components/SolicitacaoPrioridadeBadge', () => (
   SolicitacaoPrioridadeBadge: ({ prioridade }: { prioridade: string }) => <span>{prioridade}</span>,
 }));
 vi.mock('@/features/solicitacoes/components/SolicitacaoTimeline', () => ({
-  SolicitacaoTimeline: () => <div data-testid="timeline" />,
+  SolicitacaoTimeline: ({ formulario }: { formulario?: ReactNode }) => (
+    <div data-testid="timeline">{formulario}</div>
+  ),
 }));
+vi.mock('@/features/solicitacoes/components/SolicitacaoResumo', async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import('@/features/solicitacoes/components/SolicitacaoResumo')>();
+  return { SolicitacaoResumo: vi.fn(original.SolicitacaoResumo) };
+});
+vi.mock('@/shared/hooks/useVoltar', () => ({ useVoltar: vi.fn() }));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   TriagemModal: ({ onConfirm }: { onConfirm: (d: unknown) => void }) => (
     <button onClick={() => onConfirm({ prioridade: 'ALTA', responsavelIds: [] })}>
@@ -145,7 +156,17 @@ const mockSolicitacao = {
   responsavelIds: [],
 };
 
-afterEach(cleanup);
+const voltarMock = vi.fn();
+
+beforeEach(() => {
+  vi.mocked(useVoltar).mockReturnValue(voltarMock);
+});
+
+afterEach(() => {
+  cleanup();
+  voltarMock.mockClear();
+  vi.mocked(useVoltar).mockClear();
+});
 
 describe('SolicitacaoDetalhePage', () => {
   it('shows loading state while fetching', () => {
@@ -212,7 +233,7 @@ describe('SolicitacaoDetalhePage', () => {
     expect(within(container).getByRole('button', { name: /encerrar/i })).toBeDefined();
   });
 
-  it('shows Devolver button for GESTOR when in EM_VALIDACAO', async () => {
+  it('shows Devolver in Mais ações for GESTOR when in EM_VALIDACAO', async () => {
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
       data: { ...mockSolicitacao, status: 'EM_VALIDACAO' },
@@ -225,26 +246,13 @@ describe('SolicitacaoDetalhePage', () => {
       initialEntries: ['/solicitacoes/s1'],
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
-    expect(within(container).getByRole('button', { name: /devolver/i })).toBeDefined();
+    await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
+    expect(within(container).getByRole('menuitem', { name: /devolver/i })).toBeDefined();
   });
 
-  it('shows Voltar button in loaded state', async () => {
-    const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
+  function abrirComoGestor(solicitacao: Record<string, unknown> = mockSolicitacao) {
     vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao,
-      isLoading: false,
-      error: null,
-    } as unknown as ReturnType<typeof useSolicitacao>);
-
-    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
-    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
-    expect(within(container).getByRole('button', { name: /voltar/i })).toBeDefined();
-  });
-
-  it('deve não mostrar Mais ações quando o cabeçalho mostra só Editar e Voltar', async () => {
-    // Arrange
-    vi.mocked(useSolicitacao).mockReturnValue({
-      data: mockSolicitacao,
+      data: solicitacao,
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
@@ -252,14 +260,132 @@ describe('SolicitacaoDetalhePage', () => {
       user: { nome: 'G', perfil: 'GESTOR' },
       initialEntries: ['/solicitacoes/s1'],
     });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+    return within(container);
+  }
+
+  it('deve mostrar a ação principal da etapa como botão e Mais ações quando há outras ações', () => {
+    // Arrange
+    const solicitacao = { ...mockSolicitacao, status: 'A_FAZER' };
 
     // Act
-    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+    const tela = abrirComoGestor(solicitacao);
 
     // Assert
-    expect(within(container).getByRole('button', { name: 'Editar' })).toBeDefined();
-    expect(within(container).getByRole('button', { name: 'Voltar' })).toBeDefined();
-    expect(within(container).queryByRole('button', { name: 'Mais ações' })).toBeNull();
+    expect(tela.getByRole('button', { name: 'Triar' })).toBeDefined();
+    expect(tela.getByRole('button', { name: 'Mais ações' })).toBeDefined();
+  });
+
+  it('deve listar Editar em Mais ações quando o gestor pode editar e há outras ações', async () => {
+    // Arrange
+    const tela = abrirComoGestor({ ...mockSolicitacao, status: 'A_FAZER' });
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Mais ações' }));
+
+    // Assert
+    expect(tela.getByRole('menuitem', { name: 'Editar' })).toBeDefined();
+    expect(tela.queryByRole('button', { name: 'Editar' })).toBeNull();
+  });
+
+  it('deve abrir a edição quando Editar é escolhido em Mais ações', async () => {
+    // Arrange
+    const tela = abrirComoGestor({ ...mockSolicitacao, status: 'A_FAZER' });
+    await userEvent.click(tela.getByRole('button', { name: 'Mais ações' }));
+
+    // Act
+    await userEvent.click(tela.getByRole('menuitem', { name: 'Editar' }));
+
+    // Assert
+    expect(tela.getByLabelText('Título')).toBeDefined();
+    expect(tela.queryByRole('button', { name: 'Mais ações' })).toBeNull();
+  });
+
+  it('deve mostrar Voltar como botão acima do título quando a solicitação está carregada', () => {
+    // Arrange
+    const tela = abrirComoGestor();
+
+    // Act
+    const voltar = tela.getByRole('button', { name: 'Voltar' });
+    const titulo = tela.getByRole('heading', { name: mockSolicitacao.titulo });
+
+    // Assert
+    const antes = voltar.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING;
+    expect(antes).toBeTruthy();
+    expect(titulo.parentElement?.contains(voltar)).toBe(false);
+  });
+
+  it('deve chamar a volta com a reserva da lista quando Voltar é acionado', async () => {
+    // Arrange
+    const tela = abrirComoGestor();
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Voltar' }));
+
+    // Assert
+    expect(useVoltar).toHaveBeenCalledWith('/app/solicitacoes');
+    expect(voltarMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve não mostrar o bloco Ações nem o título Adicionar comentário quando a página carrega', () => {
+    // Arrange
+    const tela = abrirComoGestor();
+
+    // Act
+    const titulos = tela.queryAllByRole('heading').map((h) => h.textContent);
+
+    // Assert
+    expect(titulos).not.toContain('Ações');
+    expect(titulos).not.toContain('Adicionar comentário');
+  });
+
+  it('deve mostrar o campo de comentário dentro da linha do tempo quando a solicitação não é terminal', () => {
+    // Arrange
+    const tela = abrirComoGestor();
+
+    // Act
+    const linhaDoTempo = tela.getByTestId('timeline');
+
+    // Assert
+    expect(within(linhaDoTempo).getByText('enviar-comentario')).toBeDefined();
+  });
+
+  it.each(['CONCLUIDA', 'CANCELADA'] as const)(
+    'deve não mostrar o campo de comentário quando a solicitação está %s',
+    (status) => {
+      // Arrange
+      const tela = abrirComoGestor({ ...mockSolicitacao, status });
+
+      // Act
+      const campo = tela.queryByText('enviar-comentario');
+
+      // Assert
+      expect(campo).toBeNull();
+    },
+  );
+
+  it('deve passar atividades e usuários ao resumo quando a página carrega', () => {
+    // Arrange
+    vi.mocked(SolicitacaoResumo).mockClear();
+
+    // Act
+    abrirComoGestor();
+
+    // Assert
+    const props = vi.mocked(SolicitacaoResumo).mock.calls[0][0];
+    expect(props.atividades).toEqual([]);
+    expect(props.usuarios).toEqual([]);
+  });
+
+  it('deve mostrar a abertura em tempo relativo sem segundos quando a página carrega', () => {
+    // Arrange
+    const tela = abrirComoGestor();
+
+    // Act
+    const subtitulo = tela.getByText(/^Aberta há \d+ d$/);
+
+    // Assert
+    expect(subtitulo.textContent).not.toMatch(/\d{2}:\d{2}/);
   });
 
   it('shows solicitacao tipo and descricao', async () => {
@@ -372,7 +498,8 @@ describe('SolicitacaoDetalhePage', () => {
       initialEntries: ['/solicitacoes/s1'],
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getByRole('button', { name: /devolver/i }));
+    await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
+    await userEvent.click(within(container).getByRole('menuitem', { name: /devolver/i }));
     await userEvent.click(within(container).getByText('confirmar-devolucao'));
     expect(devolverMock).toHaveBeenCalled();
   });
@@ -448,7 +575,8 @@ describe('SolicitacaoDetalhePage', () => {
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
 
-    await userEvent.click(within(container).getByRole('button', { name: /^editar$/i }));
+    await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
+    await userEvent.click(within(container).getByRole('menuitem', { name: 'Editar' }));
 
     expect(within(container).getByText(/não pode ser alterado/i)).toBeDefined();
     expect(container.querySelector('select')).toBeNull();
@@ -481,22 +609,25 @@ describe('SolicitacaoDetalhePage', () => {
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
 
     // Act
-    await userEvent.click(within(container).getByRole('button', { name: 'Alterar responsáveis' }));
+    await userEvent.click(within(container).getByRole('button', { name: 'Mais ações' }));
+    await userEvent.click(
+      within(container).getByRole('menuitem', { name: 'Alterar responsáveis' }),
+    );
 
     // Assert
-    expect(await within(container).findByText('Olga Operadora')).toBeDefined();
-    expect(within(container).getByText('Gil Gestor')).toBeDefined();
-    expect(within(container).queryByText('Ana Administradora')).toBeNull();
-    expect(within(container).queryByText('Ivo Inativo')).toBeNull();
+    const dialogo = within(await within(container).findByRole('dialog'));
+    expect(await dialogo.findByText('Olga Operadora')).toBeDefined();
+    expect(dialogo.getByText('Gil Gestor')).toBeDefined();
+    expect(dialogo.queryByText('Ana Administradora')).toBeNull();
+    expect(dialogo.queryByText('Ivo Inativo')).toBeNull();
   });
 });
 
 describe('SolicitacaoDetalhePage — edição', () => {
   const PERGUNTA = 'Descartar alterações?';
 
-  /** O cabeçalho vem antes das ações, que também têm um "Cancelar" (o da solicitação). */
   function botaoCancelarEdicao(tela: ReturnType<typeof within>) {
-    return tela.getAllByRole('button', { name: 'Cancelar' })[0];
+    return tela.getByRole('button', { name: 'Cancelar' });
   }
 
   /** Abre a solicitação como gestor, entra na edição e devolve a função que salva. */
@@ -516,8 +647,9 @@ describe('SolicitacaoDetalhePage — edição', () => {
       initialEntries: ['/solicitacoes/s1'],
     });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
-    await userEvent.click(within(container).getByRole('button', { name: 'Editar' }));
     const tela = within(container);
+    await userEvent.click(tela.getByRole('button', { name: 'Mais ações' }));
+    await userEvent.click(tela.getByRole('menuitem', { name: 'Editar' }));
     return { editar, tela };
   }
 
@@ -548,7 +680,7 @@ describe('SolicitacaoDetalhePage — edição', () => {
     expect(moldura.className.split(' ')).toEqual(expect.arrayContaining(esperado));
   });
 
-  it.each(['Evidências', 'Histórico de atividades', 'Adicionar comentário'])(
+  it.each(['Evidências', 'Histórico de atividades'])(
     'deve mostrar o título da seção no texto secundário quando a seção é %s',
     async (secao) => {
       // Act

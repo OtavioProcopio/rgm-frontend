@@ -131,7 +131,8 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await page.click('button:has-text("Abrir solicitação")');
     await expect(page.getByText('A fazer')).toBeVisible();
 
-    await page.click('button:has-text("Cancelar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Cancelar' }).click();
     await page.locator('textarea[name="comentario"]').first().fill('Não precisa mais');
     await page.click('button:has-text("Cancelar solicitação")');
 
@@ -195,7 +196,8 @@ test.describe('Solicitação tipo CRIACAO', () => {
     await page.click('button:has-text("Abrir solicitação")');
     await expect(page.getByText('A fazer')).toBeVisible();
 
-    await page.click('button:has-text("Editar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Editar' }).click();
     await expect(page.getByText(/não pode ser alterado/i)).toBeVisible();
     // Não há nenhum <select> de tipo no formulário de edição.
     await expect(page.locator('select[name="tipo"]')).toHaveCount(0);

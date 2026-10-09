@@ -148,7 +148,8 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await loginAdmin(`/app/solicitacoes/${id}`);
     await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
 
-    await page.click('button:has-text("Devolver")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Devolver' }).click();
     await expect(page.getByText('Devolver solicitação')).toBeVisible();
     await page.fill('textarea[name="motivo"]', 'Falta ajuste antes de validar');
     await page.click('button:has-text("Confirmar devolução")');
@@ -182,7 +183,8 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await triar(request, token, id);
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await page.click('button:has-text("Cancelar")');
+    await page.getByRole('button', { name: 'Mais ações' }).click();
+    await page.getByRole('menuitem', { name: 'Cancelar' }).click();
     await page.locator('textarea[name="comentario"]').first().fill('Cancelado via Playwright');
     await page.click('button:has-text("Cancelar solicitação")');
 
