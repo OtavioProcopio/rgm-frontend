@@ -201,7 +201,7 @@ export function ModeloDetalhePage() {
 
 function IdentificacaoDoModelo({ modelo }: { modelo: Modelo }) {
   return (
-    <Card className="rounded-md p-5 shadow-none">
+    <Card className="rounded-md p-5 shadow-none lg:self-start">
       <h2 className="text-2xl font-semibold text-fg">
         <span className="font-mono">{modelo.codigo}</span> v{modelo.versao}
       </h2>

@@ -104,6 +104,19 @@ describe('LinhaDoTempo', () => {
     expect(link.getAttribute('href')).toBe('/app/x/1');
   });
 
+  it('deve dar ao link do título alvo de toque de 44 px quando o evento tem destino', () => {
+    // Arrange
+    const itens: ItemDaLinhaDoTempo[] = [criarItem('a', emIso(0, 10), { destino: '/app/x/1' })];
+
+    // Act
+    renderizar(itens);
+
+    // Assert
+    const link: HTMLElement = screen.getByRole('link', { name: 'Evento a' });
+    expect(link.classList.contains('pointer-coarse:min-h-11')).toBe(true);
+    expect(link.classList.contains('inline-flex')).toBe(true);
+  });
+
   it('deve renderizar o título sem link quando o evento não tem destino', () => {
     // Arrange
     const itens: ItemDaLinhaDoTempo[] = [criarItem('a', emIso(0, 10), { destino: null })];

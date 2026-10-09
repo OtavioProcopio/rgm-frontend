@@ -35,9 +35,9 @@ export function ModeloCard({ modelo, linkBase = '/app/modelos' }: Props) {
     <Link
       to={`${linkBase}/${modelo.id}`}
       aria-label={`${modelo.descricao}, ${modelo.codigo}`}
-      className="block"
+      className="block h-full"
     >
-      <Card className="flex flex-col overflow-hidden hover:shadow-md motion-safe:transition-shadow">
+      <Card className="flex h-full flex-col overflow-hidden hover:shadow-md motion-safe:transition-shadow">
         <Capa modelo={modelo} />
         <div className="flex flex-1 flex-col p-4">
           <p className="line-clamp-2 font-semibold text-fg">{modelo.descricao}</p>

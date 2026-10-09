@@ -580,6 +580,17 @@ describe('ModeloDetalhePage (admin) — corpo da ficha', () => {
     expect(within(titulo).getByText('M01')).toBeDefined();
   });
 
+  it('deve manter o cartão de identificação na altura do conteúdo quando a foto é mais alta', async () => {
+    // Arrange
+    await abrirFicha({});
+
+    // Act
+    const cartao = screen.getByRole('heading', { name: /M01.*v1/ }).closest('div')!;
+
+    // Assert
+    expect(cartao.classList.contains('lg:self-start')).toBe(true);
+  });
+
   it('deve usar fonte monoespaçada no código quando o modelo é carregado', async () => {
     // Arrange
     await abrirFicha({});

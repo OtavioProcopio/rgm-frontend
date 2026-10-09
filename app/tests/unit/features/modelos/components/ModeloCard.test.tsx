@@ -185,6 +185,16 @@ describe('ModeloCard', () => {
     expect(todas).not.toContain('outline-none');
   });
 
+  it('deve esticar o cartão até a altura da linha quando a grade tem cartões mais altos', () => {
+    // Act
+    const { container } = renderCard();
+
+    // Assert
+    const link = container.querySelector('a')!;
+    expect(link.classList.contains('h-full')).toBe(true);
+    expect(link.firstElementChild?.classList.contains('h-full')).toBe(true);
+  });
+
   it('deve usar transição apenas com motion-safe quando renderizado', () => {
     // Act
     const { container } = renderCard();

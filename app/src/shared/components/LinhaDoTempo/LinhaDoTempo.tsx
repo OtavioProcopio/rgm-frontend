@@ -63,7 +63,10 @@ function Autor({ autor }: { autor: NonNullable<ItemDaLinhaDoTempo['autor']> }) {
 function Titulo({ item }: { item: ItemDaLinhaDoTempo }) {
   const discreto: boolean = item.peso === 'discreto';
   const conteudo: ReactNode = item.destino ? (
-    <Link to={item.destino} className="text-accent underline-offset-2 hover:underline">
+    <Link
+      to={item.destino}
+      className="inline-flex items-center gap-2 text-accent underline-offset-2 hover:underline pointer-coarse:min-h-11"
+    >
       {item.titulo}
     </Link>
   ) : (

@@ -90,7 +90,7 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 - [x] T046 [P] Alterar os roteiros de `app/tests/e2e/` que clicam em ação do detalhe da solicitação (conferir por busca `Triar`, `Enviar para validação`, `Devolver`, `Encerrar`, `Cancelar`, `Alterar responsáveis`, `Editar`, `Voltar`): as ações fora da principal passam por "Mais ações"
 - [x] T047 [P] Acrescentar as linhas desta feature à tabela de `openspec/README.md`
-- [ ] T048 Medição "depois" com `medir012.cjs` na branch e comparação com a T001: RNF-01, RNF-02, RNF-03, RNF-04, RNF-07, RNF-12, mais toque, foco e contraste dos elementos novos (RNF-05, RNF-06) e capturas da ficha (com foto, sem foto, em 390 px), do cartão da lista e do detalhe da solicitação nos dois temas; registrar na convergência
+- [x] T048 Medição "depois" com `medir012.cjs` na branch e comparação com a T001: RNF-01, RNF-02, RNF-03, RNF-04, RNF-07, RNF-12, mais toque, foco e contraste dos elementos novos (RNF-05, RNF-06) e capturas da ficha (com foto, sem foto, em 390 px), do cartão da lista e do detalhe da solicitação nos dois temas; registrar na convergência
 - [ ] T049 Rodar a feature contra o backend de `develop` (ambiente local): ficha com foto e abas, histórico único, detalhe com ação principal e menu, comentário e "Voltar", e a suíte `make e2e`; registrar na convergência
 - [ ] T050 `make cover-arquivos ARQUIVOS="<todos os arquivos de src/ alterados ou criados>"` com 95% em cada um (RNF-09) e `app/package.json` sem pacote novo (RNF-10)
 - [ ] T051 `make validate` verde
