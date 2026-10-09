@@ -62,8 +62,8 @@ test.describe('Rastreabilidade modelo ↔ solicitação', () => {
 
     await loginAdmin(`/app/admin/modelos/${modeloId}`);
 
-    // Seção "Solicitações" deve aparecer
-    await expect(page.getByText(/Solicitações \(\d+\)/)).toBeVisible();
+    // As solicitações do modelo ficam no histórico único, na aba "Histórico".
+    await page.getByRole('tab', { name: 'Histórico' }).click();
     await expect(page.getByRole('link', { name: titulo })).toBeVisible();
   });
 
@@ -83,6 +83,7 @@ test.describe('Rastreabilidade modelo ↔ solicitação', () => {
 
     await loginAdmin(`/app/admin/modelos/${modeloId}`);
 
+    await page.getByRole('tab', { name: 'Histórico' }).click();
     await page.getByRole('link', { name: titulo }).first().click();
 
     await expect(page).toHaveURL(new RegExp(sol.id));

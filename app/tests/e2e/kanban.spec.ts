@@ -99,7 +99,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.locator('input[name="responsavelIds"]').first().check();
     await page.click('button:has-text("Confirmar triagem")');
 
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
   });
 
   test('envio para validação: EM_ANDAMENTO → EM_VALIDACAO (exige evidência para REENGENHARIA)', async ({
@@ -131,7 +131,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await expect(enviar).toBeEnabled();
     await enviar.click();
 
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
   });
 
   test('devolver: EM_VALIDACAO → EM_ANDAMENTO', async ({ page, loginAdmin, request, token }) => {
@@ -146,7 +146,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     );
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Mais ações' }).click();
     await page.getByRole('menuitem', { name: 'Devolver' }).click();
@@ -154,7 +154,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.fill('textarea[name="motivo"]', 'Falta ajuste antes de validar');
     await page.click('button:has-text("Confirmar devolução")');
 
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
   });
 
   test('concluir: EM_VALIDACAO → CONCLUIDA', async ({ page, loginAdmin, request, token }) => {
@@ -169,7 +169,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     );
 
     await loginAdmin(`/app/solicitacoes/${id}`);
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
     await page.click('button:has-text("Encerrar")');
     await page.locator('textarea[name="comentario"]').first().fill('Concluído via Playwright');
@@ -218,7 +218,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.selectOption('select[name="prioridade"]', 'URGENTE');
     await page.locator('input[name="responsavelIds"]').first().check();
     await page.click('button:has-text("Confirmar triagem")');
-    await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
 
     // Validação (com evidência, exigida para REENGENHARIA)
     await page.click('button:has-text("Enviar para validação")');
@@ -231,7 +231,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     });
     await expect(page.getByText('Evidência anexada com sucesso')).toBeVisible({ timeout: 15000 });
     await modal.getByRole('button', { name: 'Enviar para validação' }).click();
-    await expect(page.getByText('Em validação', { exact: true })).toBeVisible();
+    await expect(page.getByText('Em validação', { exact: true }).first()).toBeVisible();
 
     // Conclusão
     await page.click('button:has-text("Encerrar")');

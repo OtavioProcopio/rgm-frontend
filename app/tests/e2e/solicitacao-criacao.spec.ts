@@ -110,7 +110,8 @@ test.describe('Solicitação tipo CRIACAO', () => {
 
     // O evento CADASTRO aparece no prontuário do modelo recém-criado.
     await link.click();
-    await expect(page.getByText(codigo)).toBeVisible();
+    await expect(page.getByText(codigo).first()).toBeVisible();
+    await page.getByRole('tab', { name: 'Histórico' }).click();
     await expect(page.getByText('Modelo cadastrado')).toBeVisible();
   });
 
