@@ -39,10 +39,10 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 2 — Domínio dependente
 
-- [ ] T012 [P] Criar `TST/shared/lib/linhaDoTempo.test.ts`: `agruparPorDia` ordena do mais recente para o mais antigo (também dentro de cada dia) e agrupa por dia com `rotuloDoDia`; itens no mesmo instante mantêm a ordem de chegada; lista vazia dá nenhum grupo; `recolher` com mais de 10 itens deixa os 10 mais recentes e informa quantos ficaram atrás, com 10 ou menos não recolhe; expandido devolve todos
-- [ ] T013 [P] Criar `SRC/shared/lib/linhaDoTempo.ts` (com o tipo `ItemDaLinhaDoTempo`)
-- [ ] T014 [P] Alterar `TST/features/solicitacoes/lib/prazoSolicitacao.test.ts`: os testes atuais passam sem alteração com `formatarDuracao` vindo de `shared/lib/duracao`; casos novos de `prazoDoResumo`: aberta recém-criada com muito prazo restante mostra "Vence em N h" (o que `situacaoDoPrazo` não mostra); aberta vencida mostra "Atrasada há N d" em tom de atraso; concluída no prazo mostra "No prazo" e fora dele "Fora do prazo"; cancelada e sem `prazoLimite` não mostram nada
-- [ ] T015 [P] Alterar `SRC/features/solicitacoes/lib/prazoSolicitacao.ts`: importar `formatarDuracao` de `SRC/shared/lib/duracao.ts` e acrescentar `prazoDoResumo`
+- [x] T012 [P] Criar `TST/shared/lib/linhaDoTempo.test.ts`: `agruparPorDia` ordena do mais recente para o mais antigo (também dentro de cada dia) e agrupa por dia com `rotuloDoDia`; itens no mesmo instante mantêm a ordem de chegada; lista vazia dá nenhum grupo; `recolher` com mais de 10 itens deixa os 10 mais recentes e informa quantos ficaram atrás, com 10 ou menos não recolhe; expandido devolve todos
+- [x] T013 [P] Criar `SRC/shared/lib/linhaDoTempo.ts` (com o tipo `ItemDaLinhaDoTempo`)
+- [x] T014 [P] Alterar `TST/features/solicitacoes/lib/prazoSolicitacao.test.ts`: os testes atuais passam sem alteração com `formatarDuracao` vindo de `shared/lib/duracao`; casos novos de `prazoDoResumo`: aberta recém-criada com muito prazo restante mostra "Vence em N h" (o que `situacaoDoPrazo` não mostra); aberta vencida mostra "Atrasada há N d" em tom de atraso; concluída no prazo mostra "No prazo" e fora dele "Fora do prazo"; cancelada e sem `prazoLimite` não mostram nada
+- [x] T015 [P] Alterar `SRC/features/solicitacoes/lib/prazoSolicitacao.ts`: importar `formatarDuracao` de `SRC/shared/lib/duracao.ts` e acrescentar `prazoDoResumo`
 
 ## Fase 3 — Adaptadores de domínio
 

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
-import { formatarDuracao, idadeEmDias, situacaoDoPrazo } from '@/features/solicitacoes/lib/prazoSolicitacao';
+import {
+  formatarDuracao,
+  idadeEmDias,
+  prazoDoResumo,
+  situacaoDoPrazo,
+} from '@/features/solicitacoes/lib/prazoSolicitacao';
 
 const HORA = 3_600_000;
 const ABERTURA = Date.parse('2026-10-01T12:00:00Z');
@@ -127,6 +132,101 @@ describe('situacaoDoPrazo', () => {
   });
 });
 
+describe('prazoDoResumo', () => {
+  it('deve mostrar quanto falta, sem destaque, quando a aberta tem muito prazo restante', () => {
+    // Arrange
+    const aberta = emAndamento(48);
+    const agora = ABERTURA + 2 * HORA;
+
+    // Act
+    const resumo = prazoDoResumo(aberta, agora);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'neutro', rotulo: 'Vence em 46 h' });
+    expect(situacaoDoPrazo(aberta, agora)).toBeNull();
+  });
+
+  it('deve mostrar quanto falta, com atenção, quando resta um quarto do prazo ou menos', () => {
+    // Arrange
+    const aberta = emAndamento(24);
+    const agora = ABERTURA + 20 * HORA;
+
+    // Act
+    const resumo = prazoDoResumo(aberta, agora);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'atencao', rotulo: 'Vence em 4 h' });
+  });
+
+  it('deve dizer há quanto tempo está atrasada quando a aberta passou do prazo', () => {
+    // Arrange
+    const aberta = emAndamento(24);
+    const agora = ABERTURA + 72 * HORA;
+
+    // Act
+    const resumo = prazoDoResumo(aberta, agora);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'atraso', rotulo: 'Atrasada há 2 d' });
+  });
+
+  it('deve dizer apenas "Atrasada" quando a API marca atraso e o prazo ainda está no futuro', () => {
+    // Arrange
+    const aberta = emAndamento(24, { atrasada: true });
+    const agora = ABERTURA + 10 * HORA;
+
+    // Act
+    const resumo = prazoDoResumo(aberta, agora);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'atraso', rotulo: 'Atrasada' });
+  });
+
+  it('deve dizer "No prazo" quando a concluída não está marcada como atrasada', () => {
+    // Arrange
+    const concluida = emAndamento(24, { status: 'CONCLUIDA', atrasada: false });
+
+    // Act
+    const resumo = prazoDoResumo(concluida, ABERTURA + 500 * HORA);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'ok', rotulo: 'No prazo' });
+  });
+
+  it('deve dizer "Fora do prazo" quando a concluída está marcada como atrasada', () => {
+    // Arrange
+    const concluida = emAndamento(24, { status: 'CONCLUIDA', atrasada: true });
+
+    // Act
+    const resumo = prazoDoResumo(concluida, ABERTURA + 500 * HORA);
+
+    // Assert
+    expect(resumo).toEqual({ tom: 'atraso', rotulo: 'Fora do prazo' });
+  });
+
+  it('deve devolver nulo quando a solicitação está cancelada', () => {
+    // Arrange
+    const cancelada = emAndamento(24, { status: 'CANCELADA' });
+
+    // Act
+    const resumo = prazoDoResumo(cancelada, ABERTURA + 2 * HORA);
+
+    // Assert
+    expect(resumo).toBeNull();
+  });
+
+  it('deve devolver nulo quando a API não informa o prazo', () => {
+    // Arrange
+    const semPrazo = criarSolicitacao({ status: 'A_FAZER', prioridade: null });
+
+    // Act
+    const resumo = prazoDoResumo(semPrazo, ABERTURA);
+
+    // Assert
+    expect(resumo).toBeNull();
+  });
+});
+
 describe('formatarDuracao', () => {
   it('deve escrever em minutos quando é menos de 1 hora', () => {
     expect(formatarDuracao(59 * 60_000)).toBe('59 min');
@@ -151,13 +251,21 @@ describe('formatarDuracao', () => {
 
 describe('idadeEmDias', () => {
   it('deve contar os dias inteiros desde a abertura quando a solicitação está em aberto', () => {
-    const aberta = criarSolicitacao({ status: 'EM_VALIDACAO', prioridade: 'ALTA', criadaEm: iso(ABERTURA) });
+    const aberta = criarSolicitacao({
+      status: 'EM_VALIDACAO',
+      prioridade: 'ALTA',
+      criadaEm: iso(ABERTURA),
+    });
 
     expect(idadeEmDias(aberta, ABERTURA + 60 * HORA)).toBe(2);
   });
 
   it('deve devolver nulo quando a solicitação está concluída', () => {
-    const concluida = criarSolicitacao({ status: 'CONCLUIDA', prioridade: 'ALTA', criadaEm: iso(ABERTURA) });
+    const concluida = criarSolicitacao({
+      status: 'CONCLUIDA',
+      prioridade: 'ALTA',
+      criadaEm: iso(ABERTURA),
+    });
 
     expect(idadeEmDias(concluida, ABERTURA + 60 * HORA)).toBeNull();
   });
