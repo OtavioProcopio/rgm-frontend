@@ -62,7 +62,7 @@ export function prazoDoResumo(solicitacao: Solicitacao, agoraMs: number): Situac
   };
 }
 
-function prazoDaConcluida(atrasada: boolean): SituacaoDoPrazo {
+function prazoDaConcluida(atrasada: boolean | undefined): SituacaoDoPrazo {
   return atrasada ? { tom: 'atraso', rotulo: 'Fora do prazo' } : { tom: 'ok', rotulo: 'No prazo' };
 }
 

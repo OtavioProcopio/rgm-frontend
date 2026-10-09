@@ -46,10 +46,10 @@ testado tem em `app/src`. Toda ferramenta roda por `make`, na raiz do repositór
 
 ## Fase 3 — Adaptadores de domínio
 
-- [ ] T016 [P] Criar `TST/features/admin/modelos/lib/historicoDoModelo.test.ts`: evento com `solicitacaoRelacionadaId` cobre aquela solicitação, que não vira item de abertura; solicitação sem evento vira item de "abertura" com título, status e `criadaEm`; evento sem solicitação relacionada entra como está; cada solicitação aparece uma vez; todo item com solicitação leva a `/app/solicitacoes/<id>`; listas vazias dão lista vazia
-- [ ] T017 [P] Criar `SRC/features/admin/modelos/lib/historicoDoModelo.ts`
-- [ ] T018 [P] Criar `TST/features/solicitacoes/lib/historicoDaSolicitacao.test.ts`: cada tipo de atividade (`ABERTURA`, `ATRIBUICAO`, `MUDANCA_STATUS`, `COMENTARIO`, `EVIDENCIA_ADICIONADA`) vira item com o rótulo certo; comentário e evidência têm peso "destaque" e atribuição e mudança de status têm peso "discreto"; mudança de status leva os dois estados (de e para); comentário leva o texto; o autor leva nome e iniciais (uma ou duas letras)
-- [ ] T019 [P] Criar `SRC/features/solicitacoes/lib/historicoDaSolicitacao.ts`
+- [x] T016 [P] Criar `TST/features/admin/modelos/lib/historicoDoModelo.test.ts`: evento com `solicitacaoRelacionadaId` cobre aquela solicitação, que não vira item de abertura; solicitação sem evento vira item de "abertura" com título, status e `criadaEm`; evento sem solicitação relacionada entra como está; cada solicitação aparece uma vez; todo item com solicitação leva a `/app/solicitacoes/<id>`; listas vazias dão lista vazia
+- [x] T017 [P] Criar `SRC/features/admin/modelos/lib/historicoDoModelo.ts`
+- [x] T018 [P] Criar `TST/features/solicitacoes/lib/historicoDaSolicitacao.test.ts`: cada tipo de atividade (`ABERTURA`, `ATRIBUICAO`, `MUDANCA_STATUS`, `COMENTARIO`, `EVIDENCIA_ADICIONADA`) vira item com o rótulo certo; comentário e evidência têm peso "destaque" e atribuição e mudança de status têm peso "discreto"; mudança de status leva os dois estados (de e para); comentário leva o texto; o autor leva nome e iniciais (uma ou duas letras)
+- [x] T019 [P] Criar `SRC/features/solicitacoes/lib/historicoDaSolicitacao.ts`
 
 ## Fase 4 — Hooks
 
