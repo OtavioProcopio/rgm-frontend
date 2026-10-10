@@ -12,6 +12,7 @@ import { cn } from '@/shared/lib/cn';
 import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import { useAcoesPermitidas } from '../hooks/useAcoesPermitidas';
 import { useColunasDoQuadro } from '../hooks/useColunaDoQuadro';
+import { useTemSolicitacaoDoOperador } from '../hooks/useTemSolicitacaoDoOperador';
 import { acaoDoMovimento, proximoStatus, type AcaoSolicitacao } from '../lib/acoesSolicitacao';
 import { colunaLimitadaAos30Dias, inicioDosUltimos30Dias } from '../lib/filtrosDaColuna';
 import { relacaoDoOperador } from '../lib/relacaoDoOperador';
@@ -48,6 +49,10 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
   const isLoading = todas.some((coluna) => coluna.carregando);
   const error = todas.find((coluna) => coluna.erro)?.erro ?? null;
   const totalDoQuadro = todas.reduce((soma, coluna) => soma + coluna.total, 0);
+  // As encerradas só vêm dos últimos 30 dias: quadro vazio não prova que o operador não tem nada.
+  const temEncerradaAntiga = useTemSolicitacaoDoOperador({
+    enabled: isOperador && totalDoQuadro === 0 && !temFiltro && !isLoading,
+  });
 
   const [dragging, setDragging] = useState<Solicitacao | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<StatusSolicitacao | null>(null);
@@ -106,7 +111,11 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
       />
     );
   }
-  if (isOperador && totalDoQuadro === 0) {
+  if (isOperador && totalDoQuadro === 0 && temEncerradaAntiga.isLoading) {
+    return <LoadingState title="Carregando quadro..." />;
+  }
+  // Com solicitação fora do recorte, ou sem saber (consulta falhou), não afirma que nunca teve.
+  if (isOperador && totalDoQuadro === 0 && temEncerradaAntiga.data === false) {
     return (
       <EmptyState
         title="Você ainda não abriu nem recebeu solicitações"

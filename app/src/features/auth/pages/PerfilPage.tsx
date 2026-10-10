@@ -27,6 +27,7 @@ import { Badge, type BadgeVariant } from '@/shared/components/Badge/Badge';
 import { Button } from '@/shared/components/Button/Button';
 import { Card } from '@/shared/components/Card/Card';
 import { Input } from '@/shared/components/Input/Input';
+import { mensagemDaApi } from '@/shared/lib/mensagensDaApi';
 import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 
 const VARIACAO_DO_PERFIL: Record<PerfilUsuario, BadgeVariant> = {
@@ -36,10 +37,28 @@ const VARIACAO_DO_PERFIL: Record<PerfilUsuario, BadgeVariant> = {
   EXTERNO: 'success',
 };
 
+function mensagemDaTrocaDeSenha(error: ApiError): string {
+  const conhecida: string | null = mensagemDaApi(error);
+  const recusouASenhaAtual: boolean =
+    error.status === 400 ||
+    error.status === 422 ||
+    error.message.toLowerCase().includes('senha atual incorreta');
+  if (conhecida) {
+    return conhecida;
+  }
+  if (recusouASenhaAtual) {
+    return 'Senha atual incorreta.';
+  }
+  return error.message || 'Erro ao alterar senha.';
+}
+
 export function PerfilPage() {
   const { data: usuario, isLoading, isError } = usePerfil();
   const { mutateAsync: alterarSenha } = useAlterarSenha();
-  const { data: metricas } = useMetricas();
+  // OPERADOR nao recebe indicadores agregados do sistema (a API responde 403).
+  const veIndicadoresDoSistema =
+    usuario?.perfil === 'GESTOR' || usuario?.perfil === 'ADMINISTRADOR';
+  const { data: metricas } = useMetricas({ enabled: veIndicadoresDoSistema });
 
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -75,15 +94,7 @@ export function PerfilPage() {
       reset();
     } catch (error) {
       if (error instanceof ApiError) {
-        if (
-          error.status === 400 ||
-          error.status === 422 ||
-          error.message.toLowerCase().includes('senha atual incorreta')
-        ) {
-          setErro('Senha atual incorreta.');
-          return;
-        }
-        setErro(error.message || 'Erro ao alterar senha.');
+        setErro(mensagemDaTrocaDeSenha(error));
         return;
       }
       setErro('Não foi possível alterar a senha agora. Tente novamente mais tarde.');
@@ -280,7 +291,7 @@ export function PerfilPage() {
         </Card>
       </div>
 
-      {metricas && (
+      {veIndicadoresDoSistema && metricas && (
         <Card className="p-6">
           <div className="flex items-center gap-2.5 border-b border-line pb-4">
             <div className="rounded-lg bg-surface-muted p-2 text-accent">

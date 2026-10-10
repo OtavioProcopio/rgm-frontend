@@ -1041,3 +1041,56 @@ describe('SolicitacaoDetalhePage — comentário e evidências', () => {
     expect(tela.queryByText('excluir-evidencia')).toBeNull();
   });
 });
+
+describe('SolicitacaoDetalhePage — acesso negado', () => {
+  function abrirComErro(erro: Error) {
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: erro,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+    return within(container);
+  }
+
+  it('deve mostrar a mensagem de acesso negado quando a API responde 403', () => {
+    // Arrange
+    const erro = new ApiError({
+      status: 403,
+      message: 'Usuario nao tem acesso a esta solicitacao',
+    });
+
+    // Act
+    const tela = abrirComErro(erro);
+
+    // Assert
+    expect(tela.getByText('Você não tem acesso a esta solicitação.')).toBeDefined();
+  });
+
+  it('deve mostrar a mensagem de acesso negado quando a API responde 403 com outro texto', () => {
+    // Arrange
+    const erro = new ApiError({ status: 403, message: 'Access Denied' });
+
+    // Act
+    const tela = abrirComErro(erro);
+
+    // Assert
+    expect(tela.getByText('Você não tem acesso a esta solicitação.')).toBeDefined();
+  });
+
+  it('deve oferecer Voltar ao quadro apontando para a lista quando a API responde 403', () => {
+    // Arrange
+    const erro = new ApiError({
+      status: 403,
+      message: 'Usuario nao tem acesso a esta solicitacao',
+    });
+
+    // Act
+    const tela = abrirComErro(erro);
+
+    // Assert
+    const link = tela.getByRole('link', { name: 'Voltar ao quadro' });
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes');
+  });
+});

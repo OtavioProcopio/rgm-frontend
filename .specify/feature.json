@@ -1,4 +1,4 @@
 {
-  "active": "specs/013-dashboard-uma-pergunta-por-bloco-sem",
-  "title": "Dashboard: uma pergunta por bloco, sem informação repetida e com indicadores que dizem algo (rgm-frontend issue #144). Spec 013. Base: origin/develop."
+  "active": "specs/014-pacote-de-correcoes-do-frontend-rgm",
+  "title": "Pacote de correções do frontend (rgm-frontend, issues #153, #146, #139, #141 e #138), sobre develop. Spec 014. A #153 ja foi codificada na branch fix/perfil-sem-metricas-do-sistema-para-operador (PR #154) sem passar pelo fluxo; esta spec a absorve. Demais: #146 filtros com lista nao voltam a Todos; #139 erros crus da API no detalhe; #141 quadro vazio do operador; #138 e2e de evidencias com regra antiga. Backend nao muda."
 }
