@@ -49,13 +49,19 @@ vi.mock('@/features/solicitacoes/components/SolicitacaoFilters', () => ({
     filters,
     onChange,
   }: {
-    filters: object;
+    filters: { atrasada?: boolean; emAberto?: boolean };
     onChange: (filtros: object) => void;
   }) => (
     <div data-testid="solicitacao-filters">
       <button type="button" onClick={() => onChange({ ...filters, modeloId: 'm-9' })}>
         Filtrar pelo modelo m-9
       </button>
+      {filters.atrasada ? (
+        <button type="button" onClick={() => onChange({ ...filters, atrasada: undefined })}>
+          Em atraso
+        </button>
+      ) : null}
+      {filters.emAberto ? <span>Em aberto</span> : null}
     </div>
   ),
 }));
@@ -374,6 +380,190 @@ describe('SolicitacoesPage — paginação da lista', () => {
   });
 });
 
+describe('SolicitacoesPage — filtros vindos da URL', () => {
+  async function prepararListagemCarregando() {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: undefined,
+      error: null,
+      isLoading: true,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    return vi.mocked(useSolicitacoes);
+  }
+
+  function abrirComUrl(consulta: string): void {
+    const { AppWrapper } = createAppWrapper({
+      initialEntries: [`/app/solicitacoes${consulta}`],
+    });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+  }
+
+  it('deve abrir na lista quando a URL traz atrasada e emAberto', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?atrasada=true&emAberto=true');
+
+    // Assert
+    expect(screen.getByTestId('solicitacao-filters')).toBeDefined();
+  });
+
+  it('deve pedir a listagem com atrasada, emAberto, page 0 e size 20 quando a URL traz atrasada e emAberto', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?atrasada=true&emAberto=true');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, atrasada: true, emAberto: true },
+      { enabled: true },
+    );
+  });
+
+  it('deve mostrar a etiqueta "Em atraso" quando a URL traz atrasada e emAberto', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?atrasada=true&emAberto=true');
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Em atraso' })).toBeDefined();
+  });
+
+  it('deve mostrar a etiqueta "Em aberto" quando a URL traz atrasada e emAberto', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?atrasada=true&emAberto=true');
+
+    // Assert
+    expect(screen.getByText('Em aberto')).toBeDefined();
+  });
+
+  it('deve pedir a listagem com tipo e emAberto quando a URL traz tipo=REPARO e emAberto', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?tipo=REPARO&emAberto=true');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, tipo: 'REPARO', emAberto: true },
+      { enabled: true },
+    );
+  });
+
+  it('deve pedir a listagem com status quando a URL traz status=A_FAZER', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?status=A_FAZER');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, status: 'A_FAZER' },
+      { enabled: true },
+    );
+  });
+
+  it('deve pedir a listagem com prioridade e emAberto quando a URL traz prioridade=URGENTE e emAberto', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?prioridade=URGENTE&emAberto=true');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, prioridade: 'URGENTE', emAberto: true },
+      { enabled: true },
+    );
+  });
+
+  it('deve abrir no Kanban quando a URL traz só valores inválidos', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?status=XYZ&atrasada=1');
+
+    // Assert
+    expect(screen.getByTestId('kanban-board')).toBeDefined();
+  });
+
+  it('deve ignorar os valores inválidos da URL quando a listagem é pedida', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?status=XYZ&atrasada=1');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith({ page: 0, size: 20 }, { enabled: false });
+  });
+
+  it('deve abrir no Kanban quando a URL não traz parâmetro', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('');
+
+    // Assert
+    expect(screen.getByTestId('kanban-board')).toBeDefined();
+  });
+
+  it('deve abrir na lista quando a URL traz maquina=VICK', async () => {
+    // Arrange
+    await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?maquina=VICK');
+
+    // Assert
+    expect(screen.getByTestId('solicitacao-filters')).toBeDefined();
+  });
+
+  it('deve pedir a listagem com maquina quando a URL traz maquina=VICK', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+
+    // Act
+    abrirComUrl('?maquina=VICK');
+
+    // Assert
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, maquina: 'VICK' },
+      { enabled: true },
+    );
+  });
+
+  it('deve refazer a listagem sem atrasada quando a etiqueta "Em atraso" é removida', async () => {
+    // Arrange
+    const listagem = await prepararListagemCarregando();
+    abrirComUrl('?atrasada=true&emAberto=true');
+    listagem.mockClear();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Em atraso' }));
+
+    // Assert
+    expect(listagem).toHaveBeenCalledTimes(1);
+    expect(listagem).toHaveBeenCalledWith(
+      { page: 0, size: 20, atrasada: undefined, emAberto: true },
+      { enabled: true },
+    );
+  });
+});
+
 describe('SolicitacoesPage — cores por papel', () => {
   it('deve pôr a troca de visão sobre a superfície com a borda do tema quando a página abre', () => {
     // Arrange
@@ -468,4 +658,41 @@ describe('SolicitacoesPage — limpar o filtro do quadro', () => {
     // Assert
     expect(screen.getByTestId('modelo-do-quadro').textContent).toBe('sem modelo');
   });
+});
+
+describe('SolicitacoesPage — lista vazia com filtros da URL', () => {
+  async function abrirListaVaziaComUrl(consulta: string) {
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    vi.mocked(useSolicitacoes).mockReset();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: { content: [], page: 0, totalPages: 0, totalElements: 0 },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper({
+      initialEntries: [`/app/solicitacoes${consulta}`],
+    });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+  }
+
+  it.each([
+    ['atrasada', '?atrasada=true'],
+    ['emAberto', '?emAberto=true'],
+    ['atrasada e emAberto', '?atrasada=true&emAberto=true'],
+    ['tipo', '?tipo=REPARO'],
+    ['prioridade', '?prioridade=ALTA'],
+    ['maquina', '?maquina=VICK'],
+  ])(
+    'deve avisar que os filtros não acharam nada quando a URL traz %s e a lista vem vazia',
+    async (_filtro, consulta) => {
+      // Arrange
+      const mensagem = 'Nenhuma solicitação com os filtros aplicados.';
+
+      // Act
+      await abrirListaVaziaComUrl(consulta);
+
+      // Assert
+      expect(screen.queryByText(mensagem)).not.toBeNull();
+    },
+  );
 });

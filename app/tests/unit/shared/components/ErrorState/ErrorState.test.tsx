@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 
@@ -27,5 +28,61 @@ describe('ErrorState', () => {
   it('does not render description element when omitted', () => {
     const { container } = render(<ErrorState title="Erro" />);
     expect(container.querySelector('p')).toBeNull();
+  });
+
+  it('deve omitir o botão quando onRetry não for informado', () => {
+    // Arrange
+    const { container } = render(<ErrorState title="Erro" />);
+
+    // Act
+    const botao = within(container).queryByRole('button');
+
+    // Assert
+    expect(botao).toBeNull();
+  });
+
+  it('deve mostrar o botão Tentar novamente quando onRetry for informado', () => {
+    // Arrange
+    const { container } = render(<ErrorState onRetry={vi.fn()} />);
+
+    // Act
+    const botao = within(container).queryByRole('button', { name: 'Tentar novamente' });
+
+    // Assert
+    expect(botao).not.toBeNull();
+  });
+
+  it('deve chamar onRetry uma vez quando o botão for clicado', async () => {
+    // Arrange
+    const onRetry = vi.fn();
+    const { container } = render(<ErrorState onRetry={onRetry} />);
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve expor role alert quando renderizado', () => {
+    // Arrange
+    const { container } = render(<ErrorState title="Erro" />);
+
+    // Act
+    const alerta = within(container).queryByRole('alert');
+
+    // Assert
+    expect(alerta).not.toBeNull();
+  });
+
+  it('deve não renderizar parágrafo quando houver onRetry e não houver descrição', () => {
+    // Arrange
+    const { container } = render(<ErrorState title="Erro" onRetry={vi.fn()} />);
+
+    // Act
+    const paragrafo = container.querySelector('p');
+
+    // Assert
+    expect(paragrafo).toBeNull();
   });
 });

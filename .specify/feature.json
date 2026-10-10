@@ -1,4 +1,4 @@
 {
-  "active": "specs/012-modelos-e-linha-do-tempo",
-  "title": "Modelos e linha do tempo: ficha do modelo com foto em destaque e histórico da solicitação em linha do tempo"
+  "active": "specs/013-dashboard-uma-pergunta-por-bloco-sem",
+  "title": "Dashboard: uma pergunta por bloco, sem informação repetida e com indicadores que dizem algo (rgm-frontend issue #144). Spec 013. Base: origin/develop."
 }

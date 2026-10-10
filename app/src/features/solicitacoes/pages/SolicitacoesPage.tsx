@@ -19,22 +19,40 @@ import { KanbanBoard } from '../components/KanbanBoard';
 import { SolicitacaoCard } from '../components/SolicitacaoCard';
 import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
+import { lerFiltrosDaUrl } from '../lib/filtrosDaUrl';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 const PAGE_SIZE = 20;
 type View = 'lista' | 'kanban';
 
+/** Há filtro ativo quando qualquer campo, além da paginação, tem valor. */
+function temFiltroAtivo(filters: SolicitacoesFilters): boolean {
+  return Object.entries(filters).some(
+    ([campo, valor]) => campo !== 'page' && campo !== 'size' && valor !== undefined && valor !== '',
+  );
+}
+
+type EstadoInicial = { view: View; filters: SolicitacoesFilters };
+
+/** Visão e filtros com que a página abre, lidos da URL uma única vez. */
+function useEstadoInicialDaUrl(): EstadoInicial {
+  const [searchParams] = useSearchParams();
+  const [inicial] = useState<EstadoInicial>(() => {
+    const { filtros, temFiltroDoPainel } = lerFiltrosDaUrl(searchParams);
+    return {
+      view: temFiltroDoPainel || filtros.maquina ? 'lista' : 'kanban',
+      filters: { page: 0, size: PAGE_SIZE, ...filtros },
+    };
+  });
+  return inicial;
+}
+
 export function SolicitacoesPage() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const maquinaFromUrl = searchParams.get('maquina') || undefined;
-  const [view, setView] = useState<View>(maquinaFromUrl ? 'lista' : 'kanban');
-  const [filters, setFilters] = useState<SolicitacoesFilters>({
-    page: 0,
-    size: PAGE_SIZE,
-    maquina: maquinaFromUrl,
-  });
+  const inicial = useEstadoInicialDaUrl();
+  const [view, setView] = useState<View>(inicial.view);
+  const [filters, setFilters] = useState<SolicitacoesFilters>(inicial.filters);
   const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
@@ -157,7 +175,7 @@ export function SolicitacoesPage() {
             <EmptyState
               title="Nenhuma solicitação encontrada"
               description={
-                filters.status || filters.modeloId
+                temFiltroAtivo(filters)
                   ? 'Nenhuma solicitação com os filtros aplicados.'
                   : 'Nenhuma solicitação cadastrada ainda.'
               }

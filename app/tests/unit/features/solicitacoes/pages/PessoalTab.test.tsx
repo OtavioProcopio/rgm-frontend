@@ -9,7 +9,10 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { PessoalTab } from '@/features/solicitacoes/pages/PessoalTab';
 import type { PageResponse } from '@/shared/types/page';
-import type { Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
+import type {
+  Solicitacao,
+  SolicitacoesFilters,
+} from '@/features/solicitacoes/types/solicitacaoTypes';
 
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn(),
@@ -63,6 +66,227 @@ describe('PessoalTab', () => {
 
     // Assert
     expect(within(container).getByText(/carregando/i)).toBeDefined();
+  });
+});
+
+describe('PessoalTab — aba sem nada', () => {
+  async function abrir(totais: { abertas: number; responsavel: number; concluidas: number }) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { id: 'op-1' },
+      isLoading: false,
+    } as unknown as ReturnType<typeof usePerfil>);
+    vi.mocked(solicitacoesApi.listar).mockReset();
+    vi.mocked(solicitacoesApi.listar).mockImplementation((filtros) => {
+      if (filtros.status === 'CONCLUIDA') {
+        return Promise.resolve({ ...emptyPage, totalElements: totais.concluidas });
+      }
+      const total = filtros.abertaPorUsuarioId ? totais.abertas : totais.responsavel;
+      const content = Array.from({ length: total }, (_, i) =>
+        solicitacao({ id: `x-${i}`, titulo: `Item ${i}` }),
+      );
+      return Promise.resolve({
+        ...emptyPage,
+        content,
+        totalElements: total,
+        totalPages: total > 0 ? 1 : 0,
+      });
+    });
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    return render(<PessoalTab />, { wrapper: AppWrapper });
+  }
+
+  const zerado = { abertas: 0, responsavel: 0, concluidas: 0 };
+
+  it('deve mostrar o título "Nada por aqui ainda" quando tudo está zerado', async () => {
+    // Arrange
+    const totais = zerado;
+
+    // Act
+    const tela = await abrir(totais);
+
+    // Assert
+    expect(await tela.findByText('Nada por aqui ainda')).toBeDefined();
+  });
+
+  it('deve mostrar a descrição do vazio quando tudo está zerado', async () => {
+    // Arrange
+    const totais = zerado;
+
+    // Act
+    const tela = await abrir(totais);
+
+    // Assert
+    expect(await tela.findByText('Você ainda não abriu nem recebeu solicitações.')).toBeDefined();
+  });
+
+  it('deve levar o link "Ver o quadro" para /app/solicitacoes quando tudo está zerado', async () => {
+    // Arrange
+    const totais = zerado;
+
+    // Act
+    const tela = await abrir(totais);
+    const link = await tela.findByRole('link', { name: 'Ver o quadro' });
+
+    // Assert
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes');
+  });
+
+  it.each(['Abertas por mim', 'Sou responsável', 'Nenhuma solicitação encontrada'])(
+    'deve não mostrar "%s" quando tudo está zerado',
+    async (texto) => {
+      // Arrange
+      const totais = zerado;
+
+      // Act
+      const tela = await abrir(totais);
+      await tela.findByText('Nada por aqui ainda');
+
+      // Assert
+      expect(tela.queryByText(new RegExp(texto))).toBeNull();
+    },
+  );
+
+  it('deve mostrar os indicadores quando só há uma concluída', async () => {
+    // Arrange
+    const totais = { ...zerado, concluidas: 1 };
+
+    // Act
+    const tela = await abrir(totais);
+
+    // Assert
+    expect(await tela.findByText('Concluídas por mim')).toBeDefined();
+  });
+
+  it('deve não mostrar o vazio quando só há uma concluída', async () => {
+    // Arrange
+    const totais = { ...zerado, concluidas: 1 };
+
+    // Act
+    const tela = await abrir(totais);
+    await tela.findByText('Concluídas por mim');
+
+    // Assert
+    expect(tela.queryByText('Nada por aqui ainda')).toBeNull();
+  });
+
+  it('deve mostrar a lista quando há uma aberta por mim', async () => {
+    // Arrange
+    const totais = { ...zerado, abertas: 1 };
+
+    // Act
+    const tela = await abrir(totais);
+
+    // Assert
+    expect(await tela.findByRole('link', { name: /Item 0/ })).toBeDefined();
+  });
+
+  it('deve mostrar o indicador "Abertas por mim" quando há uma aberta por mim', async () => {
+    // Arrange
+    const totais = { ...zerado, abertas: 1 };
+
+    // Act
+    const tela = await abrir(totais);
+
+    // Assert
+    expect(await tela.findByText('Abertas por mim')).toBeDefined();
+  });
+
+  it('deve mostrar as listas vazias quando a consulta das abertas falha e há concluídas', async () => {
+    // Arrange
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { id: 'op-1' },
+      isLoading: false,
+    } as unknown as ReturnType<typeof usePerfil>);
+    vi.mocked(solicitacoesApi.listar).mockReset();
+    vi.mocked(solicitacoesApi.listar).mockImplementation((filtros) =>
+      filtros.status === 'CONCLUIDA'
+        ? Promise.resolve({ ...emptyPage, totalElements: 5 })
+        : Promise.reject(new Error('falha')),
+    );
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+
+    // Act
+    const tela = render(<PessoalTab />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(await tela.findAllByText(/Nenhuma solicitação encontrada/)).toHaveLength(2);
+  });
+
+  async function abrirComConsultaQueFalha(
+    falha: (filtros: SolicitacoesFilters) => boolean,
+    abertasPorMim: number,
+  ) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { solicitacoesApi } = await import('@/features/solicitacoes/api/solicitacoesApi');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { id: 'op-1' },
+      isLoading: false,
+    } as unknown as ReturnType<typeof usePerfil>);
+    vi.mocked(solicitacoesApi.listar).mockReset();
+    vi.mocked(solicitacoesApi.listar).mockImplementation((filtros) =>
+      falha(filtros)
+        ? Promise.reject(new Error('falha'))
+        : Promise.resolve({
+            ...emptyPage,
+            content: filtros.abertaPorUsuarioId
+              ? Array.from({ length: abertasPorMim }, (_, i) =>
+                  solicitacao({ id: `a${i}`, titulo: `Minha ${i}` }),
+                )
+              : [],
+            totalElements: filtros.abertaPorUsuarioId ? abertasPorMim : 0,
+            totalPages: filtros.abertaPorUsuarioId && abertasPorMim > 0 ? 1 : 0,
+          }),
+    );
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Op', perfil: 'OPERADOR' } });
+    return render(<PessoalTab />, { wrapper: AppWrapper });
+  }
+
+  it('deve mostrar o vazio quando a consulta das concluídas falha e não há abertas', async () => {
+    // Arrange
+    const abertasPorMim = 0;
+
+    // Act
+    const tela = await abrirComConsultaQueFalha(
+      (filtros) => filtros.status === 'CONCLUIDA',
+      abertasPorMim,
+    );
+
+    // Assert
+    expect(await tela.findByText('Nada por aqui ainda')).toBeDefined();
+  });
+
+  it('deve mostrar os indicadores quando a consulta das concluídas falha e há abertas', async () => {
+    // Arrange
+    const abertasPorMim = 2;
+
+    // Act
+    const tela = await abrirComConsultaQueFalha(
+      (filtros) => filtros.status === 'CONCLUIDA',
+      abertasPorMim,
+    );
+
+    // Assert
+    expect(await tela.findByText('Concluídas por mim')).toBeDefined();
+  });
+
+  it('deve não mostrar o vazio quando o perfil ainda carrega', async () => {
+    // Arrange
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    } as unknown as ReturnType<typeof usePerfil>);
+    const { AppWrapper } = createAppWrapper();
+
+    // Act
+    const tela = render(<PessoalTab />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(tela.queryByText('Nada por aqui ainda')).toBeNull();
   });
 });
 
@@ -199,6 +423,19 @@ describe('PessoalTab — listas em aberto, paginadas', () => {
 
     // Assert
     expect(await tela.findByRole('link', { name: /Abri 11/ })).toBeDefined();
+  });
+
+  it('deve voltar à primeira página das abertas pelo operador quando "Anterior" é acionado', async () => {
+    // Arrange
+    const { tela } = await abrirAba();
+    await userEvent.click(tela.getAllByRole('button', { name: 'Próxima' })[0]);
+    await tela.findByRole('link', { name: /Abri 11/ });
+
+    // Act
+    await userEvent.click(tela.getAllByRole('button', { name: 'Anterior' })[0]);
+
+    // Assert
+    expect(await tela.findByRole('link', { name: /Abri 01/ })).toBeDefined();
   });
 
   it('deve pedir só a página seguinte da lista em que "Próxima" foi acionado', async () => {

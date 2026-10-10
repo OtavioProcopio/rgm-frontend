@@ -2,7 +2,9 @@ import { CheckCircle2, ClipboardList, UserCheck } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import { Button } from '@/shared/components/Button/Button';
 import { Card } from '@/shared/components/Card/Card';
+import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
 import { cn } from '@/shared/lib/cn';
@@ -103,6 +105,20 @@ function ListaPaginada({
   );
 }
 
+function PessoalVazia() {
+  return (
+    <EmptyState
+      title="Nada por aqui ainda"
+      description="Você ainda não abriu nem recebeu solicitações."
+      action={
+        <Link to="/app/solicitacoes">
+          <Button>Ver o quadro</Button>
+        </Link>
+      }
+    />
+  );
+}
+
 export function PessoalTab() {
   const { data: profile, isLoading: loadingPerfil } = usePerfil();
   const userId = profile?.id;
@@ -135,6 +151,12 @@ export function PessoalTab() {
   if (loadingPerfil || loadingMinhas || loadingResponsavel || loadingConcluidas) {
     return <LoadingState title="Carregando seu painel pessoal..." />;
   }
+
+  const semNada =
+    (minhas?.totalElements ?? 0) === 0 &&
+    (sobMinhaResponsabilidade?.totalElements ?? 0) === 0 &&
+    (concluidas ?? 0) === 0;
+  if (semNada) return <PessoalVazia />;
 
   return (
     <div className="space-y-6">
