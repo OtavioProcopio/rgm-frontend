@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/features/admin/modelos/hooks/useModelos', () => ({
@@ -417,5 +418,63 @@ describe('SolicitacaoFilters — manipuladores dos filtros com controle próprio
 
     // Assert
     expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, criadaEmFim: undefined });
+  });
+});
+
+describe('SolicitacaoFilters — volta a "Todos" com interação de usuário', () => {
+  const BASE = { page: 3, size: 20 };
+
+  it.each([
+    { campo: 'Status', chave: 'status', valor: 'A_FAZER' },
+    { campo: 'Tipo', chave: 'tipo', valor: 'REPARO' },
+    { campo: 'Prioridade', chave: 'prioridade', valor: 'URGENTE' },
+  ])(
+    'deve limpar o filtro de $chave quando o usuário escolhe a opção de apoio',
+    async ({ campo, chave, valor }) => {
+      // Arrange
+      const onChange = vi.fn();
+      const { container } = render(
+        <SolicitacaoFilters filters={{ ...BASE, [chave]: valor }} onChange={onChange} />,
+      );
+
+      // Act
+      await userEvent.selectOptions(within(container).getByLabelText(campo), '');
+
+      // Assert
+      expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, [chave]: undefined });
+    },
+  );
+
+  it('deve limpar o filtro de maquina quando o usuário escolhe a opção de apoio', async () => {
+    // Arrange
+    const { useMaquinaOptions } = await import('@/features/admin/modelos/hooks/useMaquinaOptions');
+    vi.mocked(useMaquinaOptions).mockReturnValue({
+      options: [{ value: 'VICK', label: 'VICK' }],
+      isLoading: false,
+    });
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters filters={{ ...BASE, maquina: 'VICK' }} onChange={onChange} />,
+    );
+
+    // Act
+    await userEvent.selectOptions(within(container).getByLabelText('Máquina'), '');
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, maquina: undefined });
+  });
+
+  it('deve limpar o filtro de modelo quando o usuário clica em Limpar seleção', async () => {
+    // Arrange
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters filters={{ ...BASE, modeloId: 'm1' }} onChange={onChange} />,
+    );
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Limpar seleção' }));
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, modeloId: undefined });
   });
 });

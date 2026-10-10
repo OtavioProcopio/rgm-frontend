@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,6 +11,7 @@ import { ETAPAS, FUNDO_NEUTRO, SELETOR_DO_PONTO, fundosDe } from '@tests/support
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
 import { useColunasDoQuadro } from '@/features/solicitacoes/hooks/useColunaDoQuadro';
+import { useTemSolicitacaoDoOperador } from '@/features/solicitacoes/hooks/useTemSolicitacaoDoOperador';
 import type {
   Solicitacao,
   StatusSolicitacao,
@@ -20,6 +21,9 @@ import { COLUMNS } from '@/features/solicitacoes/components/kanbanColunas';
 
 vi.mock('@/features/solicitacoes/hooks/useColunaDoQuadro', () => ({
   useColunasDoQuadro: vi.fn(),
+}));
+vi.mock('@/features/solicitacoes/hooks/useTemSolicitacaoDoOperador', () => ({
+  useTemSolicitacaoDoOperador: vi.fn(),
 }));
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: { id: 'eu' } }),
@@ -38,10 +42,16 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
     aviso,
     onCarregarMais,
     relacaoDe,
+    canDragCard,
+    canAdvanceCard,
+    isInvalidDrop,
+    onDragOver,
     onAdvance,
     onDragStart,
     onDrop,
   }: {
+    isInvalidDrop: boolean;
+    onDragOver: (status: string) => void;
     config: { status: string; label: string };
     cards: { id: string; titulo: string }[];
     total: number;
@@ -49,6 +59,8 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
     aviso?: string;
     onCarregarMais?: () => void;
     relacaoDe?: (card: unknown) => string | null;
+    canDragCard: (card: unknown) => boolean;
+    canAdvanceCard: (card: unknown) => boolean;
     onAdvance: (card: unknown) => void;
     onDragStart: (card: unknown) => void;
     onDrop: (status: string) => void;
@@ -56,6 +68,8 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
     <div>
       {cards.map((card) => (
         <div key={card.id}>
+          <span data-testid={`pode-arrastar-${card.id}`}>{String(canDragCard(card))}</span>
+          <span data-testid={`pode-avancar-${card.id}`}>{String(canAdvanceCard(card))}</span>
           <span data-testid={`relacao-${card.id}`}>
             {relacaoDe ? (relacaoDe(card) ?? 'sem relação') : 'não calculada'}
           </span>
@@ -74,6 +88,10 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
           Carregar mais em {config.label}
         </button>
       ) : null}
+      <span data-testid={`invalido-${config.status}`}>{String(isInvalidDrop)}</span>
+      <button type="button" onClick={() => onDragOver(config.status)}>
+        Passar sobre {config.label}
+      </button>
       <button type="button" onClick={() => onDrop(config.status)}>
         Soltar em {config.label}
       </button>
@@ -125,6 +143,11 @@ function colunasCom(
 
 beforeEach(() => {
   vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([], { A_FAZER: { carregando: true } }));
+  vi.mocked(useTemSolicitacaoDoOperador).mockReturnValue({
+    data: false,
+    isError: false,
+    isLoading: false,
+  });
 });
 
 afterEach(cleanup);
@@ -745,6 +768,177 @@ describe('KanbanBoard — colunas em blocos', () => {
   });
 });
 
+describe('KanbanBoard — operador com quadro vazio e encerradas fora do recorte', () => {
+  const OPERADOR = { nome: 'Op', perfil: 'OPERADOR' } as const;
+  const GESTOR = { nome: 'Ge', perfil: 'GESTOR' } as const;
+  const CONVITE = 'Você ainda não abriu nem recebeu solicitações';
+
+  function montar(
+    consulta: Partial<ReturnType<typeof useTemSolicitacaoDoOperador>>,
+    user: { nome: string; perfil: 'OPERADOR' | 'GESTOR' } = OPERADOR,
+    props: Parameters<typeof KanbanBoard>[0] = {},
+  ) {
+    vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([]));
+    vi.mocked(useTemSolicitacaoDoOperador).mockReturnValue({
+      data: undefined,
+      isError: false,
+      isLoading: false,
+      ...consulta,
+    });
+    const { AppWrapper } = createAppWrapper({ user, initialEntries: ['/app/solicitacoes'] });
+    return render(<KanbanBoard {...props} />, { wrapper: AppWrapper });
+  }
+
+  it('deve não mostrar o convite quando o operador tem solicitação fora do recorte', () => {
+    // Arrange
+    const consulta = { data: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).queryByText(CONVITE)).toBeNull();
+  });
+
+  it('deve mostrar as colunas vazias quando o operador tem solicitação fora do recorte', () => {
+    // Arrange
+    const consulta = { data: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).getAllByRole('button', { name: /^Soltar em / })).toHaveLength(6);
+  });
+
+  it('deve não mostrar o convite quando a consulta extra falha', () => {
+    // Arrange
+    const consulta = { isError: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).queryByText(CONVITE)).toBeNull();
+  });
+
+  it('deve mostrar as colunas vazias quando a consulta extra falha', () => {
+    // Arrange
+    const consulta = { isError: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).getAllByRole('button', { name: /^Soltar em / })).toHaveLength(6);
+  });
+
+  it('deve manter o convite com "Nova solicitação" quando o operador não tem nenhuma', () => {
+    // Arrange
+    const consulta = { data: false };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    const link = within(container).getByRole('link', { name: 'Nova solicitação' });
+    expect(link.getAttribute('href')).toBe('/app/solicitacoes/nova');
+  });
+
+  it('deve mostrar o carregamento quando a consulta extra está carregando', () => {
+    // Arrange
+    const consulta = { isLoading: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).getByText('Carregando quadro...')).toBeDefined();
+  });
+
+  it('deve não mostrar o convite quando a consulta extra está carregando', () => {
+    // Arrange
+    const consulta = { isLoading: true };
+
+    // Act
+    const { container } = montar(consulta);
+
+    // Assert
+    expect(within(container).queryByText(CONVITE)).toBeNull();
+  });
+
+  it('deve habilitar a consulta extra quando o operador, sem filtro, tem o quadro vazio', () => {
+    // Arrange
+    const consulta = { data: false };
+
+    // Act
+    montar(consulta);
+
+    // Assert
+    expect(vi.mocked(useTemSolicitacaoDoOperador).mock.lastCall?.[0]).toEqual({ enabled: true });
+  });
+
+  it('deve desabilitar a consulta extra quando o usuário é gestor', () => {
+    // Arrange
+    const consulta = {};
+
+    // Act
+    montar(consulta, GESTOR);
+
+    // Assert
+    expect(vi.mocked(useTemSolicitacaoDoOperador).mock.lastCall?.[0]).toEqual({ enabled: false });
+  });
+
+  it('deve desabilitar a consulta extra quando há filtro', () => {
+    // Arrange
+    const consulta = {};
+
+    // Act
+    montar(consulta, OPERADOR, { modeloId: 'm-9' });
+
+    // Assert
+    expect(vi.mocked(useTemSolicitacaoDoOperador).mock.lastCall?.[0]).toEqual({ enabled: false });
+  });
+
+  it('deve desabilitar a consulta extra quando o quadro tem solicitação', () => {
+    // Arrange
+    vi.mocked(useColunasDoQuadro).mockReturnValue(
+      colunasCom([criarSolicitacao({ id: 's1', status: 'A_FAZER' })]),
+    );
+    vi.mocked(useTemSolicitacaoDoOperador).mockReturnValue({
+      data: undefined,
+      isError: false,
+      isLoading: false,
+    });
+    const { AppWrapper } = createAppWrapper({ user: OPERADOR });
+
+    // Act
+    render(<KanbanBoard />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(vi.mocked(useTemSolicitacaoDoOperador).mock.lastCall?.[0]).toEqual({ enabled: false });
+  });
+
+  it('deve desabilitar a consulta extra quando as colunas ainda estão carregando', () => {
+    // Arrange
+    vi.mocked(useColunasDoQuadro).mockReturnValue(
+      colunasCom([], { A_FAZER: { carregando: true } }),
+    );
+    vi.mocked(useTemSolicitacaoDoOperador).mockReturnValue({
+      data: undefined,
+      isError: false,
+      isLoading: false,
+    });
+    const { AppWrapper } = createAppWrapper({ user: OPERADOR });
+
+    // Act
+    render(<KanbanBoard />, { wrapper: AppWrapper });
+
+    // Assert
+    expect(vi.mocked(useTemSolicitacaoDoOperador).mock.lastCall?.[0]).toEqual({ enabled: false });
+  });
+});
+
 describe('KanbanBoard — abas do celular', () => {
   const classes = (elemento: Element) => elemento.className.split(' ');
   const rotuloDa = (status: StatusSolicitacao) =>
@@ -787,4 +981,141 @@ describe('KanbanBoard — abas do celular', () => {
       expect(pontos).toEqual([expect.arrayContaining([ponto])]);
     },
   );
+});
+
+describe('KanbanBoard — gestos e permissões do card', () => {
+  async function abrirQuadroDe(perfil: 'GESTOR' | 'OPERADOR') {
+    await carregarQuadroCom(criarSolicitacao({ id: 'sol-1', status: 'EM_VALIDACAO' }));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Usuário', perfil } });
+    return render(<KanbanBoard />, { wrapper: AppWrapper });
+  }
+
+  it('deve permitir arrastar o card quando o usuário é gestor', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('GESTOR');
+
+    // Act
+    const texto = within(container).getAllByTestId('pode-arrastar-sol-1')[0].textContent;
+
+    // Assert
+    expect(texto).toBe('true');
+  });
+
+  it('deve não permitir arrastar o card quando o usuário é operador', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('OPERADOR');
+
+    // Act
+    const texto = within(container).getAllByTestId('pode-arrastar-sol-1')[0].textContent;
+
+    // Assert
+    expect(texto).toBe('false');
+  });
+
+  it('deve permitir avançar o card quando o usuário é gestor', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('GESTOR');
+
+    // Act
+    const texto = within(container).getAllByTestId('pode-avancar-sol-1')[0].textContent;
+
+    // Assert
+    expect(texto).toBe('true');
+  });
+
+  it('deve não permitir avançar o card quando o usuário é operador', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('OPERADOR');
+
+    // Act
+    const texto = within(container).getAllByTestId('pode-avancar-sol-1')[0].textContent;
+
+    // Assert
+    expect(texto).toBe('false');
+  });
+
+  it('deve ignorar o soltar quando o arrasto termina antes de soltar', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('GESTOR');
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
+    fireEvent.dragEnd(container.firstElementChild as Element);
+
+    // Act
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Soltar em Em Andamento' })[0],
+    );
+
+    // Assert
+    expect(within(container).queryByLabelText('Motivo da devolução *')).toBeNull();
+  });
+
+  it('deve mostrar a coluna selecionada quando a aba do celular é clicada', async () => {
+    // Arrange
+    const { container } = await abrirQuadroDe('GESTOR');
+    const antes = within(container).getAllByRole('button', { name: 'Soltar em Concluída' }).length;
+    const aba = within(container).getByText('Concluída').closest('button') as HTMLElement;
+
+    // Act
+    await userEvent.click(aba);
+
+    // Assert
+    expect(within(container).getAllByRole('button', { name: 'Soltar em Concluída' })).toHaveLength(
+      antes + 1,
+    );
+  });
+});
+
+describe('KanbanBoard — destino do arrasto e avanço sem próxima etapa', () => {
+  async function abrirQuadroCom(status: StatusSolicitacao, perfil: 'GESTOR' | 'OPERADOR') {
+    await carregarQuadroCom(criarSolicitacao({ id: 'sol-2', status }));
+    const { AppWrapper } = createAppWrapper({ user: { nome: 'Usuário', perfil } });
+    return render(<KanbanBoard />, { wrapper: AppWrapper });
+  }
+
+  it('deve marcar o destino como inválido quando o movimento não é permitido ao card arrastado', async () => {
+    // Arrange
+    const { container } = await abrirQuadroCom('EM_VALIDACAO', 'GESTOR');
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
+
+    // Act
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Passar sobre A Fazer' })[0],
+    );
+
+    // Assert
+    expect(within(container).getAllByTestId('invalido-A_FAZER').at(-1)?.textContent).toBe('true');
+  });
+
+  it('deve não marcar o destino como inválido quando o movimento é permitido ao card arrastado', async () => {
+    // Arrange
+    const { container } = await abrirQuadroCom('EM_VALIDACAO', 'GESTOR');
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Arrastar Trocar correia' })[0],
+    );
+
+    // Act
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Passar sobre Concluída' })[0],
+    );
+
+    // Assert
+    expect(within(container).getByTestId('invalido-CONCLUIDA').textContent).toBe('false');
+  });
+
+  it('deve não abrir formulário quando o card avançado não tem próxima etapa', async () => {
+    // Arrange
+    const { container } = await abrirQuadroCom('CONCLUIDA', 'GESTOR');
+
+    // Act
+    await userEvent.click(
+      within(container).getAllByRole('button', { name: 'Avançar Trocar correia' })[0],
+    );
+
+    // Assert
+    expect(container.querySelector('form')).toBeNull();
+  });
 });

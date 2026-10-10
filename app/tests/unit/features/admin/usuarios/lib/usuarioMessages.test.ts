@@ -12,9 +12,9 @@ describe('getUsuarioErrorMessage', () => {
   });
 
   it('returns "e-mail já cadastrado" when message contains email ja cadastrado', () => {
-    expect(getUsuarioErrorMessage(new ApiError({ status: 409, message: 'email ja cadastrado' }))).toBe(
-      'Este e-mail já está cadastrado.',
-    );
+    expect(
+      getUsuarioErrorMessage(new ApiError({ status: 409, message: 'email ja cadastrado' })),
+    ).toBe('Este e-mail já está cadastrado.');
   });
 
   it('returns session expired for 401', () => {
@@ -42,7 +42,23 @@ describe('getUsuarioErrorMessage', () => {
   });
 
   it('returns api message for other status codes', () => {
-    expect(getUsuarioErrorMessage(new ApiError({ status: 422, message: 'Inválido' }))).toBe('Inválido');
+    expect(getUsuarioErrorMessage(new ApiError({ status: 422, message: 'Inválido' }))).toBe(
+      'Inválido',
+    );
+  });
+
+  it('deve mostrar a mensagem conhecida da senha quando o status é 400 e o texto é conhecido', () => {
+    // Arrange
+    const erro = new ApiError({
+      status: 400,
+      message: 'Senha deve ter no minimo 8 caracteres',
+    });
+
+    // Act
+    const mensagem: string = getUsuarioErrorMessage(erro);
+
+    // Assert
+    expect(mensagem).toBe('A senha deve ter no mínimo 8 caracteres.');
   });
 
   it('returns fallback for default status with empty message', () => {

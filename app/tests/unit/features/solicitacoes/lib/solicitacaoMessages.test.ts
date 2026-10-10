@@ -9,6 +9,7 @@ import {
 
 import {
   formatDuracao,
+  getMensagemDoDetalhe,
   getSolicitacaoErrorMessage,
   mensagemFotoNaoEnviadaAntes,
   prioridadeLabel,
@@ -39,8 +40,8 @@ describe('solicitacaoMessages', () => {
   });
 
   it('getSolicitacaoErrorMessage returns ApiError message when available', () => {
-    const err = new ApiError({ status: 403, message: 'Acesso negado' });
-    expect(getSolicitacaoErrorMessage(err)).toBe('Acesso negado');
+    const err = new ApiError({ status: 422, message: 'Dados inválidos' });
+    expect(getSolicitacaoErrorMessage(err)).toBe('Dados inválidos');
   });
 
   it('getSolicitacaoErrorMessage returns generic message for unknown errors', () => {
@@ -131,6 +132,68 @@ describe('solicitacaoMessages — rótulos de uma fonte só', () => {
       expect(mapa).toBe(fonte);
     },
   );
+});
+
+describe('getSolicitacaoErrorMessage — mensagens conhecidas da API', () => {
+  it('deve mostrar a mensagem de acesso quando o backend nega o detalhe com o texto conhecido', () => {
+    // Arrange
+    const erro = new ApiError({
+      status: 403,
+      message: 'Usuario nao tem acesso a esta solicitacao',
+    });
+
+    // Act
+    const mensagem: string = getSolicitacaoErrorMessage(erro);
+
+    // Assert
+    expect(mensagem).toBe('Você não tem acesso a esta solicitação.');
+  });
+
+  it('deve manter o texto da API quando o status é 500 e o texto é desconhecido', () => {
+    // Arrange
+    const erro = new ApiError({ status: 500, message: 'Serviço indisponível' });
+
+    // Act
+    const mensagem: string = getSolicitacaoErrorMessage(erro);
+
+    // Assert
+    expect(mensagem).toBe('Serviço indisponível');
+  });
+
+  it('deve manter o texto da API quando o status é 403 de uma ação e o texto é desconhecido', () => {
+    // Arrange
+    const erro = new ApiError({ status: 403, message: 'Sem permissão' });
+
+    // Act
+    const mensagem: string = getSolicitacaoErrorMessage(erro);
+
+    // Assert
+    expect(mensagem).toBe('Sem permissão');
+  });
+});
+
+describe('getMensagemDoDetalhe', () => {
+  it('deve mostrar a mensagem de acesso quando a API responde 403 com qualquer texto', () => {
+    // Arrange
+    const erro = new ApiError({ status: 403, message: 'Access Denied' });
+
+    // Act
+    const mensagem: string = getMensagemDoDetalhe(erro);
+
+    // Assert
+    expect(mensagem).toBe('Você não tem acesso a esta solicitação.');
+  });
+
+  it('deve repassar a mensagem comum quando o erro não é 403', () => {
+    // Arrange
+    const erro = new ApiError({ status: 500, message: 'Serviço indisponível' });
+
+    // Act
+    const mensagem: string = getMensagemDoDetalhe(erro);
+
+    // Assert
+    expect(mensagem).toBe('Serviço indisponível');
+  });
 });
 
 describe('mensagemFotoNaoEnviadaAntes', () => {

@@ -1,8 +1,11 @@
 import { ApiError } from '@/shared/api/apiError';
+import { mensagemDaApi } from '@/shared/lib/mensagensDaApi';
+
+const MENSAGEM_PADRAO = 'Não foi possível concluir a operação. Tente novamente.';
 
 export function getUsuarioErrorMessage(error: unknown) {
   if (!(error instanceof ApiError)) {
-    return 'Não foi possível concluir a operação. Tente novamente.';
+    return MENSAGEM_PADRAO;
   }
 
   if (error.message.toLowerCase().includes('email ja cadastrado')) {
@@ -17,6 +20,6 @@ export function getUsuarioErrorMessage(error: unknown) {
     case 500:
       return 'Erro interno. Tente novamente mais tarde.';
     default:
-      return error.message || 'Não foi possível concluir a operação. Tente novamente.';
+      return mensagemDaApi(error) ?? (error.message || MENSAGEM_PADRAO);
   }
 }

@@ -150,6 +150,40 @@ describe('ModelosFilters', () => {
       expect(onAtivoChange).toHaveBeenCalledTimes(1);
       expect(onAtivoChange).toHaveBeenCalledWith(undefined);
     });
+
+    it('deve chamar onMaquinaChange com undefined quando o usuário escolhe a opção Todas', async () => {
+      // Arrange
+      const onMaquinaChange = vi.fn();
+      const { container } = render(
+        <ModelosFilters
+          maquina="FBOX"
+          maquinaOptions={maquinas}
+          onCodigoChange={vi.fn()}
+          onMaquinaChange={onMaquinaChange}
+          onAtivoChange={vi.fn()}
+        />,
+      );
+
+      // Act
+      await userEvent.selectOptions(within(container).getByLabelText(/máquina/i), '');
+
+      // Assert
+      expect(onMaquinaChange).toHaveBeenCalledWith(undefined);
+    });
+
+    it('deve chamar onAtivoChange com undefined quando o usuário escolhe a opção Todos', async () => {
+      // Arrange
+      const onAtivoChange = vi.fn();
+      const { container } = render(
+        <ModelosFilters ativo={true} onCodigoChange={vi.fn()} onAtivoChange={onAtivoChange} />,
+      );
+
+      // Act
+      await userEvent.selectOptions(within(container).getByLabelText(/status/i), '');
+
+      // Assert
+      expect(onAtivoChange).toHaveBeenCalledWith(undefined);
+    });
   });
 
   it('renders codigo input and status select', () => {

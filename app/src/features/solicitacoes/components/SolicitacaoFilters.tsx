@@ -115,6 +115,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           label="Status"
           options={statusOptions}
           placeholder="Todos os status"
+          limpavel
           value={filters.status ?? ''}
           onChange={handleStatusChange}
         />
@@ -124,6 +125,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           label="Tipo"
           options={tipoOptions}
           placeholder="Todos os tipos"
+          limpavel
           value={filters.tipo ?? ''}
           onChange={handleTipoChange}
         />
@@ -133,6 +135,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           label="Prioridade"
           options={prioridadeOptions}
           placeholder="Todas as prioridades"
+          limpavel
           value={filters.prioridade ?? ''}
           onChange={handlePrioridadeChange}
         />
@@ -151,6 +154,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
             label="Máquina"
             options={maquinaOptions}
             placeholder="Todas as máquinas"
+            limpavel
             value={filters.maquina ?? ''}
             onChange={handleMaquinaChange}
           />

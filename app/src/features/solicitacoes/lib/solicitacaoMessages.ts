@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
+import { mensagemDaApi } from '@/shared/lib/mensagensDaApi';
 
 /** Os rótulos dos valores da API têm uma fonte só; aqui ficam os nomes que a feature já usa. */
 export {
@@ -8,10 +9,22 @@ export {
 } from '@/shared/lib/rotulos';
 
 export function getSolicitacaoErrorMessage(error: unknown): string {
+  const conhecida: string | null = mensagemDaApi(error);
+  if (conhecida) {
+    return conhecida;
+  }
   if (error instanceof ApiError) {
     return error.message;
   }
   return 'Ocorreu um erro inesperado.';
+}
+
+/** No detalhe, todo 403 é acesso negado à solicitação, qualquer que seja o texto do backend. */
+export function getMensagemDoDetalhe(error: unknown): string {
+  if (error instanceof ApiError && error.status === 403) {
+    return 'Você não tem acesso a esta solicitação.';
+  }
+  return getSolicitacaoErrorMessage(error);
 }
 
 /** Frase do aviso quando a ação foi feita e a foto que a acompanha não foi enviada. */

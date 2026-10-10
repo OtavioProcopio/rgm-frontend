@@ -281,7 +281,7 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar os totais e a soma de abertas e pendentes quando as métricas chegam', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+    await abrirPerfilCom({ nome: 'Otávio', perfil: 'GESTOR' }, METRICAS);
 
     // Assert
     expect(screen.getByText('Total de Modelos').nextElementSibling?.textContent).toBe('12');
@@ -291,7 +291,7 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar o tempo médio em horas quando a resolução média é positiva', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+    await abrirPerfilCom({ nome: 'Otávio', perfil: 'GESTOR' }, METRICAS);
 
     // Assert
     expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('3h');
@@ -299,7 +299,10 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar um travessão no tempo médio quando a resolução média é zero', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, { ...METRICAS, tempoMedioResolucaoSegundos: 0 });
+    await abrirPerfilCom(
+      { nome: 'Otávio', perfil: 'GESTOR' },
+      { ...METRICAS, tempoMedioResolucaoSegundos: 0 },
+    );
 
     // Assert
     expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('—');
@@ -436,6 +439,56 @@ describe('PerfilPage — troca de senha', () => {
     expect(await screen.findByText('Serviço indisponível')).toBeDefined();
   });
 
+  it('deve mostrar a mensagem conhecida da senha quando a API recusa com 400 e texto conhecido', async () => {
+    // Arrange
+    const falha = () =>
+      Promise.reject(
+        new ApiError({ status: 400, message: 'Senha deve ter no minimo 8 caracteres' }),
+      );
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('A senha deve ter no mínimo 8 caracteres.')).toBeDefined();
+  });
+
+  it('deve mostrar senha atual incorreta quando a API recusa com 400 e texto desconhecido', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new ApiError({ status: 400, message: 'Campo inválido' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve mostrar senha atual incorreta quando a API recusa com 422 e texto desconhecido', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new ApiError({ status: 422, message: 'Campo inválido' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve mostrar a mensagem conhecida da senha quando a API recusa com 422 e texto conhecido', async () => {
+    // Arrange
+    const falha = () =>
+      Promise.reject(
+        new ApiError({ status: 422, message: 'Senha deve ter no minimo 8 caracteres' }),
+      );
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('A senha deve ter no mínimo 8 caracteres.')).toBeDefined();
+  });
+
   it('deve mostrar o aviso genérico da API quando o erro de servidor vem sem mensagem', async () => {
     // Arrange
     const falha = () => Promise.reject(new ApiError({ status: 500, message: '' }));
@@ -515,5 +568,77 @@ describe('PerfilPage — troca de senha', () => {
       senhaAtual: 'senha-antiga',
       novaSenha: 'senha-nova-1',
     });
+  });
+});
+
+describe('PerfilPage — indicadores agregados do sistema', () => {
+  const metricas = {
+    totalModelos: 7,
+    totalSolicitacoes: 42,
+    solicitacoesAbertas: 3,
+    solicitacoesPendentes: 2,
+    tempoMedioResolucaoSegundos: 7200,
+  };
+
+  async function prepararPerfilDe(perfil: PerfilUsuario) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { nome: 'Otávio', email: 'o@o.com', perfil },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    vi.mocked(useMetricas).mockClear();
+    vi.mocked(useMetricas).mockReturnValue({ data: metricas } as ReturnType<typeof useMetricas>);
+    return useMetricas;
+  }
+
+  function abrirPerfil() {
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
+
+  it('deve desabilitar a consulta dos indicadores quando o perfil é OPERADOR', async () => {
+    // Arrange
+    const useMetricas = await prepararPerfilDe('OPERADOR');
+
+    // Act
+    abrirPerfil();
+
+    // Assert
+    expect(useMetricas).toHaveBeenCalledWith({ enabled: false });
+  });
+
+  it('deve esconder a Visão Geral do Sistema quando o perfil é OPERADOR', async () => {
+    // Arrange
+    await prepararPerfilDe('OPERADOR');
+
+    // Act
+    abrirPerfil();
+
+    // Assert
+    expect(screen.queryByText('Visão Geral do Sistema')).toBeNull();
+  });
+
+  it('deve habilitar a consulta dos indicadores quando o perfil é GESTOR', async () => {
+    // Arrange
+    const useMetricas = await prepararPerfilDe('GESTOR');
+
+    // Act
+    abrirPerfil();
+
+    // Assert
+    expect(useMetricas).toHaveBeenCalledWith({ enabled: true });
+  });
+
+  it('deve mostrar a Visão Geral do Sistema quando o perfil é ADMINISTRADOR', async () => {
+    // Arrange
+    await prepararPerfilDe('ADMINISTRADOR');
+
+    // Act
+    abrirPerfil();
+
+    // Assert
+    expect(screen.getByText('Visão Geral do Sistema')).toBeDefined();
   });
 });
