@@ -73,6 +73,114 @@ describe('SolicitacaoFilters — rótulos dos valores da API', () => {
   );
 });
 
+describe('SolicitacaoFilters — etiquetas dos filtros sem controle próprio', () => {
+  it('deve mostrar a etiqueta Em atraso quando atrasada é verdadeiro', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20, atrasada: true };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(within(container).getByText('Em atraso')).toBeDefined();
+  });
+
+  it('deve mostrar a etiqueta Em aberto quando emAberto é verdadeiro', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20, emAberto: true };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(within(container).getByText('Em aberto')).toBeDefined();
+  });
+
+  it('deve mostrar as duas etiquetas quando atrasada e emAberto são verdadeiros', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20, atrasada: true, emAberto: true };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(within(container).getAllByRole('button', { name: /^Remover filtro/ })).toHaveLength(2);
+  });
+
+  it('deve não mostrar etiqueta quando nenhum dos dois filtros está ativo', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20 };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(within(container).queryAllByRole('button', { name: /^Remover filtro/ })).toHaveLength(0);
+  });
+
+  it('deve não mostrar etiqueta quando atrasada e emAberto são falsos', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20, atrasada: false, emAberto: false };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(within(container).queryAllByRole('button', { name: /^Remover filtro/ })).toHaveLength(0);
+  });
+
+  it('deve expor a etiqueta como botão com nome Remover filtro Em atraso quando atrasada é verdadeiro', () => {
+    // Arrange
+    const filtros = { page: 0, size: 20, atrasada: true };
+
+    // Act
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={vi.fn()} />);
+
+    // Assert
+    expect(
+      within(container).getByRole('button', { name: 'Remover filtro Em atraso' }),
+    ).toBeDefined();
+  });
+
+  it('deve remover só atrasada e voltar à primeira página quando clicar em Remover filtro Em atraso', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const filtros = { page: 3, size: 20, atrasada: true, emAberto: true };
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={onChange} />);
+
+    // Act
+    fireEvent.click(within(container).getByRole('button', { name: 'Remover filtro Em atraso' }));
+
+    // Assert
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith({
+      page: 0,
+      size: 20,
+      atrasada: undefined,
+      emAberto: true,
+    });
+  });
+
+  it('deve remover só emAberto e voltar à primeira página quando clicar em Remover filtro Em aberto', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const filtros = { page: 3, size: 20, atrasada: true, emAberto: true };
+    const { container } = render(<SolicitacaoFilters filters={filtros} onChange={onChange} />);
+
+    // Act
+    fireEvent.click(within(container).getByRole('button', { name: 'Remover filtro Em aberto' }));
+
+    // Assert
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith({
+      page: 0,
+      size: 20,
+      atrasada: true,
+      emAberto: undefined,
+    });
+  });
+});
+
 describe('SolicitacaoFilters', () => {
   it('renders status select', () => {
     const { container } = render(
@@ -193,5 +301,121 @@ describe('SolicitacaoFilters', () => {
       <SolicitacaoFilters filters={{ page: 0, size: 20 }} onChange={vi.fn()} />,
     );
     expect(within(container).queryByLabelText(/máquina/i)).toBeNull();
+  });
+});
+
+describe('SolicitacaoFilters — manipuladores dos filtros com controle próprio', () => {
+  const BASE = { page: 3, size: 20 };
+
+  it.each([
+    { campo: 'Status', chave: 'status', valor: 'A_FAZER' },
+    { campo: 'Tipo', chave: 'tipo', valor: 'REPARO' },
+    { campo: 'Prioridade', chave: 'prioridade', valor: 'URGENTE' },
+  ])(
+    'deve filtrar por $chave e voltar à primeira página quando um valor é escolhido',
+    ({ campo, chave, valor }) => {
+      // Arrange
+      const onChange = vi.fn();
+      const { container } = render(<SolicitacaoFilters filters={BASE} onChange={onChange} />);
+
+      // Act
+      fireEvent.change(within(container).getByLabelText(campo), { target: { value: valor } });
+
+      // Assert
+      expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, [chave]: valor });
+    },
+  );
+
+  it.each([
+    { campo: 'Status', chave: 'status', valor: 'A_FAZER' },
+    { campo: 'Tipo', chave: 'tipo', valor: 'REPARO' },
+    { campo: 'Prioridade', chave: 'prioridade', valor: 'URGENTE' },
+  ])(
+    'deve tirar o filtro de $chave e voltar à primeira página quando o valor é limpo',
+    ({ campo, chave, valor }) => {
+      // Arrange
+      const onChange = vi.fn();
+      const { container } = render(
+        <SolicitacaoFilters filters={{ ...BASE, [chave]: valor }} onChange={onChange} />,
+      );
+
+      // Act
+      fireEvent.change(within(container).getByLabelText(campo), { target: { value: '' } });
+
+      // Assert
+      expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, [chave]: undefined });
+    },
+  );
+
+  it('deve filtrar pelo início do dia quando a data inicial é escolhida', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const { container } = render(<SolicitacaoFilters filters={BASE} onChange={onChange} />);
+
+    // Act
+    fireEvent.change(within(container).getByLabelText('Criada a partir de'), {
+      target: { value: '2026-10-01' },
+    });
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({
+      ...BASE,
+      page: 0,
+      criadaEmInicio: '2026-10-01T00:00:00Z',
+    });
+  });
+
+  it('deve tirar a data inicial quando o campo é limpo', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters
+        filters={{ ...BASE, criadaEmInicio: '2026-10-01T00:00:00Z' }}
+        onChange={onChange}
+      />,
+    );
+
+    // Act
+    fireEvent.change(within(container).getByLabelText('Criada a partir de'), {
+      target: { value: '' },
+    });
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, criadaEmInicio: undefined });
+  });
+
+  it('deve filtrar até o fim do dia quando a data final é escolhida', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const { container } = render(<SolicitacaoFilters filters={BASE} onChange={onChange} />);
+
+    // Act
+    fireEvent.change(within(container).getByLabelText('Criada até'), {
+      target: { value: '2026-10-09' },
+    });
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({
+      ...BASE,
+      page: 0,
+      criadaEmFim: '2026-10-09T23:59:59Z',
+    });
+  });
+
+  it('deve tirar a data final quando o campo é limpo', () => {
+    // Arrange
+    const onChange = vi.fn();
+    const { container } = render(
+      <SolicitacaoFilters
+        filters={{ ...BASE, criadaEmFim: '2026-10-09T23:59:59Z' }}
+        onChange={onChange}
+      />,
+    );
+
+    // Act
+    fireEvent.change(within(container).getByLabelText('Criada até'), { target: { value: '' } });
+
+    // Assert
+    expect(onChange).toHaveBeenCalledWith({ ...BASE, page: 0, criadaEmFim: undefined });
   });
 });

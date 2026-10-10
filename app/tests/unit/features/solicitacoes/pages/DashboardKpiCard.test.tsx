@@ -5,6 +5,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type { Leitura } from '@/features/solicitacoes/lib/leituraDosIndicadores';
 import { KPICard } from '@/features/solicitacoes/pages/DashboardKpiCard';
 
 type Cor = Parameters<typeof KPICard>[0]['gradient'];
@@ -32,7 +33,7 @@ function Icone({ className }: { size?: number; className?: string }) {
   return <span role="img" aria-label={NOME_DO_ICONE} className={className} />;
 }
 
-function renderIndicador(cor?: Cor, onClickPath?: string) {
+function renderIndicador(cor?: Cor, onClickPath?: string): Element {
   const { container } = render(
     <MemoryRouter>
       <KPICard
@@ -194,5 +195,148 @@ describe('KPICard — textos', () => {
 
     // Assert
     expect(classes(screen.getByText(DETALHE))).toContain('text-fg-muted');
+  });
+});
+
+const TONS: { tom: Leitura['tom'] }[] = [
+  { tom: 'ok' },
+  { tom: 'atencao' },
+  { tom: 'ruim' },
+  { tom: 'neutro' },
+];
+
+const TOMS_COM_ICONE_E_COR: { tom: Leitura['tom']; icone: string; cor: string }[] = [
+  { tom: 'ok', icone: 'lucide-circle-check', cor: 'text-success-fg' },
+  { tom: 'atencao', icone: 'lucide-triangle-alert', cor: 'text-warning-fg' },
+  { tom: 'ruim', icone: 'lucide-circle-x', cor: 'text-danger-fg' },
+  { tom: 'neutro', icone: 'lucide-minus', cor: 'text-fg-muted' },
+];
+
+const TEXTO_DA_LEITURA = 'dentro da meta de prazo';
+
+function renderComLeitura(leitura?: Leitura, subtext?: string, onClickPath?: string) {
+  return render(
+    <MemoryRouter>
+      <KPICard
+        icon={Icone}
+        label={ROTULO}
+        value={VALOR}
+        subtext={subtext}
+        leitura={leitura}
+        onClickPath={onClickPath}
+      />
+    </MemoryRouter>,
+  );
+}
+
+describe('KPICard — leitura', () => {
+  it('deve não mostrar o texto de leitura quando a leitura não é informada', () => {
+    // Arrange
+    const leitura = undefined;
+
+    // Act
+    renderComLeitura(leitura);
+
+    // Assert
+    expect(screen.queryByText(TEXTO_DA_LEITURA)).toBeNull();
+  });
+
+  it('deve não mostrar ícone de tom quando a leitura não é informada', () => {
+    // Arrange
+    const leitura = undefined;
+
+    // Act
+    const { container } = renderComLeitura(leitura);
+
+    // Assert
+    expect(container.querySelectorAll('svg')).toHaveLength(0);
+  });
+
+  it.each(TONS)('deve mostrar o texto da leitura quando o tom é $tom', ({ tom }) => {
+    // Arrange
+    const leitura: Leitura = { tom, texto: TEXTO_DA_LEITURA };
+
+    // Act
+    renderComLeitura(leitura);
+
+    // Assert
+    expect(screen.getByText(TEXTO_DA_LEITURA)).toBeDefined();
+  });
+
+  it.each(TOMS_COM_ICONE_E_COR)(
+    'deve colorir o texto da leitura com $cor quando o tom é $tom',
+    ({ tom, cor }) => {
+      // Arrange
+      const leitura: Leitura = { tom, texto: TEXTO_DA_LEITURA };
+
+      // Act
+      renderComLeitura(leitura);
+
+      // Assert
+      expect(classes(screen.getByText(TEXTO_DA_LEITURA))).toContain(cor);
+    },
+  );
+
+  it.each(TOMS_COM_ICONE_E_COR)(
+    'deve colorir o ícone da leitura com $cor quando o tom é $tom',
+    ({ tom, cor }) => {
+      // Arrange
+      const leitura: Leitura = { tom, texto: TEXTO_DA_LEITURA };
+
+      // Act
+      renderComLeitura(leitura);
+
+      // Assert
+      const svg = screen.getByText(TEXTO_DA_LEITURA).querySelector('svg')!;
+      expect(svg.getAttribute('class')).toContain(cor);
+    },
+  );
+
+  it.each(TOMS_COM_ICONE_E_COR)(
+    'deve mostrar o ícone $icone quando o tom é $tom',
+    ({ tom, icone: nomeDoIcone }) => {
+      // Arrange
+      const leitura: Leitura = { tom, texto: TEXTO_DA_LEITURA };
+
+      // Act
+      renderComLeitura(leitura);
+
+      // Assert
+      const svg = screen.getByText(TEXTO_DA_LEITURA).querySelector('svg')!;
+      expect(svg.classList.contains(nomeDoIcone)).toBe(true);
+    },
+  );
+
+  it('deve esconder o ícone da leitura dos leitores de tela quando há leitura', () => {
+    // Arrange
+    const leitura: Leitura = { tom: 'ok', texto: TEXTO_DA_LEITURA };
+
+    // Act
+    const { container } = renderComLeitura(leitura);
+
+    // Assert
+    expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('deve mostrar o texto da leitura quando há detalhe', () => {
+    // Arrange
+    const leitura: Leitura = { tom: 'ruim', texto: TEXTO_DA_LEITURA };
+
+    // Act
+    renderComLeitura(leitura, DETALHE);
+
+    // Assert
+    expect(screen.getByText(TEXTO_DA_LEITURA)).toBeDefined();
+  });
+
+  it('deve manter o link para o destino quando há leitura', () => {
+    // Arrange
+    const leitura: Leitura = { tom: 'ok', texto: TEXTO_DA_LEITURA };
+
+    // Act
+    renderComLeitura(leitura, undefined, DESTINO);
+
+    // Assert
+    expect(screen.getByRole('link').getAttribute('href')).toBe(DESTINO);
   });
 });

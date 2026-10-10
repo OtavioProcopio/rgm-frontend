@@ -1,3 +1,5 @@
+import { X } from 'lucide-react';
+
 import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
 import { Select } from '@/shared/components/Select/Select';
 import { Input } from '@/shared/components/Input/Input';
@@ -29,6 +31,37 @@ function opcoesDe(rotulos: Record<string, string>): { value: string; label: stri
 const statusOptions = opcoesDe(rotuloDoStatus);
 const tipoOptions = opcoesDe(rotuloDoTipoDeSolicitacao);
 const prioridadeOptions = opcoesDe(rotuloDaPrioridade);
+
+type EtiquetaProps = { rotulo: string; onRemove: () => void };
+
+/** Etiqueta de um filtro ativo sem controle próprio, removível com um toque. */
+function EtiquetaDeFiltro({ rotulo, onRemove }: EtiquetaProps) {
+  return (
+    <button
+      type="button"
+      aria-label={`Remover filtro ${rotulo}`}
+      onClick={onRemove}
+      className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-fg-muted pointer-coarse:min-h-11"
+    >
+      {rotulo}
+      <X className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  );
+}
+
+/** Etiquetas removíveis dos filtros "Em atraso" e "Em aberto", quando ativos. */
+function EtiquetasAtivas({ filters, onChange }: Props) {
+  if (!filters.atrasada && !filters.emAberto) return null;
+  const remover = (campo: 'atrasada' | 'emAberto') => () =>
+    onChange({ ...filters, page: 0, [campo]: undefined });
+
+  return (
+    <div className="flex w-full flex-wrap gap-2">
+      {filters.atrasada && <EtiquetaDeFiltro rotulo="Em atraso" onRemove={remover('atrasada')} />}
+      {filters.emAberto && <EtiquetaDeFiltro rotulo="Em aberto" onRemove={remover('emAberto')} />}
+    </div>
+  );
+}
 
 export function SolicitacaoFilters({ filters, onChange }: Props) {
   const { options: maquinaOptions } = useMaquinaOptions(filters.maquina);
@@ -76,6 +109,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
 
   return (
     <div className="mb-5 flex flex-wrap gap-4">
+      <EtiquetasAtivas filters={filters} onChange={onChange} />
       <div className="w-full sm:w-56">
         <Select
           label="Status"

@@ -43,6 +43,40 @@ describe('SecaoRecolhivel', () => {
     expect(conteudo.hidden).toBe(false);
   });
 
+  it('deve começar fechada quando abertaPorPadrao é falso e não há estado guardado', () => {
+    // Arrange
+    const secao = (
+      <SecaoRecolhivel id="tabela" titulo="Valores" abertaPorPadrao={false}>
+        <input aria-label="campo" />
+      </SecaoRecolhivel>
+    );
+
+    // Act
+    render(secao);
+
+    // Assert
+    const conteudo = screen.getByLabelText('campo', { selector: 'input' }).parentElement;
+    expect(conteudo?.hidden).toBe(true);
+  });
+
+  it('deve respeitar o estado guardado quando abertaPorPadrao é falso', () => {
+    // Arrange
+    const secao = (
+      <SecaoRecolhivel id="tabela" titulo="Valores" abertaPorPadrao={false}>
+        <input aria-label="campo" />
+      </SecaoRecolhivel>
+    );
+    const primeira = render(secao);
+    fireEvent.click(screen.getByRole('button'));
+    primeira.unmount();
+
+    // Act
+    render(secao);
+
+    // Assert
+    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('deve expor aria-expanded verdadeiro quando está aberta', () => {
     // Arrange
     renderizar();

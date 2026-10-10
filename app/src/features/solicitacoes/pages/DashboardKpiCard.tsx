@@ -1,5 +1,14 @@
-import { ArrowRight } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Minus,
+  XCircle,
+  type LucideIcon,
+} from 'lucide-react';
 import { Link } from 'react-router';
+
+import type { Leitura, Tom } from '../lib/leituraDosIndicadores';
 
 import { Card } from '@/shared/components/Card/Card';
 import { cn } from '@/shared/lib/cn';
@@ -16,6 +25,25 @@ const ICON_CLASSES: Record<Gradient, string> = {
   slate: 'text-fg-muted',
 };
 
+const TONS: Record<Tom, { Icone: LucideIcon; classe: string }> = {
+  ok: { Icone: CheckCircle2, classe: 'text-success-fg' },
+  atencao: { Icone: AlertTriangle, classe: 'text-warning-fg' },
+  ruim: { Icone: XCircle, classe: 'text-danger-fg' },
+  neutro: { Icone: Minus, classe: 'text-fg-muted' },
+};
+
+/** O estado vai sempre em texto; o ícone só reforça e nunca é anunciado. */
+function LinhaDeLeitura({ leitura }: { leitura: Leitura }) {
+  const { Icone, classe } = TONS[leitura.tom];
+
+  return (
+    <p className={cn('flex items-center gap-1.5 text-xs font-medium', classe)}>
+      <Icone size={14} aria-hidden="true" className={classe} />
+      {leitura.texto}
+    </p>
+  );
+}
+
 export function KPICard({
   icon: Icon,
   label,
@@ -23,6 +51,7 @@ export function KPICard({
   subtext,
   gradient,
   onClickPath,
+  leitura,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
@@ -30,6 +59,7 @@ export function KPICard({
   subtext?: string;
   gradient?: Gradient;
   onClickPath?: string;
+  leitura?: Leitura;
 }) {
   const iconClass = ICON_CLASSES[gradient ?? 'slate'];
   const isClickable = Boolean(onClickPath);
@@ -57,6 +87,7 @@ export function KPICard({
       </div>
       <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-fg">{value}</p>
       {subtext && <p className="text-xs text-fg-muted font-medium">{subtext}</p>}
+      {leitura && <LinhaDeLeitura leitura={leitura} />}
     </Card>
   );
 

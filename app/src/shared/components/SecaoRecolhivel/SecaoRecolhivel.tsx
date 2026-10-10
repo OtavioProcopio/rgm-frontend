@@ -11,11 +11,23 @@ type SecaoRecolhivelProps = {
   resumo?: string;
   children: ReactNode;
   className?: string;
+  /** Estado de quem ainda não escolheu; a escolha guardada vale sobre ele. */
+  abertaPorPadrao?: boolean;
 };
 
-export function SecaoRecolhivel({ id, titulo, resumo, children, className }: SecaoRecolhivelProps) {
+export function SecaoRecolhivel({
+  id,
+  titulo,
+  resumo,
+  children,
+  className,
+  abertaPorPadrao = true,
+}: SecaoRecolhivelProps) {
   const idConteudo = useId();
-  const [estado, definirEstado] = usePreferenciaGuardada(`rgm.secao.${id}`, 'aberta');
+  const [estado, definirEstado] = usePreferenciaGuardada(
+    `rgm.secao.${id}`,
+    abertaPorPadrao ? 'aberta' : 'fechada',
+  );
   const aberta = estado !== 'fechada';
 
   return (

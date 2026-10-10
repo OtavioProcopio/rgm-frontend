@@ -35,6 +35,15 @@ import type { DirecaoOrdenacao, OrdenacaoMetricaModelo } from '../types/solicita
 import { KPICard } from './DashboardKpiCard';
 
 const RANKING_PAGE_SIZE = 10;
+const SEGUNDOS_POR_MINUTO = 60;
+
+/** Sem informação (nulo ou menos de 1 minuto) vira "—", nunca "0 s". */
+function duracaoOuTraco(segundos: number | null | undefined): string {
+  if (segundos == null || segundos < SEGUNDOS_POR_MINUTO) {
+    return '—';
+  }
+  return formatDuracao(segundos);
+}
 
 export function ModelosTab() {
   const { user } = useAuth();
@@ -213,12 +222,10 @@ function RankingModelos() {
                 <TableRow key={m.modeloId}>
                   <TableCell className="font-medium text-fg-muted">{m.codigo}</TableCell>
                   <TableCell className="text-right tabular-nums text-fg-muted">
-                    {formatDuracao(m.tempoMedioResolucaoSegundos)}
+                    {duracaoOuTraco(m.tempoMedioResolucaoSegundos)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-fg-muted">
-                    {m.intervaloMedioSegundos != null
-                      ? formatDuracao(m.intervaloMedioSegundos)
-                      : '—'}
+                    {duracaoOuTraco(m.intervaloMedioSegundos)}
                   </TableCell>
                 </TableRow>
               ))}
