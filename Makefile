@@ -63,7 +63,7 @@ e2e: ## Rodar os testes e2e do Playwright (frontend e backend no ar); aceita BAS
 check: ## Lint + Typecheck + Testes sem cobertura + Build
 	cd app && npm run check
 
-validate: ## Pipeline completo XP: lint + typecheck + coverage 85% + build
+validate: ## Pipeline completo XP: lint + typecheck + coverage 95% + build
 	cd app && npm run validate
 
 build: ## Gerar build de produção otimizado na pasta dist
