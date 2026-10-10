@@ -281,7 +281,7 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar os totais e a soma de abertas e pendentes quando as métricas chegam', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+    await abrirPerfilCom({ nome: 'Otávio', perfil: 'GESTOR' }, METRICAS);
 
     // Assert
     expect(screen.getByText('Total de Modelos').nextElementSibling?.textContent).toBe('12');
@@ -291,7 +291,7 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar o tempo médio em horas quando a resolução média é positiva', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, METRICAS);
+    await abrirPerfilCom({ nome: 'Otávio', perfil: 'GESTOR' }, METRICAS);
 
     // Assert
     expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('3h');
@@ -299,7 +299,10 @@ describe('PerfilPage — dados opcionais e métricas', () => {
 
   it('deve mostrar um travessão no tempo médio quando a resolução média é zero', async () => {
     // Act
-    await abrirPerfilCom({ nome: 'Otávio' }, { ...METRICAS, tempoMedioResolucaoSegundos: 0 });
+    await abrirPerfilCom(
+      { nome: 'Otávio', perfil: 'GESTOR' },
+      { ...METRICAS, tempoMedioResolucaoSegundos: 0 },
+    );
 
     // Assert
     expect(screen.getByText('Tempo Médio de Resolução').nextElementSibling?.textContent).toBe('—');
@@ -515,5 +518,54 @@ describe('PerfilPage — troca de senha', () => {
       senhaAtual: 'senha-antiga',
       novaSenha: 'senha-nova-1',
     });
+  });
+});
+
+describe('PerfilPage — indicadores agregados do sistema', () => {
+  const metricas = {
+    totalModelos: 7,
+    totalSolicitacoes: 42,
+    solicitacoesAbertas: 3,
+    solicitacoesPendentes: 2,
+    tempoMedioResolucaoSegundos: 7200,
+  };
+
+  async function abrirPerfilDe(perfil: PerfilUsuario) {
+    const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
+    const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
+    vi.mocked(usePerfil).mockReturnValue({
+      data: { nome: 'Otávio', email: 'o@o.com', perfil },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePerfil>);
+    vi.mocked(useMetricas).mockClear();
+    vi.mocked(useMetricas).mockReturnValue({ data: metricas } as ReturnType<typeof useMetricas>);
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+    return useMetricas;
+  }
+
+  it('shouldNotRequestMetricsWhenProfileIsOperador', async () => {
+    const useMetricas = await abrirPerfilDe('OPERADOR');
+
+    expect(useMetricas).toHaveBeenCalledWith({ enabled: false });
+  });
+
+  it('shouldHideSystemOverviewWhenProfileIsOperador', async () => {
+    await abrirPerfilDe('OPERADOR');
+
+    expect(screen.queryByText('Visão Geral do Sistema')).toBeNull();
+  });
+
+  it('shouldRequestMetricsWhenProfileIsGestor', async () => {
+    const useMetricas = await abrirPerfilDe('GESTOR');
+
+    expect(useMetricas).toHaveBeenCalledWith({ enabled: true });
+  });
+
+  it('shouldShowSystemOverviewWhenProfileIsAdministrador', async () => {
+    await abrirPerfilDe('ADMINISTRADOR');
+
+    expect(screen.getByText('Visão Geral do Sistema')).toBeDefined();
   });
 });

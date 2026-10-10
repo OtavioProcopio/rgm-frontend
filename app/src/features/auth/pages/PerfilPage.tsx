@@ -39,7 +39,10 @@ const VARIACAO_DO_PERFIL: Record<PerfilUsuario, BadgeVariant> = {
 export function PerfilPage() {
   const { data: usuario, isLoading, isError } = usePerfil();
   const { mutateAsync: alterarSenha } = useAlterarSenha();
-  const { data: metricas } = useMetricas();
+  // OPERADOR nao recebe indicadores agregados do sistema (a API responde 403).
+  const veIndicadoresDoSistema =
+    usuario?.perfil === 'GESTOR' || usuario?.perfil === 'ADMINISTRADOR';
+  const { data: metricas } = useMetricas({ enabled: veIndicadoresDoSistema });
 
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -280,7 +283,7 @@ export function PerfilPage() {
         </Card>
       </div>
 
-      {metricas && (
+      {veIndicadoresDoSistema && metricas && (
         <Card className="p-6">
           <div className="flex items-center gap-2.5 border-b border-line pb-4">
             <div className="rounded-lg bg-surface-muted p-2 text-accent">
