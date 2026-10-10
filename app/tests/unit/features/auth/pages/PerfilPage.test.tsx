@@ -439,6 +439,56 @@ describe('PerfilPage — troca de senha', () => {
     expect(await screen.findByText('Serviço indisponível')).toBeDefined();
   });
 
+  it('deve mostrar a mensagem conhecida da senha quando a API recusa com 400 e texto conhecido', async () => {
+    // Arrange
+    const falha = () =>
+      Promise.reject(
+        new ApiError({ status: 400, message: 'Senha deve ter no minimo 8 caracteres' }),
+      );
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('A senha deve ter no mínimo 8 caracteres.')).toBeDefined();
+  });
+
+  it('deve mostrar senha atual incorreta quando a API recusa com 400 e texto desconhecido', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new ApiError({ status: 400, message: 'Campo inválido' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve mostrar senha atual incorreta quando a API recusa com 422 e texto desconhecido', async () => {
+    // Arrange
+    const falha = () => Promise.reject(new ApiError({ status: 422, message: 'Campo inválido' }));
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('Senha atual incorreta.')).toBeDefined();
+  });
+
+  it('deve mostrar a mensagem conhecida da senha quando a API recusa com 422 e texto conhecido', async () => {
+    // Arrange
+    const falha = () =>
+      Promise.reject(
+        new ApiError({ status: 422, message: 'Senha deve ter no minimo 8 caracteres' }),
+      );
+
+    // Act
+    await trocarSenha(falha);
+
+    // Assert
+    expect(await screen.findByText('A senha deve ter no mínimo 8 caracteres.')).toBeDefined();
+  });
+
   it('deve mostrar o aviso genérico da API quando o erro de servidor vem sem mensagem', async () => {
     // Arrange
     const falha = () => Promise.reject(new ApiError({ status: 500, message: '' }));
@@ -530,7 +580,7 @@ describe('PerfilPage — indicadores agregados do sistema', () => {
     tempoMedioResolucaoSegundos: 7200,
   };
 
-  async function abrirPerfilDe(perfil: PerfilUsuario) {
+  async function prepararPerfilDe(perfil: PerfilUsuario) {
     const { usePerfil } = await import('@/features/auth/hooks/usePerfil');
     const { useMetricas } = await import('@/features/solicitacoes/hooks/useMetricas');
     vi.mocked(usePerfil).mockReturnValue({
@@ -540,32 +590,55 @@ describe('PerfilPage — indicadores agregados do sistema', () => {
     } as ReturnType<typeof usePerfil>);
     vi.mocked(useMetricas).mockClear();
     vi.mocked(useMetricas).mockReturnValue({ data: metricas } as ReturnType<typeof useMetricas>);
-    const { AppWrapper } = createAppWrapper();
-    render(<PerfilPage />, { wrapper: AppWrapper });
     return useMetricas;
   }
 
-  it('shouldNotRequestMetricsWhenProfileIsOperador', async () => {
-    const useMetricas = await abrirPerfilDe('OPERADOR');
+  function abrirPerfil() {
+    const { AppWrapper } = createAppWrapper();
+    render(<PerfilPage />, { wrapper: AppWrapper });
+  }
 
+  it('deve desabilitar a consulta dos indicadores quando o perfil é OPERADOR', async () => {
+    // Arrange
+    const useMetricas = await prepararPerfilDe('OPERADOR');
+
+    // Act
+    abrirPerfil();
+
+    // Assert
     expect(useMetricas).toHaveBeenCalledWith({ enabled: false });
   });
 
-  it('shouldHideSystemOverviewWhenProfileIsOperador', async () => {
-    await abrirPerfilDe('OPERADOR');
+  it('deve esconder a Visão Geral do Sistema quando o perfil é OPERADOR', async () => {
+    // Arrange
+    await prepararPerfilDe('OPERADOR');
 
+    // Act
+    abrirPerfil();
+
+    // Assert
     expect(screen.queryByText('Visão Geral do Sistema')).toBeNull();
   });
 
-  it('shouldRequestMetricsWhenProfileIsGestor', async () => {
-    const useMetricas = await abrirPerfilDe('GESTOR');
+  it('deve habilitar a consulta dos indicadores quando o perfil é GESTOR', async () => {
+    // Arrange
+    const useMetricas = await prepararPerfilDe('GESTOR');
 
+    // Act
+    abrirPerfil();
+
+    // Assert
     expect(useMetricas).toHaveBeenCalledWith({ enabled: true });
   });
 
-  it('shouldShowSystemOverviewWhenProfileIsAdministrador', async () => {
-    await abrirPerfilDe('ADMINISTRADOR');
+  it('deve mostrar a Visão Geral do Sistema quando o perfil é ADMINISTRADOR', async () => {
+    // Arrange
+    await prepararPerfilDe('ADMINISTRADOR');
 
+    // Act
+    abrirPerfil();
+
+    // Assert
     expect(screen.getByText('Visão Geral do Sistema')).toBeDefined();
   });
 });

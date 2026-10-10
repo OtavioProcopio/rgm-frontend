@@ -67,6 +67,7 @@ export function ModelosFilters({
           label="Máquina"
           options={maquinaOptions}
           placeholder={maquinaOptionsLoading ? 'Carregando...' : 'Todas'}
+          limpavel
           disabled={maquinaOptionsLoading}
           value={maquina ?? ''}
           onChange={(e) => onMaquinaChange?.(e.target.value || undefined)}
@@ -75,6 +76,7 @@ export function ModelosFilters({
           label="Status"
           options={ativoOptions}
           placeholder="Todos"
+          limpavel
           value={ativo === undefined ? '' : String(ativo)}
           onChange={(e) => onAtivoChange(e.target.value ? e.target.value === 'true' : undefined)}
         />

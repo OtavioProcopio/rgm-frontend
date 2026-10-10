@@ -12,6 +12,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options: SelectOption[];
   placeholder?: string;
   error?: string;
+  limpavel?: boolean;
 };
 
 export function Select({
@@ -19,6 +20,7 @@ export function Select({
   error,
   id,
   label,
+  limpavel = false,
   options,
   placeholder,
   ...props
@@ -43,7 +45,7 @@ export function Select({
         {...props}
       >
         {placeholder ? (
-          <option value="" disabled>
+          <option value="" disabled={!limpavel}>
             {placeholder}
           </option>
         ) : null}

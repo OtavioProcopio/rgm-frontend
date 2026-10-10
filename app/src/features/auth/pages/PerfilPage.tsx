@@ -27,6 +27,7 @@ import { Badge, type BadgeVariant } from '@/shared/components/Badge/Badge';
 import { Button } from '@/shared/components/Button/Button';
 import { Card } from '@/shared/components/Card/Card';
 import { Input } from '@/shared/components/Input/Input';
+import { mensagemDaApi } from '@/shared/lib/mensagensDaApi';
 import { rotuloDoPerfil } from '@/shared/lib/rotulos';
 
 const VARIACAO_DO_PERFIL: Record<PerfilUsuario, BadgeVariant> = {
@@ -35,6 +36,21 @@ const VARIACAO_DO_PERFIL: Record<PerfilUsuario, BadgeVariant> = {
   OPERADOR: 'neutral',
   EXTERNO: 'success',
 };
+
+function mensagemDaTrocaDeSenha(error: ApiError): string {
+  const conhecida: string | null = mensagemDaApi(error);
+  const recusouASenhaAtual: boolean =
+    error.status === 400 ||
+    error.status === 422 ||
+    error.message.toLowerCase().includes('senha atual incorreta');
+  if (conhecida) {
+    return conhecida;
+  }
+  if (recusouASenhaAtual) {
+    return 'Senha atual incorreta.';
+  }
+  return error.message || 'Erro ao alterar senha.';
+}
 
 export function PerfilPage() {
   const { data: usuario, isLoading, isError } = usePerfil();
@@ -78,15 +94,7 @@ export function PerfilPage() {
       reset();
     } catch (error) {
       if (error instanceof ApiError) {
-        if (
-          error.status === 400 ||
-          error.status === 422 ||
-          error.message.toLowerCase().includes('senha atual incorreta')
-        ) {
-          setErro('Senha atual incorreta.');
-          return;
-        }
-        setErro(error.message || 'Erro ao alterar senha.');
+        setErro(mensagemDaTrocaDeSenha(error));
         return;
       }
       setErro('Não foi possível alterar a senha agora. Tente novamente mais tarde.');

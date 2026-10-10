@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
@@ -20,7 +20,7 @@ import { useAtividades } from '../hooks/useAtividades';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
-import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { getMensagemDoDetalhe, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import {
   editarSolicitacaoSchema,
   type EditarSolicitacaoFormData,
@@ -52,11 +52,20 @@ export function SolicitacaoDetalhePage() {
     return (
       <ErrorState
         title="Não foi possível carregar a solicitação."
-        description={getSolicitacaoErrorMessage(error)}
+        description={getMensagemDoDetalhe(error)}
+        action={<VoltarAoQuadro />}
       />
     );
   }
   return <DetalheDaSolicitacao solicitacao={solicitacao} />;
+}
+
+function VoltarAoQuadro() {
+  return (
+    <Link to="/app/solicitacoes">
+      <Button variant="secondary">Voltar ao quadro</Button>
+    </Link>
+  );
 }
 
 type EstadoDoDetalhe = ReturnType<typeof useEstadoDoDetalhe>;

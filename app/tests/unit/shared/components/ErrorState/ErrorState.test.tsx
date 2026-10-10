@@ -85,4 +85,26 @@ describe('ErrorState', () => {
     // Assert
     expect(paragrafo).toBeNull();
   });
+
+  it('deve renderizar o conteúdo de action quando for informado', () => {
+    // Arrange
+    const { container } = render(<ErrorState title="Erro" action={<a href="/quadro">Voltar</a>} />);
+
+    // Act
+    const link = within(container).queryByRole('link', { name: 'Voltar' });
+
+    // Assert
+    expect(link).not.toBeNull();
+  });
+
+  it('deve renderizar só o título quando não há descrição, nova tentativa nem action', () => {
+    // Arrange
+    const { container } = render(<ErrorState title="Erro" />);
+
+    // Act
+    const filhos = container.firstElementChild?.children;
+
+    // Assert
+    expect(filhos).toHaveLength(1);
+  });
 });

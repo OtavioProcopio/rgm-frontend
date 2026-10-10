@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Select } from '@/shared/components/Select/Select';
 
@@ -25,7 +26,9 @@ describe('Select', () => {
     const { container } = render(
       <Select label="Status" options={OPTIONS} placeholder="Selecione..." />,
     );
-    const placeholder = within(container).getByRole('option', { name: 'Selecione...' }) as HTMLOptionElement;
+    const placeholder = within(container).getByRole('option', {
+      name: 'Selecione...',
+    }) as HTMLOptionElement;
     expect(placeholder.disabled).toBe(true);
   });
 
@@ -53,7 +56,9 @@ describe('Select', () => {
   });
 
   it('deve associar a mensagem de erro ao campo quando há erro', () => {
-    const { container } = render(<Select label="Status" options={OPTIONS} error="Campo inválido." />);
+    const { container } = render(
+      <Select label="Status" options={OPTIONS} error="Campo inválido." />,
+    );
 
     const campo = container.querySelector('select')!;
     const descricao = container.ownerDocument.getElementById(
@@ -67,5 +72,55 @@ describe('Select', () => {
     const { container } = render(<Select label="Status" options={OPTIONS} />);
 
     expect(container.querySelector('select')!.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('deve chamar onChange com valor vazio quando o campo é limpável e o placeholder é escolhido', async () => {
+    // Arrange
+    const onChange = vi.fn<(valor: string) => void>();
+    const { container } = render(
+      <Select
+        label="Status"
+        options={OPTIONS}
+        placeholder="Todos"
+        limpavel
+        defaultValue="a"
+        onChange={(e) => onChange(e.target.value)}
+      />,
+    );
+
+    // Act
+    await userEvent.selectOptions(container.querySelector('select')!, '');
+
+    // Assert
+    expect(onChange.mock.calls).toEqual([['']]);
+  });
+
+  it('deve voltar ao valor vazio quando o campo é limpável e o placeholder é escolhido', async () => {
+    // Arrange
+    const { container } = render(
+      <Select label="Status" options={OPTIONS} placeholder="Todos" limpavel defaultValue="a" />,
+    );
+    const select = container.querySelector('select')!;
+
+    // Act
+    await userEvent.selectOptions(select, '');
+
+    // Assert
+    expect(select.value).toBe('');
+  });
+
+  it('deve renderizar o placeholder habilitado quando o campo é limpável', () => {
+    // Arrange
+    const { container } = render(
+      <Select label="Status" options={OPTIONS} placeholder="Todos" limpavel />,
+    );
+
+    // Act
+    const placeholder = within(container).getByRole('option', {
+      name: 'Todos',
+    }) as HTMLOptionElement;
+
+    // Assert
+    expect(placeholder.disabled).toBe(false);
   });
 });

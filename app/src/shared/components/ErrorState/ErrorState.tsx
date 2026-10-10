@@ -1,15 +1,19 @@
+import type { ReactNode } from 'react';
+
 import { Button } from '@/shared/components/Button/Button';
 
 type ErrorStateProps = {
   title?: string;
   description?: string;
   onRetry?: () => void;
+  action?: ReactNode;
 };
 
 export function ErrorState({
   title = 'Não foi possível carregar os dados.',
   description,
   onRetry,
+  action,
 }: ErrorStateProps) {
   return (
     <div role="alert" className="rounded-md border border-danger bg-danger-soft p-6">
@@ -20,6 +24,7 @@ export function ErrorState({
           Tentar novamente
         </Button>
       ) : null}
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

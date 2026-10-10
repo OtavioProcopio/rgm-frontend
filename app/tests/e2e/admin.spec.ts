@@ -3,7 +3,10 @@ import { test, expect, apiPost, API_URL, MAQUINA_CATALOGO } from './fixtures';
 const ts = () => Date.now();
 
 test.describe('Admin — Modelos', () => {
-  test('cria um novo modelo e oferece a galeria inline antes de navegar', async ({ page, loginAdmin }) => {
+  test('cria um novo modelo e oferece a galeria inline antes de navegar', async ({
+    page,
+    loginAdmin,
+  }) => {
     const codigo = `MDL-PW-${ts()}`;
     await loginAdmin('/app/admin/modelos/novo');
 
@@ -22,7 +25,12 @@ test.describe('Admin — Modelos', () => {
     await expect(page.getByText(codigo)).toBeVisible();
   });
 
-  test('exibe detalhe do modelo com link de edição', async ({ page, loginAdmin, token, request }) => {
+  test('exibe detalhe do modelo com link de edição', async ({
+    page,
+    loginAdmin,
+    token,
+    request,
+  }) => {
     const codigo = `MDL-DT-${ts()}`;
     const modelo = await apiPost<{ id: string }>(
       request,
@@ -109,11 +117,51 @@ test.describe('Admin — Usuários', () => {
     await expect(page).toHaveURL(/\/app\/admin\/usuarios/);
   });
 
-  test('API de métricas Prometheus está acessível', async ({ request }) => {
-    // Valida que o endpoint de métricas está exposto
-    const res = await request.get(`${API_URL.replace('/api', '')}/actuator/prometheus`);
-    expect(res.ok()).toBeTruthy();
-    const text = await res.text();
-    expect(text).toContain('jvm_memory');
+  const URL_PROMETHEUS = `${API_URL.replace('/api', '')}/actuator/prometheus`;
+
+  test('Prometheus recusa quem não tem a credencial de coleta', async ({ request }) => {
+    // Act
+    const res = await request.get(URL_PROMETHEUS);
+
+    // Assert
+    expect(res.status()).toBe(401);
+  });
+
+  test('Prometheus responde 200 com a credencial de coleta', async ({ request }) => {
+    // Arrange
+    const usuario = process.env.MONITORAMENTO_COLETA_USUARIO;
+    const senha = process.env.MONITORAMENTO_COLETA_SENHA;
+    test.skip(
+      !usuario || !senha,
+      'MONITORAMENTO_COLETA_USUARIO/SENHA não definidos neste ambiente',
+    );
+    const credencial = Buffer.from(`${usuario}:${senha}`).toString('base64');
+
+    // Act
+    const res = await request.get(URL_PROMETHEUS, {
+      headers: { Authorization: `Basic ${credencial}` },
+    });
+
+    // Assert
+    expect(res.status()).toBe(200);
+  });
+
+  test('Prometheus expõe as métricas da JVM com a credencial de coleta', async ({ request }) => {
+    // Arrange
+    const usuario = process.env.MONITORAMENTO_COLETA_USUARIO;
+    const senha = process.env.MONITORAMENTO_COLETA_SENHA;
+    test.skip(
+      !usuario || !senha,
+      'MONITORAMENTO_COLETA_USUARIO/SENHA não definidos neste ambiente',
+    );
+    const credencial = Buffer.from(`${usuario}:${senha}`).toString('base64');
+
+    // Act
+    const res = await request.get(URL_PROMETHEUS, {
+      headers: { Authorization: `Basic ${credencial}` },
+    });
+
+    // Assert
+    expect(await res.text()).toContain('jvm_memory');
   });
 });
