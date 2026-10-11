@@ -252,7 +252,7 @@ describe('useIndicadoresDoPeriodo — painel inexistente (spec 013)', () => {
     expect(solicitacoesApi.listar).toHaveBeenCalledWith(filtrosEsperados(intervalos.anterior));
   });
 
-  it('deve devolver as concluídas atual e anterior pelos totalElements', async () => {
+  it('deve devolver as concluídas atual e anterior pelos totalElements quando as consultas respondem', async () => {
     // Arrange
     responderPorPeriodo(pagina([], 12), pagina([], 8));
 
@@ -309,7 +309,7 @@ describe('useIndicadoresDoPeriodo — painel inexistente (spec 013)', () => {
     expect(result.current.tempoMedio).toEqual({ atual: null, anterior: null });
   });
 
-  it('deve estar carregando e sem dados antes das respostas chegarem', () => {
+  it('deve estar carregando e sem dados quando as respostas ainda não chegaram', () => {
     // Arrange
     responderPorPeriodo(pagina([], 1), pagina([], 1));
 
@@ -320,7 +320,7 @@ describe('useIndicadoresDoPeriodo — painel inexistente (spec 013)', () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  it('deve estar sem concluídas antes das respostas chegarem', () => {
+  it('deve estar sem concluídas quando as respostas ainda não chegaram', () => {
     // Arrange
     responderPorPeriodo(pagina([], 1), pagina([], 1));
 
@@ -331,7 +331,7 @@ describe('useIndicadoresDoPeriodo — painel inexistente (spec 013)', () => {
     expect(result.current.concluidas).toBeUndefined();
   });
 
-  it('deve estar sem tempo médio antes das respostas chegarem', () => {
+  it('deve estar sem tempo médio quando as respostas ainda não chegaram', () => {
     // Arrange
     responderPorPeriodo(pagina([], 1), pagina([], 1));
 

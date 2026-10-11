@@ -417,7 +417,7 @@ describe('FilaDeAtencao', () => {
     expect(foraDosItens).not.toMatch(new RegExp(`\\b${total}\\b`));
   });
 
-  it('deve apontar Ver todas para a listagem de atrasadas em aberto', async () => {
+  it('deve apontar Ver todas para a listagem de atrasadas em aberto quando há atrasadas', async () => {
     // Arrange
     listar.mockResolvedValue(criarPagina([criarSolicitacao({ prazoLimite: prazoHa(2) })]));
 

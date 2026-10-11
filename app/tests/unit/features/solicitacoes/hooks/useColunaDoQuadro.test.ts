@@ -40,15 +40,17 @@ function apiCom(total: number, idDoCard = (i: number) => `s-${i}`) {
 
 async function montar() {
   const { QueryWrapper, queryClient } = createQueryWrapper();
-  const { result } = renderHook(
-    () => useColunaDoQuadro('EM_ANDAMENTO', {}, TRINTA_DIAS_ATRAS),
-    { wrapper: QueryWrapper },
-  );
+  const { result } = renderHook(() => useColunaDoQuadro('EM_ANDAMENTO', {}, TRINTA_DIAS_ATRAS), {
+    wrapper: QueryWrapper,
+  });
   await waitFor(() => expect(result.current.carregando).toBe(false));
   return { result, queryClient };
 }
 
-async function carregarMais(result: Awaited<ReturnType<typeof montar>>['result'], esperado: number) {
+async function carregarMais(
+  result: Awaited<ReturnType<typeof montar>>['result'],
+  esperado: number,
+) {
   act(() => result.current.carregarMais());
   await waitFor(() => expect(result.current.cards).toHaveLength(esperado));
 }
@@ -319,9 +321,12 @@ describe('useColunasDoQuadro', () => {
   async function montarAsCinco() {
     apiCom(3);
     const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useColunasDoQuadro({ modeloId: 'm-1' }, TRINTA_DIAS_ATRAS), {
-      wrapper: QueryWrapper,
-    });
+    const { result } = renderHook(
+      () => useColunasDoQuadro({ modeloId: 'm-1' }, TRINTA_DIAS_ATRAS),
+      {
+        wrapper: QueryWrapper,
+      },
+    );
     await waitFor(() =>
       expect(Object.values(result.current).every((coluna) => !coluna.carregando)).toBe(true),
     );
@@ -334,7 +339,13 @@ describe('useColunasDoQuadro', () => {
 
     // Assert
     const status = vi.mocked(solicitacoesApi.listar).mock.calls.map(([filtros]) => filtros.status);
-    expect(status.sort()).toEqual(['A_FAZER', 'CANCELADA', 'CONCLUIDA', 'EM_ANDAMENTO', 'EM_VALIDACAO']);
+    expect(status.sort()).toEqual([
+      'A_FAZER',
+      'CANCELADA',
+      'CONCLUIDA',
+      'EM_ANDAMENTO',
+      'EM_VALIDACAO',
+    ]);
   });
 
   it('deve pedir 20 itens da primeira página em cada uma das cinco consultas', async () => {
@@ -342,7 +353,9 @@ describe('useColunasDoQuadro', () => {
     await montarAsCinco();
 
     // Assert
-    const paginas = vi.mocked(solicitacoesApi.listar).mock.calls.map(([f]) => `${f.page}/${f.size}`);
+    const paginas = vi
+      .mocked(solicitacoesApi.listar)
+      .mock.calls.map(([f]) => `${f.page}/${f.size}`);
     expect(paginas).toEqual(['0/20', '0/20', '0/20', '0/20', '0/20']);
   });
 
@@ -376,7 +389,9 @@ describe('useColunasDoQuadro', () => {
     await montarAsCinco();
 
     // Assert
-    const modelos = vi.mocked(solicitacoesApi.listar).mock.calls.map(([filtros]) => filtros.modeloId);
+    const modelos = vi
+      .mocked(solicitacoesApi.listar)
+      .mock.calls.map(([filtros]) => filtros.modeloId);
     expect(modelos).toEqual(['m-1', 'm-1', 'm-1', 'm-1', 'm-1']);
   });
 });

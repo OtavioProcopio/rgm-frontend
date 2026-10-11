@@ -85,7 +85,19 @@ describe('ModelosPage (gestor/operador)', () => {
     vi.mocked(useModelos).mockReturnValue({
       data: {
         content: [
-          { id: '1', codigo: 'M001', descricao: 'Modelo A', ativo: true, versao: 1, maquina: 'Máq1', temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '', observacoes: '' },
+          {
+            id: '1',
+            codigo: 'M001',
+            descricao: 'Modelo A',
+            ativo: true,
+            versao: 1,
+            maquina: 'Máq1',
+            temPendenciaAberta: false,
+            fotoCapaUrl: null,
+            criadoEm: '',
+            atualizadoEm: '',
+            observacoes: '',
+          },
         ],
         page: 0,
         totalPages: 2,
@@ -111,7 +123,19 @@ describe('ModelosPage (gestor/operador) — filtros e paginação', () => {
     vi.mocked(useModelos).mockReturnValue({
       data: {
         content: [
-          { id: '1', codigo: 'M001', descricao: 'Modelo A', ativo: true, versao: 1, maquina: 'FBOX', temPendenciaAberta: false, fotoCapaUrl: null, criadoEm: '', atualizadoEm: '', observacoes: '' },
+          {
+            id: '1',
+            codigo: 'M001',
+            descricao: 'Modelo A',
+            ativo: true,
+            versao: 1,
+            maquina: 'FBOX',
+            temPendenciaAberta: false,
+            fotoCapaUrl: null,
+            criadoEm: '',
+            atualizadoEm: '',
+            observacoes: '',
+          },
         ],
         page: 1,
         totalPages: 3,

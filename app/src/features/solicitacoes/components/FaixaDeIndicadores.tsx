@@ -16,7 +16,7 @@ import {
   type TempoMedio,
 } from '../lib/leituraDosIndicadores';
 import type { PeriodoDoPainel } from '../lib/periodoDoPainel';
-import { KPICard } from '../pages/DashboardKpiCard';
+import { KPICard } from './DashboardKpiCard';
 import type { MetricasResponse } from '../types/solicitacaoTypes';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';

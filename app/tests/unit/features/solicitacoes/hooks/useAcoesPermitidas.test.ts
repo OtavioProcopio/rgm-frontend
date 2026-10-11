@@ -14,7 +14,10 @@ vi.mock('@/features/auth/hooks/usePerfil', () => ({
 }));
 
 const emAndamento = {
-  id: 's1', status: 'EM_ANDAMENTO', abertaPorUsuarioId: 'outro', responsavelIds: ['op'],
+  id: 's1',
+  status: 'EM_ANDAMENTO',
+  abertaPorUsuarioId: 'outro',
+  responsavelIds: ['op'],
 } as Solicitacao;
 
 describe('useAcoesPermitidas', () => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { criarModeloSchema, editarModeloSchema } from '@/features/admin/modelos/schemas/modeloSchema';
+import {
+  criarModeloSchema,
+  editarModeloSchema,
+} from '@/features/admin/modelos/schemas/modeloSchema';
 import { LIMITES, mensagemDeLimite } from '@/shared/lib/limites';
 
 describe('modeloSchema', () => {
@@ -40,16 +43,19 @@ describe('limites de tamanho do modelo', () => {
     ['criação', criarModeloSchema],
     ['edição', editarModeloSchema],
   ] as const)('na %s', (_nome, esquema) => {
-    it.each(casos)('deve aceitar %s quando o texto tem exatamente %i caracteres', (campo, limite) => {
-      // Arrange
-      const dados = { ...modelo, [campo]: 'a'.repeat(limite) };
+    it.each(casos)(
+      'deve aceitar %s quando o texto tem exatamente %i caracteres',
+      (campo, limite) => {
+        // Arrange
+        const dados = { ...modelo, [campo]: 'a'.repeat(limite) };
 
-      // Act
-      const resultado = esquema.safeParse(dados);
+        // Act
+        const resultado = esquema.safeParse(dados);
 
-      // Assert
-      expect(resultado.success).toBe(true);
-    });
+        // Assert
+        expect(resultado.success).toBe(true);
+      },
+    );
 
     it.each(casos)('deve recusar %s quando o texto passa de %i caracteres', (campo, limite) => {
       // Arrange
@@ -60,7 +66,10 @@ describe('limites de tamanho do modelo', () => {
 
       // Assert
       expect(resultado.success).toBe(false);
-      expect(resultado.error?.issues[0]).toMatchObject({ path: [campo], message: mensagemDeLimite(limite) });
+      expect(resultado.error?.issues[0]).toMatchObject({
+        path: [campo],
+        message: mensagemDeLimite(limite),
+      });
     });
   });
 });

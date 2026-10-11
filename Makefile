@@ -1,4 +1,4 @@
-.PHONY: help setup install dev build lint fmt format typecheck test test-watch test-run cover coverage cover-arquivos e2e check validate
+.PHONY: help setup install dev build lint fmt typecheck test test-watch cover cover-arquivos e2e check validate
 
 # CAMINHO= limita fmt, lint e test a um arquivo ou pasta, relativo a app/.
 # Exemplo: make test CAMINHO=tests/unit/shared/lib
@@ -28,7 +28,6 @@ lint: ## Executar verificação de linter (ESLint); aceita CAMINHO=
 fmt: ## Formatar código com Prettier; aceita CAMINHO=
 	cd app && npx prettier --write $(if $(CAMINHO),$(CAMINHO),.)
 
-format: fmt ## O mesmo que fmt (nome antigo)
 
 typecheck: ## Verificar erros de tipo do código e dos testes (tsc)
 	cd app && npm run typecheck
@@ -41,12 +40,10 @@ test: ## Executar os testes do Vitest uma única vez; aceita CAMINHO=
 test-watch: ## Executar testes do Vitest em modo interativo (watch)
 	cd app && npm run test
 
-test-run: test ## O mesmo que test (nome antigo)
 
 cover: ## Rodar testes com relatório de cobertura V8 (coverage/); falha abaixo de 95%
 	cd app && npm run test:coverage
 
-coverage: cover ## O mesmo que cover (nome antigo)
 
 # ARQUIVOS= lista (separada por espaço) de arquivos de src/ relativos a app/, medidos mesmo quando
 # a configuração de cobertura os exclui; exige 95% em cada um, não no conjunto.

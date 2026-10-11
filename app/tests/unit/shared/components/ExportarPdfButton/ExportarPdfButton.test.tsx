@@ -25,7 +25,12 @@ afterEach(() => {
 describe('ExportarPdfButton', () => {
   it('deve baixar o PDF com o nome informado quando a exportação dá certo', async () => {
     // Arrange
-    render(<ExportarPdfButton buscar={() => Promise.resolve(pdf)} nomeDoArquivo={() => 'relatorio.pdf'} />);
+    render(
+      <ExportarPdfButton
+        buscar={() => Promise.resolve(pdf)}
+        nomeDoArquivo={() => 'relatorio.pdf'}
+      />,
+    );
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }));
@@ -38,7 +43,12 @@ describe('ExportarPdfButton', () => {
   it('deve mostrar o erro junto do botão quando a API responde com erro', async () => {
     // Arrange
     const recusa = new ApiError({ status: 500, message: 'Falha ao gerar o relatório.' });
-    render(<ExportarPdfButton buscar={() => Promise.reject(recusa)} nomeDoArquivo={() => 'relatorio.pdf'} />);
+    render(
+      <ExportarPdfButton
+        buscar={() => Promise.reject(recusa)}
+        nomeDoArquivo={() => 'relatorio.pdf'}
+      />,
+    );
     const botao = screen.getByRole('button', { name: 'Exportar PDF' });
 
     // Act
@@ -76,7 +86,9 @@ describe('ExportarPdfButton', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }));
 
     // Assert
-    expect((screen.getByRole('button', { name: 'Exportando...' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Exportando...' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     concluir(pdf);
     expect(await screen.findByRole('button', { name: 'Exportar PDF' })).toBeDefined();
   });

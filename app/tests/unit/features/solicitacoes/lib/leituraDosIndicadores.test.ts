@@ -84,7 +84,7 @@ describe('variacaoDeConcluidas', () => {
     expect(leitura).toEqual({ tom: 'ok', texto: '+100% contra o período anterior' });
   });
 
-  it('deve arredondar o percentual positivo ao inteiro', () => {
+  it('deve arredondar o percentual positivo ao inteiro quando o valor é fracionado', () => {
     // Arrange
     const atual = 10;
     const anterior = 8;
@@ -268,7 +268,7 @@ describe('tempoMedioDeResolucao', () => {
     expect(tempo).toEqual({ segundos: 11, amostra: null });
   });
 
-  it('deve ignorar itens sem tempo de resolução', () => {
+  it('deve ignorar itens sem tempo de resolução quando calcula o tempo médio', () => {
     // Arrange
     const itens = [
       { tempoResolucaoSegundos: 10 },

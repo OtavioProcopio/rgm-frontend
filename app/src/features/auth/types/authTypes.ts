@@ -1,6 +1,6 @@
 import type { Usuario } from '@/features/admin/usuarios/types/usuarioTypes';
 
-export type PerfilUsuario ='OPERADOR' | 'GESTOR' | 'ADMINISTRADOR' | 'EXTERNO';
+export type PerfilUsuario = 'OPERADOR' | 'GESTOR' | 'ADMINISTRADOR' | 'EXTERNO';
 
 export type LoginRequest = {
   email: string;

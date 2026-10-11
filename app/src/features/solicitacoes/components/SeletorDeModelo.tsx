@@ -14,7 +14,9 @@ type Props = {
   error?: string;
 };
 
-function opcaoDoModelo(modelo: Pick<Modelo, 'id' | 'codigo' | 'descricao' | 'maquina'>): ComboboxOption {
+function opcaoDoModelo(
+  modelo: Pick<Modelo, 'id' | 'codigo' | 'descricao' | 'maquina'>,
+): ComboboxOption {
   return {
     value: modelo.id,
     label: `${modelo.codigo} - ${modelo.descricao}`,

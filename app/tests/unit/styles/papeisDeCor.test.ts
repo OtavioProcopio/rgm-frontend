@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { contraste } from '@/shared/lib/contraste';
+import { contraste } from '../../support/contraste';
 import { THEME_COLOR } from '@/shared/lib/theme';
 
 // O Vitest não entrega o conteúdo de folha de estilo importada: o arquivo é lido do disco.

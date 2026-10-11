@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { criarUsuarioSchema, editarUsuarioSchema } from '@/features/admin/usuarios/schemas/usuarioSchema';
+import {
+  criarUsuarioSchema,
+  editarUsuarioSchema,
+} from '@/features/admin/usuarios/schemas/usuarioSchema';
 import { LIMITES, mensagemDeLimite } from '@/shared/lib/limites';
 import { MENSAGEM_DA_SENHA } from '@/shared/lib/senha';
 
@@ -83,7 +86,10 @@ describe('limites de tamanho e regra de senha do usuário', () => {
 
     // Assert
     expect(resultado.success).toBe(false);
-    expect(resultado.error?.issues[0]).toMatchObject({ path: ['senha'], message: MENSAGEM_DA_SENHA });
+    expect(resultado.error?.issues[0]).toMatchObject({
+      path: ['senha'],
+      message: MENSAGEM_DA_SENHA,
+    });
   });
 
   it('deve aceitar a criação quando a senha tem 8 caracteres', () => {
@@ -106,7 +112,10 @@ describe('limites de tamanho e regra de senha do usuário', () => {
 
     // Assert
     expect(resultado.success).toBe(false);
-    expect(resultado.error?.issues[0]).toMatchObject({ path: ['senha'], message: MENSAGEM_DA_SENHA });
+    expect(resultado.error?.issues[0]).toMatchObject({
+      path: ['senha'],
+      message: MENSAGEM_DA_SENHA,
+    });
   });
 
   describe.each([
@@ -145,7 +154,10 @@ describe('limites de tamanho e regra de senha do usuário', () => {
 
     it('deve recusar o e-mail quando ele passa do limite', () => {
       // Arrange
-      const dados = { ...interno, email: 'a'.repeat(LIMITES.usuarioEmail - DOMINIO.length + 1) + DOMINIO };
+      const dados = {
+        ...interno,
+        email: 'a'.repeat(LIMITES.usuarioEmail - DOMINIO.length + 1) + DOMINIO,
+      };
 
       // Act
       const resultado = esquema.safeParse(dados);

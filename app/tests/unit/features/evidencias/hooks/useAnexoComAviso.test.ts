@@ -63,7 +63,9 @@ describe('useAnexoComAviso', () => {
 
   it('deve reenviar o mesmo arquivo e passar a enviado quando a nova tentativa dá certo', async () => {
     // Arrange
-    vi.mocked(evidenciasApi.anexar).mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce(aceito);
+    vi.mocked(evidenciasApi.anexar)
+      .mockRejectedValueOnce(new Error('rede'))
+      .mockResolvedValueOnce(aceito);
     const { result } = montar();
     await act(async () => {
       await result.current.anexar('s1', foto, opcoes);

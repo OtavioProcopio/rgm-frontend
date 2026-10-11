@@ -32,7 +32,7 @@ import { solicitacoesApi } from '../api/solicitacoesApi';
 import { useMetricasPorModelo } from '../hooks/useMetricasPorModelo';
 import { formatDuracao } from '../lib/solicitacaoMessages';
 import type { DirecaoOrdenacao, OrdenacaoMetricaModelo } from '../types/solicitacaoTypes';
-import { KPICard } from './DashboardKpiCard';
+import { KPICard } from '../components/DashboardKpiCard';
 
 const RANKING_PAGE_SIZE = 10;
 const SEGUNDOS_POR_MINUTO = 60;

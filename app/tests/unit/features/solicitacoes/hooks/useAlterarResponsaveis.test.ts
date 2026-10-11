@@ -25,7 +25,9 @@ describe('useAlterarResponsaveis', () => {
     await act(() => result.current.mutateAsync({ responsavelIds: ['op'] }));
 
     // Assert
-    expect(solicitacoesApi.alterarResponsaveis).toHaveBeenCalledWith('s1', { responsavelIds: ['op'] });
+    expect(solicitacoesApi.alterarResponsaveis).toHaveBeenCalledWith('s1', {
+      responsavelIds: ['op'],
+    });
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.detail('s1') });
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
   });

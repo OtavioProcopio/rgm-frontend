@@ -19,11 +19,13 @@ export function ResponsaveisAction({ solicitacao, onClose, onCancelar }: AcaoPro
         usuarios={responsaveis}
         isPending={alterar.isPending}
         onCancel={onCancelar}
-        onConfirm={(responsavelIds) => executar(
+        onConfirm={(responsavelIds) =>
+          executar(
             () => alterar.mutateAsync({ responsavelIds }),
             undefined,
             sucessoDaAcao.RESPONSAVEIS,
-          )}
+          )
+        }
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>

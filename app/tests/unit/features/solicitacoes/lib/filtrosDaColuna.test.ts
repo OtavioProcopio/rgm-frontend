@@ -82,16 +82,13 @@ describe('filtrosDaColuna', () => {
     expect(filtros).toMatchObject({ page: 3, modeloId: 'm-1', sort: 'prazoLimite', dir: 'asc' });
   });
 
-  it.each([...ABERTAS, ...ENCERRADAS])(
-    'deve repassar o filtro de modelo à coluna %s',
-    (status) => {
-      // Act
-      const filtros = filtrosDaColuna(status, { modeloId: 'm-1' }, TRINTA_DIAS_ATRAS, 0);
+  it.each([...ABERTAS, ...ENCERRADAS])('deve repassar o filtro de modelo à coluna %s', (status) => {
+    // Act
+    const filtros = filtrosDaColuna(status, { modeloId: 'm-1' }, TRINTA_DIAS_ATRAS, 0);
 
-      // Assert
-      expect(filtros.modeloId).toBe('m-1');
-    },
-  );
+    // Assert
+    expect(filtros.modeloId).toBe('m-1');
+  });
 
   it.each([...ABERTAS, ...ENCERRADAS])(
     'deve repassar o período de criação à coluna %s',

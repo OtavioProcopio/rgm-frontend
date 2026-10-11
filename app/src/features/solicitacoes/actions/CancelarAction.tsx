@@ -15,11 +15,13 @@ export function CancelarAction({ solicitacao, onClose, onCancelar }: AcaoProps) 
         isPending={cancelar.isPending}
         podeConcluir={false}
         onCancel={onCancelar}
-        onConfirm={(data) => executar(
+        onConfirm={(data) =>
+          executar(
             () => cancelar.mutateAsync({ motivo: data.comentario }),
             undefined,
             sucessoDaAcao.CANCELAR,
-          )}
+          )
+        }
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>

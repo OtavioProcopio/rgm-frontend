@@ -29,10 +29,7 @@ export function ModelosPage() {
 
   return (
     <section>
-      <PageHeader
-        title="Modelos"
-        description="Visualize os modelos de máquinas disponíveis."
-      />
+      <PageHeader title="Modelos" description="Visualize os modelos de máquinas disponíveis." />
 
       <ModelosFilters
         codigo={filters.codigo}
@@ -56,7 +53,10 @@ export function ModelosPage() {
         />
       ) : null}
       {data && data.content.length === 0 ? (
-        <EmptyState title="Nenhum modelo encontrado" description="Nenhum modelo cadastrado ainda." />
+        <EmptyState
+          title="Nenhum modelo encontrado"
+          description="Nenhum modelo cadastrado ainda."
+        />
       ) : null}
 
       {data && data.content.length > 0 ? (

@@ -5,7 +5,6 @@ import {
   canManageModelos,
   canManageSolicitacoes,
   canOperateSolicitacoes,
-  canViewModelos,
   getDefaultRoute,
 } from '@/shared/lib/permissions';
 
@@ -39,14 +38,6 @@ describe('permissions', () => {
     expect(canManageSolicitacoes('OPERADOR')).toBe(false);
     expect(canManageSolicitacoes('EXTERNO')).toBe(false);
     expect(canManageSolicitacoes(null)).toBe(false);
-  });
-
-  it('allows logged-in operational profiles to view modelos', () => {
-    expect(canViewModelos('ADMINISTRADOR')).toBe(true);
-    expect(canViewModelos('GESTOR')).toBe(true);
-    expect(canViewModelos('OPERADOR')).toBe(true);
-    expect(canViewModelos('EXTERNO')).toBe(false);
-    expect(canViewModelos(null)).toBe(false);
   });
 
   it('routes ADMINISTRADOR to /app/admin and all others to /app/solicitacoes', () => {

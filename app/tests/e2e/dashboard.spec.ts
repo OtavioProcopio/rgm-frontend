@@ -115,8 +115,8 @@ test.describe('Dashboard sobre o painel por período', () => {
     page,
     loginAdmin,
   }) => {
-    const painel = page.waitForResponse(
-      (resposta) => resposta.url().includes('/solicitacoes/metricas/painel'),
+    const painel = page.waitForResponse((resposta) =>
+      resposta.url().includes('/solicitacoes/metricas/painel'),
     );
 
     await loginAdmin('/app/dashboard');

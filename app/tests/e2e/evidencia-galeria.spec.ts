@@ -21,7 +21,11 @@ test.describe('Evidência vira foto de galeria automaticamente', () => {
     const modelo = await apiPost<{ id: string }>(
       request,
       '/modelos',
-      { codigo: modeloCodigo, descricao: 'Modelo galeria automática E2E', maquina: MAQUINA_CATALOGO },
+      {
+        codigo: modeloCodigo,
+        descricao: 'Modelo galeria automática E2E',
+        maquina: MAQUINA_CATALOGO,
+      },
       token,
     );
     modeloId = modelo.id;
@@ -39,7 +43,12 @@ test.describe('Evidência vira foto de galeria automaticamente', () => {
     const sol = await apiPost<{ id: string }>(
       request,
       '/solicitacoes',
-      { titulo: `Galeria automática E2E ${ts()}`, descricao: 'Teste E2E', tipo: 'REPARO', modeloId },
+      {
+        titulo: `Galeria automática E2E ${ts()}`,
+        descricao: 'Teste E2E',
+        tipo: 'REPARO',
+        modeloId,
+      },
       token,
     );
     await apiPatch(
@@ -84,13 +93,22 @@ test.describe('Evidência vira foto de galeria automaticamente', () => {
     const modeloIsolado = await apiPost<{ id: string }>(
       request,
       '/modelos',
-      { codigo: `MDL-GAL-GERAL-${ts()}`, descricao: 'Isolado para teste GERAL', maquina: MAQUINA_CATALOGO },
+      {
+        codigo: `MDL-GAL-GERAL-${ts()}`,
+        descricao: 'Isolado para teste GERAL',
+        maquina: MAQUINA_CATALOGO,
+      },
       token,
     );
     const sol = await apiPost<{ id: string }>(
       request,
       '/solicitacoes',
-      { titulo: `Galeria GERAL não entra E2E ${ts()}`, descricao: 'Teste E2E', tipo: 'REPARO', modeloId: modeloIsolado.id },
+      {
+        titulo: `Galeria GERAL não entra E2E ${ts()}`,
+        descricao: 'Teste E2E',
+        tipo: 'REPARO',
+        modeloId: modeloIsolado.id,
+      },
       token,
     );
 

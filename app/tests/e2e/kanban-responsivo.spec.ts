@@ -51,7 +51,10 @@ test.describe('Kanban — layout responsivo', () => {
     expect(scrollWidth).toBeGreaterThan(clientWidth);
   });
 
-  test('em viewport mobile, mostra abas em vez do quadro horizontal', async ({ page, loginAdmin }) => {
+  test('em viewport mobile, mostra abas em vez do quadro horizontal', async ({
+    page,
+    loginAdmin,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAdmin('/app/solicitacoes');
 

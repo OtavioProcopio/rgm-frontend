@@ -1,4 +1,4 @@
 {
-  "active": "specs/015-dashboard-consome-o-painel-por-periodo",
-  "title": "Dashboard consome o painel por período e a listagem ordenada do backend (rgm-frontend #149 e #142). Spec 015. Backend v1.6 já em develop (rgm-backend PR #126); front deve continuar funcionando com o backend v1.5.0 (Princípio 9)."
+  "active": "specs/016-acabamento-final-do-frontend-sobre-o",
+  "title": "Acabamento final do frontend sobre o backend v1.6: indicadores de gestão, quadro e card, triagem com busca, tipos de modelo, busca e PDFs fiéis à tela, limpeza (spec 016: #150, #142, #129, #132, #156, #151)"
 }

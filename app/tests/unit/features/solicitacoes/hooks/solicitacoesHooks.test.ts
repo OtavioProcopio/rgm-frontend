@@ -24,10 +24,20 @@ import { useTriarSolicitacao } from '@/features/solicitacoes/hooks/useTriarSolic
 
 vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => {
   const s = {
-    id: 's1', titulo: 'Reparo', descricao: 'Desc', tipo: 'REPARO', status: 'A_FAZER',
-    prioridade: null, modeloId: 'm1', abertaPorUsuarioId: 'u1', comentarioFinal: null,
-    criadaEm: '2024-01-01T00:00:00Z', atualizadaEm: '2024-01-01T00:00:00Z',
-    concluidaEm: null, canceladaEm: null, responsavelIds: [],
+    id: 's1',
+    titulo: 'Reparo',
+    descricao: 'Desc',
+    tipo: 'REPARO',
+    status: 'A_FAZER',
+    prioridade: null,
+    modeloId: 'm1',
+    abertaPorUsuarioId: 'u1',
+    comentarioFinal: null,
+    criadaEm: '2024-01-01T00:00:00Z',
+    atualizadaEm: '2024-01-01T00:00:00Z',
+    concluidaEm: null,
+    canceladaEm: null,
+    responsavelIds: [],
   };
   const page = { content: [s], page: 0, totalPages: 1, totalElements: 1 };
   return {
@@ -53,7 +63,9 @@ afterEach(() => vi.clearAllMocks());
 describe('useSolicitacoes', () => {
   it('fetches solicitacoes list', async () => {
     const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useSolicitacoes({ page: 0, size: 20 }), { wrapper: QueryWrapper });
+    const { result } = renderHook(() => useSolicitacoes({ page: 0, size: 20 }), {
+      wrapper: QueryWrapper,
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.content).toHaveLength(1);
   });
@@ -99,7 +111,9 @@ describe('mutation hooks', () => {
   ] as const)('%s exposes mutateAsync', (_, hook) => {
     const { QueryWrapper } = createQueryWrapper();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { result } = renderHook(() => (hook as (id?: string) => any)('test-id'), { wrapper: QueryWrapper });
+    const { result } = renderHook(() => (hook as (id?: string) => any)('test-id'), {
+      wrapper: QueryWrapper,
+    });
     expect(typeof result.current.mutateAsync).toBe('function');
   });
 });
@@ -110,7 +124,12 @@ describe('useAbrirSolicitacao', () => {
     const { QueryWrapper, queryClient } = createQueryWrapper();
     const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useAbrirSolicitacao(), { wrapper: QueryWrapper });
-    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
+    const nova = {
+      titulo: 'Trocar correia',
+      descricao: 'Correia gasta',
+      tipo: 'REPARO',
+      modeloId: 'm1',
+    };
 
     // Act
     await result.current.mutateAsync(nova as Parameters<typeof result.current.mutateAsync>[0]);
@@ -132,7 +151,12 @@ describe('useAbrirSolicitacao', () => {
     );
     await waitFor(() => expect(result.current.quadro.carregando).toBe(false));
     const buscasAntes = vi.mocked(solicitacoesApi.listar).mock.calls.length;
-    const nova = { titulo: 'Trocar correia', descricao: 'Correia gasta', tipo: 'REPARO', modeloId: 'm1' };
+    const nova = {
+      titulo: 'Trocar correia',
+      descricao: 'Correia gasta',
+      tipo: 'REPARO',
+      modeloId: 'm1',
+    };
 
     // Act
     await result.current.abrir.mutateAsync(

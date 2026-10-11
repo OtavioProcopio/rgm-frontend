@@ -19,7 +19,7 @@ import {
 const BASE = '/app/solicitacoes?emAberto=true';
 
 describe('VISOES', () => {
-  it('deve listar as visões na ordem status, tipo e prioridade', () => {
+  it('deve listar as visões na ordem status, tipo e prioridade quando as visões são pedidas', () => {
     // Arrange
     const esperado = ['status', 'tipo', 'prioridade'];
 
@@ -30,7 +30,7 @@ describe('VISOES', () => {
     expect(ids).toEqual(esperado);
   });
 
-  it('deve rotular as visões como Status, Tipo e Prioridade', () => {
+  it('deve rotular as visões como Status, Tipo e Prioridade quando as visões são pedidas', () => {
     // Arrange
     const esperado = ['Status', 'Tipo', 'Prioridade'];
 
@@ -41,7 +41,7 @@ describe('VISOES', () => {
     expect(rotulos).toEqual(esperado);
   });
 
-  it('deve usar o id da visão como parâmetro de URL', () => {
+  it('deve usar o id da visão como parâmetro de URL quando monta o link', () => {
     // Arrange
     const esperado = VISOES.map((visao) => visao.id);
 
@@ -52,7 +52,7 @@ describe('VISOES', () => {
     expect(parametros).toEqual(esperado);
   });
 
-  it('deve ter só os status em aberto na ordem do fluxo', () => {
+  it('deve ter só os status em aberto na ordem do fluxo quando a visão é status', () => {
     // Arrange
     const esperado = ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO'];
 
@@ -63,7 +63,7 @@ describe('VISOES', () => {
     expect(valores).toEqual(esperado);
   });
 
-  it('deve excluir CONCLUIDA e CANCELADA da visão status', () => {
+  it('deve excluir CONCLUIDA e CANCELADA quando a visão é status', () => {
     // Arrange
     const encerrados = ['CONCLUIDA', 'CANCELADA'];
 
@@ -74,7 +74,7 @@ describe('VISOES', () => {
     expect(valores.filter((valor) => encerrados.includes(valor))).toEqual([]);
   });
 
-  it('deve ter os quatro tipos na ordem do domínio', () => {
+  it('deve ter os quatro tipos na ordem do domínio quando a visão é tipo', () => {
     // Arrange
     const esperado = ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'];
 
@@ -85,7 +85,7 @@ describe('VISOES', () => {
     expect(valores).toEqual(esperado);
   });
 
-  it('deve ter as quatro prioridades da mais à menos urgente', () => {
+  it('deve ter as quatro prioridades da mais à menos urgente quando a visão é prioridade', () => {
     // Arrange
     const esperado = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
 
@@ -260,7 +260,7 @@ describe('partesPorConsulta', () => {
 });
 
 describe('caminhoDasAtrasadas', () => {
-  it('deve devolver o caminho das atrasadas em aberto', () => {
+  it('deve devolver o caminho das atrasadas em aberto quando monta o link das atrasadas', () => {
     // Arrange
     const esperado = '/app/solicitacoes?atrasada=true&emAberto=true';
 

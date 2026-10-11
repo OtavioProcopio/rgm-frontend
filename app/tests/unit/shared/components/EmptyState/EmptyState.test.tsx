@@ -60,6 +60,8 @@ describe('EmptyState', () => {
     );
 
     // Assert
-    expect(container.querySelector('[aria-hidden="true"] [data-testid="meu-icone"]')).not.toBeNull();
+    expect(
+      container.querySelector('[aria-hidden="true"] [data-testid="meu-icone"]'),
+    ).not.toBeNull();
   });
 });

@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { Leitura } from '@/features/solicitacoes/lib/leituraDosIndicadores';
-import { KPICard } from '@/features/solicitacoes/pages/DashboardKpiCard';
+import { KPICard } from '@/features/solicitacoes/components/DashboardKpiCard';
 
 type Cor = Parameters<typeof KPICard>[0]['gradient'];
 

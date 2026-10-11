@@ -168,7 +168,10 @@ describe('useSolicitacaoEvents — eventos recebidos', () => {
     const { conexao, invalidar } = conectar();
 
     // Act
-    conexao.emit('solicitacao', { tipo: 'triada', solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }) });
+    conexao.emit('solicitacao', {
+      tipo: 'triada',
+      solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }),
+    });
 
     // Assert
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.lists() });
@@ -190,17 +193,30 @@ describe('useSolicitacaoEvents — eventos recebidos', () => {
   it('deve mostrar no detalhe aberto o status do evento, mantendo os responsáveis, e pedir a confirmação do detalhe e do histórico quando outro usuário devolve a solicitação', () => {
     // Arrange
     const { conexao, queryClient, invalidar } = conectar();
-    const noDetalhe = criarSolicitacao({ status: 'EM_VALIDACAO', responsavelIds: ['op'], acoesPermitidas: ['DEVOLVER'] });
+    const noDetalhe = criarSolicitacao({
+      status: 'EM_VALIDACAO',
+      responsavelIds: ['op'],
+      acoesPermitidas: ['DEVOLVER'],
+    });
     queryClient.setQueryData(solicitacoesKeys.detail('s1'), noDetalhe);
 
     // Act
-    conexao.emit('solicitacao', { tipo: 'devolvida', solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }) });
+    conexao.emit('solicitacao', {
+      tipo: 'devolvida',
+      solicitacao: criarSolicitacao({ status: 'EM_ANDAMENTO' }),
+    });
 
     // Assert
     const atualizado = queryClient.getQueryData<Solicitacao>(solicitacoesKeys.detail('s1'));
-    expect(atualizado).toMatchObject({ status: 'EM_ANDAMENTO', responsavelIds: ['op'], acoesPermitidas: null });
+    expect(atualizado).toMatchObject({
+      status: 'EM_ANDAMENTO',
+      responsavelIds: ['op'],
+      acoesPermitidas: null,
+    });
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.detail('s1') });
-    expect(solicitacoesKeys.atividades('s1').slice(0, 3)).toEqual([...solicitacoesKeys.detail('s1')]);
+    expect(solicitacoesKeys.atividades('s1').slice(0, 3)).toEqual([
+      ...solicitacoesKeys.detail('s1'),
+    ]);
   });
 
   it('deve contar a mudança da solicitação quando um evento dela chega', () => {
@@ -409,7 +425,9 @@ describe('useSolicitacaoEvents — reconexão', () => {
   it('deve parar de tentar quando a renovação é recusada por sessão expirada', async () => {
     // Arrange
     conectar();
-    mockRefreshAccessToken.mockRejectedValue(new ApiError({ status: 401, message: 'Sessão expirada.' }));
+    mockRefreshAccessToken.mockRejectedValue(
+      new ApiError({ status: 401, message: 'Sessão expirada.' }),
+    );
     derrubar();
     await vi.advanceTimersByTimeAsync(3_000);
 

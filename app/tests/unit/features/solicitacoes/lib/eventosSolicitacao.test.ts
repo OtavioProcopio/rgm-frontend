@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
-import { lerEventoAtividade, lerEventoSolicitacao, mesclarSolicitacaoDoEvento } from '@/features/solicitacoes/lib/eventosSolicitacao';
+import {
+  lerEventoAtividade,
+  lerEventoSolicitacao,
+  mesclarSolicitacaoDoEvento,
+} from '@/features/solicitacoes/lib/eventosSolicitacao';
 
 describe('lerEventoSolicitacao', () => {
   it('deve devolver o tipo e a solicitação quando o corpo é um evento de solicitação', () => {
@@ -34,7 +38,10 @@ describe('lerEventoSolicitacao', () => {
     ['é um JSON que não é objeto', '42'],
     ['é nulo', 'null'],
     ['não tem solicitação', JSON.stringify({ tipo: 'triada' })],
-    ['tem solicitação sem id', JSON.stringify({ tipo: 'triada', solicitacao: { status: 'A_FAZER' } })],
+    [
+      'tem solicitação sem id',
+      JSON.stringify({ tipo: 'triada', solicitacao: { status: 'A_FAZER' } }),
+    ],
     ['tem solicitação sem status', JSON.stringify({ tipo: 'triada', solicitacao: { id: 's1' } })],
   ])('deve devolver nulo quando o corpo %s', (_, data) => {
     // Act
@@ -86,10 +93,17 @@ describe('mesclarSolicitacaoDoEvento', () => {
 
   it('deve trocar o status, manter os responsáveis e descartar as ações informadas quando o evento é de mudança de status', () => {
     // Arrange
-    const devolvida = criarSolicitacao({ status: 'EM_ANDAMENTO', prioridade: 'ALTA', responsavelIds: [] });
+    const devolvida = criarSolicitacao({
+      status: 'EM_ANDAMENTO',
+      prioridade: 'ALTA',
+      responsavelIds: [],
+    });
 
     // Act
-    const mesclada = mesclarSolicitacaoDoEvento(atual, { tipo: 'devolvida', solicitacao: devolvida });
+    const mesclada = mesclarSolicitacaoDoEvento(atual, {
+      tipo: 'devolvida',
+      solicitacao: devolvida,
+    });
 
     // Assert
     expect(mesclada.status).toBe('EM_ANDAMENTO');
@@ -103,7 +117,10 @@ describe('mesclarSolicitacaoDoEvento', () => {
     const comOutros = criarSolicitacao({ status: 'EM_VALIDACAO', responsavelIds: ['ge', 'op2'] });
 
     // Act
-    const mesclada = mesclarSolicitacaoDoEvento(atual, { tipo: 'responsaveis_alterados', solicitacao: comOutros });
+    const mesclada = mesclarSolicitacaoDoEvento(atual, {
+      tipo: 'responsaveis_alterados',
+      solicitacao: comOutros,
+    });
 
     // Assert
     expect(mesclada.responsavelIds).toEqual(['ge', 'op2']);
@@ -111,10 +128,16 @@ describe('mesclarSolicitacaoDoEvento', () => {
 
   it('deve ficar sem responsáveis quando a troca de responsáveis vem sem a lista', () => {
     // Arrange
-    const semLista = { ...criarSolicitacao(), responsavelIds: undefined } as unknown as typeof atual;
+    const semLista = {
+      ...criarSolicitacao(),
+      responsavelIds: undefined,
+    } as unknown as typeof atual;
 
     // Act
-    const mesclada = mesclarSolicitacaoDoEvento(atual, { tipo: 'responsaveis_alterados', solicitacao: semLista });
+    const mesclada = mesclarSolicitacaoDoEvento(atual, {
+      tipo: 'responsaveis_alterados',
+      solicitacao: semLista,
+    });
 
     // Assert
     expect(mesclada.responsavelIds).toEqual([]);

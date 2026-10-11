@@ -281,9 +281,7 @@ describe('UsuariosPage — ações, filtros e paginação', () => {
     } as unknown as ReturnType<typeof useExcluirUsuario>);
     vi.mocked(useUsuarios).mockReturnValue({
       data: {
-        content: [
-          { id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true },
-        ],
+        content: [{ id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true }],
         page: pagina.page,
         totalPages: pagina.totalPages,
         totalElements: 3,
@@ -304,7 +302,9 @@ describe('UsuariosPage — ações, filtros e paginação', () => {
     await userEvent.click(tela.getByText('desativar-1'));
 
     // Act
-    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+    await userEvent.click(
+      within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }),
+    );
 
     // Assert
     expect(desativar).toHaveBeenCalledExactlyOnceWith('1');
@@ -318,7 +318,9 @@ describe('UsuariosPage — ações, filtros e paginação', () => {
     await userEvent.click(tela.getByText('desativar-1'));
 
     // Act
-    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+    await userEvent.click(
+      within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }),
+    );
 
     // Assert
     expect(await tela.findByText('Operação não concluída')).toBeDefined();
@@ -414,7 +416,9 @@ describe('UsuariosPage — ações, filtros e paginação', () => {
     await userEvent.click(tela.getByText('desativar-1'));
 
     // Act
-    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(
+      within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }),
+    );
 
     // Assert
     expect(tela.queryByRole('dialog')).toBeNull();
@@ -427,7 +431,9 @@ describe('UsuariosPage — ações, filtros e paginação', () => {
     await userEvent.click(tela.getByText('excluir-1'));
 
     // Act
-    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(
+      within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }),
+    );
 
     // Assert
     expect(tela.queryByRole('dialog')).toBeNull();

@@ -114,8 +114,7 @@ describe('solicitacoesApi — leituras', () => {
     },
     {
       nome: 'exportarMetricasPorModeloPdf',
-      chamar: () =>
-        solicitacoesApi.exportarMetricasPorModeloPdf({ sort: 'INTERVALO', dir: 'asc' }),
+      chamar: () => solicitacoesApi.exportarMetricasPorModeloPdf({ sort: 'INTERVALO', dir: 'asc' }),
       caminho: '/solicitacoes/metricas/por-modelo/pdf',
       opcoes: { params: { sort: 'INTERVALO', dir: 'asc' } },
     },
@@ -146,7 +145,9 @@ describe('solicitacoesApi — escritas', () => {
     await solicitacoesApi.comentar('s1', { comentario: 'ok' });
 
     // Assert
-    expect(post).toHaveBeenCalledExactlyOnceWith('/solicitacoes/s1/comentarios', { comentario: 'ok' });
+    expect(post).toHaveBeenCalledExactlyOnceWith('/solicitacoes/s1/comentarios', {
+      comentario: 'ok',
+    });
   });
 
   it('deve editar por PUT quando editar é chamada', async () => {
@@ -154,22 +155,52 @@ describe('solicitacoesApi — escritas', () => {
     await solicitacoesApi.editar('s1', { titulo: 'T', descricao: 'D' });
 
     // Assert
-    expect(put).toHaveBeenCalledExactlyOnceWith('/solicitacoes/s1', { titulo: 'T', descricao: 'D' });
+    expect(put).toHaveBeenCalledExactlyOnceWith('/solicitacoes/s1', {
+      titulo: 'T',
+      descricao: 'D',
+    });
   });
 
   it.each([
-    { nome: 'triar', rota: 'triar', chamar: () => solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [] }) },
-    { nome: 'enviarParaValidacao', rota: 'enviar-validacao', chamar: () => solicitacoesApi.enviarParaValidacao('s1', { comentario: 'c' }) },
-    { nome: 'encerrar', rota: 'encerrar', chamar: () => solicitacoesApi.encerrar('s1', { concluir: true, comentario: 'c' } as never) },
-    { nome: 'cancelar', rota: 'cancelar', chamar: () => solicitacoesApi.cancelar('s1', { motivo: 'm' }) },
-    { nome: 'devolver', rota: 'devolver', chamar: () => solicitacoesApi.devolver('s1', { motivo: 'm' }) },
-    { nome: 'alterarResponsaveis', rota: 'responsaveis', chamar: () => solicitacoesApi.alterarResponsaveis('s1', { responsavelIds: ['u1'] }) },
-  ])('deve chamar PATCH em /solicitacoes/s1/$rota quando $nome é chamada', async ({ rota, chamar }) => {
-    // Act
-    await chamar();
+    {
+      nome: 'triar',
+      rota: 'triar',
+      chamar: () => solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [] }),
+    },
+    {
+      nome: 'enviarParaValidacao',
+      rota: 'enviar-validacao',
+      chamar: () => solicitacoesApi.enviarParaValidacao('s1', { comentario: 'c' }),
+    },
+    {
+      nome: 'encerrar',
+      rota: 'encerrar',
+      chamar: () => solicitacoesApi.encerrar('s1', { concluir: true, comentario: 'c' } as never),
+    },
+    {
+      nome: 'cancelar',
+      rota: 'cancelar',
+      chamar: () => solicitacoesApi.cancelar('s1', { motivo: 'm' }),
+    },
+    {
+      nome: 'devolver',
+      rota: 'devolver',
+      chamar: () => solicitacoesApi.devolver('s1', { motivo: 'm' }),
+    },
+    {
+      nome: 'alterarResponsaveis',
+      rota: 'responsaveis',
+      chamar: () => solicitacoesApi.alterarResponsaveis('s1', { responsavelIds: ['u1'] }),
+    },
+  ])(
+    'deve chamar PATCH em /solicitacoes/s1/$rota quando $nome é chamada',
+    async ({ rota, chamar }) => {
+      // Act
+      await chamar();
 
-    // Assert
-    expect(patch).toHaveBeenCalledTimes(1);
-    expect(patch.mock.calls[0][0]).toBe(`/solicitacoes/s1/${rota}`);
-  });
+      // Assert
+      expect(patch).toHaveBeenCalledTimes(1);
+      expect(patch.mock.calls[0][0]).toBe(`/solicitacoes/s1/${rota}`);
+    },
+  );
 });

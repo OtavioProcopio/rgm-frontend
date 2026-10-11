@@ -20,7 +20,8 @@ import type {
   SolicitacoesFilters,
   StatusSolicitacao,
 } from '../types/solicitacaoTypes';
-import { KPICard } from './DashboardKpiCard';
+import { KPICard } from '../components/DashboardKpiCard';
+import { painelPessoalVazio } from '../lib/painelPessoal';
 
 const STATUS_TEXT_COLOR: Record<StatusSolicitacao, string> = {
   A_FAZER: 'text-fg-muted',
@@ -152,11 +153,11 @@ export function PessoalTab() {
     return <LoadingState title="Carregando seu painel pessoal..." />;
   }
 
-  const semNada =
-    (minhas?.totalElements ?? 0) === 0 &&
-    (sobMinhaResponsabilidade?.totalElements ?? 0) === 0 &&
-    (concluidas ?? 0) === 0;
-  if (semNada) return <PessoalVazia />;
+  if (
+    painelPessoalVazio(minhas?.totalElements, sobMinhaResponsabilidade?.totalElements, concluidas)
+  ) {
+    return <PessoalVazia />;
+  }
 
   return (
     <div className="space-y-6">

@@ -75,7 +75,9 @@ export function useSolicitacaoEvents() {
     const handleAtividade = (event: Event) => {
       const evento = lerEventoAtividade((event as MessageEvent).data);
       if (!evento) return;
-      queryClient.invalidateQueries({ queryKey: solicitacoesKeys.atividades(evento.solicitacaoId) });
+      queryClient.invalidateQueries({
+        queryKey: solicitacoesKeys.atividades(evento.solicitacaoId),
+      });
       queryClient.invalidateQueries({
         queryKey: evidenciasKeys.bySolicitacao(evento.solicitacaoId),
       });
