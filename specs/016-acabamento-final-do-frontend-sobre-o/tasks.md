@@ -17,16 +17,16 @@
 
 ## Fase 2 — Quadro e triagem (RF-13 a RF-22)
 
-- [ ] T008 Teste e `lib/iniciaisDosResponsaveis.ts`
-- [ ] T009 Teste e alteração de `KanbanCard.tsx`: card clicável, modelo e máquina, responsáveis, prazo; avançar fora do link
-- [ ] T010 Teste e alteração de `filtrosDaColuna.ts`: encerradas por `concluidaEm`
-- [ ] T011 Teste e alteração de `KanbanBoard.tsx`: controle de colunas no celular com rótulo curto e contagem
-- [ ] T012 Teste e `lib/prazosDaPrioridade.ts`
-- [ ] T013 Teste e `shared/components/SeletorMultiplo/SeletorMultiplo.tsx`
-- [ ] T014 Teste e `api/responsaveisDisponiveisApi.ts` + `useResponsaveisDisponiveis` (busca no servidor)
-- [ ] T015 Teste e alteração de `TriagemModal.tsx` e `AlterarResponsaveisModal.tsx`
-- [ ] T016 Teste e alteração de `acoesSolicitacao.ts` (troca de responsáveis só depois da triagem)
-- [ ] T017 E2E do quadro e da triagem; `make validate` verde
+- [x] T008 Teste e `lib/iniciaisDosResponsaveis.ts`
+- [x] T009 Teste e alteração de `KanbanCard.tsx`: card clicável, modelo e máquina, responsáveis, prazo; avançar fora do link
+- [x] T010 Teste e alteração de `filtrosDaColuna.ts`: encerradas por `concluidaEm`
+- [x] T011 Teste e alteração de `KanbanBoard.tsx`: controle de colunas no celular com rótulo curto e contagem
+- [x] T012 Teste e `lib/prazosDaPrioridade.ts`
+- [x] T013 Teste e `shared/components/SeletorMultiplo/SeletorMultiplo.tsx`
+- [x] T014 Teste e `api/responsaveisDisponiveisApi.ts` + `useResponsaveisDisponiveis` (busca no servidor)
+- [x] T015 Teste e alteração de `TriagemModal.tsx` e `AlterarResponsaveisModal.tsx`
+- [x] T016 Teste e alteração de `acoesSolicitacao.ts` (troca de responsáveis só depois da triagem)
+- [x] T017 E2E do quadro e da triagem; `make validate` verde
 
 ## Fase 3 — Tipos de modelo, busca e PDFs (RF-23 a RF-33)
 
@@ -39,12 +39,12 @@
 
 ## Fase 4 — Dashboard de gestão (RF-01 a RF-12)
 
-- [ ] T024 Tipos e `solicitacoesApi.indicadoresDeGestao`; `useIndicadoresDeGestao` (só gestor e administrador)
-- [ ] T025 Teste e `lib/leituraDoPrazo.ts` e `lib/gargaloDasEtapas.ts`
-- [ ] T026 Blocos de prazo, resolução, backlog, etapas e devolução com testes
-- [ ] T027 Blocos por máquina, reincidentes e carga por responsável, com atalho para a lista filtrada
-- [ ] T028 `DashboardPage` com os blocos, erro por bloco e distribuição por tipo e prioridade em uma consulta
-- [ ] T029 E2E do dashboard de gestão; `make validate` e e2e inteiro verdes
+- [x] T024 Tipos e `solicitacoesApi.indicadoresDeGestao`; `useIndicadoresDeGestao` (só gestor e administrador)
+- [x] T025 Teste e `lib/leituraDoPrazo.ts` e `lib/gargaloDasEtapas.ts`
+- [x] T026 Blocos de prazo, resolução, backlog, etapas e devolução com testes
+- [x] T027 Blocos por máquina, reincidentes e carga por responsável, com atalho para a lista filtrada
+- [x] T028 `DashboardPage` com os blocos, erro por bloco e distribuição por tipo e prioridade em uma consulta
+- [x] T029 E2E do dashboard de gestão; `make validate` e e2e inteiro verdes
 
 ## Rastreabilidade
 
@@ -71,3 +71,30 @@
 ## Convergence
 
 > Seção **append-only**, escrita por `/bu:converge`.
+
+### Rodada 1 — 2026-10-11
+
+| Requisito | Estado | Evidência |
+|---|---|---|
+| RF-01, RF-02 | realizado | `components/gestao/BlocoDePrazo.tsx`, `lib/leituraDoPrazo.ts` (90/75, sem base → texto); `IndicadoresDeGestao.test.tsx` |
+| RF-03 | realizado | `components/gestao/BlocoDeResolucao.tsx` (mediana, p90 e quantidade) |
+| RF-04 | parcial | faixas levam à lista filtrada (`lib/caminhosDaGestao.ts`, `filtrosDaUrl.ts` aceita `criadaEmInicio/Fim`); "sem responsável" é só número, porque o backend não tem filtro para isso |
+| RF-05, RF-06 | realizado | `BlocoDeEtapas.tsx`, `lib/gargaloDasEtapas.ts` (etapa sem dado = "sem dados"; devolução "N de M") |
+| RF-07, RF-08, RF-09 | realizado | `BlocoPorMaquina.tsx`, `BlocoDeReincidentes.tsx`, `BlocoDeCarga.tsx` com aviso de soma; links por `maquina`, `modeloId`, `responsavelId` |
+| RF-10 | parcial | os blocos novos saem de uma única requisição: carregando, erro com "Tentar novamente" e o resto do dashboard de pé; o erro é do conjunto, não de cada bloco |
+| RF-11 | realizado | `useIndicadoresDeGestao` só habilita para gestor/administrador; teste do operador |
+| RF-12 | realizado | `useDistribuicaoDoTrabalho` lê `emAbertoPorTipo/Prioridade` das métricas (0 requisições extras); "Sem prioridade" sem link |
+| RF-13 a RF-22 | realizado | PR #158 (fase 2) |
+| RF-23 a RF-32 | realizado | PR #159 (fase 3) |
+| RF-33 | não feito (decisão) | o aviso de corte fica dentro do PDF; registrado na spec |
+| RF-34, RF-35 | realizado | PR #157 (fase 1) |
+| RF-36 | parcial | nomes de teste, regra fora de `pages/` e pastas feitos na fase 1; limite de tamanho de função só conferido nos arquivos que esta spec tocou |
+| RF-37 | realizado | build de produção em `vite preview`, 5 medidas até o último bloco de gestão: 249 a 412 ms (limite 3 s) |
+| RNF-01 | realizado | 1 requisição nova (`/metricas/gestao`); a distribuição saiu de 8 para 0; e2e limita a 4 requisições de dados |
+| RNF-03 | parcial | título, texto de leitura e alvo de toque `pointer-coarse:min-h-11` nos blocos; sem varredura de acessibilidade nova |
+| RNF-04 | realizado | `make validate`: 3458 testes, 0 falhas, cobertura 99,9% |
+| RNF-05 | não verificado | blocos usam só os tokens de tema existentes; claro e escuro não foram conferidos na tela |
+
+Validação: `make validate` verde (3458 testes) e e2e inteiro verde (70 passaram, 2 ignorados).
+Veredito: não convergido (RF-04, RF-10, RF-36, RNF-03 parciais; RNF-05 sem verificação)
+Tarefas acrescentadas: nenhuma — as pendências dependem de decisão ou de backend (filtro "sem responsável"), e não de código desta spec.

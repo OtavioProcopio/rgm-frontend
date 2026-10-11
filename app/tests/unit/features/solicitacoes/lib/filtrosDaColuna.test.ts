@@ -55,12 +55,12 @@ describe('filtrosDaColuna', () => {
     },
   );
 
-  it.each(ENCERRADAS)('deve não pedir ordenação quando a coluna é %s', (status) => {
+  it.each(ENCERRADAS)('deve pedir a ordem por encerramento quando a coluna é %s', (status) => {
     // Act
     const filtros = filtrosDaColuna(status, {}, TRINTA_DIAS_ATRAS, 0);
 
     // Assert
-    expect(filtros).not.toHaveProperty('sort');
+    expect(filtros).toMatchObject({ sort: 'concluidaEm', dir: 'desc' });
   });
 
   it('deve manter a ordenação quando o período de criação foi escolhido', () => {

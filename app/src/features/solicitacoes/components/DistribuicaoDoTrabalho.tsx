@@ -7,6 +7,7 @@ import {
   type ParteContada,
 } from '@/features/solicitacoes/hooks/useDistribuicaoDoTrabalho';
 import {
+  SEM_PRIORIDADE,
   VISOES,
   caminhoDoFiltro,
   type VisaoDaDistribuicao,
@@ -36,6 +37,7 @@ const COR_POR_VISAO: Record<VisaoDaDistribuicao, Record<string, string>> = {
     ALTA: 'bg-warning',
     MEDIA: 'bg-info',
     BAIXA: 'bg-fg-muted',
+    SEM_PRIORIDADE: 'bg-line-strong',
   },
 };
 
@@ -60,18 +62,35 @@ function Barra({ visao, parte, maior }: LinhaProps) {
   );
 }
 
+function ConteudoDaLinha({ visao, parte, maior }: LinhaProps) {
+  return (
+    <>
+      <span className="w-28 shrink-0 text-fg">{parte.rotulo}</span>
+      <Barra visao={visao} parte={parte} maior={maior} />
+      <span className="w-10 shrink-0 text-right tabular-nums text-fg-muted">
+        {parte.quantidade}
+      </span>
+    </>
+  );
+}
+
 function Linha({ visao, parte, maior }: LinhaProps) {
+  const classe = 'flex items-center gap-3 rounded-md py-1 text-sm';
+  // "Sem prioridade" não tem filtro de lista: sem link, para não abrir uma lista maior.
+  if (parte.valor === SEM_PRIORIDADE) {
+    return (
+      <li className={classe}>
+        <ConteudoDaLinha visao={visao} parte={parte} maior={maior} />
+      </li>
+    );
+  }
   return (
     <li>
       <Link
         to={caminhoDoFiltro(visao, parte.valor)}
-        className="flex items-center gap-3 rounded-md py-1 text-sm hover:bg-surface-muted pointer-coarse:min-h-11"
+        className={`${classe} hover:bg-surface-muted pointer-coarse:min-h-11`}
       >
-        <span className="w-28 shrink-0 text-fg">{parte.rotulo}</span>
-        <Barra visao={visao} parte={parte} maior={maior} />
-        <span className="w-10 shrink-0 text-right tabular-nums text-fg-muted">
-          {parte.quantidade}
-        </span>
+        <ConteudoDaLinha visao={visao} parte={parte} maior={maior} />
       </Link>
     </li>
   );
@@ -96,11 +115,8 @@ type CorpoProps = { visao: VisaoDaDistribuicao; distribuicao: Distribuicao } & P
 >;
 
 function Corpo({ visao, distribuicao, metricasErro, onRetryMetricas }: CorpoProps) {
-  if (visao === 'status' && metricasErro) {
+  if (metricasErro) {
     return <ErrorState title={TITULO_DO_ERRO} onRetry={onRetryMetricas} />;
-  }
-  if (distribuicao.isError) {
-    return <ErrorState title={TITULO_DO_ERRO} onRetry={distribuicao.refetch} />;
   }
   if (!distribuicao.partes) {
     return <LoadingState title="Carregando a distribuição..." />;

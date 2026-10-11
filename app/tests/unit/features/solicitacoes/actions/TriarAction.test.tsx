@@ -22,26 +22,15 @@ vi.mock('@/features/solicitacoes/hooks/useTriarSolicitacao', () => ({
 vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
   evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
 }));
-vi.mock('@/features/admin/usuarios/hooks/useResponsaveisDisponiveis', () => ({
-  useResponsaveisDisponiveis: () => ({
-    responsaveis: [{ id: 'op', nome: 'Olga Operadora' }],
-    isLoading: false,
-  }),
-}));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   TriagemModal: ({
-    usuarios,
     onCancel,
     onConfirm,
   }: {
-    usuarios: { id: string; nome: string }[];
     onCancel: () => void;
     onConfirm: (data: unknown, foto: File | null, nota: string) => void;
   }) => (
     <form aria-label="Triagem">
-      {usuarios.map((u) => (
-        <span key={u.id}>{u.nome}</span>
-      ))}
       <button type="button" onClick={() => onConfirm(dados, null, '')}>
         Confirmar
       </button>
@@ -75,14 +64,6 @@ afterEach(() => {
 });
 
 describe('TriarAction', () => {
-  it('deve listar os responsáveis disponíveis quando o formulário abre', () => {
-    // Act
-    montar();
-
-    // Assert
-    expect(screen.getByText('Olga Operadora')).toBeDefined();
-  });
-
   it('deve triar e fechar quando a triagem é confirmada', async () => {
     // Arrange
     triar.mockResolvedValue(undefined);

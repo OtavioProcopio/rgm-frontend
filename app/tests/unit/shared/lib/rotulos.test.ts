@@ -5,6 +5,7 @@ import {
   rotuloDoPerfil,
   rotuloDoStatus,
   rotuloDoTipoDeAtividade,
+  nomeDoTipoDeModelo,
   rotuloDoTipoDeModelo,
   rotuloDoTipoDeSolicitacao,
 } from '@/shared/lib/rotulos';
@@ -176,5 +177,23 @@ describe('rótulos dos sete conjuntos', () => {
 
     // Assert
     expect(vazios).toEqual([]);
+  });
+});
+
+describe('nomeDoTipoDeModelo', () => {
+  it('deve dar o nome amigável quando o tipo é um dos cinco de origem', () => {
+    // Act
+    const nome = nomeDoTipoDeModelo('COQUILHA_ACO');
+
+    // Assert
+    expect(nome).toBe('Coquilha em Aço');
+  });
+
+  it('deve cair no próprio nome quando o tipo foi cadastrado depois', () => {
+    // Act
+    const nome = nomeDoTipoDeModelo('Aço inox');
+
+    // Assert
+    expect(nome).toBe('Aço inox');
   });
 });

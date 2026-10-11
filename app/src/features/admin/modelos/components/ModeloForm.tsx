@@ -6,9 +6,9 @@ import { Input } from '@/shared/components/Input/Input';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
-import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
 
 import { useMaquinaOptions } from '../hooks/useMaquinaOptions';
+import { useTipoModeloOptions } from '../hooks/useTipoModeloOptions';
 import {
   criarModeloSchema,
   editarModeloSchema,
@@ -16,11 +16,6 @@ import {
   type EditarModeloFormData,
 } from '../schemas/modeloSchema';
 import type { CriarModeloRequest, EditarModeloRequest, Modelo } from '../types/modeloTypes';
-
-const tipoModeloOptions = [
-  { value: '', label: 'Não definido' },
-  ...Object.entries(rotuloDoTipoDeModelo).map(([value, label]) => ({ value, label })),
-];
 
 type ModeloFormProps =
   | {
@@ -42,6 +37,7 @@ export function ModeloForm(props: ModeloFormProps) {
 
 function CriarModeloForm({ isSubmitting, onSubmit }: Extract<ModeloFormProps, { mode: 'create' }>) {
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions();
+  const { options: tipoModeloOptions, isLoading: tiposLoading } = useTipoModeloOptions();
 
   const {
     control,
@@ -91,7 +87,7 @@ function CriarModeloForm({ isSubmitting, onSubmit }: Extract<ModeloFormProps, { 
         label="Tipo do Modelo"
         options={tipoModeloOptions}
         error={errors.tipo?.message}
-        disabled={isSubmitting}
+        disabled={isSubmitting || tiposLoading}
         {...register('tipo')}
       />
       <Input
@@ -123,6 +119,7 @@ function EditarModeloForm({
   onSubmit,
 }: Extract<ModeloFormProps, { mode: 'edit' }>) {
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(modelo.maquina);
+  const { options: tipoModeloOptions, isLoading: tiposLoading } = useTipoModeloOptions(modelo.tipo);
 
   const {
     control,
@@ -180,7 +177,7 @@ function EditarModeloForm({
         label="Tipo do Modelo"
         options={tipoModeloOptions}
         error={errors.tipo?.message}
-        disabled={isSubmitting}
+        disabled={isSubmitting || tiposLoading}
         {...register('tipo')}
       />
       <Input

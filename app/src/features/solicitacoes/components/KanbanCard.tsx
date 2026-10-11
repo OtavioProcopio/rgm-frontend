@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { ArrowRightCircle, ExternalLink, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
+import { ArrowRightCircle, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
 
 import { Badge, type BadgeVariant } from '@/shared/components/Badge/Badge';
 import { Card } from '@/shared/components/Card/Card';
@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/cn';
 import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
 import { acaoDoMovimento, proximoStatus, rotuloDaAcao } from '../lib/acoesSolicitacao';
+import { responsaveisDoCard } from '../lib/iniciaisDosResponsaveis';
 import { idadeEmDias, situacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
 import { ROTULO_DA_RELACAO, type RelacaoDoOperador } from '../lib/relacaoDoOperador';
 import type { Solicitacao, TipoSolicitacao } from '../types/solicitacaoTypes';
@@ -81,6 +82,47 @@ function rotuloDeAvancar(solicitacao: Solicitacao): string {
   return acao ? rotuloDaAcao(acao) : 'Avançar para a próxima etapa';
 }
 
+/** Código e máquina do modelo, ou o que foi informado na abertura de uma criação sem modelo. */
+function identificacaoDoModelo(solicitacao: Solicitacao): string | null {
+  const codigo = solicitacao.modeloCodigo;
+  const maquina = solicitacao.modeloMaquina;
+  if (!codigo && !maquina) return null;
+  const versao = solicitacao.modeloVersao ? ` v${solicitacao.modeloVersao}` : '';
+  return [codigo ? `${codigo}${versao}` : null, maquina].filter(Boolean).join(' · ');
+}
+
+function Responsaveis({ solicitacao }: { solicitacao: Solicitacao }) {
+  const { iniciais, restantes, nomes } = responsaveisDoCard(solicitacao);
+  if (iniciais.length === 0 && restantes === 0) {
+    return <span className="text-xs text-fg-muted">Sem responsável</span>;
+  }
+  return (
+    <span
+      className="flex items-center -space-x-1"
+      title={nomes || undefined}
+      aria-label={nomes ? `Responsáveis: ${nomes}` : `${restantes} responsáveis`}
+    >
+      {iniciais.map((iniciais, indice) => (
+        <span
+          key={`${iniciais}-${indice}`}
+          aria-hidden="true"
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-surface bg-info-soft text-[10px] font-semibold text-info-fg"
+        >
+          {iniciais}
+        </span>
+      ))}
+      {restantes > 0 ? (
+        <span
+          aria-hidden="true"
+          className="flex h-6 min-w-6 items-center justify-center rounded-full border border-surface bg-surface-muted px-1 text-[10px] font-semibold text-fg-muted"
+        >
+          +{restantes}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function KanbanCard({
   solicitacao,
   isDraggable,
@@ -92,7 +134,7 @@ export function KanbanCard({
   const Icon = ICONE_DO_TIPO[solicitacao.tipo];
   const [agora] = useState(() => Date.now());
   const avancar = rotuloDeAvancar(solicitacao);
-  const criadaEmFormatada = new Date(solicitacao.criadaEm).toLocaleDateString('pt-BR');
+  const modelo = identificacaoDoModelo(solicitacao);
   const borderClass = solicitacao.prioridade
     ? PRIORITY_BORDER[solicitacao.prioridade]
     : 'border-l-line-strong';
@@ -109,14 +151,14 @@ export function KanbanCard({
           : undefined
       }
       className={cn(
-        'group rounded-lg border-l-4',
+        'group relative rounded-lg border-l-4',
         'transition-all hover:shadow-md active:opacity-50',
         isDraggable && 'lg:cursor-grab lg:active:cursor-grabbing',
         borderClass,
       )}
     >
       <div className="p-3">
-        {/* Tipo + age */}
+        {/* Tipo (ícone com rótulo curto) + idade */}
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <Badge
             variant="neutral"
@@ -125,35 +167,27 @@ export function KanbanCard({
           >
             {rotuloDoTipoDeSolicitacao[solicitacao.tipo]}
           </Badge>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <time
-              dateTime={solicitacao.criadaEm}
-              title={`Aberta em ${criadaEmFormatada}`}
-              className="text-xs text-fg-muted"
-            >
-              {criadaEmFormatada}
-            </time>
-            <AgeBadge solicitacao={solicitacao} agora={agora} />
-          </div>
+          <AgeBadge solicitacao={solicitacao} agora={agora} />
         </div>
 
         {relacao ? (
           <p className="mt-2 text-xs font-medium text-fg-muted">{ROTULO_DA_RELACAO[relacao]}</p>
         ) : null}
 
-        {/* Título */}
+        {/* Título: o link se estende pelo card inteiro */}
         <p className="mt-2 text-sm font-semibold leading-snug text-fg line-clamp-2">
-          {solicitacao.titulo}
+          <Link
+            to={`/app/solicitacoes/${solicitacao.id}`}
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent"
+          >
+            {solicitacao.titulo}
+          </Link>
         </p>
 
-        {/* Descrição */}
-        {solicitacao.descricao && (
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-fg-muted">
-            {solicitacao.descricao}
-          </p>
-        )}
+        {/* Modelo e máquina */}
+        {modelo ? <p className="mt-1 truncate text-xs text-fg-muted">{modelo}</p> : null}
 
-        {/* Rodapé: prioridade + SLA + link */}
+        {/* Rodapé: prioridade, prazo, responsáveis e avançar */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {solicitacao.prioridade ? (
@@ -164,6 +198,7 @@ export function KanbanCard({
             <PrazoBadge solicitacao={solicitacao} agora={agora} />
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <Responsaveis solicitacao={solicitacao} />
             {canAdvance ? (
               <button
                 type="button"
@@ -173,20 +208,14 @@ export function KanbanCard({
                   e.stopPropagation();
                   onAdvance(solicitacao);
                 }}
-                className={cn(CONTROLE_DO_CARD, 'bg-surface-muted text-accent hover:brightness-95')}
+                className={cn(
+                  CONTROLE_DO_CARD,
+                  'relative z-10 bg-surface-muted text-accent hover:brightness-95',
+                )}
               >
                 <ArrowRightCircle size={14} aria-hidden />
               </button>
             ) : null}
-            <Link
-              to={`/app/solicitacoes/${solicitacao.id}`}
-              onClick={(e) => e.stopPropagation()}
-              aria-label={`Ver solicitação: ${solicitacao.titulo}`}
-              className={cn(CONTROLE_DO_CARD, 'bg-surface-muted text-accent hover:brightness-95')}
-            >
-              Ver
-              <ExternalLink size={10} aria-hidden />
-            </Link>
           </div>
         </div>
       </div>

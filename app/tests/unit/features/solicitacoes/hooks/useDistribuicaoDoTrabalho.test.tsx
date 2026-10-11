@@ -1,23 +1,11 @@
 /**
  * @vitest-environment jsdom
  */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
-import { createQueryWrapper } from '@tests/support/queryWrapper';
-
-import { OPCOES_PADRAO_DAS_CONSULTAS } from '@/app/providers/queryOptions';
-import { solicitacoesApi } from '@/features/solicitacoes/api/solicitacoesApi';
 import { useDistribuicaoDoTrabalho } from '@/features/solicitacoes/hooks/useDistribuicaoDoTrabalho';
-import type { VisaoDaDistribuicao } from '@/features/solicitacoes/lib/distribuicaoDoTrabalho';
-import type {
-  MetricasResponse,
-  Solicitacao,
-  SolicitacoesFilters,
-} from '@/features/solicitacoes/types/solicitacaoTypes';
-import type { PageResponse } from '@/shared/types/page';
+import type { MetricasResponse } from '@/features/solicitacoes/types/solicitacaoTypes';
 
 const METRICAS: MetricasResponse = {
   totalUsuarios: 3,
@@ -34,347 +22,57 @@ const METRICAS: MetricasResponse = {
   solicitacoesPendentes: 5,
   solicitacoesConcluidas: 30,
   tempoMedioResolucaoSegundos: 100,
+  emAbertoPorTipo: { REPARO: 4, INSPECAO: 3, REENGENHARIA: 2, CRIACAO: 1 },
+  emAbertoPorPrioridade: { URGENTE: 4, ALTA: 3, MEDIA: 1, BAIXA: 1, SEM_PRIORIDADE: 1 },
 };
 
-const TOTAIS: Record<string, number> = {
-  REPARO: 4,
-  INSPECAO: 3,
-  REENGENHARIA: 2,
-  CRIACAO: 1,
-  URGENTE: 8,
-  ALTA: 6,
-  MEDIA: 4,
-  BAIXA: 2,
-};
-
-function pagina(totalElements: number): PageResponse<Solicitacao> {
-  return { content: [], page: 0, size: 1, totalElements, totalPages: totalElements };
-}
-
-function totalDoFiltro(filtros: SolicitacoesFilters): number {
-  return TOTAIS[String(filtros.tipo ?? filtros.prioridade)];
-}
-
-let listar: MockInstance<typeof solicitacoesApi.listar>;
-
-beforeEach(() => {
-  listar = vi.spyOn(solicitacoesApi, 'listar');
-  listar.mockImplementation(async (filtros) => pagina(totalDoFiltro(filtros)));
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-function montar(visaoInicial: VisaoDaDistribuicao, metricas: MetricasResponse | undefined) {
-  const { QueryWrapper } = createQueryWrapper();
-  return renderHook(({ visao }) => useDistribuicaoDoTrabalho(visao, metricas), {
-    wrapper: QueryWrapper,
-    initialProps: { visao: visaoInicial },
-  });
-}
-
-const CONFIGURACAO_DO_QUERY_PROVIDER = { ...OPCOES_PADRAO_DAS_CONSULTAS, retry: false };
-
-function montarComConfiguracaoDoProvider(
-  visaoInicial: VisaoDaDistribuicao,
-  metricas: MetricasResponse | undefined,
-) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: CONFIGURACAO_DO_QUERY_PROVIDER },
-  });
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-  return renderHook(({ visao }) => useDistribuicaoDoTrabalho(visao, metricas), {
-    wrapper,
-    initialProps: { visao: visaoInicial },
-  });
-}
-
-function rejeitarInspecao(): void {
-  listar.mockImplementation(async (filtros) => {
-    if (filtros.tipo === 'INSPECAO') throw new Error('falha');
-    return pagina(totalDoFiltro(filtros));
-  });
+function quantidades(visao: 'status' | 'tipo' | 'prioridade', metricas?: MetricasResponse) {
+  const { result } = renderHook(() => useDistribuicaoDoTrabalho(visao, metricas));
+  return result.current.partes?.map((parte) => parte.quantidade);
 }
 
 describe('useDistribuicaoDoTrabalho', () => {
-  it('deve não chamar a API quando a visão é status', () => {
+  it('deve contar por status quando a visão é status', () => {
     // Arrange
+    const esperado = [5, 3, 2];
+
     // Act
-    montar('status', METRICAS);
+    const resultado = quantidades('status', METRICAS);
 
     // Assert
-    expect(listar).not.toHaveBeenCalled();
+    expect(resultado).toEqual(esperado);
   });
 
-  it('deve devolver as três contagens abertas das métricas quando a visão é status', () => {
+  it('deve contar por tipo a partir das métricas quando a visão é tipo', () => {
     // Arrange
+    const esperado = [4, 3, 2, 1];
+
     // Act
-    const { result } = montar('status', METRICAS);
+    const resultado = quantidades('tipo', METRICAS);
 
     // Assert
-    expect(result.current.partes).toEqual([
-      { valor: 'A_FAZER', rotulo: 'A fazer', quantidade: 5 },
-      { valor: 'EM_ANDAMENTO', rotulo: 'Em andamento', quantidade: 3 },
-      { valor: 'EM_VALIDACAO', rotulo: 'Em validação', quantidade: 2 },
-    ]);
+    expect(resultado).toEqual(esperado);
   });
 
-  it('deve devolver partes indefinidas quando as métricas não existem', () => {
+  it('deve contar por prioridade, com sem prioridade, quando a visão é prioridade', () => {
     // Arrange
+    const esperado = [4, 3, 1, 1, 1];
+
     // Act
-    const { result } = montar('status', undefined);
+    const resultado = quantidades('prioridade', METRICAS);
 
     // Assert
-    expect(result.current.partes).toBeUndefined();
+    expect(resultado).toEqual(esperado);
   });
 
-  it('deve não indicar carregamento quando as métricas não existem', () => {
+  it('deve devolver indefinido quando as métricas ainda não chegaram', () => {
     // Arrange
-    // Act
-    const { result } = montar('status', undefined);
-
-    // Assert
-    expect(result.current.isLoading).toBe(false);
-  });
-
-  it('deve não indicar erro quando as métricas não existem', () => {
-    // Arrange
-    // Act
-    const { result } = montar('status', undefined);
-
-    // Assert
-    expect(result.current.isError).toBe(false);
-  });
-
-  it('deve não consultar a API ao refazer quando a visão é status', () => {
-    // Arrange
-    const { result } = montar('status', METRICAS);
+    const metricas = undefined;
 
     // Act
-    result.current.refetch();
+    const resultado = quantidades('tipo', metricas);
 
     // Assert
-    expect(listar).not.toHaveBeenCalled();
-  });
-
-  it('deve consultar a API uma vez por tipo em aberto quando a visão é tipo', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(listar).toHaveBeenCalledTimes(4);
-  });
-
-  it('deve consultar cada tipo em aberto com tamanho 1 quando a visão é tipo', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(listar.mock.calls.map(([filtros]) => filtros)).toEqual(
-      ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'].map((tipo) => ({
-        emAberto: true,
-        tipo,
-        page: 0,
-        size: 1,
-      })),
-    );
-  });
-
-  it('deve consultar cada prioridade em aberto quando a visão é prioridade', async () => {
-    // Arrange
-    const { result } = montar('prioridade', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(listar.mock.calls.map(([filtros]) => filtros)).toEqual(
-      ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'].map((prioridade) => ({
-        emAberto: true,
-        prioridade,
-        page: 0,
-        size: 1,
-      })),
-    );
-  });
-
-  it('deve consultar quatro prioridades quando a visão é prioridade', async () => {
-    // Arrange
-    const { result } = montar('prioridade', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(listar).toHaveBeenCalledTimes(4);
-  });
-
-  it('deve usar totalElements como quantidade de cada parte quando a visão é tipo', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(result.current.partes?.map((parte) => parte.quantidade)).toEqual([4, 3, 2, 1]);
-  });
-
-  it('deve manter a ordem dos tipos nas partes quando a visão é tipo', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(result.current.partes?.map((parte) => parte.valor)).toEqual([
-      'REPARO',
-      'INSPECAO',
-      'REENGENHARIA',
-      'CRIACAO',
-    ]);
-  });
-
-  it('deve devolver as quatro partes de prioridade quando as contagens chegam', async () => {
-    // Arrange
-    const { result } = montar('prioridade', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(result.current.partes).toHaveLength(4);
-  });
-
-  it('deve chamar a API quatro vezes quando a visão muda de status para tipo', async () => {
-    // Arrange
-    const { result, rerender } = montar('status', METRICAS);
-
-    // Act
-    rerender({ visao: 'tipo' });
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(listar).toHaveBeenCalledTimes(4);
-  });
-
-  it('deve indicar carregamento quando as consultas estão pendentes', () => {
-    // Arrange
-    listar.mockImplementation(() => new Promise<PageResponse<Solicitacao>>(() => undefined));
-
-    // Act
-    const { result } = montar('tipo', METRICAS);
-
-    // Assert
-    expect(result.current.isLoading).toBe(true);
-  });
-
-  it('deve deixar partes indefinidas quando as consultas estão pendentes', () => {
-    // Arrange
-    listar.mockImplementation(() => new Promise<PageResponse<Solicitacao>>(() => undefined));
-
-    // Act
-    const { result } = montar('tipo', METRICAS);
-
-    // Assert
-    expect(result.current.partes).toBeUndefined();
-  });
-
-  it('deve encerrar o carregamento quando as quatro consultas chegam', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(result.current.isLoading).toBe(false);
-  });
-
-  it('deve não indicar erro quando as quatro consultas chegam', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-
-    // Act
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Assert
-    expect(result.current.isError).toBe(false);
-  });
-
-  it('deve deixar partes indefinidas quando uma consulta rejeita', async () => {
-    // Arrange
-    rejeitarInspecao();
-
-    // Act
-    const { result } = montar('tipo', METRICAS);
-    await waitFor(() => expect(result.current.isError).toBe(true));
-
-    // Assert
-    expect(result.current.partes).toBeUndefined();
-  });
-
-  it('deve encerrar o carregamento quando uma consulta rejeita', async () => {
-    // Arrange
-    rejeitarInspecao();
-
-    // Act
-    const { result } = montar('tipo', METRICAS);
-    await waitFor(() => expect(result.current.isError).toBe(true));
-
-    // Assert
-    expect(result.current.isLoading).toBe(false);
-  });
-
-  it('deve não refazer as consultas quando a visão volta a uma já carregada', async () => {
-    // Arrange
-    const { result, rerender } = montarComConfiguracaoDoProvider('tipo', METRICAS);
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-    rerender({ visao: 'status' });
-
-    // Act
-    rerender({ visao: 'tipo' });
-
-    // Assert
-    expect(listar).toHaveBeenCalledTimes(4);
-  });
-
-  it('deve refazer as quatro consultas quando refetch é chamado', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Act
-    await act(async () => {
-      result.current.refetch();
-    });
-
-    // Assert
-    await waitFor(() => expect(listar).toHaveBeenCalledTimes(8));
-  });
-
-  it('deve devolver undefined quando refetch é chamado na visão tipo', async () => {
-    // Arrange
-    const { result } = montar('tipo', METRICAS);
-    await waitFor(() => expect(result.current.partes).toBeDefined());
-
-    // Act
-    let retorno: unknown = 'intacto';
-    await act(async () => {
-      retorno = result.current.refetch();
-    });
-
-    // Assert
-    expect(retorno).toBeUndefined();
+    expect(resultado).toBeUndefined();
   });
 });

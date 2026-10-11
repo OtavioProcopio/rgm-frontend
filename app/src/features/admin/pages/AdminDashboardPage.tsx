@@ -1,4 +1,4 @@
-import { Cog, PackageSearch, Users } from 'lucide-react';
+import { Cog, PackageSearch, Shapes, Users } from 'lucide-react';
 
 import { AdminCard } from '@/features/admin/components/AdminCard';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
@@ -21,6 +21,12 @@ const adminCards = [
     description: 'Gerencie o catálogo de máquinas/encaixes usado no cadastro de modelos.',
     href: '/app/admin/maquinas',
     icon: Cog,
+  },
+  {
+    title: 'Tipos de modelo',
+    description: 'Gerencie o catálogo de tipos usado no cadastro de modelos.',
+    href: '/app/admin/tipos-modelo',
+    icon: Shapes,
   },
 ];
 

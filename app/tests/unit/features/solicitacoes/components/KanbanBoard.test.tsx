@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
 import { createAppWrapper } from '@tests/support/appWrapper';
 import { ETAPAS, FUNDO_NEUTRO, SELETOR_DO_PONTO, fundosDe } from '@tests/support/etapasDoQuadro';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
@@ -27,11 +26,6 @@ vi.mock('@/features/solicitacoes/hooks/useTemSolicitacaoDoOperador', () => ({
 }));
 vi.mock('@/features/auth/hooks/usePerfil', () => ({
   usePerfil: vi.fn().mockReturnValue({ data: { id: 'eu' } }),
-}));
-vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
-  usuariosApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], page: 0, totalPages: 0, totalElements: 0 }),
-  },
 }));
 vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
   KanbanColumn: ({
@@ -99,13 +93,7 @@ vi.mock('@/features/solicitacoes/components/KanbanColumn', () => ({
   ),
 }));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
-  TriagemModal: ({ usuarios }: { usuarios: { id: string; nome: string }[] }) => (
-    <ul aria-label="Responsáveis disponíveis">
-      {usuarios.map((u) => (
-        <li key={u.id}>{u.nome}</li>
-      ))}
-    </ul>
-  ),
+  TriagemModal: () => <form aria-label="Triagem" />,
 }));
 
 const STATUS: StatusSolicitacao[] = [
@@ -180,8 +168,8 @@ describe('KanbanBoard', () => {
 
     // Assert
     const abas = within(container)
-      .getAllByRole('button', {
-        name: /^0\s*(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada)$/,
+      .getAllByRole('tab', {
+        name: /^(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada): 0$/,
       })
       .map((aba) => aba.textContent);
     expect(abas).toHaveLength(5);
@@ -198,42 +186,14 @@ describe('KanbanBoard', () => {
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
     // Assert
-    expect(within(container).getByRole('button', { name: /^1\s*A Fazer$/ })).toBeDefined();
+    expect(within(container).getByRole('tab', { name: 'A Fazer: 1' })).toBeDefined();
   });
 
-  it('deve listar os responsáveis disponíveis no modal de triagem quando o gestor avança um card de A Fazer', async () => {
+  it('deve abrir o formulário de triagem quando o gestor avança um card de A Fazer', async () => {
     // Arrange
-    const { useColunasDoQuadro } = await import('@/features/solicitacoes/hooks/useColunaDoQuadro');
     vi.mocked(useColunasDoQuadro).mockReturnValue(
-      colunasCom([
-        {
-          id: 's1',
-          titulo: 'Trocar correia',
-          status: 'A_FAZER',
-          tipo: 'REPARO',
-          prioridade: null,
-          descricao: '',
-          modeloId: 'm1',
-          abertaPorUsuarioId: 'u1',
-          comentarioFinal: null,
-          criadaEm: new Date().toISOString(),
-          atualizadaEm: new Date().toISOString(),
-          concluidaEm: null,
-          canceladaEm: null,
-          responsavelIds: [],
-        },
-      ]),
+      colunasCom([criarSolicitacao({ id: 's1', titulo: 'Trocar correia', status: 'A_FAZER' })]),
     );
-    const usuario = { email: null, ativo: true, criadoEm: '', atualizadoEm: '' };
-    vi.mocked(usuariosApi.listar).mockResolvedValueOnce({
-      content: [
-        { ...usuario, id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
-        { ...usuario, id: 'ad', nome: 'Ana Administradora', perfil: 'ADMINISTRADOR' },
-      ],
-      page: 0,
-      totalPages: 1,
-      totalElements: 2,
-    } as Awaited<ReturnType<typeof usuariosApi.listar>>);
     const { AppWrapper } = createAppWrapper({ user: { nome: 'Ge', perfil: 'GESTOR' } });
     const { container } = render(<KanbanBoard />, { wrapper: AppWrapper });
 
@@ -243,9 +203,7 @@ describe('KanbanBoard', () => {
     );
 
     // Assert
-    const lista = within(container).getByRole('list', { name: 'Responsáveis disponíveis' });
-    expect(await within(lista).findByText('Olga Operadora')).toBeDefined();
-    expect(within(lista).queryByText('Ana Administradora')).toBeNull();
+    expect(await within(container).findByRole('form', { name: 'Triagem' })).toBeDefined();
   });
 
   it('deve abrir o formulário de envio para validação quando o operador responsável avança o card', async () => {
@@ -603,7 +561,7 @@ describe('KanbanBoard — colunas em blocos', () => {
     const { container } = montar(colunas);
 
     // Assert
-    expect(within(container).getByRole('button', { name: /^45\s*Em Andamento$/ })).toBeDefined();
+    expect(within(container).getByRole('tab', { name: 'Em Andamento: 45' })).toBeDefined();
   });
 
   it('deve pedir o próximo bloco da coluna quando "Carregar mais" é acionado nela', async () => {
@@ -958,7 +916,7 @@ describe('KanbanBoard — operador com quadro vazio e encerradas fora do recorte
 describe('KanbanBoard — abas do celular', () => {
   const classes = (elemento: Element) => elemento.className.split(' ');
   const rotuloDa = (status: StatusSolicitacao) =>
-    COLUMNS.find((coluna) => coluna.status === status)!.label;
+    COLUMNS.find((coluna) => coluna.status === status)!.rotuloCurto;
 
   function abaDe(status: StatusSolicitacao) {
     vi.mocked(useColunasDoQuadro).mockReturnValue(colunasCom([]));

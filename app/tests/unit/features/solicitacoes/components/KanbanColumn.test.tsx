@@ -335,7 +335,7 @@ describe('KanbanColumn', () => {
   );
 
   it.each(['CONCLUIDA', 'CANCELADA'])(
-    'deve não dizer ordem nenhuma quando a coluna é %s',
+    'deve dizer que as encerradas mais recentes vêm primeiro quando a coluna é %s',
     (status) => {
       // Arrange
       const etapa = configDe(status);
@@ -344,7 +344,7 @@ describe('KanbanColumn', () => {
       const { container } = render(colunaBasica({ config: etapa }));
 
       // Assert
-      expect(within(container).queryByText(/primeiro/)).toBeNull();
+      expect(within(container).getByText('encerradas mais recentes primeiro')).toBeDefined();
     },
   );
 

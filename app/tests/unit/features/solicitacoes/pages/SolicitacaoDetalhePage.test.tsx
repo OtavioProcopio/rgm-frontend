@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
+import { responsaveisDisponiveisApi } from '@/features/solicitacoes/api/responsaveisDisponiveisApi';
 import { ancestralComum } from '@tests/support/ancestralComum';
 import { createAppWrapper } from '@tests/support/appWrapper';
 
@@ -27,9 +27,11 @@ vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   },
 }));
 
-vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
-  usuariosApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], totalElements: 0, page: 0, totalPages: 0 }),
+vi.mock('@/features/solicitacoes/api/responsaveisDisponiveisApi', () => ({
+  responsaveisDisponiveisApi: {
+    listar: vi
+      .fn()
+      .mockResolvedValue({ content: [], totalElements: 0, page: 0, size: 20, totalPages: 0 }),
   },
 }));
 
@@ -146,11 +148,6 @@ vi.mock('@/features/evidencias/components/EvidenciaUploader', () => ({
 }));
 vi.mock('@/features/admin/modelos/hooks/useModelo', () => ({
   useModelo: vi.fn().mockReturnValue({ data: undefined }),
-}));
-vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({
-  usuariosApi: {
-    listar: vi.fn().mockResolvedValue({ content: [], page: 0, totalPages: 0, totalElements: 0 }),
-  },
 }));
 
 const mockSolicitacao = {
@@ -657,7 +654,7 @@ describe('SolicitacaoDetalhePage', () => {
     expect(container.querySelector('select')).toBeNull();
   });
 
-  it('deve mostrar só os responsáveis disponíveis quando o gestor abre Alterar responsáveis', async () => {
+  it('deve oferecer só quem ainda não é responsável quando o gestor abre Alterar responsáveis', async () => {
     // Arrange
     const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
     vi.mocked(useSolicitacao).mockReturnValue({
@@ -665,18 +662,16 @@ describe('SolicitacaoDetalhePage', () => {
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useSolicitacao>);
-    const usuario = { email: null, ativo: true, criadoEm: '', atualizadoEm: '' };
-    vi.mocked(usuariosApi.listar).mockResolvedValueOnce({
+    vi.mocked(responsaveisDisponiveisApi.listar).mockResolvedValueOnce({
       content: [
-        { ...usuario, id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
-        { ...usuario, id: 'ge', nome: 'Gil Gestor', perfil: 'GESTOR' },
-        { ...usuario, id: 'ad', nome: 'Ana Administradora', perfil: 'ADMINISTRADOR' },
-        { ...usuario, id: 'in', nome: 'Ivo Inativo', perfil: 'OPERADOR', ativo: false },
+        { id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
+        { id: 'ge', nome: 'Gil Gestor', perfil: 'GESTOR' },
       ],
       page: 0,
+      size: 20,
       totalPages: 1,
-      totalElements: 4,
-    } as Awaited<ReturnType<typeof usuariosApi.listar>>);
+      totalElements: 2,
+    });
     const { AppWrapper } = createAppWrapper({
       user: { nome: 'G', perfil: 'GESTOR' },
       initialEntries: ['/solicitacoes/s1'],
@@ -691,10 +686,9 @@ describe('SolicitacaoDetalhePage', () => {
 
     // Assert
     const dialogo = within(await within(container).findByRole('dialog'));
-    expect(await dialogo.findByText('Olga Operadora')).toBeDefined();
-    expect(dialogo.getByText('Gil Gestor')).toBeDefined();
-    expect(dialogo.queryByText('Ana Administradora')).toBeNull();
-    expect(dialogo.queryByText('Ivo Inativo')).toBeNull();
+    expect(await dialogo.findByRole('button', { name: 'Gil Gestor' })).toBeDefined();
+    expect(dialogo.queryByRole('button', { name: 'Olga Operadora' })).toBeNull();
+    expect(dialogo.getByRole('button', { name: 'Remover Responsável atual' })).toBeDefined();
   });
 });
 

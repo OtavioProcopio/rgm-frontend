@@ -1,12 +1,16 @@
 import { useState } from 'react';
 
 import { Button } from '@/shared/components/Button/Button';
+import {
+  SeletorMultiplo,
+  type OpcaoDoSeletor,
+} from '@/shared/components/SeletorMultiplo/SeletorMultiplo';
 
-type UsuarioOpcao = { id: string; nome: string };
+import { useBuscaDeResponsaveis } from '../hooks/useBuscaDeResponsaveis';
 
 type Props = {
-  responsaveisAtuais: string[];
-  usuarios: UsuarioOpcao[];
+  /** Responsáveis de hoje, com o nome para a etiqueta. */
+  responsaveisAtuais: { id: string; nome: string }[];
   isPending?: boolean;
   onCancel: () => void;
   onConfirm: (responsavelIds: string[]) => void;
@@ -14,44 +18,34 @@ type Props = {
 
 export function AlterarResponsaveisModal({
   responsaveisAtuais,
-  usuarios,
   isPending,
   onCancel,
   onConfirm,
 }: Props) {
-  const [selecionados, setSelecionados] = useState<string[]>(responsaveisAtuais);
-
-  function toggle(id: string) {
-    setSelecionados((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }
+  const { buscar, candidatos, carregando, falhou } = useBuscaDeResponsaveis();
+  const [escolhidos, setEscolhidos] = useState<OpcaoDoSeletor[]>(
+    responsaveisAtuais.map((r) => ({ valor: r.id, rotulo: r.nome })),
+  );
 
   return (
     <div className="rounded-md border border-info bg-info-soft p-4 text-sm">
       <h3 className="font-semibold text-info-fg">Alterar responsáveis</h3>
       <p className="mt-1 text-info-fg">
-        Selecione os responsáveis pela execução desta solicitação.
+        Busque pelo nome e escolha os responsáveis pela execução desta solicitação.
       </p>
-      <div className="mt-4 space-y-2">
-        {usuarios.length === 0 ? (
-          <p className="text-sm text-fg-muted">Nenhum responsável disponível.</p>
-        ) : (
-          usuarios.map((u) => (
-            <label
-              key={u.id}
-              className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11"
-            >
-              <input
-                type="checkbox"
-                checked={selecionados.includes(u.id)}
-                onChange={() => toggle(u.id)}
-                className="h-4 w-4 rounded border-line-strong"
-              />
-              <span className="text-sm text-fg">{u.nome}</span>
-            </label>
-          ))
-        )}
+      <div className="mt-4">
+        <SeletorMultiplo
+          rotulo="Responsáveis"
+          escolhidas={escolhidos}
+          opcoes={candidatos.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+          onChange={setEscolhidos}
+          onBuscar={buscar}
+          carregando={carregando}
+          textoSemResultado="Nenhum responsável disponível."
+          erro={falhou ? 'Não foi possível buscar os responsáveis. Tente de novo.' : undefined}
+        />
       </div>
-      {selecionados.length === 0 && (
+      {escolhidos.length === 0 && (
         <p className="mt-2 text-xs text-danger-fg">Selecione pelo menos 1 responsável.</p>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
@@ -60,8 +54,8 @@ export function AlterarResponsaveisModal({
         </Button>
         <Button
           type="button"
-          disabled={isPending || selecionados.length === 0}
-          onClick={() => onConfirm(selecionados)}
+          disabled={isPending || escolhidos.length === 0}
+          onClick={() => onConfirm(escolhidos.map((e) => e.valor))}
         >
           {isPending ? 'Salvando...' : 'Confirmar'}
         </Button>

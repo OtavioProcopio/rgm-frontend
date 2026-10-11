@@ -158,7 +158,11 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     >
       {/* ── Mobile: tab bar ── */}
       <div className="mb-3 lg:hidden">
-        <div className="flex overflow-x-auto rounded-xl border border-line bg-surface-muted">
+        <div
+          role="tablist"
+          aria-label="Colunas do quadro"
+          className="grid grid-cols-5 overflow-hidden rounded-xl border border-line bg-surface-muted"
+        >
           {COLUMNS.map((col) => {
             const count = colunas[col.status].total;
             const isActive = col.status === activeTab;
@@ -166,21 +170,24 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
               <button
                 key={col.status}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-label={`${col.label}: ${count}`}
                 onClick={() => setActiveTab(col.status)}
                 className={cn(
-                  'flex shrink-0 flex-col items-center border-b-2 bg-surface-muted px-4 py-2.5 text-center transition-colors',
+                  'flex min-w-0 flex-col items-center border-b-2 bg-surface-muted px-1 py-2.5 text-center transition-colors pointer-coarse:min-h-11',
                   isActive
                     ? 'border-b-accent font-semibold text-fg'
                     : 'border-b-transparent font-medium text-fg-muted hover:text-fg',
                 )}
               >
                 <span className="text-lg font-bold tabular-nums leading-none">{count}</span>
-                <span className="mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-xs">
+                <span className="mt-0.5 flex max-w-full items-center gap-1 text-[11px]">
                   <span
                     aria-hidden="true"
                     className={cn('h-1.5 w-1.5 shrink-0 rounded-full', col.pontoClass)}
                   />
-                  <span>{col.label}</span>
+                  <span className="truncate">{col.rotuloCurto}</span>
                 </span>
               </button>
             );

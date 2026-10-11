@@ -7,21 +7,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AlterarResponsaveisModal } from '@/features/solicitacoes/components/AlterarResponsaveisModal';
 
-const USUARIOS = [
-  { id: 'u1', nome: 'João' },
-  { id: 'u2', nome: 'Maria' },
+const candidatos = [
+  { id: 'u1', nome: 'João', perfil: 'OPERADOR' },
+  { id: 'u2', nome: 'Maria', perfil: 'OPERADOR' },
 ];
-const AVISO_SEM_RESPONSAVEL = 'Selecione pelo menos 1 responsável.';
+let falhou = false;
+
+vi.mock('@/features/solicitacoes/hooks/useBuscaDeResponsaveis', () => ({
+  useBuscaDeResponsaveis: () => ({
+    buscar: vi.fn(),
+    candidatos,
+    carregando: false,
+    falhou,
+  }),
+}));
 
 const classes = (elemento: Element) => elemento.className.split(' ');
 
-function montar(responsaveisAtuais: string[] = [], usuarios = USUARIOS) {
+function montar(atuais: { id: string; nome: string }[] = [], isPending = false) {
   const onConfirm = vi.fn<(responsavelIds: string[]) => void>();
   const onCancel = vi.fn<() => void>();
   const { container } = render(
     <AlterarResponsaveisModal
-      responsaveisAtuais={responsaveisAtuais}
-      usuarios={usuarios}
+      responsaveisAtuais={atuais}
+      isPending={isPending}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />,
@@ -29,48 +38,58 @@ function montar(responsaveisAtuais: string[] = [], usuarios = USUARIOS) {
   return { container, onConfirm, onCancel };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  falhou = false;
+});
 
 describe('AlterarResponsaveisModal', () => {
-  it('deve marcar os responsáveis atuais quando abre', () => {
-    // Arrange
-    const [atual] = USUARIOS;
-
+  it('deve mostrar os responsáveis atuais como etiquetas quando abre', () => {
     // Act
-    montar([atual.id]);
-    const marcados = USUARIOS.filter(
-      (usuario) => (screen.getByLabelText(usuario.nome) as HTMLInputElement).checked,
-    );
+    montar([{ id: 'u1', nome: 'João' }]);
 
     // Assert
-    expect(marcados).toEqual([atual]);
+    expect(screen.getByRole('button', { name: 'Remover João' })).toBeDefined();
   });
 
   it('deve confirmar com os responsáveis escolhidos quando um responsável é acrescentado', async () => {
     // Arrange
-    const [atual, novo] = USUARIOS;
-    const { onConfirm } = montar([atual.id]);
-    await userEvent.click(screen.getByLabelText(novo.nome));
+    const { onConfirm } = montar([{ id: 'u1', nome: 'João' }]);
+    await userEvent.click(screen.getByRole('button', { name: 'Maria' }));
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
 
     // Assert
-    expect(onConfirm.mock.calls).toEqual([[[atual.id, novo.id]]]);
+    expect(onConfirm.mock.calls).toEqual([[['u1', 'u2']]]);
   });
 
-  it('deve impedir a confirmação quando nenhum responsável está marcado', () => {
+  it('deve impedir a confirmação quando nenhum responsável está escolhido', () => {
     // Act
     montar([]);
     const confirmar = screen.getByRole('button', { name: 'Confirmar' }) as HTMLButtonElement;
 
     // Assert
     expect(confirmar.disabled).toBe(true);
+    expect(screen.getByText('Selecione pelo menos 1 responsável.')).toBeDefined();
+  });
+
+  it('deve impedir a confirmação quando o último responsável é removido', async () => {
+    // Arrange
+    montar([{ id: 'u1', nome: 'João' }]);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Remover João' }));
+
+    // Assert
+    expect((screen.getByRole('button', { name: 'Confirmar' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
   });
 
   it('deve chamar onCancel uma vez quando Cancelar é acionado', async () => {
     // Arrange
-    const { onCancel } = montar([USUARIOS[0].id]);
+    const { onCancel } = montar([{ id: 'u1', nome: 'João' }]);
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
@@ -78,9 +97,7 @@ describe('AlterarResponsaveisModal', () => {
     // Assert
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
-});
 
-describe('AlterarResponsaveisModal — cores por papel', () => {
   it('deve usar o fundo e a borda de informação quando o formulário é mostrado', () => {
     // Act
     const { container } = montar();
@@ -91,38 +108,23 @@ describe('AlterarResponsaveisModal — cores por papel', () => {
     );
   });
 
-  it('deve usar o texto de informação quando mostra o título', () => {
+  it('deve mostrar o estado de envio e bloquear a confirmação quando a alteração está pendente', () => {
     // Act
-    montar();
+    montar([{ id: 'u1', nome: 'João' }], true);
+    const salvando = screen.getByRole('button', { name: 'Salvando...' }) as HTMLButtonElement;
 
     // Assert
-    expect(classes(screen.getByRole('heading'))).toContain('text-info-fg');
+    expect(salvando.disabled).toBe(true);
   });
 
-  it('deve usar o texto de perigo quando nenhum responsável está marcado', () => {
-    // Act
-    montar([]);
-
-    // Assert
-    expect(classes(screen.getByText(AVISO_SEM_RESPONSAVEL))).toContain('text-danger-fg');
-  });
-
-  it('deve usar o texto secundário quando não há responsável disponível', () => {
-    // Act
-    montar([], []);
-
-    // Assert
-    expect(classes(screen.getByText('Nenhum responsável disponível.'))).toContain('text-fg-muted');
-  });
-
-  it('deve usar o texto principal quando mostra o nome de um responsável', () => {
+  it('deve avisar quando a busca de responsáveis falha', () => {
     // Arrange
-    const [usuario] = USUARIOS;
+    falhou = true;
 
     // Act
-    montar();
+    montar([{ id: 'u1', nome: 'João' }]);
 
     // Assert
-    expect(classes(screen.getByText(usuario.nome))).toContain('text-fg');
+    expect(screen.getByText(/Não foi possível buscar os responsáveis/)).toBeDefined();
   });
 });

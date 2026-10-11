@@ -15,12 +15,20 @@ const POR_PRAZO: OrdemDaColuna = {
 
 /**
  * Única fonte da ordem de cada coluna: a consulta e o texto do cabeçalho leem daqui.
- * Concluída e Cancelada ficam de fora: a API só ordena por criação, prazo e prioridade.
+ * Concluída e Cancelada seguem a data de encerramento, mais recente primeiro.
  */
+const POR_ENCERRAMENTO: OrdemDaColuna = {
+  sort: 'concluidaEm',
+  dir: 'desc',
+  texto: 'encerradas mais recentes primeiro',
+};
+
 const ORDEM_DO_QUADRO: Partial<Record<StatusSolicitacao, OrdemDaColuna>> = {
   A_FAZER: { sort: 'criadaEm', dir: 'desc', texto: 'mais recentes primeiro' },
   EM_ANDAMENTO: POR_PRAZO,
   EM_VALIDACAO: POR_PRAZO,
+  CONCLUIDA: POR_ENCERRAMENTO,
+  CANCELADA: POR_ENCERRAMENTO,
 };
 
 export function ordemDaColuna(status: StatusSolicitacao): OrdemDaColuna | undefined {

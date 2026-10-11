@@ -16,7 +16,7 @@ import { PageHeader, type AcaoDoMenu } from '@/shared/components/PageHeader/Page
 import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 import { cn } from '@/shared/lib/cn';
 import { canManageModelos } from '@/shared/lib/permissions';
-import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
+import { nomeDoTipoDeModelo } from '@/shared/lib/rotulos';
 
 import { useResumoDasSolicitacoesDoModelo } from '@/features/solicitacoes/hooks/useResumoDasSolicitacoesDoModelo';
 import { useSolicitacoes } from '@/features/solicitacoes/hooks/useSolicitacoes';
@@ -317,7 +317,7 @@ function DadosDoModelo({ modelo }: { modelo: Modelo }) {
       <Detail label="Máquina / Encaixe" value={modelo.maquina} />
       <Detail
         label="Tipo do Modelo"
-        value={modelo.tipo ? rotuloDoTipoDeModelo[modelo.tipo] : 'Não definido'}
+        value={modelo.tipo ? nomeDoTipoDeModelo(modelo.tipo) : 'Não definido'}
       />
       <Detail label="Criado em" value={formatDate(modelo.criadoEm)} />
       <Detail label="Atualizado em" value={formatDate(modelo.atualizadoEm)} />

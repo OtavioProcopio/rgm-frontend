@@ -261,6 +261,25 @@ describe('SolicitacoesPage — ações do cabeçalho', () => {
     });
   });
 
+  it('deve exportar com a busca que a tela está usando quando a lista foi aberta com q', async () => {
+    // Arrange
+    vi.mocked(solicitacoesApi.exportar).mockClear();
+    const { AppWrapper } = createAppWrapper({
+      user: { nome: 'Ge', perfil: 'GESTOR' },
+      initialEntries: ['/app/solicitacoes?q=correia'],
+    });
+    render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Exportar PDF' }));
+
+    // Assert
+    expect(solicitacoesApi.exportar).toHaveBeenCalledWith(
+      expect.objectContaining({ q: 'correia', page: 0, size: 20 }),
+    );
+  });
+
   it('deve mostrar "Exportar PDF" como botão e nenhum "Mais ações" quando o usuário não pode criar', () => {
     // Arrange
     const { AppWrapper } = createAppWrapper({ user: null });
@@ -521,7 +540,7 @@ describe('SolicitacoesPage — filtros vindos da URL', () => {
     expect(screen.getByTestId('kanban-board')).toBeDefined();
   });
 
-  it('deve ignorar os valores inválidos da URL quando a listagem é pedida', async () => {
+  it('deve ignorar os valores inválidos da URL e abrir no Kanban sem consultar a listagem', async () => {
     // Arrange
     const listagem = await prepararListagemCarregando();
 
@@ -529,7 +548,8 @@ describe('SolicitacoesPage — filtros vindos da URL', () => {
     abrirComUrl('?status=XYZ&atrasada=1');
 
     // Assert
-    expect(listagem).toHaveBeenCalledWith({ page: 0, size: 20 }, { enabled: false });
+    expect(screen.getByTestId('kanban-board')).toBeDefined();
+    expect(listagem).not.toHaveBeenCalled();
   });
 
   it('deve abrir no Kanban quando a URL não traz parâmetro', async () => {

@@ -11,6 +11,7 @@ export const LIMITES = {
   modeloPretendidoCodigo: 50,
   modeloPretendidoMaquina: 100,
   maquinaNome: 255,
+  tipoModeloNome: 255,
   usuarioNome: 255,
   usuarioEmail: 255,
 } as const;

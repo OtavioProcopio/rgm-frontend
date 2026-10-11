@@ -213,4 +213,79 @@ describe('lerFiltrosDaUrl', () => {
       temFiltroDoPainel: true,
     });
   });
+
+  it('deve ler a busca quando o parâmetro q tem 2 ou mais caracteres', () => {
+    // Arrange
+    const params = new URLSearchParams('q=correia');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: { q: 'correia' }, temFiltroDoPainel: false });
+  });
+
+  it('deve ignorar a busca quando o parâmetro q tem 1 caractere', () => {
+    // Arrange
+    const params = new URLSearchParams('q=a');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: {}, temFiltroDoPainel: false });
+  });
+
+  it('deve ler modeloId e responsavelId quando são UUID', () => {
+    // Arrange
+    const id = '6dacdfac-4812-4b37-9a4c-20ed9516dc0f';
+    const params = new URLSearchParams(`modeloId=${id}&responsavelId=${id}`);
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({
+      filtros: { modeloId: id, responsavelId: id },
+      temFiltroDoPainel: true,
+    });
+  });
+
+  it('deve ignorar modeloId e responsavelId quando não são UUID', () => {
+    // Arrange
+    const params = new URLSearchParams('modeloId=abc&responsavelId=1');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: {}, temFiltroDoPainel: false });
+  });
+
+  it('deve ler o período de criação quando são instantes ISO em UTC', () => {
+    // Arrange
+    const params = new URLSearchParams(
+      'criadaEmInicio=2026-10-08T12:00:00.000Z&criadaEmFim=2026-10-10T12:00:00Z',
+    );
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado.filtros).toEqual({
+      criadaEmInicio: '2026-10-08T12:00:00.000Z',
+      criadaEmFim: '2026-10-10T12:00:00Z',
+    });
+  });
+
+  it('deve ignorar o período de criação quando não é um instante ISO', () => {
+    // Arrange
+    const params = new URLSearchParams('criadaEmInicio=ontem&criadaEmFim=2026-10-10');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: {}, temFiltroDoPainel: false });
+  });
 });

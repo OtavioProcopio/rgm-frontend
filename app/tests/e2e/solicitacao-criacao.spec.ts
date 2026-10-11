@@ -4,7 +4,15 @@
  * ao ser concluída, cria o Modelo e vincula o modeloId — ver
  * openspec/changes/solicitacao-tipo-criacao-modelo (backend).
  */
-import { test, expect, apiCriarUsuario, apiPatch, apiPost, MAQUINA_CATALOGO } from './fixtures';
+import {
+  test,
+  expect,
+  apiCriarUsuario,
+  apiPatch,
+  apiPost,
+  escolherPrioridadeEPrimeiroResponsavel,
+  MAQUINA_CATALOGO,
+} from './fixtures';
 
 const ts = () => Date.now();
 
@@ -88,8 +96,7 @@ test.describe('Solicitação tipo CRIACAO', () => {
 
     // Triagem — usa o próprio gestor como responsável (perfil atribuível).
     await page.click('button:has-text("Triar")');
-    await page.selectOption('select[name="prioridade"]', 'MEDIA');
-    await page.locator('input[name="responsavelIds"]').first().check();
+    await escolherPrioridadeEPrimeiroResponsavel(page, 'MEDIA');
     await page.click('button:has-text("Confirmar triagem")');
     await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
 

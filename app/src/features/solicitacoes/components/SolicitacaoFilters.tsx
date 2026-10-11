@@ -9,6 +9,7 @@ import {
   rotuloDoTipoDeSolicitacao,
 } from '@/shared/lib/rotulos';
 
+import { BuscaTextual } from './BuscaTextual';
 import { SeletorDeModelo } from './SeletorDeModelo';
 
 import type {
@@ -49,16 +50,19 @@ function EtiquetaDeFiltro({ rotulo, onRemove }: EtiquetaProps) {
   );
 }
 
-/** Etiquetas removíveis dos filtros "Em atraso" e "Em aberto", quando ativos. */
+/** Etiquetas removíveis dos filtros sem controle próprio na lista, quando ativos. */
 function EtiquetasAtivas({ filters, onChange }: Props) {
-  if (!filters.atrasada && !filters.emAberto) return null;
-  const remover = (campo: 'atrasada' | 'emAberto') => () =>
+  if (!filters.atrasada && !filters.emAberto && !filters.responsavelId) return null;
+  const remover = (campo: 'atrasada' | 'emAberto' | 'responsavelId') => () =>
     onChange({ ...filters, page: 0, [campo]: undefined });
 
   return (
     <div className="flex w-full flex-wrap gap-2">
       {filters.atrasada && <EtiquetaDeFiltro rotulo="Em atraso" onRemove={remover('atrasada')} />}
       {filters.emAberto && <EtiquetaDeFiltro rotulo="Em aberto" onRemove={remover('emAberto')} />}
+      {filters.responsavelId && (
+        <EtiquetaDeFiltro rotulo="Um responsável" onRemove={remover('responsavelId')} />
+      )}
     </div>
   );
 }
@@ -66,50 +70,30 @@ function EtiquetasAtivas({ filters, onChange }: Props) {
 export function SolicitacaoFilters({ filters, onChange }: Props) {
   const { options: maquinaOptions } = useMaquinaOptions(filters.maquina);
 
-  function handleMaquinaChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    onChange({ ...filters, page: 0, maquina: e.target.value || undefined });
+  /** Muda um campo do filtro e volta para a primeira página. */
+  function alterar<K extends keyof SolicitacoesFilters>(
+    campo: K,
+    valor: SolicitacoesFilters[K] | undefined,
+  ) {
+    onChange({ ...filters, page: 0, [campo]: valor });
   }
 
-  function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value as StatusSolicitacao | '';
-    onChange({ ...filters, page: 0, status: value || undefined });
-  }
+  const doSelect =
+    <T extends string>(campo: 'status' | 'tipo' | 'prioridade' | 'maquina') =>
+    (e: React.ChangeEvent<HTMLSelectElement>) =>
+      alterar(campo, (e.target.value as T | '') || undefined);
 
-  function handleModeloChange(modeloId: string) {
-    onChange({ ...filters, page: 0, modeloId: modeloId || undefined });
-  }
-
-  function handleTipoChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value as TipoSolicitacao | '';
-    onChange({ ...filters, page: 0, tipo: value || undefined });
-  }
-
-  function handlePrioridadeChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value as PrioridadeSolicitacao | '';
-    onChange({ ...filters, page: 0, prioridade: value || undefined });
-  }
-
-  function handleInicioChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    onChange({
-      ...filters,
-      page: 0,
-      criadaEmInicio: val ? `${val}T00:00:00Z` : undefined,
-    });
-  }
-
-  function handleFimChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    onChange({
-      ...filters,
-      page: 0,
-      criadaEmFim: val ? `${val}T23:59:59Z` : undefined,
-    });
-  }
+  const dataDe =
+    (campo: 'criadaEmInicio' | 'criadaEmFim', hora: string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      alterar(campo, e.target.value ? `${e.target.value}T${hora}Z` : undefined);
 
   return (
     <div className="mb-5 flex flex-wrap gap-4">
       <EtiquetasAtivas filters={filters} onChange={onChange} />
+      <div className="w-full sm:w-80">
+        <BuscaTextual valor={filters.q} onChange={(q) => alterar('q', q)} />
+      </div>
       <div className="w-full sm:w-56">
         <Select
           label="Status"
@@ -117,7 +101,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           placeholder="Todos os status"
           limpavel
           value={filters.status ?? ''}
-          onChange={handleStatusChange}
+          onChange={doSelect<StatusSolicitacao>('status')}
         />
       </div>
       <div className="w-full sm:w-48">
@@ -127,7 +111,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           placeholder="Todos os tipos"
           limpavel
           value={filters.tipo ?? ''}
-          onChange={handleTipoChange}
+          onChange={doSelect<TipoSolicitacao>('tipo')}
         />
       </div>
       <div className="w-full sm:w-48">
@@ -137,7 +121,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           placeholder="Todas as prioridades"
           limpavel
           value={filters.prioridade ?? ''}
-          onChange={handlePrioridadeChange}
+          onChange={doSelect<PrioridadeSolicitacao>('prioridade')}
         />
       </div>
       <div className="w-full sm:w-64">
@@ -145,7 +129,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           label="Modelo"
           placeholder="Todos os modelos"
           value={filters.modeloId ?? ''}
-          onChange={handleModeloChange}
+          onChange={(modeloId) => alterar('modeloId', modeloId || undefined)}
         />
       </div>
       {maquinaOptions.length > 0 && (
@@ -156,7 +140,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
             placeholder="Todas as máquinas"
             limpavel
             value={filters.maquina ?? ''}
-            onChange={handleMaquinaChange}
+            onChange={doSelect<string>('maquina')}
           />
         </div>
       )}
@@ -165,7 +149,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           type="date"
           label="Criada a partir de"
           value={filters.criadaEmInicio ? filters.criadaEmInicio.split('T')[0] : ''}
-          onChange={handleInicioChange}
+          onChange={dataDe('criadaEmInicio', '00:00:00')}
         />
       </div>
       <div className="w-full sm:w-44">
@@ -173,7 +157,7 @@ export function SolicitacaoFilters({ filters, onChange }: Props) {
           type="date"
           label="Criada até"
           value={filters.criadaEmFim ? filters.criadaEmFim.split('T')[0] : ''}
-          onChange={handleFimChange}
+          onChange={dataDe('criadaEmFim', '23:59:59')}
         />
       </div>
     </div>
