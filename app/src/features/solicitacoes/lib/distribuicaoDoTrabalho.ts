@@ -35,6 +35,9 @@ const STATUS_EM_ABERTO: StatusSolicitacao[] = ['A_FAZER', 'EM_ANDAMENTO', 'EM_VA
 const TIPOS: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'];
 const PRIORIDADES: PrioridadeSolicitacao[] = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
 
+/** Parte das abertas que ainda não passaram pela triagem; não tem lista própria. */
+export const SEM_PRIORIDADE = 'SEM_PRIORIDADE';
+
 export const VISOES: ConfiguracaoDaVisao[] = [
   {
     id: 'status',
@@ -52,7 +55,10 @@ export const VISOES: ConfiguracaoDaVisao[] = [
     id: 'prioridade',
     rotulo: 'Prioridade',
     parametro: 'prioridade',
-    partes: partesDe(PRIORIDADES, rotuloDaPrioridade),
+    partes: [
+      ...partesDe(PRIORIDADES, rotuloDaPrioridade),
+      { valor: SEM_PRIORIDADE, rotulo: 'Sem prioridade' },
+    ],
   },
 ];
 
@@ -75,14 +81,18 @@ export function partesPorStatus(
   }));
 }
 
-/** Junta cada parte ao total da sua consulta; `undefined` enquanto algum total falta. */
-export function partesPorConsulta(
-  partes: ParteDaDistribuicao[],
-  totais: Array<number | undefined>,
+/** Contagem das visões `tipo` e `prioridade`, vinda das métricas; `undefined` sem elas. */
+export function partesPorMetricas(
+  visao: Exclude<VisaoDaDistribuicao, 'status'>,
+  metricas: MetricasResponse | undefined,
 ): ParteContada[] | undefined {
-  const contados = totais.filter((total): total is number => total !== undefined);
-  if (contados.length < partes.length) return undefined;
-  return partes.map((parte, indice) => ({ ...parte, quantidade: contados[indice] }));
+  if (!metricas) return undefined;
+  const contagens: Record<string, number | undefined> =
+    visao === 'tipo' ? metricas.emAbertoPorTipo : metricas.emAbertoPorPrioridade;
+  return visaoPorId(visao).partes.map((parte) => ({
+    ...parte,
+    quantidade: contagens[parte.valor] ?? 0,
+  }));
 }
 
 export function caminhoDoFiltro(visao: VisaoDaDistribuicao, valor: string): string {

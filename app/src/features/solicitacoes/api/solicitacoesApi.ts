@@ -12,6 +12,7 @@ import type {
   EncerrarSolicitacaoRequest,
   EnviarParaValidacaoRequest,
   HistoricoMetricas,
+  IndicadoresDeGestao,
   MetricaPorModelo,
   MetricasPorModeloFilters,
   MetricasResponse,
@@ -68,6 +69,9 @@ export const solicitacoesApi = {
     httpClient.get<PainelPorPeriodo>('/solicitacoes/metricas/painel', {
       params: { dias, ...(modeloId ? { modeloId } : {}) },
     }),
+
+  obterIndicadoresDeGestao: (dias: number) =>
+    httpClient.get<IndicadoresDeGestao>('/solicitacoes/metricas/gestao', { params: { dias } }),
 
   exportar: (filters: SolicitacoesFilters) =>
     httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),

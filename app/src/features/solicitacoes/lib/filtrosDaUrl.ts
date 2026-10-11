@@ -15,7 +15,17 @@ import type {
 export type FiltrosDaUrl = Partial<
   Pick<
     SolicitacoesFilters,
-    'status' | 'tipo' | 'prioridade' | 'atrasada' | 'emAberto' | 'maquina' | 'q'
+    | 'status'
+    | 'tipo'
+    | 'prioridade'
+    | 'atrasada'
+    | 'emAberto'
+    | 'maquina'
+    | 'q'
+    | 'modeloId'
+    | 'responsavelId'
+    | 'criadaEmInicio'
+    | 'criadaEmFim'
   >
 >;
 
@@ -29,6 +39,13 @@ function valorDaLista<T extends string>(
   validos: readonly T[],
 ): T | undefined {
   return validos.find((item) => item === valor);
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const INSTANTE_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+function deFormato(valor: string | null, formato: RegExp): string | undefined {
+  return valor !== null && formato.test(valor) ? valor : undefined;
 }
 
 function verdadeiroExato(valor: string | null): true | undefined {
@@ -46,6 +63,10 @@ export function lerFiltrosDaUrl(params: URLSearchParams): {
     prioridade: valorDaLista(params.get('prioridade'), PRIORIDADES_VALIDAS),
     atrasada: verdadeiroExato(params.get('atrasada')),
     emAberto: verdadeiroExato(params.get('emAberto')),
+    modeloId: deFormato(params.get('modeloId'), UUID),
+    responsavelId: deFormato(params.get('responsavelId'), UUID),
+    criadaEmInicio: deFormato(params.get('criadaEmInicio'), INSTANTE_ISO),
+    criadaEmFim: deFormato(params.get('criadaEmFim'), INSTANTE_ISO),
   };
   const maquina = params.get('maquina') || undefined;
   const q = termoDeBusca(params.get('q'));

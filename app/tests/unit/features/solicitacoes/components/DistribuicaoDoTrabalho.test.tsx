@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
@@ -9,10 +9,7 @@ import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { solicitacoesApi } from '@/features/solicitacoes/api/solicitacoesApi';
 import { DistribuicaoDoTrabalho } from '@/features/solicitacoes/components/DistribuicaoDoTrabalho';
-import type {
-  MetricasResponse,
-  SolicitacoesFilters,
-} from '@/features/solicitacoes/types/solicitacaoTypes';
+import type { MetricasResponse } from '@/features/solicitacoes/types/solicitacaoTypes';
 
 const METRICAS = {
   solicitacoesPorStatus: {
@@ -22,31 +19,14 @@ const METRICAS = {
     CONCLUIDA: 100,
     CANCELADA: 100,
   },
+  emAbertoPorTipo: { REPARO: 11, INSPECAO: 8, REENGENHARIA: 6, CRIACAO: 5 },
+  emAbertoPorPrioridade: { URGENTE: 41, ALTA: 32, MEDIA: 23, BAIXA: 14, SEM_PRIORIDADE: 7 },
 } as unknown as MetricasResponse;
-
-const QUANTIDADES: Record<string, number> = {
-  REPARO: 11,
-  INSPECAO: 8,
-  REENGENHARIA: 6,
-  CRIACAO: 5,
-  URGENTE: 41,
-  ALTA: 32,
-  MEDIA: 23,
-  BAIXA: 14,
-};
 
 let listar: MockInstance<typeof solicitacoesApi.listar>;
 
 beforeEach(() => {
-  listar = vi.spyOn(solicitacoesApi, 'listar').mockImplementation((filtros: SolicitacoesFilters) =>
-    Promise.resolve({
-      content: [],
-      page: 0,
-      size: filtros.size,
-      totalPages: 0,
-      totalElements: QUANTIDADES[filtros.tipo ?? filtros.prioridade ?? ''] ?? 0,
-    }),
-  );
+  listar = vi.spyOn(solicitacoesApi, 'listar');
 });
 
 afterEach(() => {
@@ -142,7 +122,7 @@ describe('DistribuicaoDoTrabalho', () => {
     );
   });
 
-  it('deve chamar listar uma vez por tipo quando Tipo é escolhido', async () => {
+  it('deve não chamar listar quando Tipo é escolhido', () => {
     // Arrange
     renderizar();
 
@@ -150,18 +130,10 @@ describe('DistribuicaoDoTrabalho', () => {
     escolher('Tipo');
 
     // Assert
-    await screen.findByText('11');
-    expect(listar.mock.calls.map(([filtros]) => filtros)).toEqual(
-      ['REPARO', 'INSPECAO', 'REENGENHARIA', 'CRIACAO'].map((tipo) => ({
-        emAberto: true,
-        tipo,
-        page: 0,
-        size: 1,
-      })),
-    );
+    expect(listar).toHaveBeenCalledTimes(0);
   });
 
-  it('deve mostrar as quantidades por tipo quando Tipo é escolhido', async () => {
+  it('deve mostrar as quantidades por tipo quando Tipo é escolhido', () => {
     // Arrange
     renderizar();
 
@@ -169,12 +141,11 @@ describe('DistribuicaoDoTrabalho', () => {
     escolher('Tipo');
 
     // Assert
-    await screen.findByText('11');
     const itens = screen.getAllByRole('listitem').map((item) => item.textContent);
     expect(itens).toEqual(['Reparo11', 'Inspeção8', 'Reengenharia6', 'Criação de modelo5']);
   });
 
-  it('deve levar cada tipo à listagem filtrada quando Tipo é escolhido', async () => {
+  it('deve levar cada tipo à listagem filtrada quando Tipo é escolhido', () => {
     // Arrange
     renderizar();
 
@@ -182,11 +153,11 @@ describe('DistribuicaoDoTrabalho', () => {
     escolher('Tipo');
 
     // Assert
-    const link = await screen.findByRole('link', { name: /Reparo/ });
+    const link = screen.getByRole('link', { name: /Reparo/ });
     expect(link.getAttribute('href')).toBe('/app/solicitacoes?emAberto=true&tipo=REPARO');
   });
 
-  it('deve chamar listar uma vez por prioridade quando Prioridade é escolhida', async () => {
+  it('deve mostrar as quantidades de cada prioridade, com sem prioridade, quando Prioridade é escolhida', () => {
     // Arrange
     renderizar();
 
@@ -194,31 +165,11 @@ describe('DistribuicaoDoTrabalho', () => {
     escolher('Prioridade');
 
     // Assert
-    await screen.findByText('41');
-    expect(listar.mock.calls.map(([filtros]) => filtros)).toEqual(
-      ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'].map((prioridade) => ({
-        emAberto: true,
-        prioridade,
-        page: 0,
-        size: 1,
-      })),
-    );
-  });
-
-  it('deve mostrar as quantidades de cada prioridade quando Prioridade é escolhida', async () => {
-    // Arrange
-    renderizar();
-
-    // Act
-    escolher('Prioridade');
-
-    // Assert
-    await screen.findByText('Urgente');
     const itens = screen.getAllByRole('listitem').map((item) => item.textContent);
-    expect(itens).toEqual(['Urgente41', 'Alta32', 'Média23', 'Baixa14']);
+    expect(itens).toEqual(['Urgente41', 'Alta32', 'Média23', 'Baixa14', 'Sem prioridade7']);
   });
 
-  it('deve levar cada prioridade à listagem filtrada quando Prioridade é escolhida', async () => {
+  it('deve levar cada prioridade à listagem filtrada quando Prioridade é escolhida', () => {
     // Arrange
     renderizar();
 
@@ -226,8 +177,19 @@ describe('DistribuicaoDoTrabalho', () => {
     escolher('Prioridade');
 
     // Assert
-    const link = await screen.findByRole('link', { name: /Urgente/ });
+    const link = screen.getByRole('link', { name: /Urgente/ });
     expect(link.getAttribute('href')).toBe('/app/solicitacoes?emAberto=true&prioridade=URGENTE');
+  });
+
+  it('deve não oferecer link para sem prioridade quando Prioridade é escolhida', () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    escolher('Prioridade');
+
+    // Assert
+    expect(screen.queryByRole('link', { name: /Sem prioridade/ })).toBeNull();
   });
 
   it('deve mostrar as três partes com quantidade zero quando todas as quantidades são zero', () => {
@@ -314,43 +276,31 @@ describe('DistribuicaoDoTrabalho', () => {
     expect(onRetryMetricas).toHaveBeenCalledTimes(1);
   });
 
-  it('deve mostrar carregando enquanto as contagens por tipo não chegam quando Tipo é escolhido', () => {
+  it('deve mostrar o erro das métricas quando Tipo é escolhido e as métricas falharam', () => {
     // Arrange
-    listar.mockImplementation(() => new Promise(() => {}));
-    renderizar();
+    renderizar({ metricas: undefined, metricasErro: true });
 
     // Act
     escolher('Tipo');
 
     // Assert
-    expect(screen.getByRole('status').textContent).toBe('Carregando a distribuição...');
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Não foi possível carregar o trabalho em aberto',
+    );
   });
 
-  it('deve mostrar o erro quando a consulta por tipo falha', async () => {
+  it('deve refazer só a consulta das métricas quando Tentar novamente é acionado na visão tipo', () => {
     // Arrange
-    listar.mockRejectedValue(new Error('falha'));
-    renderizar();
-
-    // Act
+    const onRetryMetricas = vi.fn();
+    renderizar({ metricas: undefined, metricasErro: true, onRetryMetricas });
     escolher('Tipo');
 
-    // Assert
-    const alerta = await screen.findByRole('alert');
-    expect(alerta.textContent).toContain('Não foi possível carregar o trabalho em aberto');
-  });
-
-  it('deve refazer as quatro chamadas quando Tentar novamente é acionado após falha por tipo', async () => {
-    // Arrange
-    listar.mockRejectedValue(new Error('falha'));
-    renderizar();
-    escolher('Tipo');
-    const botao = await screen.findByRole('button', { name: 'Tentar novamente' });
-
     // Act
-    fireEvent.click(botao);
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
 
     // Assert
-    await waitFor(() => expect(listar).toHaveBeenCalledTimes(8));
+    expect(onRetryMetricas).toHaveBeenCalledTimes(1);
+    expect(listar).toHaveBeenCalledTimes(0);
   });
 
   it('deve não usar classe animate quando renderizado', () => {

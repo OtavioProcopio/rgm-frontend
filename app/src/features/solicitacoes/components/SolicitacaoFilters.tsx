@@ -50,16 +50,19 @@ function EtiquetaDeFiltro({ rotulo, onRemove }: EtiquetaProps) {
   );
 }
 
-/** Etiquetas removíveis dos filtros "Em atraso" e "Em aberto", quando ativos. */
+/** Etiquetas removíveis dos filtros sem controle próprio na lista, quando ativos. */
 function EtiquetasAtivas({ filters, onChange }: Props) {
-  if (!filters.atrasada && !filters.emAberto) return null;
-  const remover = (campo: 'atrasada' | 'emAberto') => () =>
+  if (!filters.atrasada && !filters.emAberto && !filters.responsavelId) return null;
+  const remover = (campo: 'atrasada' | 'emAberto' | 'responsavelId') => () =>
     onChange({ ...filters, page: 0, [campo]: undefined });
 
   return (
     <div className="flex w-full flex-wrap gap-2">
       {filters.atrasada && <EtiquetaDeFiltro rotulo="Em atraso" onRemove={remover('atrasada')} />}
       {filters.emAberto && <EtiquetaDeFiltro rotulo="Em aberto" onRemove={remover('emAberto')} />}
+      {filters.responsavelId && (
+        <EtiquetaDeFiltro rotulo="Um responsável" onRemove={remover('responsavelId')} />
+      )}
     </div>
   );
 }

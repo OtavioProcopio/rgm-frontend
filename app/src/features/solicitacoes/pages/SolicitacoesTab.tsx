@@ -5,6 +5,7 @@ import { ControleSegmentado } from '@/shared/components/ControleSegmentado/Contr
 import { DistribuicaoDoTrabalho } from '../components/DistribuicaoDoTrabalho';
 import { FaixaDeIndicadores } from '../components/FaixaDeIndicadores';
 import { FilaDeAtencao } from '../components/FilaDeAtencao';
+import { IndicadoresDeGestao } from '../components/gestao/IndicadoresDeGestao';
 import { TendenciaDoPeriodo } from '../components/TendenciaDoPeriodo';
 import { useMetricas } from '../hooks/useMetricas';
 import { PERIODOS, type PeriodoDoPainel } from '../lib/periodoDoPainel';
@@ -63,6 +64,7 @@ export function SolicitacoesTab(): JSX.Element {
       <FilaDeAtencao />
       <FaixaDeIndicadores dias={dias} {...dados} />
       <TendenciaEDistribuicao dias={dias} {...dados} />
+      <IndicadoresDeGestao dias={dias} />
     </div>
   );
 }

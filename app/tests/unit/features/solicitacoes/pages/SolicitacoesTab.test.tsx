@@ -18,6 +18,7 @@ import type {
 import { ApiError } from '@/shared/api/apiError';
 import type { PageResponse } from '@/shared/types/page';
 import { createAppWrapper } from '@tests/support/appWrapper';
+import { criarIndicadoresDeGestao } from '@tests/support/indicadoresDeGestaoFixture';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
 const ABERTAS = 47;
@@ -41,6 +42,8 @@ const METRICAS: MetricasResponse = {
   solicitacoesPendentes: 11,
   solicitacoesConcluidas: 100,
   tempoMedioResolucaoSegundos: 86400,
+  emAbertoPorTipo: { REPARO: 0, INSPECAO: 0, REENGENHARIA: 0, CRIACAO: 0 },
+  emAbertoPorPrioridade: { URGENTE: 0, ALTA: 0, MEDIA: 0, BAIXA: 0, SEM_PRIORIDADE: 0 },
 };
 
 const HISTORICO: HistoricoMetricas = {
@@ -71,6 +74,7 @@ let listar: MockInstance<typeof solicitacoesApi.listar>;
 let obterMetricas: MockInstance<typeof solicitacoesApi.obterMetricas>;
 let obterHistorico: MockInstance<typeof solicitacoesApi.obterHistoricoMetricas>;
 let obterPainel: MockInstance<typeof solicitacoesApi.obterPainel>;
+let obterGestao: MockInstance<typeof solicitacoesApi.obterIndicadoresDeGestao>;
 let buscarPorId: MockInstance<typeof modelosApi.buscarPorId>;
 
 function pagina(content: Solicitacao[], totalElements: number): PageResponse<Solicitacao> {
@@ -118,6 +122,8 @@ beforeEach(() => {
   obterHistorico = vi.spyOn(solicitacoesApi, 'obterHistoricoMetricas');
   obterPainel = vi.spyOn(solicitacoesApi, 'obterPainel');
   obterPainel.mockRejectedValue(new ApiError({ status: 404, message: 'não encontrado' }));
+  obterGestao = vi.spyOn(solicitacoesApi, 'obterIndicadoresDeGestao');
+  obterGestao.mockResolvedValue(criarIndicadoresDeGestao());
   buscarPorId = vi.spyOn(modelosApi, 'buscarPorId');
   responderListagem();
   obterMetricas.mockResolvedValue(METRICAS);
@@ -523,5 +529,72 @@ describe('SolicitacoesTab — painel por período', () => {
 
     // Assert
     expect(obterPainel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('SolicitacoesTab — indicadores de gestão', () => {
+  it('deve pedir os indicadores de gestão do período escolhido quando abre', async () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    await screen.findByRole('region', { name: 'Prazo cumprido' });
+
+    // Assert
+    expect(obterGestao).toHaveBeenCalledWith(30);
+  });
+
+  it('deve mostrar os blocos de gestão quando a consulta responde', async () => {
+    // Arrange
+    renderizar();
+
+    // Act
+    const regioes = await Promise.all(
+      [
+        'Prazo cumprido',
+        'Tempo de resolução',
+        'Idade das abertas',
+        'Onde o tempo se perde',
+        'Por máquina',
+        'Modelos reincidentes',
+        'Carga por responsável',
+      ].map((nome) => screen.findByRole('region', { name: nome })),
+    );
+
+    // Assert
+    expect(regioes).toHaveLength(7);
+  });
+
+  it('deve manter os outros blocos quando os indicadores de gestão falham', async () => {
+    // Arrange
+    obterGestao.mockRejectedValue(ERRO_DE_REDE);
+
+    // Act
+    renderizar();
+
+    // Assert
+    expect(
+      await screen.findByText('Não foi possível carregar os indicadores de gestão'),
+    ).toBeDefined();
+    expect(await screen.findByText('Trocar correia')).toBeDefined();
+  });
+
+  it('deve pedir de novo quando Tentar novamente é acionado nos indicadores de gestão', async () => {
+    // Arrange
+    const usuario = userEvent.setup();
+    obterGestao.mockRejectedValueOnce(ERRO_DE_REDE);
+    renderizar();
+    await screen.findByText('Não foi possível carregar os indicadores de gestão');
+    const alerta = screen.getByText('Não foi possível carregar os indicadores de gestão');
+
+    // Act
+    await usuario.click(
+      within(alerta.closest('[role="alert"]') as HTMLElement).getByRole('button', {
+        name: TENTAR_NOVAMENTE,
+      }),
+    );
+
+    // Assert
+    expect(await screen.findByRole('region', { name: 'Prazo cumprido' })).toBeDefined();
   });
 });

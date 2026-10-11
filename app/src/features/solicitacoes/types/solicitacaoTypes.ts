@@ -200,6 +200,9 @@ export type MetricasResponse = {
   solicitacoesPendentes: number;
   solicitacoesConcluidas: number;
   tempoMedioResolucaoSegundos: number;
+  /** Abertas por tipo e por prioridade (inclui `SEM_PRIORIDADE`); somam `solicitacoesAbertas`. */
+  emAbertoPorTipo: Record<TipoSolicitacao, number>;
+  emAbertoPorPrioridade: Record<PrioridadeSolicitacao | 'SEM_PRIORIDADE', number>;
 };
 
 export type OrdenacaoMetricaModelo = 'TEMPO_RESOLUCAO' | 'INTERVALO';
@@ -217,4 +220,71 @@ export type MetricasPorModeloFilters = {
   dir: DirecaoOrdenacao;
   page: number;
   size: number;
+};
+
+export type PrazoPorPrioridade = {
+  prioridade: PrioridadeSolicitacao;
+  concluidas: number;
+  noPrazo: number;
+  /** `null` quando a prioridade não teve concluídas no período. */
+  percentualNoPrazo: number | null;
+};
+
+export type EtapaDoTempo = {
+  amostras: number;
+  /** `null` quando nenhuma solicitação passou pela etapa no período. */
+  medianaSegundos: number | null;
+  mediaSegundos: number | null;
+};
+
+export type MaquinaDeGestao = {
+  maquina: string;
+  abertas: number;
+  emAtraso: number;
+  tempoMedioResolucaoSegundos: number | null;
+};
+
+export type ModeloReincidente = {
+  modeloId: string;
+  codigo: string;
+  versao: number;
+  maquina: string | null;
+  solicitacoes: number;
+};
+
+export type ResponsavelComCarga = { usuarioId: string; nome: string; abertas: number };
+
+/** Resposta de `GET /solicitacoes/metricas/gestao?dias=7|30|90`. */
+export type IndicadoresDeGestao = {
+  dias: number;
+  inicio: string;
+  fim: string;
+  prazo: {
+    concluidasComPrioridade: number;
+    noPrazo: number;
+    percentualNoPrazo: number | null;
+    concluidasSemPrioridade: number;
+    porPrioridade: PrazoPorPrioridade[];
+  };
+  resolucao: {
+    concluidas: number;
+    medianaSegundos: number | null;
+    p90Segundos: number | null;
+  };
+  backlog: {
+    abertas: number;
+    menosDeUmDia: number;
+    umATresDias: number;
+    maisDeTresDias: number;
+    semResponsavel: number;
+  };
+  etapas: {
+    esperaAteIniciar: EtapaDoTempo;
+    execucao: EtapaDoTempo;
+    esperaDeValidacao: EtapaDoTempo;
+  };
+  devolucao: { enviadasParaValidacao: number; devolucoes: number; taxa: number | null };
+  porMaquina: MaquinaDeGestao[];
+  reincidentes: ModeloReincidente[];
+  carga: { solicitacoesDistintas: number; responsaveis: ResponsavelComCarga[] };
 };
