@@ -13,8 +13,13 @@ vi.mock('@/features/auth/hooks/usePerfil', () => ({
 }));
 
 const usuario = {
-  id: '1', nome: 'João', email: 'j@j.com', perfil: 'OPERADOR' as const,
-  ativo: true, criadoEm: '2024-01-01T00:00:00Z', atualizadoEm: '2024-01-01T00:00:00Z',
+  id: '1',
+  nome: 'João',
+  email: 'j@j.com',
+  perfil: 'OPERADOR' as const,
+  ativo: true,
+  criadoEm: '2024-01-01T00:00:00Z',
+  atualizadoEm: '2024-01-01T00:00:00Z',
 };
 
 afterEach(cleanup);
@@ -23,7 +28,12 @@ describe('UsuarioActionsMenu', () => {
   it('renders Editar link and action buttons', () => {
     const { container } = render(
       <MemoryRouter>
-        <UsuarioActionsMenu usuario={usuario} onAtivar={vi.fn()} onDesativar={vi.fn()} onExcluir={vi.fn()} />
+        <UsuarioActionsMenu
+          usuario={usuario}
+          onAtivar={vi.fn()}
+          onDesativar={vi.fn()}
+          onExcluir={vi.fn()}
+        />
       </MemoryRouter>,
     );
     expect(within(container).getByText('Editar')).toBeDefined();
@@ -34,7 +44,12 @@ describe('UsuarioActionsMenu', () => {
   it('renders Ativar when usuario is inactive', () => {
     const { container } = render(
       <MemoryRouter>
-        <UsuarioActionsMenu usuario={{ ...usuario, ativo: false }} onAtivar={vi.fn()} onDesativar={vi.fn()} onExcluir={vi.fn()} />
+        <UsuarioActionsMenu
+          usuario={{ ...usuario, ativo: false }}
+          onAtivar={vi.fn()}
+          onDesativar={vi.fn()}
+          onExcluir={vi.fn()}
+        />
       </MemoryRouter>,
     );
     expect(within(container).getByText('Ativar')).toBeDefined();
@@ -44,7 +59,12 @@ describe('UsuarioActionsMenu', () => {
     const onDesativar = vi.fn();
     const { container } = render(
       <MemoryRouter>
-        <UsuarioActionsMenu usuario={usuario} onAtivar={vi.fn()} onDesativar={onDesativar} onExcluir={vi.fn()} />
+        <UsuarioActionsMenu
+          usuario={usuario}
+          onAtivar={vi.fn()}
+          onDesativar={onDesativar}
+          onExcluir={vi.fn()}
+        />
       </MemoryRouter>,
     );
     await userEvent.click(within(container).getByText('Desativar'));
@@ -55,7 +75,12 @@ describe('UsuarioActionsMenu', () => {
     const onExcluir = vi.fn();
     const { container } = render(
       <MemoryRouter>
-        <UsuarioActionsMenu usuario={usuario} onAtivar={vi.fn()} onDesativar={vi.fn()} onExcluir={onExcluir} />
+        <UsuarioActionsMenu
+          usuario={usuario}
+          onAtivar={vi.fn()}
+          onDesativar={vi.fn()}
+          onExcluir={onExcluir}
+        />
       </MemoryRouter>,
     );
     await userEvent.click(within(container).getByText('Excluir'));

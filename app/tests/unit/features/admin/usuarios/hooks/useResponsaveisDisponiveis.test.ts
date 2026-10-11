@@ -11,7 +11,15 @@ import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useR
 
 vi.mock('@/features/admin/usuarios/api/usuariosApi', () => ({ usuariosApi: { listar: vi.fn() } }));
 
-const operador = { id: 'op', nome: 'Op', email: null, perfil: 'OPERADOR', ativo: true, criadoEm: '', atualizadoEm: '' };
+const operador = {
+  id: 'op',
+  nome: 'Op',
+  email: null,
+  perfil: 'OPERADOR',
+  ativo: true,
+  criadoEm: '',
+  atualizadoEm: '',
+};
 const administrador = { ...operador, id: 'ad', perfil: 'ADMINISTRADOR' };
 
 afterEach(() => vi.clearAllMocks());

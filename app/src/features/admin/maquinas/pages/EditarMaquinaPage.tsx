@@ -48,7 +48,10 @@ export function EditarMaquinaPage() {
 
   return (
     <section>
-      <PageHeader title="Renomear máquina" description="Atualize o nome desta máquina do catálogo." />
+      <PageHeader
+        title="Renomear máquina"
+        description="Atualize o nome desta máquina do catálogo."
+      />
 
       {errorMessage ? (
         <div className="mb-4">

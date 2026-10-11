@@ -4,10 +4,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  DURACAO_DO_AVISO_EM_MS,
-  ToastProvider,
-} from '@/shared/components/Toast/ToastProvider';
+import { DURACAO_DO_AVISO_EM_MS, ToastProvider } from '@/shared/components/Toast/ToastProvider';
 import { useToast } from '@/shared/components/Toast/toastContext';
 
 function Disparador({ mensagem }: { mensagem: string }) {

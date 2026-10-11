@@ -16,7 +16,13 @@ export function EnviarValidacaoAction({ solicitacao, onClose, onCancelar }: Acao
         isPending={enviar.isPending}
         evidenciaObrigatoria={solicitacao.tipo !== 'CRIACAO'}
         onCancel={onCancelar}
-        onConfirm={(data) => executar(() => enviar.mutateAsync(data.comentario), undefined, sucessoDaAcao.ENVIAR_VALIDACAO)}
+        onConfirm={(data) =>
+          executar(
+            () => enviar.mutateAsync(data.comentario),
+            undefined,
+            sucessoDaAcao.ENVIAR_VALIDACAO,
+          )
+        }
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>

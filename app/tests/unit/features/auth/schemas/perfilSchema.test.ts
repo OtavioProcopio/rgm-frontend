@@ -23,9 +23,7 @@ describe('alterarSenhaSchema', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.format().novaSenha?._errors[0]).toBe(
-        MENSAGEM_DA_SENHA
-      );
+      expect(result.error.format().novaSenha?._errors[0]).toBe(MENSAGEM_DA_SENHA);
     }
   });
 
@@ -38,9 +36,7 @@ describe('alterarSenhaSchema', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.format().confirmarNovaSenha?._errors[0]).toBe(
-        'As senhas não coincidem'
-      );
+      expect(result.error.format().confirmarNovaSenha?._errors[0]).toBe('As senhas não coincidem');
     }
   });
 
@@ -53,9 +49,7 @@ describe('alterarSenhaSchema', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.format().senhaAtual?._errors[0]).toBe(
-        'Senha atual é obrigatória'
-      );
+      expect(result.error.format().senhaAtual?._errors[0]).toBe('Senha atual é obrigatória');
     }
   });
 });
@@ -71,7 +65,10 @@ describe('regra única de senha na troca da própria senha', () => {
 
     // Assert
     expect(resultado.success).toBe(false);
-    expect(resultado.error?.issues[0]).toMatchObject({ path: ['novaSenha'], message: MENSAGEM_DA_SENHA });
+    expect(resultado.error?.issues[0]).toMatchObject({
+      path: ['novaSenha'],
+      message: MENSAGEM_DA_SENHA,
+    });
   });
 
   it('deve aceitar a nova senha quando ela tem 8 caracteres', () => {

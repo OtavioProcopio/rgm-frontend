@@ -6,7 +6,10 @@ import { useToast } from '@/shared/components/Toast/toastContext';
 import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 
-import { getSolicitacaoErrorMessage, mensagemFotoNaoEnviadaAntes } from '../lib/solicitacaoMessages';
+import {
+  getSolicitacaoErrorMessage,
+  mensagemFotoNaoEnviadaAntes,
+} from '../lib/solicitacaoMessages';
 import { solicitacoesKeys } from './solicitacoesKeys';
 
 export type EvidenciaDaAcao = AnexarEvidenciaOptions & {
@@ -40,7 +43,9 @@ export function useExecutarAcao(solicitacaoId: string, onConcluida: () => void) 
   // que também gera evento.
   const chaveDaMarca = solicitacoesKeys.atualizacao(solicitacaoId);
   const { data: marca } = useQuery<number>({ queryKey: chaveDaMarca, enabled: false });
-  const [marcaVista, setMarcaVista] = useState(() => queryClient.getQueryData<number>(chaveDaMarca));
+  const [marcaVista, setMarcaVista] = useState(() =>
+    queryClient.getQueryData<number>(chaveDaMarca),
+  );
   const [executando, setExecutando] = useState(false);
 
   function atualizarHistorico() {
@@ -67,8 +72,12 @@ export function useExecutarAcao(solicitacaoId: string, onConcluida: () => void) 
     evidencia?: EvidenciaDaAcao,
     sucesso?: string,
   ) {
-    const { file = null, feito = '', anexarAntes = false, ...opcoes }: Partial<EvidenciaDaAcao> =
-      evidencia ?? {};
+    const {
+      file = null,
+      feito = '',
+      anexarAntes = false,
+      ...opcoes
+    }: Partial<EvidenciaDaAcao> = evidencia ?? {};
     setErro(null);
 
     if (file && anexarAntes && fotoJaEnviada.current !== file) {

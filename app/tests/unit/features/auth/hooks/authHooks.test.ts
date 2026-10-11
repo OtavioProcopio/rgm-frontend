@@ -13,12 +13,18 @@ import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { ApiError } from '@/shared/api/apiError';
 
 vi.mock('@/features/auth/api/authApi', () => ({
-  authApi: { login: vi.fn().mockResolvedValue({ token: 'tok', refreshToken: 'ref', nome: 'A', perfil: 'OPERADOR' }) },
+  authApi: {
+    login: vi
+      .fn()
+      .mockResolvedValue({ token: 'tok', refreshToken: 'ref', nome: 'A', perfil: 'OPERADOR' }),
+  },
 }));
 
 vi.mock('@/features/auth/api/perfilApi', () => ({
   perfilApi: {
-    obterPerfil: vi.fn().mockResolvedValue({ nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR' }),
+    obterPerfil: vi
+      .fn()
+      .mockResolvedValue({ nome: 'Otávio', email: 'o@o.com', perfil: 'OPERADOR' }),
     alterarSenha: vi.fn().mockResolvedValue(undefined),
   },
 }));

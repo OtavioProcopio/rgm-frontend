@@ -34,9 +34,7 @@ export async function apiPost<T>(
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok()) {
-    throw new Error(
-      `POST ${path} falhou (${res.status()}): ${await res.text()}`,
-    );
+    throw new Error(`POST ${path} falhou (${res.status()}): ${await res.text()}`);
   }
   return res.json() as Promise<T>;
 }
@@ -52,9 +50,7 @@ export async function apiPatch(
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok()) {
-    throw new Error(
-      `PATCH ${path} falhou (${res.status()}): ${await res.text()}`,
-    );
+    throw new Error(`PATCH ${path} falhou (${res.status()}): ${await res.text()}`);
   }
 }
 
@@ -125,7 +121,12 @@ export async function apiCriarUsuario(
 
 // ── Login fixtures ───────────────────────────────────────────────────────────
 
-async function loginComoUsuario(page: Page, email: string, senha: string, goTo = '/app/solicitacoes') {
+async function loginComoUsuario(
+  page: Page,
+  email: string,
+  senha: string,
+  goTo = '/app/solicitacoes',
+) {
   const res = await page.request.post(`${API_URL}/auth/login`, {
     data: { email, senha },
   });

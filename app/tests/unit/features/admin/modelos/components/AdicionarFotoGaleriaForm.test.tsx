@@ -37,7 +37,9 @@ describe('AdicionarFotoGaleriaForm', () => {
     await userEvent.upload(screen.getByLabelText('Foto da galeria'), pdf, { applyAccept: false });
 
     // Assert
-    expect(screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.')).toBeDefined();
+    expect(
+      screen.getByText('Tipo de arquivo não permitido. Os tipos aceitos são JPEG, PNG e WebP.'),
+    ).toBeDefined();
   });
 
   it('deve recusar dizendo o limite quando a foto tem 11 MB', async () => {
@@ -80,9 +82,13 @@ describe('AdicionarFotoGaleriaForm', () => {
     expect(within(container).getByText(/foto\.png/)).toBeDefined();
     expect(within(container).queryByRole('button', { name: /clique para selecionar/i })).toBeNull();
 
-    await userEvent.click(within(container).getByRole('button', { name: /remover foto selecionada/i }));
+    await userEvent.click(
+      within(container).getByRole('button', { name: /remover foto selecionada/i }),
+    );
     expect(within(container).queryByRole('img', { name: /pré-visualização/i })).toBeNull();
-    expect(within(container).getByRole('button', { name: /clique para selecionar/i })).toBeDefined();
+    expect(
+      within(container).getByRole('button', { name: /clique para selecionar/i }),
+    ).toBeDefined();
   });
 
   it('does not render a cancel button when onCancel is not provided', () => {
@@ -92,7 +98,9 @@ describe('AdicionarFotoGaleriaForm', () => {
 
   it('calls onCancel when the cancel button is clicked', async () => {
     const onCancel = vi.fn();
-    const { container } = render(<AdicionarFotoGaleriaForm onSubmit={vi.fn()} onCancel={onCancel} />);
+    const { container } = render(
+      <AdicionarFotoGaleriaForm onSubmit={vi.fn()} onCancel={onCancel} />,
+    );
     await userEvent.click(within(container).getByRole('button', { name: /cancelar/i }));
     expect(onCancel).toHaveBeenCalled();
   });

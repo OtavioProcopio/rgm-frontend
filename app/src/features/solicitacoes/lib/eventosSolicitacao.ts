@@ -39,7 +39,10 @@ export function lerEventoAtividade(data: unknown): EventoAtividade | null {
  * permitidas: os responsáveis que a tela já mostrava são mantidos e as ações ficam sem
  * informação da API, para valer a regra local até o detalhe ser consultado de novo.
  */
-export function mesclarSolicitacaoDoEvento(atual: Solicitacao, evento: EventoSolicitacao): Solicitacao {
+export function mesclarSolicitacaoDoEvento(
+  atual: Solicitacao,
+  evento: EventoSolicitacao,
+): Solicitacao {
   const trouxeResponsaveis = evento.tipo === TIPO_RESPONSAVEIS_ALTERADOS;
   return {
     ...atual,

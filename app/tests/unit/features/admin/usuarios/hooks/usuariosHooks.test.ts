@@ -38,7 +38,9 @@ afterEach(() => vi.clearAllMocks());
 describe('useUsuarios', () => {
   it('fetches usuarios list', async () => {
     const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useUsuarios({ page: 0, size: 20 }), { wrapper: QueryWrapper });
+    const { result } = renderHook(() => useUsuarios({ page: 0, size: 20 }), {
+      wrapper: QueryWrapper,
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeDefined();
   });

@@ -24,7 +24,7 @@ describe('Combobox', () => {
         onChange={vi.fn()}
         options={mockOptions}
         placeholder="Busque aqui..."
-      />
+      />,
     );
 
     expect(screen.getByLabelText('Meu Combobox')).toBeDefined();
@@ -32,28 +32,14 @@ describe('Combobox', () => {
   });
 
   it('renders with selected value', () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value="2"
-        onChange={vi.fn()}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="2" onChange={vi.fn()} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox') as HTMLInputElement;
     expect(input.value).toBe('Opção 2');
   });
 
   it('opens dropdown and displays all options on focus', async () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={vi.fn()}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox');
     fireEvent.focus(input);
@@ -66,18 +52,11 @@ describe('Combobox', () => {
   });
 
   it('filters options based on search query', async () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={vi.fn()}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox');
     fireEvent.focus(input);
-    
+
     await userEvent.type(input, 'Opção 1');
 
     expect(screen.getByText('Opção 1')).toBeDefined();
@@ -86,14 +65,7 @@ describe('Combobox', () => {
 
   it('calls onChange and closes dropdown when option is clicked', async () => {
     const onChange = vi.fn();
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={onChange}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={onChange} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox');
     fireEvent.focus(input);
@@ -107,14 +79,7 @@ describe('Combobox', () => {
 
   it('clears selection when clear button is clicked', () => {
     const onChange = vi.fn();
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value="2"
-        onChange={onChange}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="2" onChange={onChange} options={mockOptions} />);
 
     // Let's find button with X icon or close class
     const buttons = screen.getAllByRole('button');
@@ -126,14 +91,7 @@ describe('Combobox', () => {
   });
 
   it('toggles dropdown when chevron is clicked', () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={vi.fn()}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />);
 
     const buttons = screen.getAllByRole('button');
     // Just click chevron button (only button when value is empty)
@@ -147,14 +105,7 @@ describe('Combobox', () => {
   });
 
   it('shows no results message when filter yields no options', async () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={vi.fn()}
-        options={mockOptions}
-      />
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox');
     fireEvent.focus(input);
@@ -167,13 +118,8 @@ describe('Combobox', () => {
     render(
       <div>
         <div data-testid="outside">Fora</div>
-        <Combobox
-          label="Meu Combobox"
-          value=""
-          onChange={vi.fn()}
-          options={mockOptions}
-        />
-      </div>
+        <Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />
+      </div>,
     );
 
     const input = screen.getByLabelText('Meu Combobox');
@@ -185,14 +131,7 @@ describe('Combobox', () => {
   });
 
   it('keeps dropdown open when clicking inside', () => {
-    render(
-      <Combobox
-        label="Meu Combobox"
-        value=""
-        onChange={vi.fn()}
-        options={mockOptions}
-      />,
-    );
+    render(<Combobox label="Meu Combobox" value="" onChange={vi.fn()} options={mockOptions} />);
 
     const input = screen.getByLabelText('Meu Combobox');
     fireEvent.focus(input);
@@ -206,12 +145,7 @@ describe('Combobox', () => {
     render(
       <div>
         <div data-testid="outside2">Fora2</div>
-        <Combobox
-          label="Meu Combobox"
-          value="1"
-          onChange={vi.fn()}
-          options={mockOptions}
-        />
+        <Combobox label="Meu Combobox" value="1" onChange={vi.fn()} options={mockOptions} />
       </div>,
     );
 
@@ -229,7 +163,7 @@ describe('Combobox', () => {
         onChange={vi.fn()}
         options={mockOptions}
         error="Campo obrigatório"
-      />
+      />,
     );
 
     expect(screen.getByText('Campo obrigatório')).toBeDefined();
@@ -243,7 +177,7 @@ describe('Combobox', () => {
         onChange={vi.fn()}
         options={mockOptions}
         error="Campo obrigatório"
-      />
+      />,
     );
 
     const campo = container.querySelector('input')!;
@@ -256,7 +190,7 @@ describe('Combobox', () => {
 
   it('deve deixar o campo sem descrição associada quando não há erro', () => {
     const { container } = render(
-      <Combobox label="Modelo" value="" onChange={vi.fn()} options={mockOptions} />
+      <Combobox label="Modelo" value="" onChange={vi.fn()} options={mockOptions} />,
     );
 
     expect(container.querySelector('input')!.hasAttribute('aria-describedby')).toBe(false);

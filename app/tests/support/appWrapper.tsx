@@ -23,7 +23,11 @@ type AppWrapperOptions = {
   authOverrides?: Partial<AuthContextValue>;
 };
 
-export function createAppWrapper({ user = DEFAULT_USER, initialEntries = ['/'], authOverrides }: AppWrapperOptions = {}) {
+export function createAppWrapper({
+  user = DEFAULT_USER,
+  initialEntries = ['/'],
+  authOverrides,
+}: AppWrapperOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },

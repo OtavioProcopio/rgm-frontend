@@ -24,7 +24,9 @@ const feito = 'A solicitação foi triada, mas a foto não foi enviada.';
 function montar() {
   const onConcluida = vi.fn();
   const { QueryWrapper, queryClient } = createQueryWrapper();
-  const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), { wrapper: QueryWrapper });
+  const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), {
+    wrapper: QueryWrapper,
+  });
   return { result, onConcluida, queryClient };
 }
 
@@ -102,11 +104,16 @@ describe('useExecutarAcao', () => {
     };
 
     // Act
-    await act(() => result.current.executar(acao, { file: foto, tipo: 'DEVOLUCAO', descricao: 'ok', feito }));
+    await act(() =>
+      result.current.executar(acao, { file: foto, tipo: 'DEVOLUCAO', descricao: 'ok', feito }),
+    );
 
     // Assert
     expect(ordem).toEqual(['ação', 'foto']);
-    expect(evidenciasApi.anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'DEVOLUCAO', descricao: 'ok' });
+    expect(evidenciasApi.anexar).toHaveBeenCalledWith('s1', foto, {
+      tipo: 'DEVOLUCAO',
+      descricao: 'ok',
+    });
     expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.atividades('s1') });
     expect(onConcluida).toHaveBeenCalledTimes(1);
     expect(result.current.aviso).toBeNull();
@@ -118,10 +125,20 @@ describe('useExecutarAcao', () => {
     vi.mocked(evidenciasApi.anexar).mockRejectedValue(new Error('arquivo grande'));
 
     // Act
-    await act(() => result.current.executar(() => Promise.resolve(), { file: foto, tipo: 'INSTRUCAO_SERVICO', feito }));
+    await act(() =>
+      result.current.executar(() => Promise.resolve(), {
+        file: foto,
+        tipo: 'INSTRUCAO_SERVICO',
+        feito,
+      }),
+    );
 
     // Assert
-    expect(result.current.aviso).toMatchObject({ mensagem: feito, estado: 'falhou', enviando: false });
+    expect(result.current.aviso).toMatchObject({
+      mensagem: feito,
+      estado: 'falhou',
+      enviando: false,
+    });
     expect(result.current.erro).toBeNull();
     expect(onConcluida).not.toHaveBeenCalled();
   });
@@ -131,8 +148,12 @@ describe('useExecutarAcao', () => {
     const { result, queryClient } = montar();
     const invalidar = vi.spyOn(queryClient, 'invalidateQueries');
     const acao = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(evidenciasApi.anexar).mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce(aceito);
-    await act(() => result.current.executar(acao, { file: foto, tipo: 'INSTRUCAO_SERVICO', feito }));
+    vi.mocked(evidenciasApi.anexar)
+      .mockRejectedValueOnce(new Error('rede'))
+      .mockResolvedValueOnce(aceito);
+    await act(() =>
+      result.current.executar(acao, { file: foto, tipo: 'INSTRUCAO_SERVICO', feito }),
+    );
 
     // Act
     await act(() => result.current.aviso!.onTentarNovamente());
@@ -171,12 +192,20 @@ describe('useExecutarAcao', () => {
 
     // Act
     await act(() =>
-      result.current.executar(acao, { file: foto, tipo: 'CONCLUSAO', descricao: 'ok', anexarAntes: true }),
+      result.current.executar(acao, {
+        file: foto,
+        tipo: 'CONCLUSAO',
+        descricao: 'ok',
+        anexarAntes: true,
+      }),
     );
 
     // Assert
     expect(ordem).toEqual(['foto', 'ação']);
-    expect(evidenciasApi.anexar).toHaveBeenCalledWith('s1', foto, { tipo: 'CONCLUSAO', descricao: 'ok' });
+    expect(evidenciasApi.anexar).toHaveBeenCalledWith('s1', foto, {
+      tipo: 'CONCLUSAO',
+      descricao: 'ok',
+    });
     expect(onConcluida).toHaveBeenCalledTimes(1);
   });
 
@@ -188,11 +217,15 @@ describe('useExecutarAcao', () => {
     const acao = vi.fn();
 
     // Act
-    await act(() => result.current.executar(acao, { file: foto, tipo: 'CONCLUSAO', anexarAntes: true }));
+    await act(() =>
+      result.current.executar(acao, { file: foto, tipo: 'CONCLUSAO', anexarAntes: true }),
+    );
 
     // Assert
     expect(acao).not.toHaveBeenCalled();
-    expect(result.current.erro).toBe(`A foto não foi enviada e a solicitação não foi concluída. ${recusa.message}`);
+    expect(result.current.erro).toBe(
+      `A foto não foi enviada e a solicitação não foi concluída. ${recusa.message}`,
+    );
     expect(result.current.aviso).toBeNull();
     expect(onConcluida).not.toHaveBeenCalled();
   });
@@ -201,7 +234,10 @@ describe('useExecutarAcao', () => {
     // Arrange
     const { result, onConcluida } = montar();
     vi.mocked(evidenciasApi.anexar).mockResolvedValue(aceito);
-    const acao = vi.fn().mockRejectedValueOnce(new Error('recusada')).mockResolvedValueOnce(undefined);
+    const acao = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('recusada'))
+      .mockResolvedValueOnce(undefined);
     const evidencia = { file: foto, tipo: 'CONCLUSAO', anexarAntes: true } as const;
     await act(() => result.current.executar(acao, evidencia));
 
@@ -244,7 +280,9 @@ describe('useExecutarAcao', () => {
     queryClient.setQueryData(solicitacoesKeys.atualizacao('s1'), 3);
 
     // Act
-    const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), { wrapper: QueryWrapper });
+    const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), {
+      wrapper: QueryWrapper,
+    });
 
     // Assert
     expect(result.current.atualizadaPorOutro).toBe(false);

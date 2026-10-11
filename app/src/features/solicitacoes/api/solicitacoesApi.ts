@@ -57,8 +57,7 @@ export const solicitacoesApi = {
   alterarResponsaveis: (id: string, payload: AlterarResponsaveisRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/responsaveis`, payload),
 
-  obterMetricas: () =>
-    httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
+  obterMetricas: () => httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
 
   obterHistoricoMetricas: (dias: number, modeloId?: string) =>
     httpClient.get<HistoricoMetricas>('/solicitacoes/metricas/historico', {
@@ -81,4 +80,3 @@ export const solicitacoesApi = {
   exportarMetricasPorModeloPdf: (filters: Omit<MetricasPorModeloFilters, 'page' | 'size'>) =>
     httpClient.get<Blob>('/solicitacoes/metricas/por-modelo/pdf', { params: filters }),
 };
-

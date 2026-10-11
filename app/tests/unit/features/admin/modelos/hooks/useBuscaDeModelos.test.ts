@@ -94,7 +94,11 @@ describe('useBuscaDeModelos', () => {
     });
 
     // Assert
-    expect(filtrosPedidos().map((filtros) => filtros.codigo).filter(Boolean)).toEqual(['MD']);
+    expect(
+      filtrosPedidos()
+        .map((filtros) => filtros.codigo)
+        .filter(Boolean),
+    ).toEqual(['MD']);
   });
 
   it('deve ignorar espaços nas pontas do termo', () => {

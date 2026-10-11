@@ -31,7 +31,9 @@ afterEach(() => vi.clearAllMocks());
 describe('useModelos', () => {
   it('fetches modelos list', async () => {
     const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useModelos({ page: 0, size: 20 }), { wrapper: QueryWrapper });
+    const { result } = renderHook(() => useModelos({ page: 0, size: 20 }), {
+      wrapper: QueryWrapper,
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeDefined();
   });

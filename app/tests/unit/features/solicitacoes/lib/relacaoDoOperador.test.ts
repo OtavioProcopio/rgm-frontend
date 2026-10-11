@@ -60,7 +60,10 @@ describe('relacaoDoOperador', () => {
 
   it('deve ser nula quando o id do operador ainda não é conhecido', () => {
     // Arrange
-    const solicitacao = criarSolicitacao({ abertaPorUsuarioId: OPERADOR, responsavelIds: [OPERADOR] });
+    const solicitacao = criarSolicitacao({
+      abertaPorUsuarioId: OPERADOR,
+      responsavelIds: [OPERADOR],
+    });
 
     // Act
     const relacao = relacaoDoOperador(solicitacao, undefined);

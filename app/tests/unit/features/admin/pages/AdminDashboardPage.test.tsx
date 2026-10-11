@@ -12,14 +12,18 @@ afterEach(cleanup);
 describe('AdminDashboardPage', () => {
   it('renders admin panel title', () => {
     const { container } = render(
-      <MemoryRouter><AdminDashboardPage /></MemoryRouter>,
+      <MemoryRouter>
+        <AdminDashboardPage />
+      </MemoryRouter>,
     );
     expect(within(container).getByText(/painel administrativo/i)).toBeDefined();
   });
 
   it('renders Usuários, Modelos and Máquinas cards', () => {
     const { container } = render(
-      <MemoryRouter><AdminDashboardPage /></MemoryRouter>,
+      <MemoryRouter>
+        <AdminDashboardPage />
+      </MemoryRouter>,
     );
     expect(within(container).getByText('Usuários')).toBeDefined();
     expect(within(container).getByText('Modelos')).toBeDefined();

@@ -1,10 +1,5 @@
 export type TipoEvidencia =
-  | 'GERAL'
-  | 'ABERTURA'
-  | 'INSTRUCAO_SERVICO'
-  | 'SERVICO_REALIZADO'
-  | 'CONCLUSAO'
-  | 'DEVOLUCAO';
+  'GERAL' | 'ABERTURA' | 'INSTRUCAO_SERVICO' | 'SERVICO_REALIZADO' | 'CONCLUSAO' | 'DEVOLUCAO';
 
 export type Evidencia = {
   id: string;

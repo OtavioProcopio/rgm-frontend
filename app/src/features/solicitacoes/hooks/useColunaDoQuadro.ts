@@ -51,7 +51,8 @@ export function useColunaDoQuadro(
     queryFn: ({ pageParam }) =>
       solicitacoesApi.listar(filtrosDaColuna(status, quadro, inicioDos30Dias, pageParam)),
     initialPageParam: 0,
-    getNextPageParam: (ultima) => (ultima.page + 1 < ultima.totalPages ? ultima.page + 1 : undefined),
+    getNextPageParam: (ultima) =>
+      ultima.page + 1 < ultima.totalPages ? ultima.page + 1 : undefined,
   });
 
   const cards = useMemo(() => {

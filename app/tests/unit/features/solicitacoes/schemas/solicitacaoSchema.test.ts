@@ -161,16 +161,19 @@ describe('limites de tamanho da solicitação', () => {
     ['modeloCodigo', LIMITES.modeloPretendidoCodigo],
     ['modeloMaquina', LIMITES.modeloPretendidoMaquina],
     ['modeloObservacoes', LIMITES.textoLongo],
-  ] as const)('deve aceitar %s na abertura quando o texto tem exatamente %i caracteres', (campo, limite) => {
-    // Arrange
-    const dados = { ...abertura, [campo]: 'a'.repeat(limite) };
+  ] as const)(
+    'deve aceitar %s na abertura quando o texto tem exatamente %i caracteres',
+    (campo, limite) => {
+      // Arrange
+      const dados = { ...abertura, [campo]: 'a'.repeat(limite) };
 
-    // Act
-    const resultado = abrirSolicitacaoSchema.safeParse(dados);
+      // Act
+      const resultado = abrirSolicitacaoSchema.safeParse(dados);
 
-    // Assert
-    expect(resultado.success).toBe(true);
-  });
+      // Assert
+      expect(resultado.success).toBe(true);
+    },
+  );
 
   it.each([
     ['titulo', LIMITES.solicitacaoTitulo],
@@ -178,36 +181,45 @@ describe('limites de tamanho da solicitação', () => {
     ['modeloCodigo', LIMITES.modeloPretendidoCodigo],
     ['modeloMaquina', LIMITES.modeloPretendidoMaquina],
     ['modeloObservacoes', LIMITES.textoLongo],
-  ] as const)('deve recusar %s na abertura quando o texto passa de %i caracteres', (campo, limite) => {
-    // Arrange
-    const dados = { ...abertura, [campo]: 'a'.repeat(limite + 1) };
+  ] as const)(
+    'deve recusar %s na abertura quando o texto passa de %i caracteres',
+    (campo, limite) => {
+      // Arrange
+      const dados = { ...abertura, [campo]: 'a'.repeat(limite + 1) };
 
-    // Act
-    const resultado = abrirSolicitacaoSchema.safeParse(dados);
+      // Act
+      const resultado = abrirSolicitacaoSchema.safeParse(dados);
 
-    // Assert
-    expect(resultado.success).toBe(false);
-    expect(resultado.error?.issues[0]).toMatchObject({ path: [campo], message: mensagemDeLimite(limite) });
-  });
+      // Assert
+      expect(resultado.success).toBe(false);
+      expect(resultado.error?.issues[0]).toMatchObject({
+        path: [campo],
+        message: mensagemDeLimite(limite),
+      });
+    },
+  );
 
   it.each([
     ['comentário', comentarioSchema, 'comentario', {}],
     ['motivo da devolução', devolverSolicitacaoSchema, 'motivo', {}],
     ['comentário final', encerrarSolicitacaoSchema, 'comentario', { concluir: true }],
-  ] as const)('deve aceitar %s com 2.000 caracteres e recusar com 2.001', (_nome, esquema, campo, base) => {
-    // Arrange
-    const noLimite = { ...base, [campo]: 'a'.repeat(LIMITES.textoLongo) };
-    const acimaDoLimite = { ...base, [campo]: 'a'.repeat(LIMITES.textoLongo + 1) };
+  ] as const)(
+    'deve aceitar %s com 2.000 caracteres e recusar com 2.001',
+    (_nome, esquema, campo, base) => {
+      // Arrange
+      const noLimite = { ...base, [campo]: 'a'.repeat(LIMITES.textoLongo) };
+      const acimaDoLimite = { ...base, [campo]: 'a'.repeat(LIMITES.textoLongo + 1) };
 
-    // Act
-    const aceito = esquema.safeParse(noLimite);
-    const recusado = esquema.safeParse(acimaDoLimite);
+      // Act
+      const aceito = esquema.safeParse(noLimite);
+      const recusado = esquema.safeParse(acimaDoLimite);
 
-    // Assert
-    expect(aceito.success).toBe(true);
-    expect(recusado.success).toBe(false);
-    expect(recusado.error?.issues[0]?.message).toBe(mensagemDeLimite(LIMITES.textoLongo));
-  });
+      // Assert
+      expect(aceito.success).toBe(true);
+      expect(recusado.success).toBe(false);
+      expect(recusado.error?.issues[0]?.message).toBe(mensagemDeLimite(LIMITES.textoLongo));
+    },
+  );
 });
 
 describe('editarSolicitacaoSchema', () => {
@@ -230,14 +242,21 @@ describe('editarSolicitacaoSchema', () => {
     ['descricao', LIMITES.textoLongo],
   ] as const)('deve recusar a edição quando %s passa de %i caracteres', (campo, limite) => {
     // Arrange
-    const dados = { titulo: 'Trinca na placa', descricao: 'Trinca junto ao canal', [campo]: 'a'.repeat(limite + 1) };
+    const dados = {
+      titulo: 'Trinca na placa',
+      descricao: 'Trinca junto ao canal',
+      [campo]: 'a'.repeat(limite + 1),
+    };
 
     // Act
     const resultado = editarSolicitacaoSchema.safeParse(dados);
 
     // Assert
     expect(resultado.success).toBe(false);
-    expect(resultado.error?.issues[0]).toMatchObject({ path: [campo], message: mensagemDeLimite(limite) });
+    expect(resultado.error?.issues[0]).toMatchObject({
+      path: [campo],
+      message: mensagemDeLimite(limite),
+    });
   });
 
   it('deve recusar a edição quando o título só tem espaços', () => {
@@ -260,6 +279,9 @@ describe('editarSolicitacaoSchema', () => {
     const resultado = editarSolicitacaoSchema.safeParse(dados);
 
     // Assert
-    expect(resultado.data).toEqual({ titulo: 'Trinca na placa', descricao: 'Trinca junto ao canal' });
+    expect(resultado.data).toEqual({
+      titulo: 'Trinca na placa',
+      descricao: 'Trinca junto ao canal',
+    });
   });
 });
