@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router';
 
 import { AuthContext, type AuthContextValue } from '@/app/providers/authContext';
 import type { AuthUser } from '@/features/auth/types/authTypes';
+import { ToastProvider } from '@/shared/components/Toast/ToastProvider';
 
 const DEFAULT_USER: AuthUser = { nome: 'Teste', perfil: 'ADMINISTRADOR' };
 
@@ -41,7 +42,9 @@ export function createAppWrapper({ user = DEFAULT_USER, initialEntries = ['/'], 
     return (
       <QueryClientProvider client={queryClient}>
         <AuthContext.Provider value={authValue}>
-          <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+          <ToastProvider>
+            <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+          </ToastProvider>
         </AuthContext.Provider>
       </QueryClientProvider>
     );

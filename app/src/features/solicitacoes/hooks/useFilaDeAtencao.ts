@@ -17,9 +17,15 @@ export type FilaDeAtencao = {
   dataUpdatedAt: number;
 };
 
+/**
+ * A API ordena pelo prazo; a ordenação no cliente (`itensDaFila`) continua e é idempotente,
+ * o que mantém a fila certa com o backend antigo, que ignora `sort`.
+ */
 const FILTROS_DA_FILA: SolicitacoesFilters = {
   atrasada: true,
   emAberto: true,
+  sort: 'prazoLimite',
+  dir: 'asc',
   page: 0,
   size: LIMITE_DA_CONSULTA,
 };

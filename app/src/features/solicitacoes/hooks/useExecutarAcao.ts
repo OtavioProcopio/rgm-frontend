@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 
 import type { AnexarEvidenciaOptions } from '@/features/evidencias/api/evidenciasApi';
+import { useToast } from '@/shared/components/Toast/toastContext';
 import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 
@@ -27,6 +28,7 @@ export type EvidenciaDaAcao = AnexarEvidenciaOptions & {
  */
 export function useExecutarAcao(solicitacaoId: string, onConcluida: () => void) {
   const queryClient = useQueryClient();
+  const { avisar } = useToast();
   const anexoDepois = useAnexoComAviso();
   const anexoAntes = useUploadEvidencia(solicitacaoId);
   const fotoJaEnviada = useRef<File | null>(null);
@@ -45,17 +47,26 @@ export function useExecutarAcao(solicitacaoId: string, onConcluida: () => void) 
     void queryClient.invalidateQueries({ queryKey: solicitacoesKeys.atividades(solicitacaoId) });
   }
 
-  async function executar(acao: () => Promise<unknown>, evidencia?: EvidenciaDaAcao) {
+  /** `sucesso` é a frase do aviso temporário, dada só quando a ação termina por inteiro. */
+  async function executar(
+    acao: () => Promise<unknown>,
+    evidencia?: EvidenciaDaAcao,
+    sucesso?: string,
+  ) {
     setExecutando(true);
     try {
-      await executarPassos(acao, evidencia);
+      await executarPassos(acao, evidencia, sucesso);
     } finally {
       setMarcaVista(queryClient.getQueryData<number>(chaveDaMarca));
       setExecutando(false);
     }
   }
 
-  async function executarPassos(acao: () => Promise<unknown>, evidencia?: EvidenciaDaAcao) {
+  async function executarPassos(
+    acao: () => Promise<unknown>,
+    evidencia?: EvidenciaDaAcao,
+    sucesso?: string,
+  ) {
     const { file = null, feito = '', anexarAntes = false, ...opcoes }: Partial<EvidenciaDaAcao> =
       evidencia ?? {};
     setErro(null);
@@ -84,6 +95,7 @@ export function useExecutarAcao(solicitacaoId: string, onConcluida: () => void) 
       atualizarHistorico();
     }
     onConcluida();
+    if (sucesso) avisar(sucesso);
   }
 
   async function tentarNovamente() {

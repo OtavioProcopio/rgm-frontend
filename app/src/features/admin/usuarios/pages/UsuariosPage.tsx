@@ -34,7 +34,7 @@ export function UsuariosPage() {
   const [selectedForDelete, setSelectedForDelete] = useState<Usuario | null>(null);
   const [selectedForDesativar, setSelectedForDesativar] = useState<Usuario | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const { data, error, isLoading } = useUsuarios(filters);
+  const { data, error, isLoading, refetch } = useUsuarios(filters);
   const ativarUsuario = useAtivarUsuario();
   const desativarUsuario = useDesativarUsuario();
   const excluirUsuario = useExcluirUsuario();
@@ -51,11 +51,10 @@ export function UsuariosPage() {
     }
   }
 
-  async function handleConfirmDesativar() {
-    if (!selectedForDesativar) return;
+  async function handleConfirmDesativar(usuario: Usuario) {
     setActionError(null);
     try {
-      await desativarUsuario.mutateAsync(selectedForDesativar.id);
+      await desativarUsuario.mutateAsync(usuario.id);
       setSelectedForDesativar(null);
     } catch (mutationError) {
       setActionError(getUsuarioErrorMessage(mutationError));
@@ -63,15 +62,11 @@ export function UsuariosPage() {
     }
   }
 
-  async function handleExcluir() {
-    if (!selectedForDelete) {
-      return;
-    }
-
+  async function handleExcluir(usuario: Usuario) {
     setActionError(null);
 
     try {
-      await excluirUsuario.mutateAsync(selectedForDelete.id);
+      await excluirUsuario.mutateAsync(usuario.id);
       setSelectedForDelete(null);
     } catch (mutationError) {
       setActionError(getUsuarioErrorMessage(mutationError));
@@ -115,7 +110,7 @@ export function UsuariosPage() {
           variant="danger"
           isPending={desativarUsuario.isPending}
           onCancel={() => setSelectedForDesativar(null)}
-          onConfirm={handleConfirmDesativar}
+          onConfirm={() => handleConfirmDesativar(selectedForDesativar)}
         />
       ) : null}
 
@@ -124,7 +119,7 @@ export function UsuariosPage() {
           usuario={selectedForDelete}
           isDeleting={excluirUsuario.isPending}
           onCancel={() => setSelectedForDelete(null)}
-          onConfirm={handleExcluir}
+          onConfirm={() => handleExcluir(selectedForDelete)}
         />
       ) : null}
 
@@ -134,6 +129,7 @@ export function UsuariosPage() {
         <ErrorState
           title="Não foi possível carregar usuários."
           description={getUsuarioErrorMessage(error)}
+          onRetry={() => void refetch()}
         />
       ) : null}
 

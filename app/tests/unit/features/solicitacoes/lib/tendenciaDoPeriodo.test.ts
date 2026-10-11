@@ -97,9 +97,9 @@ describe('semMovimento', () => {
     expect(resultado).toBe(true);
   });
 
-  it('deve ser verdadeiro quando todos os pontos têm abertas e concluídas zeradas', () => {
+  it('deve ser verdadeiro quando todos os pontos têm criadas e concluídas zeradas', () => {
     // Arrange
-    const series = [criarPonto(), criarPonto({ canceladas: 2 })];
+    const series = [criarPonto(), criarPonto({ canceladas: 2, abertas: 4 })];
 
     // Act
     const resultado = semMovimento(series);
@@ -108,9 +108,9 @@ describe('semMovimento', () => {
     expect(resultado).toBe(true);
   });
 
-  it('deve ser falso quando algum ponto tem abertas', () => {
+  it('deve ser falso quando algum ponto tem criadas', () => {
     // Arrange
-    const series = [criarPonto(), criarPonto({ abertas: 1 })];
+    const series = [criarPonto(), criarPonto({ total: 1 })];
 
     // Act
     const resultado = semMovimento(series);
@@ -193,7 +193,7 @@ describe('rotuloDoPonto', () => {
     const rotulo = rotuloDoPonto(ponto);
 
     // Assert
-    expect(rotulo).toBe('09/10: 44 criadas, 33 ainda abertas, 5 concluídas');
+    expect(rotulo).toBe('09/10: 44 criadas, 5 concluídas');
   });
 
   it('deve usar o singular quando cada contagem é 1', () => {
@@ -204,7 +204,7 @@ describe('rotuloDoPonto', () => {
     const rotulo = rotuloDoPonto(ponto);
 
     // Assert
-    expect(rotulo).toBe('09/10: 1 criada, 1 ainda aberta, 1 concluída');
+    expect(rotulo).toBe('09/10: 1 criada, 1 concluída');
   });
 
   it('deve usar o plural quando tudo é zero', () => {
@@ -215,6 +215,6 @@ describe('rotuloDoPonto', () => {
     const rotulo = rotuloDoPonto(ponto);
 
     // Assert
-    expect(rotulo).toBe('09/10: 0 criadas, 0 ainda abertas, 0 concluídas');
+    expect(rotulo).toBe('09/10: 0 criadas, 0 concluídas');
   });
 });

@@ -1,3 +1,5 @@
+import { formatarDuracao } from '@/shared/lib/duracao';
+
 export type Tom = 'ok' | 'atencao' | 'ruim' | 'neutro';
 
 export type Leitura = { tom: Tom; texto: string };
@@ -52,6 +54,21 @@ export function leituraDoTempoMedio(
   if (atualSegundos === anteriorSegundos)
     return { tom: 'neutro', texto: 'Igual ao período anterior' };
   return { tom: 'ruim', texto: 'Pior que o período anterior' };
+}
+
+const SEM_VALOR = '—';
+const DETALHE_DO_TEMPO = 'da abertura à conclusão';
+
+/** Tempo médio legível; o valor vazio quando nada foi concluído no período. */
+export function valorDoTempoMedio(tempo: TempoMedio | null): string {
+  return tempo === null ? SEM_VALOR : formatarDuracao(tempo.segundos * 1000);
+}
+
+/** Só o tempo calculado sobre uma amostra da listagem (spec 013) leva o aviso "média de". */
+export function detalheDoTempoMedio(tempo: TempoMedio | null): string {
+  if (tempo === null || tempo.amostra === null) return DETALHE_DO_TEMPO;
+  const { usados, total } = tempo.amostra;
+  return `${DETALHE_DO_TEMPO} · média de ${usados} de ${total}`;
 }
 
 export type PaginaDeConcluidas = {

@@ -25,7 +25,7 @@ const perfilOptions: PerfilUsuario[] = ['ADMINISTRADOR', 'GESTOR', 'OPERADOR', '
 export function EditarUsuarioPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: usuario, error, isLoading } = useUsuario(id);
+  const { data: usuario, error, isLoading, refetch } = useUsuario(id);
   const { data: currentUser } = usePerfil();
 
   const editarUsuario = useEditarUsuario();
@@ -111,7 +111,11 @@ export function EditarUsuarioPage() {
 
   if (error || !usuario) {
     return (
-      <ErrorState title="Usuário não encontrado" description={getUsuarioErrorMessage(error)} />
+      <ErrorState
+        title="Usuário não encontrado"
+        description={getUsuarioErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

@@ -14,7 +14,7 @@ import type { EditarModeloRequest } from '../types/modeloTypes';
 export function EditarModeloPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: modelo, error, isLoading } = useModelo(id);
+  const { data: modelo, error, isLoading, refetch } = useModelo(id);
   const editarModelo = useEditarModelo();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -47,7 +47,11 @@ export function EditarModeloPage() {
       />
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
-        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
+        <ErrorState
+          title="Modelo não encontrado"
+          description={getModeloErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : null}
       {errorMessage ? (
         <div className="mb-4">

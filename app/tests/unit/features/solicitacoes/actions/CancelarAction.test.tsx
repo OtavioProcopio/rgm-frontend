@@ -120,4 +120,29 @@ describe('CancelarAction', () => {
     expect(onCancelar).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('deve confirmar com o aviso Solicitação cancelada quando a ação dá certo', async () => {
+    // Arrange
+    cancelar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar solicitação' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação cancelada')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    cancelar.mockRejectedValue(new Error('recusada'));
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar solicitação' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Solicitação cancelada')).toBeNull();
+  });
 });

@@ -23,7 +23,7 @@ import {
   rotuloDoUltimoPonto,
   semMovimento,
 } from '../lib/tendenciaDoPeriodo';
-import type { HistoricoMetricas, PontoDeSerie } from '../types/solicitacaoTypes';
+import type { DadosDaTendencia, PontoDaTendencia } from '../types/solicitacaoTypes';
 
 const MAXIMO_DE_ROTULOS = 6;
 const CABECALHOS: string[] = ['Período', 'Criadas', 'Abertas', 'Concluídas', 'Canceladas'];
@@ -40,20 +40,26 @@ function porcentagem(valor: number, topo: number): string {
   return `${(valor / topo) * 100}%`;
 }
 
-function Legenda({ periodoLabel }: { periodoLabel: string }) {
+const CONCLUIDAS_NO_DIA = 'Concluídas: concluídas neste dia';
+/** Sem o painel, a série é por data de criação: a conclusão cai no dia em que foi criada. */
+const CONCLUIDAS_PELA_CRIACAO = 'Concluídas: criadas neste dia que hoje estão concluídas';
+
+function Legenda({ periodoLabel, porDataDoEvento }: LegendaProps) {
   return (
     <div className="mt-1 text-xs text-fg-muted">
       <p>{periodoLabel}</p>
       <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-        <ItemDaLegenda cor="bg-accent" texto="Abertas: criadas neste dia que hoje estão abertas" />
+        <ItemDaLegenda cor="bg-accent" texto="Criadas: criadas neste dia" />
         <ItemDaLegenda
           cor="bg-success"
-          texto="Concluídas: criadas neste dia que hoje estão concluídas"
+          texto={porDataDoEvento ? CONCLUIDAS_NO_DIA : CONCLUIDAS_PELA_CRIACAO}
         />
       </ul>
     </div>
   );
 }
+
+type LegendaProps = { periodoLabel: string; porDataDoEvento: boolean };
 
 function ItemDaLegenda({ cor, texto }: { cor: string; texto: string }) {
   return (
@@ -96,7 +102,7 @@ function LinhasDeGrade({ marcas }: { marcas: number[] }) {
   );
 }
 
-type GrupoProps = { ponto: PontoDeSerie; topo: number; destaque: boolean };
+type GrupoProps = { ponto: PontoDaTendencia; topo: number; destaque: boolean };
 
 function classeDoGrupo(destaque: boolean): string {
   return cn(
@@ -119,10 +125,10 @@ function useBalaoDoPonto() {
   };
 }
 
-function BarrasDoPonto({ ponto, topo }: { ponto: PontoDeSerie; topo: number }) {
+function BarrasDoPonto({ ponto, topo }: { ponto: PontoDaTendencia; topo: number }) {
   return (
     <>
-      <div className="w-full bg-accent" style={{ height: porcentagem(ponto.abertas, topo) }} />
+      <div className="w-full bg-accent" style={{ height: porcentagem(ponto.total, topo) }} />
       <div className="w-full bg-success" style={{ height: porcentagem(ponto.concluidas, topo) }} />
     </>
   );
@@ -158,15 +164,15 @@ function Balao({ texto }: { texto: string }) {
   );
 }
 
-function RotulosDeData({ series, dias }: { series: PontoDeSerie[]; dias: PeriodoDoPainel }) {
+function RotulosDeData({ series, dias }: { series: PontoDaTendencia[]; dias: PeriodoDoPainel }) {
   const comRotulo = indicesComRotulo(series.length);
-  const textoDe = (ponto: PontoDeSerie, indice: number): string => {
+  const textoDe = (ponto: PontoDaTendencia, indice: number): string => {
     if (ehHoje(indice, series.length)) return rotuloDoUltimoPonto(dias);
     return comRotulo(indice) ? ponto.periodo : '';
   };
   return (
     <div aria-hidden="true" className="mt-1 flex text-xs text-fg-muted">
-      {series.map((ponto: PontoDeSerie, indice: number) => (
+      {series.map((ponto: PontoDaTendencia, indice: number) => (
         <span key={ponto.periodo} className="min-w-0 flex-1 text-center">
           {textoDe(ponto, indice)}
         </span>
@@ -175,13 +181,13 @@ function RotulosDeData({ series, dias }: { series: PontoDeSerie[]; dias: Periodo
   );
 }
 
-function GruposDeBarras({ series, marcas }: { series: PontoDeSerie[]; marcas: number[] }) {
+function GruposDeBarras({ series, marcas }: { series: PontoDaTendencia[]; marcas: number[] }) {
   const topo: number = marcas[marcas.length - 1];
   return (
     <div className="relative h-44">
       <LinhasDeGrade marcas={marcas} />
       <div className="relative flex h-full gap-1">
-        {series.map((ponto: PontoDeSerie, indice: number) => (
+        {series.map((ponto: PontoDaTendencia, indice: number) => (
           <GrupoDoPonto
             key={ponto.periodo}
             ponto={ponto}
@@ -194,8 +200,8 @@ function GruposDeBarras({ series, marcas }: { series: PontoDeSerie[]; marcas: nu
   );
 }
 
-function Grafico({ series, dias }: { series: PontoDeSerie[]; dias: PeriodoDoPainel }) {
-  const maior: number = Math.max(...series.flatMap((p) => [p.abertas, p.concluidas]));
+function Grafico({ series, dias }: { series: PontoDaTendencia[]; dias: PeriodoDoPainel }) {
+  const maior: number = Math.max(...series.flatMap((p) => [p.total, p.concluidas]));
   const marcas: number[] = marcasDoEixo(maior);
   return (
     <div
@@ -215,7 +221,7 @@ function Grafico({ series, dias }: { series: PontoDeSerie[]; dias: PeriodoDoPain
 function GraficoVazio({ dias }: { dias: PeriodoDoPainel }) {
   return (
     <p className="mt-4 flex h-44 items-center justify-center text-center text-sm text-fg-muted">
-      Nenhuma solicitação aberta ou concluída nos últimos {dias} dias
+      Nenhuma solicitação criada ou concluída nos últimos {dias} dias
     </p>
   );
 }
@@ -232,7 +238,7 @@ function CabecalhoDaTabela() {
   );
 }
 
-function LinhaDaTabela({ ponto }: { ponto: PontoDeSerie }) {
+function LinhaDaTabela({ ponto }: { ponto: PontoDaTendencia }) {
   return (
     <TableRow>
       <TableCell>{ponto.periodo}</TableCell>
@@ -244,7 +250,7 @@ function LinhaDaTabela({ ponto }: { ponto: PontoDeSerie }) {
   );
 }
 
-function TabelaDeValores({ series }: { series: PontoDeSerie[] }) {
+function TabelaDeValores({ series }: { series: PontoDaTendencia[] }) {
   return (
     <SecaoRecolhivel
       id="tendencia-valores"
@@ -255,7 +261,7 @@ function TabelaDeValores({ series }: { series: PontoDeSerie[] }) {
       <Table className="mt-2">
         <CabecalhoDaTabela />
         <TableBody>
-          {series.map((ponto: PontoDeSerie) => (
+          {series.map((ponto: PontoDaTendencia) => (
             <LinhaDaTabela key={ponto.periodo} ponto={ponto} />
           ))}
         </TableBody>
@@ -264,22 +270,22 @@ function TabelaDeValores({ series }: { series: PontoDeSerie[] }) {
   );
 }
 
-type CartaoProps = { historico: HistoricoMetricas; dias: PeriodoDoPainel };
+type CartaoProps = { historico: DadosDaTendencia; dias: PeriodoDoPainel };
 
-function CorpoDoGrafico({ series, dias }: { series: PontoDeSerie[]; dias: PeriodoDoPainel }) {
+function CorpoDoGrafico({ series, dias }: { series: PontoDaTendencia[]; dias: PeriodoDoPainel }) {
   if (semMovimento(series)) return <GraficoVazio dias={dias} />;
   return <Grafico series={series} dias={dias} />;
 }
 
 function CartaoDaTendencia({ historico, dias }: CartaoProps) {
   const idTitulo: string = useId();
-  const { series, periodoLabel } = historico;
+  const { series, periodoLabel, porDataDoEvento } = historico;
   return (
     <Card as="section" aria-labelledby={idTitulo} className="p-5">
       <h2 id={idTitulo} className="text-base font-semibold text-fg">
         Tendência
       </h2>
-      <Legenda periodoLabel={periodoLabel} />
+      <Legenda periodoLabel={periodoLabel} porDataDoEvento={porDataDoEvento} />
       <CorpoDoGrafico series={series} dias={dias} />
       <TabelaDeValores series={series} />
     </Card>
@@ -289,13 +295,9 @@ function CartaoDaTendencia({ historico, dias }: CartaoProps) {
 export function TendenciaDoPeriodo({ dias }: { dias: PeriodoDoPainel }) {
   const { data, isPending, isError, refetch } = useHistoricoMetricas(dias);
   if (isPending) {
-    return (
-      <div role="status">
-        <LoadingState title="Carregando a tendência..." />
-      </div>
-    );
+    return <LoadingState title="Carregando a tendência..." />;
   }
-  if (isError) {
+  if (isError || data === undefined) {
     return (
       <ErrorState
         title="Não foi possível carregar a tendência"

@@ -106,7 +106,7 @@ describe('BarraLateral', () => {
     fireEvent.click(botao());
 
     // Assert
-    expect(screen.queryByAltText('RGM Auto Parts')).toBeNull();
+    expect(screen.queryByAltText('Rei Auto Parts')).toBeNull();
     expect(screen.queryByText(IDENTIFICACAO)).toBeNull();
   });
 
@@ -116,7 +116,7 @@ describe('BarraLateral', () => {
     renderizar();
 
     // Assert
-    expect(screen.getByAltText('RGM Auto Parts')).toBeTruthy();
+    expect(screen.getByAltText('Rei Auto Parts')).toBeTruthy();
     expect(screen.getByText(IDENTIFICACAO)).toBeTruthy();
   });
 

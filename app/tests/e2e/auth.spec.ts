@@ -35,6 +35,47 @@ test.describe('Autenticação', () => {
     await expect(page.getByText('E-mail ou senha inválidos')).toBeVisible();
   });
 
+  test('diz que excedeu as tentativas quando o login responde 429', async ({ page }) => {
+    await page.route('**/auth/login', (rota) =>
+      rota.fulfill({ status: 429, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/login');
+    await page.fill('input[name="email"]', ADMIN_EMAIL);
+    await page.fill('input[name="senha"]', ADMIN_PASSWORD);
+    await page.click('button:has-text("Entrar")');
+    await expect(page.getByRole('alert')).toHaveText(
+      'Muitas tentativas. Tente de novo em 1 minuto.',
+    );
+  });
+
+  test('diz que está sem conexão quando a requisição de login não chega ao servidor', async ({
+    page,
+  }) => {
+    await page.route('**/auth/login', (rota) => rota.abort('connectionrefused'));
+    await page.goto('/login');
+    await page.fill('input[name="email"]', ADMIN_EMAIL);
+    await page.fill('input[name="senha"]', ADMIN_PASSWORD);
+    await page.click('button:has-text("Entrar")');
+    await expect(page.getByRole('alert')).toHaveText(
+      'Sem conexão com o servidor. Verifique sua rede e tente de novo.',
+    );
+  });
+
+  test('mostra e oculta a senha digitada no login', async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('input[name="senha"]', 'segredo123');
+    await page.getByRole('button', { name: 'Mostrar senha' }).click();
+    await expect(page.locator('input[name="senha"]')).toHaveAttribute('type', 'text');
+    await page.getByRole('button', { name: 'Ocultar senha' }).click();
+    await expect(page.locator('input[name="senha"]')).toHaveAttribute('type', 'password');
+  });
+
+  test('mostra o nome do produto no título da aba e na tela de login', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page).toHaveTitle('Rei Auto Parts');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Rei Auto Parts');
+  });
+
   test('faz logout e redireciona para /login', async ({ page, loginAdmin }) => {
     await loginAdmin('/app/admin');
     await page.getByRole('button', { name: /^Menu do usuário/ }).click();

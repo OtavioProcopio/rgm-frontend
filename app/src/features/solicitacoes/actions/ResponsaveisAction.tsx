@@ -3,6 +3,7 @@ import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useR
 import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal';
 import { useAlterarResponsaveis } from '../hooks/useAlterarResponsaveis';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
+import { sucessoDaAcao } from '../lib/solicitacaoMessages';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
@@ -18,7 +19,11 @@ export function ResponsaveisAction({ solicitacao, onClose, onCancelar }: AcaoPro
         usuarios={responsaveis}
         isPending={alterar.isPending}
         onCancel={onCancelar}
-        onConfirm={(responsavelIds) => executar(() => alterar.mutateAsync({ responsavelIds }))}
+        onConfirm={(responsavelIds) => executar(
+            () => alterar.mutateAsync({ responsavelIds }),
+            undefined,
+            sucessoDaAcao.RESPONSAVEIS,
+          )}
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>

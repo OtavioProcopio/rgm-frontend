@@ -103,11 +103,7 @@ function Corpo({ visao, distribuicao, metricasErro, onRetryMetricas }: CorpoProp
     return <ErrorState title={TITULO_DO_ERRO} onRetry={distribuicao.refetch} />;
   }
   if (!distribuicao.partes) {
-    return (
-      <div role="status">
-        <LoadingState title="Carregando a distribuição..." />
-      </div>
-    );
+    return <LoadingState title="Carregando a distribuição..." />;
   }
   return <Lista visao={visao} partes={distribuicao.partes} />;
 }

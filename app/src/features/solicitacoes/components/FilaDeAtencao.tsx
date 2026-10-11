@@ -49,11 +49,7 @@ function FilaVazia() {
 }
 
 function Carregando() {
-  return (
-    <div role="status">
-      <LoadingState title="Carregando a fila de atenção..." />
-    </div>
-  );
+  return <LoadingState title="Carregando a fila de atenção..." />;
 }
 
 function Falha({ onRetry }: { onRetry: Fila['refetch'] }) {

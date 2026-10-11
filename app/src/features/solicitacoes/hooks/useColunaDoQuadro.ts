@@ -18,6 +18,8 @@ export type ColunaDoQuadro = {
   /** Falha ao buscar o bloco seguinte: os cards já carregados continuam na tela. */
   falhouAoCarregarMais: boolean;
   carregarMais: () => void;
+  /** Refaz a consulta da coluna sem recarregar a página. */
+  tentarDeNovo: () => void;
 };
 
 /** As cinco colunas do quadro, cada uma com a sua consulta em blocos. */
@@ -70,6 +72,9 @@ export function useColunaDoQuadro(
     falhouAoCarregarMais: consulta.isFetchNextPageError,
     carregarMais: () => {
       void consulta.fetchNextPage();
+    },
+    tentarDeNovo: () => {
+      void consulta.refetch();
     },
   };
 }

@@ -1,4 +1,4 @@
-import type { PontoDeSerie } from '../types/solicitacaoTypes';
+import type { PontoDaTendencia } from '../types/solicitacaoTypes';
 
 const EIXO_MINIMO: number[] = [0, 1, 2];
 const LIMITE_DO_TOPO_PAR = 10;
@@ -22,8 +22,8 @@ export function marcasDoEixo(maximo: number): number[] {
   return [0, topo / 2, topo];
 }
 
-export function semMovimento(series: PontoDeSerie[]): boolean {
-  return series.every((ponto) => ponto.abertas === 0 && ponto.concluidas === 0);
+export function semMovimento(series: PontoDaTendencia[]): boolean {
+  return series.every((ponto) => ponto.total === 0 && ponto.concluidas === 0);
 }
 
 export function ehHoje(indice: number, total: number): boolean {
@@ -39,10 +39,8 @@ function contar(quantidade: number, singular: string, plural: string): string {
   return `${quantidade} ${quantidade === 1 ? singular : plural}`;
 }
 
-/** A série é por data de criação: "abertas" são as criadas no dia que seguem abertas. */
-export function rotuloDoPonto(ponto: PontoDeSerie): string {
+export function rotuloDoPonto(ponto: PontoDaTendencia): string {
   const criadas: string = contar(ponto.total, 'criada', 'criadas');
-  const abertas: string = contar(ponto.abertas, 'ainda aberta', 'ainda abertas');
   const concluidas: string = contar(ponto.concluidas, 'concluída', 'concluídas');
-  return `${ponto.periodo}: ${criadas}, ${abertas}, ${concluidas}`;
+  return `${ponto.periodo}: ${criadas}, ${concluidas}`;
 }

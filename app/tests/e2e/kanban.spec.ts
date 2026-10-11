@@ -93,6 +93,49 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await expect(page.getByText('A fazer')).toBeVisible();
   });
 
+  test('mostra a solicitação recém-aberta no primeiro bloco de A fazer', async ({
+    page,
+    loginAdmin,
+    request,
+    token,
+  }) => {
+    // Modelo próprio: as 22 solicitações não podem empurrar a dos outros testes para a 2ª página.
+    const modelo = await apiPost<{ id: string }>(
+      request,
+      '/modelos',
+      {
+        codigo: `MDL-ORD-${ts()}`,
+        descricao: 'Modelo ordenação PW',
+        maquina: MAQUINA_CATALOGO,
+      },
+      token,
+    );
+    const abrirNoModelo = (titulo: string) =>
+      apiPost(
+        request,
+        '/solicitacoes',
+        { titulo, descricao: 'Via API Playwright', tipo: 'REENGENHARIA', modeloId: modelo.id },
+        token,
+      );
+
+    // Mais de um bloco (20) em A fazer: sem ordenação pela API, a nova ficaria fora do primeiro.
+    for (let i = 0; i < 21; i += 1) {
+      await abrirNoModelo(`Bloco PW ${ts()}-${i}`);
+    }
+    const titulo = `Recém-aberta PW ${ts()}`;
+    await abrirNoModelo(titulo);
+
+    await loginAdmin('/app/solicitacoes');
+
+    // O quadro tem uma coluna por status no computador e uma aba por status no celular:
+    // só a visível interessa.
+    const visivel = (texto: string | RegExp) =>
+      page.getByText(texto).locator('visible=true').first();
+    await expect(visivel('mais recentes primeiro')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Carregar mais/ }).first()).toBeVisible();
+    await expect(visivel(titulo)).toBeVisible();
+  });
+
   test('lista solicitações contém a criada', async ({ page, loginAdmin, request, token }) => {
     const titulo = `Lista PW ${ts()}`;
     await criarSolicitacao(request, token, titulo);

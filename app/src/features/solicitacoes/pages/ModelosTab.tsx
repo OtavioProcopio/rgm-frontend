@@ -50,7 +50,7 @@ export function ModelosTab() {
   const navigate = useNavigate();
   const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
 
-  const { data: resumo, isLoading, isError } = useResumoDeModelos();
+  const { data: resumo, isLoading, isError, refetch } = useResumoDeModelos();
 
   function irParaSolicitacoesDaMaquina(maquina: string) {
     navigate(`/app/solicitacoes?maquina=${encodeURIComponent(maquina)}`);
@@ -72,6 +72,7 @@ export function ModelosTab() {
       <ErrorState
         title="Não foi possível carregar os modelos"
         description="Verifique sua conexão com o servidor."
+        onRetry={() => void refetch()}
       />
     );
   }
@@ -156,7 +157,7 @@ function RankingModelos() {
   const [sort, setSort] = useState<OrdenacaoMetricaModelo>('TEMPO_RESOLUCAO');
   const [dir, setDir] = useState<DirecaoOrdenacao>('desc');
   const [page, setPage] = useState(0);
-  const { data, isLoading, isError } = useMetricasPorModelo({
+  const { data, isLoading, isError, refetch } = useMetricasPorModelo({
     sort,
     dir,
     page,
@@ -188,6 +189,7 @@ function RankingModelos() {
         <ErrorState
           title="Não foi possível carregar o ranking"
           description="Verifique sua conexão com o servidor."
+          onRetry={() => void refetch()}
         />
       ) : null}
       {data && data.content.length === 0 ? (

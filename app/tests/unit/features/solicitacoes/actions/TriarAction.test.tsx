@@ -205,4 +205,29 @@ describe('TriarAction', () => {
     // Assert
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('deve confirmar com o aviso Solicitação triada quando a ação dá certo', async () => {
+    // Arrange
+    triar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação triada')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    triar.mockRejectedValue(new Error('recusada'));
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Solicitação triada')).toBeNull();
+  });
 });

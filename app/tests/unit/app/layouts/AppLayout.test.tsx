@@ -19,7 +19,7 @@ vi.mock('@/features/solicitacoes/hooks/useSemAtualizacao', () => ({
 
 const USUARIO = { nome: 'Ge', perfil: 'GESTOR' } as const;
 const ADMIN = { nome: 'Ad', perfil: 'ADMINISTRADOR' } as const;
-const NOME_DO_LOGO = 'RGM Auto Parts';
+const NOME_DO_LOGO = 'Rei Auto Parts';
 const PLACA_DO_LOGO = 'bg-logo-plate';
 const CONTROLE_DE_TEMA = /^Tema: /;
 
@@ -150,7 +150,7 @@ describe('AppLayout', () => {
     // Assert
     expect(screen.getAllByText('Portal de gestão')).toHaveLength(1);
     expect(screen.queryByText('Solicitações de manutenção')).toBeNull();
-    expect(screen.queryByText('RGM Auto Parts')).toBeNull();
+    expect(screen.queryByText('Rei Auto Parts')).toBeNull();
   });
 
   it('deve mostrar a identificação do portal uma vez quando o administrador abre o layout', () => {

@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   LIMITE_DA_AMOSTRA,
+  detalheDoTempoMedio,
   leituraDoAtraso,
   leituraDoTempoMedio,
   resumoDasPaginas,
   tempoMedioDeResolucao,
+  valorDoTempoMedio,
   variacaoDeConcluidas,
 } from '@/features/solicitacoes/lib/leituraDosIndicadores';
 
@@ -393,5 +395,97 @@ describe('resumoDasPaginas', () => {
       concluidas: { atual: 0, anterior: 5 },
       tempoMedio: { atual: null, anterior: { segundos: 30, amostra: null } },
     });
+  });
+});
+
+describe('valorDoTempoMedio', () => {
+  it('deve mostrar 30 min quando o tempo médio é de 1800 segundos', () => {
+    // Arrange
+    const tempo = { segundos: 1800, amostra: null };
+
+    // Act
+    const valor = valorDoTempoMedio(tempo);
+
+    // Assert
+    expect(valor).toBe('30 min');
+  });
+
+  it('deve mostrar horas quando o tempo médio é de 7200 segundos', () => {
+    // Arrange
+    const tempo = { segundos: 7200, amostra: null };
+
+    // Act
+    const valor = valorDoTempoMedio(tempo);
+
+    // Assert
+    expect(valor).toBe('2 h');
+  });
+
+  it('deve truncar a casa decimal quando o tempo vem com uma casa', () => {
+    // Arrange
+    const tempo = { segundos: 1799.9, amostra: null };
+
+    // Act
+    const valor = valorDoTempoMedio(tempo);
+
+    // Assert
+    expect(valor).toBe('29 min');
+  });
+
+  it('deve mostrar o valor vazio quando o tempo médio é nulo', () => {
+    // Arrange
+    const tempo = null;
+
+    // Act
+    const valor = valorDoTempoMedio(tempo);
+
+    // Assert
+    expect(valor).toBe('—');
+  });
+});
+
+describe('detalheDoTempoMedio', () => {
+  it('deve dizer da abertura à conclusão quando não há amostra', () => {
+    // Arrange
+    const tempo = { segundos: 1800, amostra: null };
+
+    // Act
+    const detalhe = detalheDoTempoMedio(tempo);
+
+    // Assert
+    expect(detalhe).toBe('da abertura à conclusão');
+  });
+
+  it('deve não mencionar média de quando o tempo vem do painel sem amostra', () => {
+    // Arrange
+    const tempo = { segundos: 1800, amostra: null };
+
+    // Act
+    const detalhe = detalheDoTempoMedio(tempo);
+
+    // Assert
+    expect(detalhe).not.toContain('média de');
+  });
+
+  it('deve manter o aviso da amostra quando o tempo vem da listagem com 130 concluídas', () => {
+    // Arrange
+    const tempo = { segundos: 1800, amostra: { usados: 100, total: 130 } };
+
+    // Act
+    const detalhe = detalheDoTempoMedio(tempo);
+
+    // Assert
+    expect(detalhe).toBe('da abertura à conclusão · média de 100 de 130');
+  });
+
+  it('deve dizer da abertura à conclusão quando o tempo médio é nulo', () => {
+    // Arrange
+    const tempo = null;
+
+    // Act
+    const detalhe = detalheDoTempoMedio(tempo);
+
+    // Assert
+    expect(detalhe).toBe('da abertura à conclusão');
   });
 });

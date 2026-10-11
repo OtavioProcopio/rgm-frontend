@@ -124,4 +124,31 @@ describe('DevolverAction', () => {
     );
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('deve confirmar com o aviso Solicitação devolvida quando a ação dá certo', async () => {
+    // Arrange
+    devolver.mockResolvedValue(undefined);
+    anexar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação devolvida')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    devolver.mockRejectedValue(new Error('recusada'));
+    anexar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Solicitação devolvida')).toBeNull();
+  });
 });

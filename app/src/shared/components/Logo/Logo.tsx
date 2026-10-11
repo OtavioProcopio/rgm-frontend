@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/cn';
+import { NOME_DO_PRODUTO } from '@/shared/lib/produto';
 
 const ALTURA = {
   sm: 'h-8',
@@ -20,7 +21,7 @@ export function Logo({ tamanho = 'md', className }: LogoProps) {
     <span className={cn('inline-flex rounded-md bg-logo-plate p-1 -m-1', className)}>
       <img
         src="/logo-rgm-autoparts.png"
-        alt="RGM Auto Parts"
+        alt={NOME_DO_PRODUTO}
         className={cn('w-auto', ALTURA[tamanho])}
       />
     </span>

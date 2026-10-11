@@ -16,7 +16,14 @@ import type {
 } from '@/features/solicitacoes/types/solicitacaoTypes';
 import type { PageResponse } from '@/shared/types/page';
 
-const FILTROS: SolicitacoesFilters = { atrasada: true, emAberto: true, page: 0, size: 100 };
+const FILTROS: SolicitacoesFilters = {
+  atrasada: true,
+  emAberto: true,
+  sort: 'prazoLimite',
+  dir: 'asc',
+  page: 0,
+  size: 100,
+};
 
 function criarPagina(content: Solicitacao[], totalElements: number): PageResponse<Solicitacao> {
   return { content, page: 0, size: 100, totalElements, totalPages: 2 };
@@ -70,6 +77,47 @@ describe('useFilaDeAtencao', () => {
 
     // Assert
     expect(listarSpy).toHaveBeenCalledWith(FILTROS);
+  });
+
+  it('deve pedir à API a ordenação por prazo crescente quando monta', async () => {
+    // Arrange
+    const { result } = montar();
+
+    // Act
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Assert
+    expect(listarSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 'prazoLimite', dir: 'asc' }),
+    );
+  });
+
+  it('deve manter o tamanho de 100 e os filtros de atrasada e em aberto quando pede a ordenação', async () => {
+    // Arrange
+    const { result } = montar();
+
+    // Act
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Assert
+    expect(listarSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ atrasada: true, emAberto: true, size: 100 }),
+    );
+  });
+
+  it('deve manter a mesma ordem quando a API já devolve do mais atrasado ao menos', async () => {
+    // Arrange
+    const jaOrdenadas = [1, 2, 3, 4, 5, 6, 7, 8].map((dia) =>
+      criarAtrasada(`s${dia}`, `2026-01-0${dia}T00:00:00Z`),
+    );
+    listarSpy.mockResolvedValue(criarPagina(jaOrdenadas, 8));
+    const { result } = montar();
+
+    // Act
+    await waitFor(() => expect(result.current.itens).toHaveLength(5));
+
+    // Assert
+    expect(result.current.itens.map((item) => item.id)).toEqual(['s1', 's2', 's3', 's4', 's5']);
   });
 
   it('deve devolver no máximo 5 itens do mais atrasado ao menos quando há 8 fora de ordem', async () => {

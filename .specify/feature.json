@@ -1,4 +1,4 @@
 {
-  "active": "specs/014-pacote-de-correcoes-do-frontend-rgm",
-  "title": "Pacote de correções do frontend (rgm-frontend, issues #153, #146, #139, #141 e #138), sobre develop. Spec 014. A #153 ja foi codificada na branch fix/perfil-sem-metricas-do-sistema-para-operador (PR #154) sem passar pelo fluxo; esta spec a absorve. Demais: #146 filtros com lista nao voltam a Todos; #139 erros crus da API no detalhe; #141 quadro vazio do operador; #138 e2e de evidencias com regra antiga. Backend nao muda."
+  "active": "specs/015-dashboard-consome-o-painel-por-periodo",
+  "title": "Dashboard consome o painel por período e a listagem ordenada do backend (rgm-frontend #149 e #142). Spec 015. Backend v1.6 já em develop (rgm-backend PR #126); front deve continuar funcionando com o backend v1.5.0 (Princípio 9)."
 }

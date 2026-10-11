@@ -1,6 +1,7 @@
 import { EnviarValidacaoModal } from '../components/EnviarValidacaoModal';
 import { useEnviarParaValidacao } from '../hooks/useEnviarParaValidacao';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
+import { sucessoDaAcao } from '../lib/solicitacaoMessages';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
@@ -15,7 +16,7 @@ export function EnviarValidacaoAction({ solicitacao, onClose, onCancelar }: Acao
         isPending={enviar.isPending}
         evidenciaObrigatoria={solicitacao.tipo !== 'CRIACAO'}
         onCancel={onCancelar}
-        onConfirm={(data) => executar(() => enviar.mutateAsync(data.comentario))}
+        onConfirm={(data) => executar(() => enviar.mutateAsync(data.comentario), undefined, sucessoDaAcao.ENVIAR_VALIDACAO)}
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />
     </>

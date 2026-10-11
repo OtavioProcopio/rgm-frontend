@@ -1,6 +1,7 @@
 import { DIA_MS } from '@/shared/lib/duracao';
 
 import type { SolicitacoesFilters, StatusSolicitacao } from '../types/solicitacaoTypes';
+import { ordemDaColuna } from './ordemDoQuadro';
 
 /** Quantas solicitações cada coluna do quadro carrega por vez. */
 export const TAMANHO_DO_BLOCO = 20;
@@ -36,10 +37,12 @@ export function filtrosDaColuna(
   inicioDos30Dias: string,
   page: number,
 ): SolicitacoesFilters {
+  const ordem = ordemDaColuna(status);
   return {
     status,
     page,
     size: TAMANHO_DO_BLOCO,
+    ...(ordem ? { sort: ordem.sort, dir: ordem.dir } : {}),
     ...(quadro.modeloId ? { modeloId: quadro.modeloId } : {}),
     ...(quadro.criadaEmInicio ? { criadaEmInicio: quadro.criadaEmInicio } : {}),
     ...(quadro.criadaEmFim ? { criadaEmFim: quadro.criadaEmFim } : {}),

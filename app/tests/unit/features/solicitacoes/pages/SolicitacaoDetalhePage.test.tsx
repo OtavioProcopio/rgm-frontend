@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -213,6 +213,27 @@ describe('SolicitacaoDetalhePage', () => {
     const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
     const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
     expect(within(container).getByText(/não foi possível/i)).toBeDefined();
+  });
+
+  it('deve refazer a consulta quando Tentar novamente é acionado depois da falha', async () => {
+    // Arrange
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
+    const refetch = vi.fn();
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+    const { container } = render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it('shows Triagem button for GESTOR when status is A_FAZER', async () => {
@@ -860,6 +881,17 @@ describe('SolicitacaoDetalhePage — edição', () => {
     expect(editar).not.toHaveBeenCalled();
   });
 
+  it('deve confirmar com o aviso Solicitação atualizada quando salvar a edição dá certo', async () => {
+    // Arrange
+    const { tela } = await abrirEdicao();
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Salvar' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação atualizada')).toBeDefined();
+  });
+
   it('deve mostrar o erro da ação e manter a edição aberta quando salvar falha', async () => {
     // Arrange
     const { editar, tela } = await abrirEdicao();
@@ -965,6 +997,55 @@ describe('SolicitacaoDetalhePage — comentário e evidências', () => {
     expect(upload).toHaveBeenCalledTimes(1);
     expect(tela.getByText('Operação não concluída')).toBeDefined();
     expect(tela.getByText('Arquivo grande demais')).toBeDefined();
+  });
+
+  it('deve confirmar com o aviso Comentário registrado quando o comentário é enviado', async () => {
+    // Arrange
+    const { tela } = abrirComo('GESTOR');
+
+    // Act
+    await userEvent.click(tela.getByText('enviar-comentario'));
+
+    // Assert
+    expect(await screen.findByText('Comentário registrado')).toBeDefined();
+  });
+
+  it('deve mostrar o erro do comentário junto do formulário quando enviar falha', async () => {
+    // Arrange
+    const { comentar, tela } = abrirComo('GESTOR');
+    comentar.mockRejectedValueOnce(new ApiError({ status: 500, message: 'Comentário recusado' }));
+
+    // Act
+    await userEvent.click(tela.getByText('enviar-comentario'));
+
+    // Assert
+    const linhaDoTempo = tela.getByTestId('timeline');
+    expect(within(linhaDoTempo).getByText('Comentário recusado')).toBeDefined();
+    expect(screen.queryByText('Comentário registrado')).toBeNull();
+  });
+
+  it('deve confirmar com o aviso Evidência anexada quando o arquivo é enviado', async () => {
+    // Arrange
+    const { tela } = abrirComo('GESTOR');
+
+    // Act
+    await userEvent.click(tela.getByText('anexar-evidencia'));
+
+    // Assert
+    expect(await screen.findByText('Evidência anexada')).toBeDefined();
+  });
+
+  it('deve mostrar o erro do envio junto do botão de anexar quando o envio falha', async () => {
+    // Arrange
+    const { upload, tela } = abrirComo('GESTOR');
+    upload.mockRejectedValueOnce(new ApiError({ status: 413, message: 'Arquivo grande demais' }));
+
+    // Act
+    await userEvent.click(tela.getByText('anexar-evidencia'));
+
+    // Assert
+    const secao = tela.getByTestId('evidencia-uploader').parentElement!;
+    expect(within(secao).getByText('Arquivo grande demais')).toBeDefined();
   });
 
   it('deve excluir a evidência pelo identificador quando o gestor aciona excluir', async () => {

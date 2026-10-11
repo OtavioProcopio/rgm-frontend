@@ -44,4 +44,22 @@ describe('EmptyState', () => {
     expect(within(container).queryByRole('button')).toBeNull();
     expect(within(container).queryByRole('link')).toBeNull();
   });
+
+  it('deve mostrar um ícone decorativo quando nenhum ícone é informado', () => {
+    // Act
+    const { container } = render(<EmptyState title="Nenhum item" />);
+
+    // Assert
+    expect(container.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+  });
+
+  it('deve mostrar o ícone informado no lugar do padrão quando icone é passado', () => {
+    // Act
+    const { container } = render(
+      <EmptyState title="Nenhum item" icone={<span data-testid="meu-icone" />} />,
+    );
+
+    // Assert
+    expect(container.querySelector('[aria-hidden="true"] [data-testid="meu-icone"]')).not.toBeNull();
+  });
 });

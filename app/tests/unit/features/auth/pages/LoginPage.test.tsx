@@ -1,15 +1,16 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
 
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ApiError } from '@/shared/api/apiError';
 
-const NOME_DO_LOGO = 'RGM Auto Parts';
+const NOME_DO_LOGO = 'Rei Auto Parts';
 const PLACA_DO_LOGO = 'bg-logo-plate';
 const PAPEIS_DO_CARTAO = ['bg-surface', 'border-line'];
 const PAPEIS_DO_CAMPO = ['bg-surface', 'text-fg', 'border-line-strong'];
@@ -126,5 +127,81 @@ describe('LoginPage', () => {
     await userEvent.type(within(container).getByLabelText(/senha/i), 'wrong');
     await userEvent.click(within(container).getByRole('button', { name: /entrar/i }));
     expect(within(container).getByText(/e-mail ou senha inválidos/i)).toBeDefined();
+  });
+  it('deve mostrar o nome do produto como título quando a tela de entrada é aberta', () => {
+    // Act
+    const { tela } = montar();
+
+    // Assert
+    expect(tela.getByRole('heading', { level: 1 }).textContent).toBe(NOME_DO_LOGO);
+  });
+
+  it('deve usar um exemplo neutro de e-mail quando a tela de entrada é aberta', () => {
+    // Act
+    const { tela } = montar();
+
+    // Assert
+    expect(tela.getByLabelText('E-mail').getAttribute('placeholder')).toBe('nome@empresa.com');
+  });
+
+  it('deve dar o foco ao e-mail quando a tela de entrada é aberta', async () => {
+    // Act
+    const { tela } = montar();
+
+    // Assert
+    await waitFor(() => expect(document.activeElement).toBe(tela.getByLabelText('E-mail')));
+  });
+
+  it('deve pedir o teclado de e-mail e o próximo campo quando a tela de entrada é aberta', () => {
+    // Act
+    const { tela } = montar();
+
+    // Assert
+    const email = tela.getByLabelText('E-mail');
+    expect([email.getAttribute('inputmode'), email.getAttribute('enterkeyhint')]).toEqual([
+      'email',
+      'next',
+    ]);
+  });
+
+  it('deve mostrar a senha digitada quando Mostrar senha é acionado', async () => {
+    // Arrange
+    const { tela } = montar();
+    await userEvent.type(tela.getByLabelText('Senha'), 'segredo123');
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Mostrar senha' }));
+
+    // Assert
+    expect(tela.getByLabelText('Senha').getAttribute('type')).toBe('text');
+  });
+
+  it.each([
+    {
+      caso: 'o excesso de tentativas',
+      erro: new ApiError({ status: 429, message: 'Too Many Requests' }),
+      mensagem: 'Muitas tentativas. Tente de novo em 1 minuto.',
+    },
+    {
+      caso: 'a falta de conexão',
+      erro: new TypeError('Failed to fetch'),
+      mensagem: 'Sem conexão com o servidor. Verifique sua rede e tente de novo.',
+    },
+  ])('deve dizer $caso com um alerta quando o login falha assim', async ({ erro, mensagem }) => {
+    // Arrange
+    const { AppWrapper } = createAppWrapper({
+      user: null,
+      authOverrides: { login: vi.fn().mockRejectedValue(erro) },
+    });
+    const { container } = render(<LoginPage />, { wrapper: AppWrapper });
+    const tela = within(container);
+    await userEvent.type(tela.getByLabelText('E-mail'), 'a@a.com');
+    await userEvent.type(tela.getByLabelText('Senha'), 'segredo123');
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Entrar' }));
+
+    // Assert
+    expect((await tela.findByRole('alert')).textContent).toBe(mensagem);
   });
 });

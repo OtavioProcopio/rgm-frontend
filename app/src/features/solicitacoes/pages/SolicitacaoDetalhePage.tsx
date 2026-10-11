@@ -20,7 +20,11 @@ import { useAtividades } from '../hooks/useAtividades';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
-import { getMensagemDoDetalhe, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import {
+  getMensagemDoDetalhe,
+  getSolicitacaoErrorMessage,
+  sucessoDaAcao,
+} from '../lib/solicitacaoMessages';
 import {
   editarSolicitacaoSchema,
   type EditarSolicitacaoFormData,
@@ -33,6 +37,7 @@ import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
 import { Input } from '@/shared/components/Input/Input';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { useToast } from '@/shared/components/Toast/toastContext';
 import { LIMITES } from '@/shared/lib/limites';
 import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
@@ -45,7 +50,7 @@ type ErrosDaEdicao = { titulo?: string; descricao?: string };
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
-  const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
+  const { data: solicitacao, isLoading, error, refetch } = useSolicitacao(id!);
 
   if (isLoading) return <LoadingState title="Carregando solicitação..." />;
   if (error || !solicitacao) {
@@ -53,6 +58,7 @@ export function SolicitacaoDetalhePage() {
       <ErrorState
         title="Não foi possível carregar a solicitação."
         description={getMensagemDoDetalhe(error)}
+        onRetry={() => void refetch()}
         action={<VoltarAoQuadro />}
       />
     );
@@ -102,7 +108,6 @@ function EvidenciasEHistorico({ id, estado }: { id: string; estado: EstadoDoDeta
         atividades={atividades}
         carregando={carregandoAtividades}
         encerrada={permissoes.isTerminal}
-        aoFalhar={setActionError}
       />
     </>
   );
@@ -163,13 +168,21 @@ function usePermissoesDaSolicitacao(solicitacao: Solicitacao) {
 
 // ── Erros de ação ────────────────────────────────────────────
 
-async function executarComErro(aoFalhar: AoFalhar, acao: () => Promise<unknown>): Promise<void> {
+/** Executa a ação; o erro vai para `aoFalhar` e não some sozinho, o sucesso vai para `aoConcluir`. */
+async function executarComErro(
+  aoFalhar: AoFalhar,
+  acao: () => Promise<unknown>,
+  aoConcluir?: () => void,
+): Promise<boolean> {
   aoFalhar(null);
   try {
     await acao();
   } catch (err) {
     aoFalhar(getSolicitacaoErrorMessage(err));
+    return false;
   }
+  aoConcluir?.();
+  return true;
 }
 
 function ErroDeAcao({ mensagem }: { mensagem: string | null }) {
@@ -218,12 +231,17 @@ type FluxoDaEdicao = ReturnType<typeof useFluxoDaEdicao>;
 
 function usePersistirEdicao(id: string, fluxo: FluxoDaEdicao, aoFalhar: AoFalhar) {
   const editar = useEditarSolicitacao(id);
+  const { avisar } = useToast();
   async function persistir(dados: EditarSolicitacaoFormData): Promise<void> {
     fluxo.setErros({});
-    await executarComErro(aoFalhar, async () => {
-      await editar.mutateAsync(dados);
-      fluxo.setIsEditing(false);
-    });
+    await executarComErro(
+      aoFalhar,
+      async () => {
+        await editar.mutateAsync(dados);
+        fluxo.setIsEditing(false);
+      },
+      () => avisar(sucessoDaAcao.EDITAR),
+    );
   }
   return { persistir, isPending: editar.isPending };
 }
@@ -431,12 +449,21 @@ function useAcoesDeEvidencia(id: string, aoFalhar: AoFalhar) {
   const { data: evidencias = [], isLoading } = useEvidencias(id);
   const upload = useUploadEvidencia(id);
   const remocao = useDeleteEvidencia(id);
-  const enviar = (file: File) => executarComErro(aoFalhar, () => upload.mutateAsync({ file }));
+  const { avisar } = useToast();
+  // O erro do envio fica junto do botão que o enviou; o da exclusão segue o da página.
+  const [erroDoEnvio, setErroDoEnvio] = useState<string | null>(null);
+  const enviar = (file: File) =>
+    executarComErro(
+      setErroDoEnvio,
+      () => upload.mutateAsync({ file }),
+      () => avisar(sucessoDaAcao.ANEXAR),
+    );
   const excluir = (evidenciaId: string) =>
     executarComErro(aoFalhar, () => remocao.mutateAsync(evidenciaId));
   return {
     evidencias,
     isLoading,
+    erroDoEnvio,
     enviar,
     excluir,
     enviando: upload.isPending,
@@ -452,7 +479,8 @@ function EvidenciasDaSolicitacao({ id, podeAnexar, aoFalhar }: PropsDasEvidencia
     <div>
       <h2 className="mb-3 text-sm font-semibold text-fg-muted">Evidências</h2>
       {podeAnexar ? (
-        <div className="mb-4">
+        <div className="mb-4 space-y-3">
+          <ErroDeAcao mensagem={acoes.erroDoEnvio} />
           <EvidenciaUploader isPending={acoes.enviando} onUpload={acoes.enviar} />
         </div>
       ) : null}
@@ -473,16 +501,25 @@ type PropsDoHistorico = {
   atividades: AtividadeSolicitacao[];
   carregando: boolean;
   encerrada: boolean;
-  aoFalhar: AoFalhar;
 };
 
 function HistoricoDaSolicitacao(props: PropsDoHistorico) {
-  const { id, atividades, carregando, encerrada, aoFalhar } = props;
+  const { id, atividades, carregando, encerrada } = props;
   const comentar = useRegistrarComentario(id);
+  const { avisar } = useToast();
+  // O erro fica junto do formulário, com o texto digitado preservado para nova tentativa.
+  const [erro, setErro] = useState<string | null>(null);
   const enviar = (data: { comentario: string }) =>
-    executarComErro(aoFalhar, () => comentar.mutateAsync(data));
+    executarComErro(
+      setErro,
+      () => comentar.mutateAsync(data),
+      () => avisar(sucessoDaAcao.COMENTAR),
+    );
   const formulario = encerrada ? undefined : (
-    <ComentarioForm isPending={comentar.isPending} onSubmit={enviar} />
+    <div className="space-y-3">
+      <ErroDeAcao mensagem={erro} />
+      <ComentarioForm isPending={comentar.isPending} onSubmit={enviar} />
+    </div>
   );
   return (
     <div>

@@ -10,8 +10,10 @@ import { solicitacoesApi } from '@/features/solicitacoes/api/solicitacoesApi';
 import { TendenciaDoPeriodo } from '@/features/solicitacoes/components/TendenciaDoPeriodo';
 import type {
   HistoricoMetricas,
+  PainelPorPeriodo,
   PontoDeSerie,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
+import { ApiError } from '@/shared/api/apiError';
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 
 const PRIMEIRO: PontoDeSerie = {
@@ -45,7 +47,7 @@ const HISTORICO: HistoricoMetricas = {
 };
 const SEM_MOVIMENTO: HistoricoMetricas = {
   ...HISTORICO,
-  series: [{ ...PRIMEIRO, abertas: 0, concluidas: 0 }],
+  series: [{ ...PRIMEIRO, total: 0, concluidas: 0 }],
 };
 const TRINTA_DIAS: PontoDeSerie[] = Array.from({ length: 30 }, (_, indice: number) => ({
   ...SEGUNDO,
@@ -53,6 +55,7 @@ const TRINTA_DIAS: PontoDeSerie[] = Array.from({ length: 30 }, (_, indice: numbe
 }));
 
 let obterHistorico: MockInstance<typeof solicitacoesApi.obterHistoricoMetricas>;
+let obterPainel: MockInstance<typeof solicitacoesApi.obterPainel>;
 
 const desenhar = (dias: 7 | 30 | 90 = 30) => {
   const { QueryWrapper } = createQueryWrapper();
@@ -61,9 +64,51 @@ const desenhar = (dias: 7 | 30 | 90 = 30) => {
 const grupos = () => screen.findAllByRole('img');
 const textoDas = (celulas: HTMLElement[]) => celulas.map((celula) => celula.textContent);
 
+const PAINEL: PainelPorPeriodo = {
+  periodo: {
+    inicio: '2026-01-01',
+    fim: '2026-01-04',
+    criadas: 4,
+    concluidas: 4,
+    canceladas: 0,
+    tempoMedioResolucaoSegundos: null,
+    abertasAgora: 0,
+    atrasadasAgora: 0,
+    serie: [
+      {
+        rotulo: '01/01',
+        criadas: 4,
+        concluidas: 0,
+        canceladas: 0,
+        abertasAoFimDoDia: 4,
+        atrasadasAoFimDoDia: 0,
+      },
+      {
+        rotulo: '02/01',
+        criadas: 0,
+        concluidas: 4,
+        canceladas: 0,
+        abertasAoFimDoDia: 0,
+        atrasadasAoFimDoDia: 0,
+      },
+    ],
+  },
+  anterior: {
+    inicio: '2025-12-28',
+    fim: '2026-01-01',
+    criadas: 0,
+    concluidas: 0,
+    canceladas: 0,
+    tempoMedioResolucaoSegundos: null,
+    serie: [],
+  },
+};
+
 beforeEach(() => {
   obterHistorico = vi.spyOn(solicitacoesApi, 'obterHistoricoMetricas');
   obterHistorico.mockResolvedValue(HISTORICO);
+  obterPainel = vi.spyOn(solicitacoesApi, 'obterPainel');
+  obterPainel.mockRejectedValue(new ApiError({ status: 404, message: 'não encontrado' }));
 });
 
 afterEach(() => {
@@ -106,10 +151,10 @@ describe('TendenciaDoPeriodo — barras', () => {
     const alturas = [...grupo.children].map((barra) => (barra as HTMLElement).style.height);
 
     // Assert
-    expect(alturas).toEqual(['87.5%', '12.5%']);
+    expect(alturas).toEqual(['90%', '10%']);
   });
 
-  it('deve rotular o grupo com abertas e concluídas do ponto quando a série chega', async () => {
+  it('deve rotular o grupo com criadas e concluídas do ponto quando a série chega', async () => {
     // Arrange
     obterHistorico.mockResolvedValue(HISTORICO);
 
@@ -118,9 +163,7 @@ describe('TendenciaDoPeriodo — barras', () => {
     const [grupo] = await grupos();
 
     // Assert
-    expect(grupo.getAttribute('aria-label')).toBe(
-      '2026-01-01: 9 criadas, 7 ainda abertas, 1 concluída',
-    );
+    expect(grupo.getAttribute('aria-label')).toBe('2026-01-01: 9 criadas, 1 concluída');
   });
 
   it('deve resumir o gráfico num grupo rotulado quando a série chega', async () => {
@@ -139,7 +182,7 @@ describe('TendenciaDoPeriodo — barras', () => {
 });
 
 describe('TendenciaDoPeriodo — eixos', () => {
-  it('deve mostrar as três marcas do eixo quando o maior valor é 7', async () => {
+  it('deve mostrar as três marcas do eixo quando o maior valor é 9', async () => {
     // Arrange
     obterHistorico.mockResolvedValue(HISTORICO);
 
@@ -149,7 +192,7 @@ describe('TendenciaDoPeriodo — eixos', () => {
     const marcas = within(screen.getByRole('list', { name: 'Escala do gráfico' }));
 
     // Assert
-    expect(textoDas(marcas.getAllByRole('listitem'))).toEqual(['0', '4', '8']);
+    expect(textoDas(marcas.getAllByRole('listitem'))).toEqual(['0', '5', '10']);
   });
 
   it('deve rotular só o último ponto com Hoje quando o período é de 30 dias', async () => {
@@ -218,9 +261,7 @@ describe('TendenciaDoPeriodo — valores ao focar', () => {
     await userEvent.tab();
 
     // Assert
-    expect(screen.getByRole('tooltip').textContent).toBe(
-      '2026-01-01: 9 criadas, 7 ainda abertas, 1 concluída',
-    );
+    expect(screen.getByRole('tooltip').textContent).toBe('2026-01-01: 9 criadas, 1 concluída');
   });
 
   it('deve mostrar o valor do ponto seguinte quando o foco passa para o próximo grupo', async () => {
@@ -233,9 +274,7 @@ describe('TendenciaDoPeriodo — valores ao focar', () => {
     await userEvent.tab();
 
     // Assert
-    expect(screen.getByRole('tooltip').textContent).toBe(
-      '2026-01-02: 5 criadas, 2 ainda abertas, 3 concluídas',
-    );
+    expect(screen.getByRole('tooltip').textContent).toBe('2026-01-02: 5 criadas, 3 concluídas');
   });
 
   it('deve mostrar o valor do ponto quando o mouse passa sobre o grupo', async () => {
@@ -247,9 +286,7 @@ describe('TendenciaDoPeriodo — valores ao focar', () => {
     await userEvent.hover(grupo);
 
     // Assert
-    expect(screen.getByRole('tooltip').textContent).toBe(
-      '2026-01-01: 9 criadas, 7 ainda abertas, 1 concluída',
-    );
+    expect(screen.getByRole('tooltip').textContent).toBe('2026-01-01: 9 criadas, 1 concluída');
   });
 
   it('deve esconder o valor do ponto quando o mouse sai do grupo', async () => {
@@ -267,7 +304,7 @@ describe('TendenciaDoPeriodo — valores ao focar', () => {
 });
 
 describe('TendenciaDoPeriodo — legenda e tabela', () => {
-  it('deve explicar as abertas como criadas no dia que hoje estão abertas quando a série chega', async () => {
+  it('deve explicar as criadas como criadas neste dia quando a série chega', async () => {
     // Arrange
     obterHistorico.mockResolvedValue(HISTORICO);
 
@@ -276,12 +313,10 @@ describe('TendenciaDoPeriodo — legenda e tabela', () => {
     await grupos();
 
     // Assert
-    expect(
-      screen.getByText('Abertas: criadas neste dia que hoje estão abertas').textContent,
-    ).toContain('criadas neste dia que hoje estão abertas');
+    expect(screen.getByText('Criadas: criadas neste dia').textContent).toContain('neste dia');
   });
 
-  it('deve explicar as concluídas como criadas no dia que hoje estão concluídas quando a série chega', async () => {
+  it('deve explicar as concluídas como criadas no dia que hoje estão concluídas quando o painel não existe', async () => {
     // Arrange
     obterHistorico.mockResolvedValue(HISTORICO);
 
@@ -362,7 +397,7 @@ describe('TendenciaDoPeriodo — estados', () => {
   it('deve explicar o vazio quando não há solicitação aberta nem concluída', async () => {
     // Arrange
     obterHistorico.mockResolvedValue(SEM_MOVIMENTO);
-    const aviso = 'Nenhuma solicitação aberta ou concluída nos últimos 30 dias';
+    const aviso = 'Nenhuma solicitação criada ou concluída nos últimos 30 dias';
 
     // Act
     desenhar();
@@ -378,7 +413,7 @@ describe('TendenciaDoPeriodo — estados', () => {
 
     // Act
     desenhar();
-    await screen.findByText(/^Nenhuma solicitação aberta ou concluída/);
+    await screen.findByText(/^Nenhuma solicitação criada ou concluída/);
 
     // Assert
     expect(screen.queryByRole('list', { name: 'Escala do gráfico' })).toBeNull();
@@ -459,5 +494,83 @@ describe('TendenciaDoPeriodo — período e movimento', () => {
 
     // Assert
     expect(container.innerHTML).not.toContain('animate-');
+  });
+});
+
+describe('TendenciaDoPeriodo — com o painel por período', () => {
+  it('deve rotular cada dia com as criadas e as concluídas do próprio dia quando o gráfico é desenhado', async () => {
+    // Arrange
+    obterPainel.mockResolvedValue(PAINEL);
+
+    // Act
+    desenhar();
+    const desenhados = await grupos();
+
+    // Assert
+    expect(desenhados.map((grupo) => grupo.getAttribute('aria-label'))).toEqual([
+      '01/01: 4 criadas, 0 concluídas',
+      '02/01: 0 criadas, 4 concluídas',
+    ]);
+  });
+
+  it('deve dar a barra de concluídas ao dia em que concluiu quando ele não criou nenhuma', async () => {
+    // Arrange
+    obterPainel.mockResolvedValue(PAINEL);
+
+    // Act
+    desenhar();
+    const [, segundoDia] = await grupos();
+    const alturas = [...segundoDia.children].map((barra) => (barra as HTMLElement).style.height);
+
+    // Assert
+    expect(alturas).toEqual(['0%', '100%']);
+  });
+
+  it('deve explicar as concluídas como concluídas neste dia quando o painel responde', async () => {
+    // Arrange
+    obterPainel.mockResolvedValue(PAINEL);
+
+    // Act
+    desenhar();
+    await grupos();
+
+    // Assert
+    expect(screen.getByText('Concluídas: concluídas neste dia')).toBeDefined();
+  });
+
+  it('deve mostrar o rótulo do período dos dias recebidos quando o painel responde', async () => {
+    // Arrange
+    obterPainel.mockResolvedValue(PAINEL);
+
+    // Act
+    desenhar(7);
+    const rotulo = await screen.findByText('Últimos 7 dias');
+
+    // Assert
+    expect(rotulo.textContent).toBe('Últimos 7 dias');
+  });
+
+  it('deve não chamar o histórico quando o painel responde', async () => {
+    // Arrange
+    obterPainel.mockResolvedValue(PAINEL);
+
+    // Act
+    desenhar();
+    await grupos();
+
+    // Assert
+    expect(obterHistorico).not.toHaveBeenCalled();
+  });
+
+  it('deve avisar do erro e não trocar de fonte quando o painel responde 500', async () => {
+    // Arrange
+    obterPainel.mockRejectedValue(new ApiError({ status: 500, message: 'erro' }));
+
+    // Act
+    desenhar();
+    const alerta = await screen.findByRole('alert');
+
+    // Assert
+    expect(alerta.textContent).toContain('Não foi possível carregar a tendência');
   });
 });

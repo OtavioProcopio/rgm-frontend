@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/Button/Button';
 
 import { cn } from '@/shared/lib/cn';
 
+import { ordemDaColuna } from '../lib/ordemDoQuadro';
 import type { RelacaoDoOperador } from '../lib/relacaoDoOperador';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { KanbanCard } from './KanbanCard';
@@ -59,6 +60,7 @@ export function KanbanColumn({
   onDrop,
   onAdvance,
 }: Props) {
+  const ordem = ordemDaColuna(config.status);
   return (
     <div
       className={cn('flex flex-col', mobileView ? 'w-full' : 'min-w-[170px] max-w-[340px] flex-1')}
@@ -104,6 +106,7 @@ export function KanbanColumn({
         }}
       >
         {aviso ? <p className="px-1 text-xs font-medium text-fg-muted">{aviso}</p> : null}
+        {ordem ? <p className="px-1 text-xs font-medium text-fg-muted">{ordem.texto}</p> : null}
         {cards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted">

@@ -12,7 +12,7 @@ const ABERTAS: StatusSolicitacao[] = ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO']
 const ENCERRADAS: StatusSolicitacao[] = ['CONCLUIDA', 'CANCELADA'];
 
 describe('TAMANHO_DO_BLOCO', () => {
-  it('deve carregar as colunas em blocos de 20', () => {
+  it('deve carregar as colunas em blocos de 20 quando o quadro abre', () => {
     // Act
     const tamanho = TAMANHO_DO_BLOCO;
 
@@ -22,12 +22,64 @@ describe('TAMANHO_DO_BLOCO', () => {
 });
 
 describe('filtrosDaColuna', () => {
-  it('deve pedir o status da coluna, na página informada, com o tamanho do bloco', () => {
+  it('deve pedir o status da coluna, na página informada, com o tamanho do bloco quando o filtro é montado', () => {
     // Act
     const filtros = filtrosDaColuna('EM_ANDAMENTO', {}, TRINTA_DIAS_ATRAS, 2);
 
     // Assert
-    expect(filtros).toEqual({ status: 'EM_ANDAMENTO', page: 2, size: 20 });
+    expect(filtros).toEqual({
+      status: 'EM_ANDAMENTO',
+      page: 2,
+      size: 20,
+      sort: 'prazoLimite',
+      dir: 'asc',
+    });
+  });
+
+  it('deve pedir as criadas mais recentes primeiro quando a coluna é A_FAZER', () => {
+    // Act
+    const filtros = filtrosDaColuna('A_FAZER', {}, TRINTA_DIAS_ATRAS, 0);
+
+    // Assert
+    expect(filtros).toMatchObject({ sort: 'criadaEm', dir: 'desc' });
+  });
+
+  it.each(['EM_ANDAMENTO', 'EM_VALIDACAO'] as const)(
+    'deve pedir o prazo mais vencido primeiro quando a coluna é %s',
+    (status) => {
+      // Act
+      const filtros = filtrosDaColuna(status, {}, TRINTA_DIAS_ATRAS, 0);
+
+      // Assert
+      expect(filtros).toMatchObject({ sort: 'prazoLimite', dir: 'asc' });
+    },
+  );
+
+  it.each(ENCERRADAS)('deve não pedir ordenação quando a coluna é %s', (status) => {
+    // Act
+    const filtros = filtrosDaColuna(status, {}, TRINTA_DIAS_ATRAS, 0);
+
+    // Assert
+    expect(filtros).not.toHaveProperty('sort');
+  });
+
+  it('deve manter a ordenação quando o período de criação foi escolhido', () => {
+    // Arrange
+    const periodo = { criadaEmInicio: '2026-08-01T00:00:00Z', criadaEmFim: '2026-08-31T23:59:59Z' };
+
+    // Act
+    const filtros = filtrosDaColuna('A_FAZER', periodo, TRINTA_DIAS_ATRAS, 0);
+
+    // Assert
+    expect(filtros).toMatchObject({ sort: 'criadaEm', dir: 'desc' });
+  });
+
+  it('deve manter a ordenação da mesma página quando o modelo foi escolhido', () => {
+    // Act
+    const filtros = filtrosDaColuna('EM_VALIDACAO', { modeloId: 'm-1' }, TRINTA_DIAS_ATRAS, 3);
+
+    // Assert
+    expect(filtros).toMatchObject({ page: 3, modeloId: 'm-1', sort: 'prazoLimite', dir: 'asc' });
   });
 
   it.each([...ABERTAS, ...ENCERRADAS])(
@@ -107,7 +159,7 @@ describe('filtrosDaColuna', () => {
 });
 
 describe('inicioDosUltimos30Dias', () => {
-  it('deve devolver o início do dia de 30 dias antes do instante informado', () => {
+  it('deve devolver o início do dia de 30 dias antes quando o instante é informado', () => {
     // Arrange
     const agora = new Date('2026-10-07T15:42:10.500Z');
 
@@ -118,7 +170,7 @@ describe('inicioDosUltimos30Dias', () => {
     expect(inicio).toBe('2026-09-07T00:00:00.000Z');
   });
 
-  it('deve devolver o mesmo instante para dois momentos do mesmo dia', () => {
+  it('deve devolver o mesmo instante quando os dois momentos são do mesmo dia', () => {
     // Arrange
     const cedo = new Date('2026-10-07T00:00:01Z');
     const tarde = new Date('2026-10-07T23:59:59Z');
