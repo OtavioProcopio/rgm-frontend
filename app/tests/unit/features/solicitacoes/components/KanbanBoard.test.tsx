@@ -134,6 +134,7 @@ function colunasCom(
         erro: null,
         falhouAoCarregarMais: false,
         carregarMais: vi.fn(),
+        tentarDeNovo: vi.fn(),
         ...porStatus[status],
       };
       return [status, coluna];
@@ -713,6 +714,21 @@ describe('KanbanBoard — colunas em blocos', () => {
 
     // Assert
     expect(within(container).getAllByRole('button', { name: /^Soltar em / })).toHaveLength(6);
+  });
+
+  it('deve refazer só a consulta da coluna que falhou quando Tentar novamente é acionado', async () => {
+    // Arrange
+    const tentarDeNovo = vi.fn();
+    const colunas = colunasCom([], {
+      EM_VALIDACAO: { erro: new Error('sem rede'), tentarDeNovo },
+    });
+    const { container } = montar(colunas);
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(tentarDeNovo).toHaveBeenCalledTimes(1);
   });
 
   it('deve mostrar o erro do quadro quando uma das colunas falha', () => {

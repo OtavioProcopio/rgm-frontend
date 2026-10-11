@@ -17,6 +17,7 @@ import type {
   Solicitacao,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
+import { ApiError } from '@/shared/api/apiError';
 import type { PageResponse } from '@/shared/types/page';
 import { createAppWrapper } from '@tests/support/appWrapper';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
@@ -86,6 +87,7 @@ const ERRO_DE_REDE = new Error('falha de rede');
 let listar: MockInstance<typeof solicitacoesApi.listar>;
 let obterMetricas: MockInstance<typeof solicitacoesApi.obterMetricas>;
 let obterHistorico: MockInstance<typeof solicitacoesApi.obterHistoricoMetricas>;
+let obterPainel: MockInstance<typeof solicitacoesApi.obterPainel>;
 
 function pagina(content: Solicitacao[], totalElements: number): PageResponse<Solicitacao> {
   return { content, page: 0, size: 100, totalPages: 1, totalElements };
@@ -121,6 +123,8 @@ beforeEach(() => {
   listar = vi.spyOn(solicitacoesApi, 'listar');
   obterMetricas = vi.spyOn(solicitacoesApi, 'obterMetricas');
   obterHistorico = vi.spyOn(solicitacoesApi, 'obterHistoricoMetricas');
+  obterPainel = vi.spyOn(solicitacoesApi, 'obterPainel');
+  obterPainel.mockRejectedValue(new ApiError({ status: 404, message: 'não encontrado' }));
   const atrasada: Solicitacao = criarSolicitacao({ titulo: 'Trocar correia' });
   listar.mockImplementation(async (filtros) =>
     filtros.atrasada === true ? pagina([atrasada], 17) : pagina([], 58),
@@ -305,6 +309,15 @@ describe('DashboardPage — operador não vê o agregado', () => {
 
     // Assert
     expect(obterHistorico).not.toHaveBeenCalled();
+  });
+
+  it('deve não chamar o painel por período quando o perfil é operador', async () => {
+    // Act
+    renderizar('OPERADOR');
+    await screen.findByText('Conteúdo da aba Pessoal');
+
+    // Assert
+    expect(obterPainel).not.toHaveBeenCalled();
   });
 
   it('deve desligar as consultas de métricas e fila quando o perfil é operador', () => {

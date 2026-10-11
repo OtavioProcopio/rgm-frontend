@@ -21,7 +21,7 @@ const PAGE_SIZE = 20;
 
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
-  const { data, error, isLoading } = useModelos(filters);
+  const { data, error, isLoading, refetch } = useModelos(filters);
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
     filters.maquina,
   );
@@ -80,6 +80,7 @@ export function ModelosPage() {
         <ErrorState
           title="Não foi possível carregar modelos."
           description={getModeloErrorMessage(error)}
+          onRetry={() => void refetch()}
         />
       ) : null}
       {data && data.content.length === 0 ? (

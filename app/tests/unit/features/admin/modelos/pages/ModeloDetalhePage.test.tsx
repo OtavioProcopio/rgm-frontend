@@ -89,6 +89,27 @@ describe('ModeloDetalhePage (admin)', () => {
     expect(within(container).getByText(/não foi possível/i)).toBeDefined();
   });
 
+  it('deve refazer a consulta quando Tentar novamente é acionado depois da falha', async () => {
+    // Arrange
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const { useModelo } = await import('@/features/admin/modelos/hooks/useModelo');
+    const refetch = vi.fn();
+    vi.mocked(useModelo).mockReturnValue({
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useModelo>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/modelos/1'] });
+    const { container } = render(<ModeloDetalhePage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   async function abrirComResumo(
     resumo: Record<string, unknown> | undefined,
     estadoDoResumo: { isLoading?: boolean; isError?: boolean } = {},

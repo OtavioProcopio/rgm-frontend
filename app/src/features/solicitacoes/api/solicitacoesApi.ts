@@ -15,6 +15,7 @@ import type {
   MetricaPorModelo,
   MetricasPorModeloFilters,
   MetricasResponse,
+  PainelPorPeriodo,
   Solicitacao,
   SolicitacoesFilters,
   TriarSolicitacaoRequest,
@@ -62,6 +63,11 @@ export const solicitacoesApi = {
   obterHistoricoMetricas: (dias: number, modeloId?: string) =>
     httpClient.get<HistoricoMetricas>('/solicitacoes/metricas/historico', {
       params: { dias, modeloId },
+    }),
+
+  obterPainel: (dias: number, modeloId?: string) =>
+    httpClient.get<PainelPorPeriodo>('/solicitacoes/metricas/painel', {
+      params: { dias, ...(modeloId ? { modeloId } : {}) },
     }),
 
   exportar: (filters: SolicitacoesFilters) =>

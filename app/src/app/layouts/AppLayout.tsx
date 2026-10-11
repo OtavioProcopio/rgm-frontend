@@ -6,6 +6,7 @@ import { BarraLateral } from '@/app/layouts/BarraLateral';
 import { MenuDoUsuario } from '@/app/layouts/MenuDoUsuario';
 import { Logo } from '@/shared/components/Logo/Logo';
 import { destinosDeNavegacao } from '@/shared/lib/navegacao';
+import { NOME_DO_PRODUTO } from '@/shared/lib/produto';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { AvisoSemAtualizacao } from '@/features/solicitacoes/components/AvisoSemAtualizacao';
 import { useSolicitacaoEvents } from '@/features/solicitacoes/hooks/useSolicitacaoEvents';
@@ -28,7 +29,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-canvas text-fg lg:flex">
       <BarraLateral
         destinos={destinos}
-        identificacao={user?.perfil ? PERFIL_LABEL[user.perfil] : 'RGM Auto Parts'}
+        identificacao={user?.perfil ? PERFIL_LABEL[user.perfil] : NOME_DO_PRODUTO}
       />
 
       <div className="min-w-0 flex-1">

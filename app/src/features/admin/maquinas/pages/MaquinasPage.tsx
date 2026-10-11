@@ -15,7 +15,7 @@ import { getMaquinaErrorMessage } from '../lib/maquinaMessages';
 import type { Maquina } from '@/features/admin/modelos/types/maquinaTypes';
 
 export function MaquinasPage() {
-  const { data: maquinas, error, isLoading } = useMaquinas();
+  const { data: maquinas, error, isLoading, refetch } = useMaquinas();
   const [actionError, setActionError] = useState<string | null>(null);
   const ativarMaquina = useAtivarMaquina();
   const desativarMaquina = useDesativarMaquina();
@@ -63,6 +63,7 @@ export function MaquinasPage() {
         <ErrorState
           title="Não foi possível carregar as máquinas."
           description={getMaquinaErrorMessage(error)}
+          onRetry={() => void refetch()}
         />
       ) : null}
 

@@ -3,7 +3,7 @@ import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useR
 
 import { TriagemModal } from '../components/TriagemModal';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
-import { acaoFeitaSemFoto } from '../lib/solicitacaoMessages';
+import { acaoFeitaSemFoto, sucessoDaAcao } from '../lib/solicitacaoMessages';
 import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
@@ -22,12 +22,16 @@ export function TriarAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
         usuarios={responsaveis}
         onCancel={onCancelar}
         onConfirm={(data, foto, nota) =>
-          executar(() => triar.mutateAsync(data), {
-            file: foto,
-            tipo: 'INSTRUCAO_SERVICO',
-            feito: acaoFeitaSemFoto.TRIAR,
-            descricao: nota || undefined,
-          })
+          executar(
+            () => triar.mutateAsync(data),
+            {
+              file: foto,
+              tipo: 'INSTRUCAO_SERVICO',
+              feito: acaoFeitaSemFoto.TRIAR,
+              descricao: nota || undefined,
+            },
+            sucessoDaAcao.TRIAR,
+          )
         }
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />

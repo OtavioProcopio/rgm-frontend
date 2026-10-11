@@ -2,6 +2,7 @@ import { EncerramentoModal } from '../components/EncerramentoModal';
 import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
 import { useEncerrarSolicitacao } from '../hooks/useEncerrarSolicitacao';
 import { useExecutarAcao } from '../hooks/useExecutarAcao';
+import { sucessoDaAcao } from '../lib/solicitacaoMessages';
 import { AcaoAvisos } from './AcaoAvisos';
 import type { AcaoProps } from '../types/acaoProps';
 
@@ -22,13 +23,21 @@ export function EncerrarAction({ solicitacao, onClose, onCancelar }: AcaoProps) 
         onCancel={onCancelar}
         onConfirm={(data, foto) =>
           data.concluir
-            ? executar(() => encerrar.mutateAsync(data), {
-                file: foto,
-                tipo: 'CONCLUSAO',
-                anexarAntes: true,
-                descricao: data.comentario,
-              })
-            : executar(() => cancelar.mutateAsync({ motivo: data.comentario }))
+            ? executar(
+                () => encerrar.mutateAsync(data),
+                {
+                  file: foto,
+                  tipo: 'CONCLUSAO',
+                  anexarAntes: true,
+                  descricao: data.comentario,
+                },
+                sucessoDaAcao.ENCERRAR,
+              )
+            : executar(
+                () => cancelar.mutateAsync({ motivo: data.comentario }),
+                undefined,
+                sucessoDaAcao.CANCELAR,
+              )
         }
       />
       <AcaoAvisos erro={erro} atualizadaPorOutro={atualizadaPorOutro} />

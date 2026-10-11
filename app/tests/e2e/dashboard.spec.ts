@@ -1,4 +1,8 @@
-import { test, expect } from './fixtures';
+import { test, expect, API_URL } from './fixtures';
+
+/** Requisições de dados do painel: as de solicitações, sem o canal de eventos em tempo real. */
+const ehRequisicaoDeDados = (url: string) =>
+  url.startsWith(`${API_URL}/solicitacoes`) && !url.includes('/solicitacoes/events');
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ loginAdmin }) => {
@@ -83,5 +87,76 @@ test.describe('Lista filtrada vinda do painel', () => {
 
     await expect(page.getByRole('button', { name: /Remover filtro/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Kanban' })).toBeVisible();
+  });
+});
+
+test.describe('Dashboard sobre o painel por período', () => {
+  test('abre os indicadores com no máximo três requisições de dados', async ({
+    page,
+    loginAdmin,
+  }) => {
+    await loginAdmin('/app/perfil');
+    const requisicoes: string[] = [];
+    page.on('request', (requisicao) => {
+      if (ehRequisicaoDeDados(requisicao.url())) requisicoes.push(requisicao.url());
+    });
+
+    await page.goto('/app/dashboard');
+    await expect(
+      page.getByRole('region', { name: 'Indicadores' }).getByText('Concluídas no período'),
+    ).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Tendência' })).toBeVisible();
+    await page.waitForLoadState('networkidle');
+
+    expect(requisicoes.length).toBeLessThanOrEqual(3);
+  });
+
+  test('mostra os indicadores do painel por período quando o backend o oferece', async ({
+    page,
+    loginAdmin,
+  }) => {
+    const painel = page.waitForResponse(
+      (resposta) => resposta.url().includes('/solicitacoes/metricas/painel'),
+    );
+
+    await loginAdmin('/app/dashboard');
+
+    expect((await painel).status()).toBe(200);
+    await expect(
+      page.getByRole('region', { name: 'Indicadores' }).getByText('Concluídas no período'),
+    ).toBeVisible();
+  });
+
+  test('mostra os indicadores da spec 013 quando o painel responde 404', async ({
+    page,
+    loginAdmin,
+  }) => {
+    await page.route('**/solicitacoes/metricas/painel**', (rota) =>
+      rota.fulfill({ status: 404, contentType: 'application/json', body: '{}' }),
+    );
+
+    await loginAdmin('/app/dashboard');
+
+    const indicadores = page.getByRole('region', { name: 'Indicadores' });
+    await expect(indicadores.getByText('Concluídas no período')).toBeVisible();
+    await expect(indicadores.getByText('Tempo médio', { exact: true })).toBeVisible();
+    await expect(indicadores.getByRole('alert')).toHaveCount(0);
+  });
+
+  test('mostra o erro com Tentar novamente quando o painel falha com erro do servidor', async ({
+    page,
+    loginAdmin,
+  }) => {
+    await page.route('**/solicitacoes/metricas/painel**', (rota) =>
+      rota.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+    );
+
+    await loginAdmin('/app/dashboard');
+
+    await expect(
+      page
+        .getByRole('region', { name: 'Indicadores' })
+        .getByRole('button', { name: 'Tentar novamente' }),
+    ).toBeVisible();
   });
 });

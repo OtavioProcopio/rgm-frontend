@@ -34,6 +34,19 @@ export const acaoFeitaSemFoto = {
   DEVOLVER: 'A solicitação foi devolvida, mas a foto não foi enviada.',
 } as const;
 
+/** Confirmação mostrada por alguns segundos depois que a ação é feita. */
+export const sucessoDaAcao = {
+  TRIAR: 'Solicitação triada',
+  DEVOLVER: 'Solicitação devolvida',
+  ENCERRAR: 'Solicitação encerrada',
+  CANCELAR: 'Solicitação cancelada',
+  ENVIAR_VALIDACAO: 'Solicitação enviada para validação',
+  RESPONSAVEIS: 'Responsáveis atualizados',
+  COMENTAR: 'Comentário registrado',
+  ANEXAR: 'Evidência anexada',
+  EDITAR: 'Solicitação atualizada',
+} as const;
+
 /** Erro do formulário quando a foto vai antes da ação e o envio falha: nada foi feito. */
 export function mensagemFotoNaoEnviadaAntes(error: unknown): string {
   const motivo = error instanceof ApiError && error.message ? ` ${error.message}` : '';

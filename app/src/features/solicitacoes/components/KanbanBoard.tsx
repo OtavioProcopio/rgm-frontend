@@ -6,7 +6,6 @@ import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
-import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { cn } from '@/shared/lib/cn';
 
 import { DialogoDaAcao } from '../actions/DialogoDaAcao';
@@ -19,6 +18,7 @@ import { relacaoDoOperador } from '../lib/relacaoDoOperador';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import type { Solicitacao, StatusSolicitacao } from '../types/solicitacaoTypes';
 import { COLUMNS } from './kanbanColunas';
+import { EsqueletoDoQuadro } from './EsqueletoDoQuadro';
 import { KanbanColumn } from './KanbanColumn';
 
 type AcaoPendente = { acao: AcaoSolicitacao; card: Solicitacao };
@@ -48,6 +48,8 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
   const todas = COLUMNS.map((col) => colunas[col.status]);
   const isLoading = todas.some((coluna) => coluna.carregando);
   const error = todas.find((coluna) => coluna.erro)?.erro ?? null;
+  const tentarDeNovo = () =>
+    todas.filter((coluna) => coluna.erro).forEach((coluna) => coluna.tentarDeNovo());
   const totalDoQuadro = todas.reduce((soma, coluna) => soma + coluna.total, 0);
   // As encerradas só vêm dos últimos 30 dias: quadro vazio não prova que o operador não tem nada.
   const temEncerradaAntiga = useTemSolicitacaoDoOperador({
@@ -90,12 +92,13 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     if (proximo) tryMove(card, proximo);
   }
 
-  if (isLoading) return <LoadingState title="Carregando quadro..." />;
+  if (isLoading) return <EsqueletoDoQuadro />;
   if (error)
     return (
       <ErrorState
         title="Erro ao carregar solicitações"
         description={getSolicitacaoErrorMessage(error)}
+        onRetry={tentarDeNovo}
       />
     );
   if (isOperador && totalDoQuadro === 0 && temFiltro) {
@@ -112,7 +115,7 @@ export function KanbanBoard({ modeloId, dataInicio, dataFim, onLimparFiltro }: P
     );
   }
   if (isOperador && totalDoQuadro === 0 && temEncerradaAntiga.isLoading) {
-    return <LoadingState title="Carregando quadro..." />;
+    return <EsqueletoDoQuadro />;
   }
   // Com solicitação fora do recorte, ou sem saber (consulta falhou), não afirma que nunca teve.
   if (isOperador && totalDoQuadro === 0 && temEncerradaAntiga.data === false) {

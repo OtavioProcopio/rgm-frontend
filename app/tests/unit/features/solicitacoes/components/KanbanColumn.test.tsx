@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ETAPAS, FUNDO_NEUTRO, SELETOR_DO_PONTO, fundosDe } from '@tests/support/etapasDoQuadro';
@@ -65,6 +65,49 @@ describe('KanbanColumn', () => {
       />
     );
   }
+
+  it.each([
+    { caso: 'a solta é válida', extra: { isDropTarget: true }, classe: 'border-accent' },
+    {
+      caso: 'a solta é inválida',
+      extra: { isDropTarget: true, isInvalidDrop: true },
+      classe: 'border-danger',
+    },
+    { caso: 'a coluna não é alvo', extra: {}, classe: 'border-line' },
+  ])('deve destacar a zona com $classe quando $caso', ({ extra, classe }) => {
+    // Act
+    const { container } = render(colunaBasica(extra));
+
+    // Assert
+    const zona = container.querySelector('[style*="min-height"]')!;
+    expect(classes(zona)).toContain(classe);
+  });
+
+  it('deve avisar o status da coluna quando algo é arrastado por cima dela', () => {
+    // Arrange
+    const onDragOver = vi.fn();
+    const { container } = render(colunaBasica({ onDragOver }));
+    const zona = container.querySelector('[style*="min-height"]')!;
+
+    // Act
+    fireEvent.dragOver(zona);
+
+    // Assert
+    expect(onDragOver).toHaveBeenCalledExactlyOnceWith('A_FAZER');
+  });
+
+  it('deve avisar o status da coluna quando algo é solto nela', () => {
+    // Arrange
+    const onDrop = vi.fn();
+    const { container } = render(colunaBasica({ onDrop }));
+    const zona = container.querySelector('[style*="min-height"]')!;
+
+    // Act
+    fireEvent.drop(zona);
+
+    // Assert
+    expect(onDrop).toHaveBeenCalledExactlyOnceWith('A_FAZER');
+  });
 
   it('deve mostrar o nome da coluna no computador', () => {
     // Act
@@ -264,6 +307,61 @@ describe('KanbanColumn', () => {
 
     // Assert
     expect(within(container).queryByText('Últimos 30 dias')).toBeNull();
+  });
+
+  it('deve dizer mais recentes primeiro quando a coluna é A_FAZER', () => {
+    // Arrange
+    const etapa = configDe('A_FAZER');
+
+    // Act
+    const { container } = render(colunaBasica({ config: etapa }));
+
+    // Assert
+    expect(within(container).getByText('mais recentes primeiro')).toBeDefined();
+  });
+
+  it.each(['EM_ANDAMENTO', 'EM_VALIDACAO'])(
+    'deve dizer prazo mais vencido primeiro quando a coluna é %s',
+    (status) => {
+      // Arrange
+      const etapa = configDe(status);
+
+      // Act
+      const { container } = render(colunaBasica({ config: etapa }));
+
+      // Assert
+      expect(within(container).getByText('prazo mais vencido primeiro')).toBeDefined();
+    },
+  );
+
+  it.each(['CONCLUIDA', 'CANCELADA'])(
+    'deve não dizer ordem nenhuma quando a coluna é %s',
+    (status) => {
+      // Arrange
+      const etapa = configDe(status);
+
+      // Act
+      const { container } = render(colunaBasica({ config: etapa }));
+
+      // Assert
+      expect(within(container).queryByText(/primeiro/)).toBeNull();
+    },
+  );
+
+  it('deve mostrar a ordem junto do aviso quando a coluna tem os dois', () => {
+    // Arrange
+    const etapa = configDe('A_FAZER');
+
+    // Act
+    const { container } = render(colunaBasica({ config: etapa, aviso: 'Últimos 30 dias' }));
+
+    // Assert
+    expect(
+      [
+        within(container).queryByText('Últimos 30 dias'),
+        within(container).queryByText('mais recentes primeiro'),
+      ].every((elemento) => elemento !== null),
+    ).toBe(true);
   });
 
   it('deve avisar na coluna quando a busca do próximo bloco falha', () => {

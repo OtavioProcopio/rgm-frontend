@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Logo } from '@/shared/components/Logo/Logo';
 
-const NOME = 'RGM Auto Parts';
+const NOME = 'Rei Auto Parts';
 const ALTURAS = [
   { tamanho: 'sm', classe: 'h-8' },
   { tamanho: 'md', classe: 'h-12' },

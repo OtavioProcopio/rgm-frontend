@@ -15,6 +15,7 @@ import type {
   MetricasResponse,
   Solicitacao,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
+import { ApiError } from '@/shared/api/apiError';
 import type { PageResponse } from '@/shared/types/page';
 import { createAppWrapper } from '@tests/support/appWrapper';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
@@ -69,6 +70,7 @@ const MODELO: Modelo = {
 let listar: MockInstance<typeof solicitacoesApi.listar>;
 let obterMetricas: MockInstance<typeof solicitacoesApi.obterMetricas>;
 let obterHistorico: MockInstance<typeof solicitacoesApi.obterHistoricoMetricas>;
+let obterPainel: MockInstance<typeof solicitacoesApi.obterPainel>;
 let buscarPorId: MockInstance<typeof modelosApi.buscarPorId>;
 
 function pagina(content: Solicitacao[], totalElements: number): PageResponse<Solicitacao> {
@@ -114,6 +116,8 @@ beforeEach(() => {
   listar = vi.spyOn(solicitacoesApi, 'listar');
   obterMetricas = vi.spyOn(solicitacoesApi, 'obterMetricas');
   obterHistorico = vi.spyOn(solicitacoesApi, 'obterHistoricoMetricas');
+  obterPainel = vi.spyOn(solicitacoesApi, 'obterPainel');
+  obterPainel.mockRejectedValue(new ApiError({ status: 404, message: 'não encontrado' }));
   buscarPorId = vi.spyOn(modelosApi, 'buscarPorId');
   responderListagem();
   obterMetricas.mockResolvedValue(METRICAS);
@@ -493,5 +497,31 @@ describe('SolicitacoesTab — erro de um bloco não derruba os outros', () => {
 
     // Assert
     expect(obterMetricas).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('SolicitacoesTab — painel por período', () => {
+  it('deve consultar o painel uma única vez quando a faixa e a tendência usam o mesmo período', async () => {
+    // Arrange
+    const periodo = {
+      inicio: '2026-09-10',
+      fim: '2026-10-10',
+      criadas: 0,
+      concluidas: 140,
+      canceladas: 0,
+      tempoMedioResolucaoSegundos: 1800,
+      serie: [],
+    };
+    obterPainel.mockResolvedValue({
+      periodo: { ...periodo, abertasAgora: 0, atrasadasAgora: 0 },
+      anterior: { ...periodo, concluidas: 120 },
+    });
+
+    // Act
+    renderizar();
+    await screen.findByText('140');
+
+    // Assert
+    expect(obterPainel).toHaveBeenCalledTimes(1);
   });
 });

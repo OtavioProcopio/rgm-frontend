@@ -130,6 +130,28 @@ describe('SolicitacoesPage', () => {
     expect(within(container).getByText(/não foi possível carregar/i)).toBeDefined();
   });
 
+  it('deve refazer a consulta quando Tentar novamente é acionado depois da falha', async () => {
+    // Arrange
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
+    const refetch = vi.fn();
+    vi.mocked(useSolicitacoes).mockReturnValue({
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useSolicitacoes>);
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<SolicitacoesPage />, { wrapper: AppWrapper });
+    await userEvent.click(within(container).getByRole('button', { name: /lista/i }));
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('opens directly in lista view filtered by maquina from the URL', async () => {
     const { useSolicitacoes } = await import('@/features/solicitacoes/hooks/useSolicitacoes');
     vi.mocked(useSolicitacoes).mockReturnValue({

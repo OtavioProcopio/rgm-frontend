@@ -18,4 +18,28 @@ describe('LoadingState', () => {
     const { container } = render(<LoadingState title="Carregando usuários..." />);
     expect(within(container).getByText('Carregando usuários...')).toBeDefined();
   });
+
+  it('deve ser anunciado como estado quando carrega', () => {
+    // Act
+    const { container } = render(<LoadingState title="Carregando quadro..." />);
+
+    // Assert
+    expect(within(container).getByRole('status').textContent).toBe('Carregando quadro...');
+  });
+
+  it('deve manter o texto só para o leitor de tela quando o esqueleto é desenhado', () => {
+    // Act
+    const { container } = render(<LoadingState title="Carregando quadro..." />);
+
+    // Assert
+    expect(within(container).getByText('Carregando quadro...').className).toContain('sr-only');
+  });
+
+  it('deve desenhar o número de linhas pedido quando linhas é informado', () => {
+    // Act
+    const { container } = render(<LoadingState linhas={5} />);
+
+    // Assert
+    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(5);
+  });
 });

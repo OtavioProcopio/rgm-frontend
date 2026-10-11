@@ -70,6 +70,9 @@ export type SolicitacoesFilters = {
   tipoData?: 'CRIACAO' | 'CONCLUSAO';
   dataInicio?: string;
   dataFim?: string;
+  /** Ordenação da API; o backend antigo a ignora e mantém a ordem de sempre. */
+  sort?: 'criadaEm' | 'prazoLimite' | 'prioridade';
+  dir?: 'asc' | 'desc';
 };
 
 export type AbrirSolicitacaoRequest = {
@@ -130,10 +133,55 @@ export type PontoDeSerie = {
   slaMediaHoras: number;
 };
 
+/** O que a tendência desenha por dia, venha do painel ou do histórico. */
+export type PontoDaTendencia = Pick<
+  PontoDeSerie,
+  'periodo' | 'total' | 'abertas' | 'concluidas' | 'canceladas'
+>;
+
+export type DadosDaTendencia = {
+  series: PontoDaTendencia[];
+  periodoLabel: string;
+  /** Verdadeiro quando concluídas contam no dia da conclusão (painel); falso no histórico. */
+  porDataDoEvento: boolean;
+};
+
 export type HistoricoMetricas = {
   series: PontoDeSerie[];
   slaGlobalMediaHoras: number;
   periodoLabel: string;
+};
+
+export type PontoDaSerieDoPainel = {
+  /** `dd/MM` por dia, ou `Sem N` por semana quando o período passa de 30 dias. */
+  rotulo: string;
+  criadas: number;
+  concluidas: number;
+  canceladas: number;
+  abertasAoFimDoDia: number;
+  atrasadasAoFimDoDia: number;
+};
+
+export type PeriodoAnteriorDoPainel = {
+  inicio: string;
+  fim: string;
+  criadas: number;
+  concluidas: number;
+  canceladas: number;
+  /** Segundos com 1 casa; `null` quando nada foi concluído no período. */
+  tempoMedioResolucaoSegundos: number | null;
+  serie: PontoDaSerieDoPainel[];
+};
+
+export type PeriodoAtualDoPainel = PeriodoAnteriorDoPainel & {
+  abertasAgora: number;
+  atrasadasAgora: number;
+};
+
+/** Resposta de `GET /solicitacoes/metricas/painel`. */
+export type PainelPorPeriodo = {
+  periodo: PeriodoAtualDoPainel;
+  anterior: PeriodoAnteriorDoPainel;
 };
 
 export type MetricasResponse = {

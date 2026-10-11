@@ -108,6 +108,27 @@ describe('ModelosPage', () => {
     expect(within(container).getByText(/não foi possível carregar/i)).toBeDefined();
   });
 
+  it('deve refazer a consulta quando Tentar novamente é acionado depois da falha', async () => {
+    // Arrange
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
+    const refetch = vi.fn();
+    vi.mocked(useModelos).mockReturnValue({
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useModelos>);
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<ModelosPage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('renders modelos table when data is available', async () => {
     const { useModelos } = await import('@/features/admin/modelos/hooks/useModelos');
     vi.mocked(useModelos).mockReturnValue({

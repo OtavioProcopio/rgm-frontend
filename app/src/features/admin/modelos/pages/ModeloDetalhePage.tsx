@@ -37,7 +37,7 @@ type Mutacao = { mutateAsync: (id: string) => Promise<unknown> };
 export function ModeloDetalhePage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { data: modelo, error, isLoading } = useModelo(id);
+  const { data: modelo, error, isLoading, refetch } = useModelo(id);
   const dados = useDadosDoModelo(id);
   const podeGerenciarFoto = canManageModelos(user?.perfil);
 
@@ -46,7 +46,11 @@ export function ModeloDetalhePage() {
       <CabecalhoDoModelo id={id} modelo={modelo} gerencia={Boolean(id) && podeGerenciarFoto} />
       {isLoading ? <LoadingState title="Carregando modelo..." /> : null}
       {error ? (
-        <ErrorState title="Modelo não encontrado" description={getModeloErrorMessage(error)} />
+        <ErrorState
+          title="Modelo não encontrado"
+          description={getModeloErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : null}
       {modelo ? (
         <CorpoDoModelo

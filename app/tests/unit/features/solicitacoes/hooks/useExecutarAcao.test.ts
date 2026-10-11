@@ -2,10 +2,12 @@
  * @vitest-environment jsdom
  */
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
 import { ApiError } from '@/shared/api/apiError';
+import { ToastContext } from '@/shared/components/Toast/toastContext';
 import { createQueryWrapper } from '@tests/support/queryWrapper';
 
 import { solicitacoesKeys } from '@/features/solicitacoes/hooks/solicitacoesKeys';
@@ -24,6 +26,20 @@ function montar() {
   const { QueryWrapper, queryClient } = createQueryWrapper();
   const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), { wrapper: QueryWrapper });
   return { result, onConcluida, queryClient };
+}
+
+function montarComAviso() {
+  const avisar = vi.fn();
+  const onConcluida = vi.fn();
+  const { QueryWrapper } = createQueryWrapper();
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    createElement(
+      QueryWrapper,
+      null,
+      createElement(ToastContext.Provider, { value: { avisar } }, children),
+    );
+  const { result } = renderHook(() => useExecutarAcao('s1', onConcluida), { wrapper });
+  return { result, avisar, onConcluida };
 }
 
 afterEach(() => vi.clearAllMocks());
@@ -247,5 +263,65 @@ describe('useExecutarAcao', () => {
 
     // Assert
     expect(result.current.atualizadaPorOutro).toBe(false);
+  });
+
+  it('deve dar o aviso de sucesso depois de concluir quando a ação termina e a frase é informada', async () => {
+    // Arrange
+    const { result, avisar, onConcluida } = montarComAviso();
+
+    // Act
+    await act(() =>
+      result.current.executar(() => Promise.resolve(), undefined, 'Solicitação triada'),
+    );
+
+    // Assert
+    expect(onConcluida).toHaveBeenCalledTimes(1);
+    expect(avisar).toHaveBeenCalledWith('Solicitação triada');
+  });
+
+  it('deve não dar o aviso de sucesso quando a ação é recusada', async () => {
+    // Arrange
+    const { result, avisar } = montarComAviso();
+
+    // Act
+    await act(() =>
+      result.current.executar(
+        () => Promise.reject(new Error('recusada')),
+        undefined,
+        'Solicitação triada',
+      ),
+    );
+
+    // Assert
+    expect(avisar).not.toHaveBeenCalled();
+  });
+
+  it('deve não dar o aviso de sucesso quando a ação é feita e a foto falha', async () => {
+    // Arrange
+    const { result, avisar } = montarComAviso();
+    vi.mocked(evidenciasApi.anexar).mockRejectedValue(new Error('arquivo grande'));
+
+    // Act
+    await act(() =>
+      result.current.executar(
+        () => Promise.resolve(),
+        { file: foto, tipo: 'INSTRUCAO_SERVICO', feito },
+        'Solicitação triada',
+      ),
+    );
+
+    // Assert
+    expect(avisar).not.toHaveBeenCalled();
+  });
+
+  it('deve não dar aviso algum quando nenhuma frase de sucesso é informada', async () => {
+    // Arrange
+    const { result, avisar } = montarComAviso();
+
+    // Act
+    await act(() => result.current.executar(() => Promise.resolve()));
+
+    // Assert
+    expect(avisar).not.toHaveBeenCalled();
   });
 });

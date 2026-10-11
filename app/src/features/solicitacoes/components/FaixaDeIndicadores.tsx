@@ -7,8 +7,10 @@ import {
   type IndicadoresDoPeriodo,
 } from '../hooks/useIndicadoresDoPeriodo';
 import {
+  detalheDoTempoMedio,
   leituraDoAtraso,
   leituraDoTempoMedio,
+  valorDoTempoMedio,
   variacaoDeConcluidas,
   type Leitura,
   type TempoMedio,
@@ -18,7 +20,6 @@ import { KPICard } from '../pages/DashboardKpiCard';
 import type { MetricasResponse } from '../types/solicitacaoTypes';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
-import { formatarDuracao } from '@/shared/lib/duracao';
 
 type Props = {
   dias: PeriodoDoPainel;
@@ -28,7 +29,6 @@ type Props = {
 };
 
 const SEM_VALOR = '—';
-const DETALHE_DO_TEMPO = 'da abertura à conclusão';
 const ERRO_DO_ATRASO = 'Não foi possível carregar os itens em atraso';
 
 function Celula({ carregando, children }: { carregando: boolean; children: ReactNode }) {
@@ -42,16 +42,6 @@ function Celula({ carregando, children }: { carregando: boolean; children: React
 
 function segundosDe(tempo: TempoMedio | null): number | null {
   return tempo === null ? null : tempo.segundos;
-}
-
-function valorDoTempo(tempo: TempoMedio | null): string {
-  return tempo === null ? SEM_VALOR : formatarDuracao(tempo.segundos * 1000);
-}
-
-function detalheDoTempo(tempo: TempoMedio | null): string {
-  if (tempo === null || tempo.amostra === null) return DETALHE_DO_TEMPO;
-  const { usados, total } = tempo.amostra;
-  return `${DETALHE_DO_TEMPO} · média de ${usados} de ${total}`;
 }
 
 function CartaoAbertas(props: Pick<Props, 'metricas' | 'metricasErro' | 'onRetryMetricas'>) {
@@ -122,8 +112,8 @@ function CartaoTempoMedio({ dados }: { dados?: DadosDoPeriodo }) {
       <KPICard
         icon={Timer}
         label="Tempo médio"
-        value={tempo ? valorDoTempo(tempo.atual) : SEM_VALOR}
-        subtext={tempo ? detalheDoTempo(tempo.atual) : DETALHE_DO_TEMPO}
+        value={tempo ? valorDoTempoMedio(tempo.atual) : SEM_VALOR}
+        subtext={detalheDoTempoMedio(tempo ? tempo.atual : null)}
         gradient="purple"
         leitura={tempo && leituraDoTempoMedio(segundosDe(tempo.atual), segundosDe(tempo.anterior))}
       />

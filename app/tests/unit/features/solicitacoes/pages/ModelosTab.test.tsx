@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
@@ -66,7 +67,12 @@ function rankingDe(tempo: number, intervalo: number | null): (typeof RANKING)[nu
   };
 }
 
-function resumoResponde(estado: { data?: typeof RESUMO; isLoading?: boolean; isError?: boolean }) {
+function resumoResponde(estado: {
+  data?: typeof RESUMO;
+  isLoading?: boolean;
+  isError?: boolean;
+  refetch?: () => void;
+}) {
   vi.mocked(useResumoDeModelos).mockReturnValue({
     data: undefined,
     isLoading: false,
@@ -106,6 +112,19 @@ describe('ModelosTab — estados', () => {
 
     // Assert
     expect(within(container).getByText(/carregando/i)).toBeDefined();
+  });
+
+  it('deve refazer a consulta do resumo quando Tentar novamente é acionado', async () => {
+    // Arrange
+    const refetch = vi.fn();
+    resumoResponde({ isError: true, refetch });
+    const { container } = abrir();
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it('deve mostrar o erro quando o resumo não pôde ser carregado', () => {
@@ -339,6 +358,24 @@ describe('ModelosTab — ramos de estado e teclado', () => {
 
     // Assert
     expect(within(container).getByText('Carregando ranking...')).toBeDefined();
+  });
+
+  it('deve refazer a consulta do ranking quando Tentar novamente é acionado', async () => {
+    // Arrange
+    const refetch = vi.fn();
+    vi.mocked(useMetricasPorModelo).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch,
+    } as unknown as ReturnType<typeof useMetricasPorModelo>);
+    const { container } = abrir();
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it('deve mostrar o erro do ranking quando o ranking não pôde ser carregado', () => {

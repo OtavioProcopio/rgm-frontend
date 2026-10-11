@@ -53,7 +53,9 @@ export function SolicitacoesPage() {
   const inicial = useEstadoInicialDaUrl();
   const [view, setView] = useState<View>(inicial.view);
   const [filters, setFilters] = useState<SolicitacoesFilters>(inicial.filters);
-  const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
+  const { data, error, isLoading, refetch } = useSolicitacoes(filters, {
+    enabled: view === 'lista',
+  });
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
   const buscarPdf = (): Promise<Blob> => solicitacoesApi.exportar(filters);
@@ -169,6 +171,7 @@ export function SolicitacoesPage() {
             <ErrorState
               title="Não foi possível carregar solicitações."
               description={getSolicitacaoErrorMessage(error)}
+              onRetry={() => void refetch()}
             />
           ) : null}
           {data && data.content.length === 0 ? (

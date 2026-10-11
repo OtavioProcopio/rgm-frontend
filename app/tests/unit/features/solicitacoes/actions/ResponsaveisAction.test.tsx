@@ -103,4 +103,29 @@ describe('ResponsaveisAction', () => {
     expect(onCancelar).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('deve confirmar com o aviso Responsáveis atualizados quando a ação dá certo', async () => {
+    // Arrange
+    alterar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByText('Responsáveis atualizados')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    alterar.mockRejectedValue(new Error('recusada'));
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Responsáveis atualizados')).toBeNull();
+  });
 });

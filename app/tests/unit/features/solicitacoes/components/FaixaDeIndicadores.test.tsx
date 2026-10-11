@@ -10,7 +10,12 @@ import {
   intervalosDoPeriodo,
   type PeriodoDoPainel,
 } from '@/features/solicitacoes/lib/periodoDoPainel';
-import type { MetricasResponse, Solicitacao } from '@/features/solicitacoes/types/solicitacaoTypes';
+import type {
+  MetricasResponse,
+  PeriodoAnteriorDoPainel,
+  Solicitacao,
+} from '@/features/solicitacoes/types/solicitacaoTypes';
+import { ApiError } from '@/shared/api/apiError';
 import type { PageResponse } from '@/shared/types/page';
 import { createAppWrapper } from '@tests/support/appWrapper';
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
@@ -32,6 +37,7 @@ const CARREGANDO = 'Carregando';
 const LEITURA_DE_ATRASO = /das abertas|Em dia/;
 
 let listar: MockInstance<typeof solicitacoesApi.listar>;
+let obterPainel: MockInstance<typeof solicitacoesApi.obterPainel>;
 
 function pagina(total: number, tempos: (number | null)[] = []): Pagina {
   const content: Solicitacao[] = tempos.map((tempo) =>
@@ -118,8 +124,27 @@ function chamadasDasConcluidas(): number {
   return listar.mock.calls.filter(([filtros]) => filtros.status === 'CONCLUIDA').length;
 }
 
+function periodoDoPainel(concluidas: number, tempo: number | null): PeriodoAnteriorDoPainel {
+  return {
+    inicio: '2026-09-10',
+    fim: '2026-10-10',
+    criadas: 0,
+    concluidas,
+    canceladas: 0,
+    tempoMedioResolucaoSegundos: tempo,
+    serie: [],
+  };
+}
+
+function responderPainel(atual: PeriodoAnteriorDoPainel, anterior: PeriodoAnteriorDoPainel): void {
+  const periodo = { ...atual, abertasAgora: 0, atrasadasAgora: 0 };
+  obterPainel.mockResolvedValue({ periodo, anterior });
+}
+
 beforeEach(() => {
   listar = vi.spyOn(solicitacoesApi, 'listar');
+  obterPainel = vi.spyOn(solicitacoesApi, 'obterPainel');
+  obterPainel.mockRejectedValue(new ApiError({ status: 404, message: 'não encontrado' }));
   responder({});
 });
 
@@ -639,6 +664,114 @@ describe('FaixaDeIndicadores — falha nos indicadores do período', () => {
 
     // Assert
     await waitFor(() => expect(chamadasDasConcluidas()).toBe(antes + 2));
+  });
+});
+
+describe('FaixaDeIndicadores — com o painel por período', () => {
+  it('deve mostrar as 140 concluídas quando o painel traz 140 e a listagem teria só 100', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+
+    // Assert
+    expect(await screen.findByText('140')).toBeDefined();
+  });
+
+  it('deve mostrar a variação contra 120 quando o painel traz 140 e 120', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+
+    // Assert
+    expect(await screen.findByText('+17% contra o período anterior')).toBeDefined();
+  });
+
+  it('deve não mostrar média de 100 de quando o painel traz 140 concluídas', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+    await screen.findByText('140');
+
+    // Assert
+    expect(screen.queryByText(/média de/)).toBeNull();
+  });
+
+  it('deve mostrar 30 min quando o tempo médio do painel é de 1800 segundos', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+
+    // Assert
+    expect(await screen.findByText('30 min')).toBeDefined();
+  });
+
+  it('deve não mostrar 0 h quando o tempo médio do painel é de 1800 segundos', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+    await screen.findByText('30 min');
+
+    // Assert
+    expect(screen.queryByText('0 h')).toBeNull();
+  });
+
+  it('deve não chamar a listagem de concluídas quando o painel responde', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 1800));
+
+    // Act
+    renderFaixa();
+    await screen.findByText('140');
+
+    // Assert
+    expect(chamadasDasConcluidas()).toBe(0);
+  });
+
+  it('deve mostrar o erro com Tentar novamente quando o painel responde 500', async () => {
+    // Arrange
+    obterPainel.mockRejectedValue(new ApiError({ status: 500, message: 'erro' }));
+
+    // Act
+    renderFaixa();
+
+    // Assert
+    expect(await screen.findByRole('button', { name: TENTAR_NOVAMENTE })).toBeDefined();
+  });
+
+  it('deve não trocar de fonte quando o painel responde 500', async () => {
+    // Arrange
+    obterPainel.mockRejectedValue(new ApiError({ status: 500, message: 'erro' }));
+
+    // Act
+    renderFaixa();
+    await screen.findByText('Não foi possível carregar os indicadores do período');
+
+    // Assert
+    expect(chamadasDasConcluidas()).toBe(0);
+  });
+
+  it('deve refazer o painel quando o botão de nova tentativa é acionado', async () => {
+    // Arrange
+    obterPainel.mockRejectedValue(new ApiError({ status: 500, message: 'erro' }));
+    renderFaixa();
+    await screen.findByRole('alert');
+    const antes = obterPainel.mock.calls.length;
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: TENTAR_NOVAMENTE }));
+
+    // Assert
+    await waitFor(() => expect(obterPainel.mock.calls).toHaveLength(antes + 1));
   });
 });
 

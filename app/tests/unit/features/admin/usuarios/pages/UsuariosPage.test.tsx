@@ -1,12 +1,18 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppWrapper } from '@tests/support/appWrapper';
 
+import { useAtivarUsuario } from '@/features/admin/usuarios/hooks/useAtivarUsuario';
+import { useDesativarUsuario } from '@/features/admin/usuarios/hooks/useDesativarUsuario';
+import { useExcluirUsuario } from '@/features/admin/usuarios/hooks/useExcluirUsuario';
+import { useUsuarios } from '@/features/admin/usuarios/hooks/useUsuarios';
 import { UsuariosPage } from '@/features/admin/usuarios/pages/UsuariosPage';
+import { ApiError } from '@/shared/api/apiError';
 
 vi.mock('@/features/admin/usuarios/hooks/useUsuarios', () => ({
   useUsuarios: vi.fn().mockReturnValue({ data: undefined, error: null, isLoading: true }),
@@ -102,6 +108,27 @@ describe('UsuariosPage', () => {
     const { AppWrapper } = createAppWrapper();
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
     expect(within(container).getByText(/não foi possível carregar/i)).toBeDefined();
+  });
+
+  it('deve refazer a consulta quando Tentar novamente é acionado depois da falha', async () => {
+    // Arrange
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const { useUsuarios } = await import('@/features/admin/usuarios/hooks/useUsuarios');
+    const refetch = vi.fn();
+    vi.mocked(useUsuarios).mockReturnValue({
+      data: undefined,
+      error: new Error('fail'),
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useUsuarios>);
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
+
+    // Act
+    await userEvent.click(within(container).getByRole('button', { name: 'Tentar novamente' }));
+
+    // Assert
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it('renders table when data is available', async () => {
@@ -230,5 +257,180 @@ describe('UsuariosPage', () => {
     const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
     await userEvent.click(within(container).getByText('ativar-1'));
     expect(ativarMock).toHaveBeenCalledWith('1');
+  });
+});
+
+describe('UsuariosPage — ações, filtros e paginação', () => {
+  function abrir(pagina = { page: 1, totalPages: 3 }) {
+    const mutacoes = {
+      ativar: vi.fn().mockResolvedValue(undefined),
+      desativar: vi.fn().mockResolvedValue(undefined),
+      excluir: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(useAtivarUsuario).mockReturnValue({
+      mutateAsync: mutacoes.ativar,
+      isPending: false,
+    } as unknown as ReturnType<typeof useAtivarUsuario>);
+    vi.mocked(useDesativarUsuario).mockReturnValue({
+      mutateAsync: mutacoes.desativar,
+      isPending: false,
+    } as unknown as ReturnType<typeof useDesativarUsuario>);
+    vi.mocked(useExcluirUsuario).mockReturnValue({
+      mutateAsync: mutacoes.excluir,
+      isPending: false,
+    } as unknown as ReturnType<typeof useExcluirUsuario>);
+    vi.mocked(useUsuarios).mockReturnValue({
+      data: {
+        content: [
+          { id: '1', nome: 'Alice', email: 'a@a.com', perfil: 'OPERADOR', ativo: true },
+        ],
+        page: pagina.page,
+        totalPages: pagina.totalPages,
+        totalElements: 3,
+      },
+      error: null,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useUsuarios>);
+    const { AppWrapper } = createAppWrapper();
+    const { container } = render(<UsuariosPage />, { wrapper: AppWrapper });
+    return { ...mutacoes, tela: within(container) };
+  }
+
+  const ultimosFiltros = () => vi.mocked(useUsuarios).mock.calls.at(-1)![0];
+
+  it('deve desativar o usuário e fechar a confirmação quando a desativação é confirmada', async () => {
+    // Arrange
+    const { desativar, tela } = abrir();
+    await userEvent.click(tela.getByText('desativar-1'));
+
+    // Act
+    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+
+    // Assert
+    expect(desativar).toHaveBeenCalledExactlyOnceWith('1');
+    await waitFor(() => expect(tela.queryByRole('dialog')).toBeNull());
+  });
+
+  it('deve mostrar o erro da operação e fechar a confirmação quando a desativação falha', async () => {
+    // Arrange
+    const { desativar, tela } = abrir();
+    desativar.mockRejectedValueOnce(new ApiError({ status: 409, message: 'Último administrador' }));
+    await userEvent.click(tela.getByText('desativar-1'));
+
+    // Act
+    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+
+    // Assert
+    expect(await tela.findByText('Operação não concluída')).toBeDefined();
+    expect(tela.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deve excluir o usuário e fechar o diálogo quando a exclusão é confirmada', async () => {
+    // Arrange
+    const { excluir, tela } = abrir();
+    await userEvent.click(tela.getByText('excluir-1'));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Excluir usuário' }));
+
+    // Assert
+    expect(excluir).toHaveBeenCalledExactlyOnceWith('1');
+    await waitFor(() => expect(tela.queryByRole('dialog')).toBeNull());
+  });
+
+  it('deve mostrar o erro da operação quando a exclusão falha', async () => {
+    // Arrange
+    const { excluir, tela } = abrir();
+    excluir.mockRejectedValueOnce(new ApiError({ status: 409, message: 'Há vínculos' }));
+    await userEvent.click(tela.getByText('excluir-1'));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Excluir usuário' }));
+
+    // Assert
+    expect(await tela.findByText('Operação não concluída')).toBeDefined();
+  });
+
+  it('deve mostrar o erro da operação quando a ativação falha', async () => {
+    // Arrange
+    const { ativar, tela } = abrir();
+    ativar.mockRejectedValueOnce(new ApiError({ status: 500, message: 'Erro interno' }));
+
+    // Act
+    await userEvent.click(tela.getByText('ativar-1'));
+
+    // Assert
+    expect(await tela.findByText('Operação não concluída')).toBeDefined();
+  });
+
+  it('deve pedir a primeira página do perfil escolhido quando o filtro de perfil muda', async () => {
+    // Arrange
+    const { tela } = abrir();
+
+    // Act
+    await userEvent.selectOptions(tela.getByLabelText('Perfil'), 'GESTOR');
+
+    // Assert
+    expect(ultimosFiltros()).toMatchObject({ perfil: 'GESTOR', page: 0 });
+  });
+
+  it('deve pedir só os inativos quando o filtro de status muda para Inativos', async () => {
+    // Arrange
+    const { tela } = abrir();
+
+    // Act
+    await userEvent.selectOptions(tela.getByLabelText('Status'), 'false');
+
+    // Assert
+    expect(ultimosFiltros()).toMatchObject({ ativo: false, page: 0 });
+  });
+
+  it('deve pedir a página seguinte quando Próxima é acionada', async () => {
+    // Arrange
+    const { tela } = abrir({ page: 1, totalPages: 3 });
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+
+    // Assert
+    expect(ultimosFiltros()).toMatchObject({ page: 1 });
+  });
+
+  it('deve pedir a página anterior quando Anterior é acionada', async () => {
+    // Arrange
+    const { tela } = abrir({ page: 1, totalPages: 3 });
+    await userEvent.click(tela.getByRole('button', { name: 'Próxima' }));
+
+    // Act
+    await userEvent.click(tela.getByRole('button', { name: 'Anterior' }));
+
+    // Assert
+    expect(ultimosFiltros()).toMatchObject({ page: 0 });
+  });
+
+  it('deve fechar a confirmação sem desativar quando Cancelar é acionado', async () => {
+    // Arrange
+    const { desativar, tela } = abrir();
+    await userEvent.click(tela.getByText('desativar-1'));
+
+    // Act
+    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+
+    // Assert
+    expect(tela.queryByRole('dialog')).toBeNull();
+    expect(desativar).not.toHaveBeenCalled();
+  });
+
+  it('deve fechar o diálogo sem excluir quando Cancelar é acionado', async () => {
+    // Arrange
+    const { excluir, tela } = abrir();
+    await userEvent.click(tela.getByText('excluir-1'));
+
+    // Act
+    await userEvent.click(within(tela.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+
+    // Assert
+    expect(tela.queryByRole('dialog')).toBeNull();
+    expect(excluir).not.toHaveBeenCalled();
   });
 });

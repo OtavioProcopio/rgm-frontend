@@ -74,6 +74,8 @@ describe('useColunaDoQuadro', () => {
       status: 'EM_ANDAMENTO',
       page: 0,
       size: 20,
+      sort: 'prazoLimite',
+      dir: 'asc',
     });
   });
 
@@ -293,6 +295,23 @@ describe('useColunaDoQuadro', () => {
 
     // Assert
     expect(result.current.falhouAoCarregarMais).toBe(false);
+  });
+});
+
+describe('useColunaDoQuadro — nova tentativa', () => {
+  it('deve refazer a consulta do primeiro bloco quando tentarDeNovo é chamada', async () => {
+    // Arrange
+    apiCom(TOTAL);
+    const { result } = await montar();
+    const pedidasAntes = vi.mocked(solicitacoesApi.listar).mock.calls.length;
+
+    // Act
+    act(() => result.current.tentarDeNovo());
+
+    // Assert
+    await waitFor(() =>
+      expect(vi.mocked(solicitacoesApi.listar).mock.calls.length).toBeGreaterThan(pedidasAntes),
+    );
   });
 });
 

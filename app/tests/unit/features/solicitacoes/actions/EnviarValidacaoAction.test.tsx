@@ -123,4 +123,29 @@ describe('EnviarValidacaoAction', () => {
     expect(onCancelar).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('deve confirmar com o aviso Solicitação enviada para validação quando a ação dá certo', async () => {
+    // Arrange
+    enviar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação enviada para validação')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    enviar.mockRejectedValue(new Error('recusada'));
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Solicitação enviada para validação')).toBeNull();
+  });
 });

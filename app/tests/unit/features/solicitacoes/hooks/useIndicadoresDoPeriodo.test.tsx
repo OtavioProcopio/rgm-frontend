@@ -12,9 +12,11 @@ import { useIndicadoresDoPeriodo } from '@/features/solicitacoes/hooks/useIndica
 import { intervalosDoPeriodo } from '@/features/solicitacoes/lib/periodoDoPainel';
 import { LIMITE_DA_AMOSTRA } from '@/features/solicitacoes/lib/leituraDosIndicadores';
 import type {
+  PeriodoAnteriorDoPainel,
   Solicitacao,
   SolicitacoesFilters,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
+import { ApiError } from '@/shared/api/apiError';
 import type { PageResponse } from '@/shared/types/page';
 
 const AGORA = '2026-10-09T15:00:00Z';
@@ -64,9 +66,33 @@ function montar(dias: number) {
   });
 }
 
+function periodoDoPainel(concluidas: number, tempo: number | null): PeriodoAnteriorDoPainel {
+  return {
+    inicio: '2026-09-10',
+    fim: '2026-10-10',
+    criadas: 0,
+    concluidas,
+    canceladas: 0,
+    tempoMedioResolucaoSegundos: tempo,
+    serie: [],
+  };
+}
+
+function painel(atual: PeriodoAnteriorDoPainel, anterior: PeriodoAnteriorDoPainel) {
+  const periodo = { ...atual, abertasAgora: 0, atrasadasAgora: 0 };
+  return { periodo, anterior };
+}
+
+function responderPainel(atual: PeriodoAnteriorDoPainel, anterior: PeriodoAnteriorDoPainel) {
+  return vi.spyOn(solicitacoesApi, 'obterPainel').mockResolvedValue(painel(atual, anterior));
+}
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(AGORA);
+  vi.spyOn(solicitacoesApi, 'obterPainel').mockRejectedValue(
+    new ApiError({ status: 404, message: 'não encontrado' }),
+  );
 });
 
 afterEach(() => {
@@ -74,7 +100,120 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('useIndicadoresDoPeriodo', () => {
+describe('useIndicadoresDoPeriodo — com o painel', () => {
+  it('deve devolver as concluídas atual e anterior do painel quando ele responde', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 3600));
+    vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.concluidas).toBeDefined());
+
+    // Assert
+    expect(result.current.concluidas).toEqual({ atual: 140, anterior: 120 });
+  });
+
+  it('deve não chamar a listagem de concluídas quando o painel responde', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800), periodoDoPainel(120, 3600));
+    const listar = vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.concluidas).toBeDefined());
+
+    // Assert
+    expect(listar).not.toHaveBeenCalled();
+  });
+
+  it('deve devolver o tempo médio em segundos sem amostra quando o painel responde', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(140, 1800.5), periodoDoPainel(120, 3600));
+    vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.tempoMedio).toBeDefined());
+
+    // Assert
+    expect(result.current.tempoMedio).toEqual({
+      atual: { segundos: 1800.5, amostra: null },
+      anterior: { segundos: 3600, amostra: null },
+    });
+  });
+
+  it('deve devolver tempo médio nulo quando o painel traz null', async () => {
+    // Arrange
+    responderPainel(periodoDoPainel(0, null), periodoDoPainel(0, null));
+    vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.tempoMedio).toBeDefined());
+
+    // Assert
+    expect(result.current.tempoMedio).toEqual({ atual: null, anterior: null });
+  });
+
+  it('deve consultar o painel uma vez com os dias quando monta', async () => {
+    // Arrange
+    const obterPainel = responderPainel(periodoDoPainel(1, 1), periodoDoPainel(1, 1));
+    vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(7);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Assert
+    expect(obterPainel).toHaveBeenCalledExactlyOnceWith(7, undefined);
+  });
+
+  it('deve estar carregando quando o painel ainda não respondeu', () => {
+    // Arrange
+    vi.spyOn(solicitacoesApi, 'obterPainel').mockReturnValue(new Promise(() => undefined));
+    vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+
+    // Assert
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('deve sinalizar erro e não chamar listar quando o painel responde 500', async () => {
+    // Arrange
+    vi.spyOn(solicitacoesApi, 'obterPainel').mockRejectedValue(
+      new ApiError({ status: 500, message: 'erro' }),
+    );
+    const listar = vi.spyOn(solicitacoesApi, 'listar');
+
+    // Act
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    // Assert
+    expect(listar).not.toHaveBeenCalled();
+  });
+
+  it('deve refazer o painel quando refetch é chamado e o painel respondeu', async () => {
+    // Arrange
+    const obterPainel = responderPainel(periodoDoPainel(1, 1), periodoDoPainel(1, 1));
+    vi.spyOn(solicitacoesApi, 'listar');
+    const { result } = montar(30);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Act
+    await act(async () => {
+      result.current.refetch();
+    });
+
+    // Assert
+    await waitFor(() => expect(obterPainel).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe('useIndicadoresDoPeriodo — painel inexistente (spec 013)', () => {
   it('deve chamar listar exatamente duas vezes quando monta', async () => {
     // Arrange
     responderPorPeriodo(pagina([], 0), pagina([], 0));

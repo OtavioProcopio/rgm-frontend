@@ -173,4 +173,31 @@ describe('EncerrarAction', () => {
     expect(onCancelar).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('deve confirmar com o aviso Solicitação encerrada quando a ação dá certo', async () => {
+    // Arrange
+    encerrar.mockResolvedValue(undefined);
+    anexar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Concluir' }));
+
+    // Assert
+    expect(await screen.findByText('Solicitação encerrada')).toBeDefined();
+  });
+
+  it('deve não dar o aviso de sucesso quando a API recusa a ação', async () => {
+    // Arrange
+    encerrar.mockRejectedValue(new Error('recusada'));
+    anexar.mockResolvedValue(undefined);
+    montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Concluir' }));
+
+    // Assert
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.queryByText('Solicitação encerrada')).toBeNull();
+  });
 });
