@@ -34,13 +34,17 @@ describe('ordemDaColuna', () => {
   );
 
   it.each(['CONCLUIDA', 'CANCELADA'] as const)(
-    'deve não ter ordem nem texto quando o status é %s',
+    'deve ordenar pela data de encerramento, mais recente primeiro, quando o status é %s',
     (status) => {
       // Act
       const ordem = ordemDaColuna(status);
 
       // Assert
-      expect(ordem).toBeUndefined();
+      expect(ordem).toEqual({
+        sort: 'concluidaEm',
+        dir: 'desc',
+        texto: 'encerradas mais recentes primeiro',
+      });
     },
   );
 });

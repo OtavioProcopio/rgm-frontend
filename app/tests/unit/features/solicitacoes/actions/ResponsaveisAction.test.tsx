@@ -19,13 +19,15 @@ vi.mock('@/features/solicitacoes/hooks/useAlterarResponsaveis', () => ({
 vi.mock('@/features/evidencias/hooks/useUploadEvidencia', () => ({
   useUploadEvidencia: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
-vi.mock('@/features/admin/usuarios/hooks/useResponsaveisDisponiveis', () => ({
-  useResponsaveisDisponiveis: () => ({
-    responsaveis: [
-      { id: 'op', nome: 'Olga Operadora' },
-      { id: 'ge', nome: 'Gil Gestor' },
+vi.mock('@/features/solicitacoes/hooks/useBuscaDeResponsaveis', () => ({
+  useBuscaDeResponsaveis: () => ({
+    buscar: vi.fn(),
+    candidatos: [
+      { id: 'op', nome: 'Olga Operadora', perfil: 'OPERADOR' },
+      { id: 'ge', nome: 'Gil Gestor', perfil: 'GESTOR' },
     ],
-    isLoading: false,
+    carregando: false,
+    falhou: false,
   }),
 }));
 
@@ -35,7 +37,11 @@ function montar() {
   const { QueryWrapper } = createQueryWrapper();
   render(
     <ResponsaveisAction
-      solicitacao={criarSolicitacao({ status: 'EM_ANDAMENTO', responsavelIds: ['op'] })}
+      solicitacao={criarSolicitacao({
+        status: 'EM_ANDAMENTO',
+        responsavelIds: ['op'],
+        responsaveis: [{ id: 'op', nome: 'Olga Operadora' }],
+      })}
       onClose={onClose}
       onCancelar={onCancelar}
     />,
@@ -50,24 +56,19 @@ afterEach(() => {
 });
 
 describe('ResponsaveisAction', () => {
-  it('deve abrir com os responsáveis atuais marcados quando a ação é aberta', () => {
+  it('deve abrir com os responsáveis atuais como etiquetas quando a ação é aberta', () => {
     // Act
     montar();
 
     // Assert
-    expect(
-      (screen.getByRole('checkbox', { name: 'Olga Operadora' }) as HTMLInputElement).checked,
-    ).toBe(true);
-    expect((screen.getByRole('checkbox', { name: 'Gil Gestor' }) as HTMLInputElement).checked).toBe(
-      false,
-    );
+    expect(screen.getByRole('button', { name: 'Remover Olga Operadora' })).toBeDefined();
   });
 
   it('deve salvar a nova lista e fechar quando a alteração é confirmada', async () => {
     // Arrange
     alterar.mockResolvedValue(undefined);
     const { onClose } = montar();
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Gil Gestor' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gil Gestor' }));
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));

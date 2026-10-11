@@ -14,9 +14,14 @@ export type Solicitacao = {
   prioridade: PrioridadeSolicitacao | null;
   /** Nulo enquanto uma solicitação CRIACAO ainda não foi concluída (o modelo ainda não existe). */
   modeloId: string | null;
-  /** Preenchidos apenas em solicitações do tipo CRIACAO. */
+  /**
+   * Código e máquina do modelo: o backend v1.6 os preenche para toda solicitação com modelo; em
+   * CRIACAO sem modelo são os dados informados na abertura.
+   */
   modeloCodigo?: string | null;
   modeloMaquina?: string | null;
+  /** Versão do modelo do cadastro; vem na listagem e no detalhe a partir do backend v1.6. */
+  modeloVersao?: number | null;
   modeloObservacoes?: string | null;
   abertaPorUsuarioId: string;
   comentarioFinal: string | null;
@@ -71,7 +76,7 @@ export type SolicitacoesFilters = {
   dataInicio?: string;
   dataFim?: string;
   /** Ordenação da API; o backend antigo a ignora e mantém a ordem de sempre. */
-  sort?: 'criadaEm' | 'prazoLimite' | 'prioridade';
+  sort?: 'criadaEm' | 'prazoLimite' | 'prioridade' | 'concluidaEm';
   dir?: 'asc' | 'desc';
 };
 

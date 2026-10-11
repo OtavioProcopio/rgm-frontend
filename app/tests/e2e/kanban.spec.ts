@@ -6,6 +6,7 @@ import {
   apiGet,
   apiAnexarServicoRealizado,
   MAQUINA_CATALOGO,
+  escolherPrioridadeEPrimeiroResponsavel,
 } from './fixtures';
 
 const ts = () => Date.now();
@@ -136,6 +137,28 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await expect(visivel(titulo)).toBeVisible();
   });
 
+  test('card mostra modelo e máquina e abre o detalhe ao ser clicado', async ({
+    page,
+    loginAdmin,
+    request,
+    token,
+  }) => {
+    const titulo = `Card clicável PW ${ts()}`;
+    const id = await criarSolicitacao(request, token, titulo);
+
+    await loginAdmin('/app/solicitacoes');
+
+    const card = page.getByRole('link', { name: titulo }).locator('visible=true').first();
+    await expect(card).toBeVisible();
+    await expect(
+      page.getByText(`${modeloCodigo} v1 · ${MAQUINA_CATALOGO}`).locator('visible=true').first(),
+    ).toBeVisible();
+
+    await card.click();
+
+    await expect(page).toHaveURL(new RegExp(`/app/solicitacoes/${id}$`));
+  });
+
   test('lista solicitações contém a criada', async ({ page, loginAdmin, request, token }) => {
     const titulo = `Lista PW ${ts()}`;
     await criarSolicitacao(request, token, titulo);
@@ -157,8 +180,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await page.click('button:has-text("Triar")');
     await expect(page.getByText('Triar solicitação')).toBeVisible();
 
-    await page.selectOption('select[name="prioridade"]', 'ALTA');
-    await page.locator('input[name="responsavelIds"]').first().check();
+    await escolherPrioridadeEPrimeiroResponsavel(page, 'ALTA');
     await page.click('button:has-text("Confirmar triagem")');
 
     await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
@@ -279,8 +301,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
 
     // Triagem
     await page.click('button:has-text("Triar")');
-    await page.selectOption('select[name="prioridade"]', 'URGENTE');
-    await page.locator('input[name="responsavelIds"]').first().check();
+    await escolherPrioridadeEPrimeiroResponsavel(page, 'URGENTE');
     await page.click('button:has-text("Confirmar triagem")');
     await expect(page.getByText('Em andamento', { exact: true }).first()).toBeVisible();
 

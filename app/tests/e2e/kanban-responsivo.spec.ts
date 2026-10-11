@@ -59,7 +59,13 @@ test.describe('Kanban — layout responsivo', () => {
     await loginAdmin('/app/solicitacoes');
 
     await expect(page.locator('div.hidden.gap-4.overflow-x-auto.lg\\:flex')).not.toBeVisible();
-    // Barra de abas mobile com os status.
-    await expect(page.getByRole('button', { name: /A Fazer/ })).toBeVisible();
+    // Controle de colunas no celular: as cinco colunas visíveis, sem rolagem horizontal.
+    const abas = page.getByRole('tab', {
+      name: /^(A Fazer|Em Andamento|Em Validação|Concluída|Cancelada): \d+$/,
+    });
+    await expect(abas).toHaveCount(5);
+    for (const aba of await abas.all()) {
+      await expect(aba).toBeInViewport();
+    }
   });
 });

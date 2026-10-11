@@ -3,37 +3,40 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
-import { Select } from '@/shared/components/Select/Select';
+import { ControleSegmentado } from '@/shared/components/ControleSegmentado/ControleSegmentado';
+import {
+  SeletorMultiplo,
+  type OpcaoDoSeletor,
+} from '@/shared/components/SeletorMultiplo/SeletorMultiplo';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
 import { LIMITES } from '@/shared/lib/limites';
-import { rotuloDaPrioridade } from '@/shared/lib/rotulos';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 
+import { useBuscaDeResponsaveis } from '../hooks/useBuscaDeResponsaveis';
+import { opcoesDePrioridadeComPrazo } from '../lib/prazosDaPrioridade';
 import {
   triarSolicitacaoSchema,
   type TriarSolicitacaoFormData,
 } from '../schemas/solicitacaoSchema';
-
-type UsuarioOpcao = { id: string; nome: string };
+import type { PrioridadeSolicitacao } from '../types/solicitacaoTypes';
 
 type Props = {
   isPending?: boolean;
-  usuarios: UsuarioOpcao[];
   onCancel: () => void;
   onConfirm: (data: TriarSolicitacaoFormData, foto: File | null, nota: string) => void;
 };
 
-const prioridadeOptions = Object.entries(rotuloDaPrioridade).map(([value, label]) => ({
-  value,
-  label,
-}));
+const OPCOES_DE_PRIORIDADE = opcoesDePrioridadeComPrazo();
 
-export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props) {
+export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
   const [foto, setFoto] = useState<File | null>(null);
   const [nota, setNota] = useState('');
+  const { buscar, candidatos, carregando, falhou } = useBuscaDeResponsaveis();
+  const [escolhidos, setEscolhidos] = useState<OpcaoDoSeletor[]>([]);
   const {
-    register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<TriarSolicitacaoFormData>({
     resolver: zodResolver(triarSolicitacaoSchema),
@@ -41,6 +44,17 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
       responsavelIds: [],
     },
   });
+
+  const prioridade = watch('prioridade');
+
+  function escolherResponsaveis(novos: OpcaoDoSeletor[]) {
+    setEscolhidos(novos);
+    setValue(
+      'responsavelIds',
+      novos.map((o) => o.valor),
+      { shouldValidate: true },
+    );
+  }
 
   function onSubmit(data: TriarSolicitacaoFormData) {
     onConfirm(data, foto, nota);
@@ -53,40 +67,38 @@ export function TriagemModal({ isPending, usuarios, onCancel, onConfirm }: Props
         Defina a prioridade e os responsáveis para colocar em andamento.
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-        <Select
-          label="Prioridade"
-          options={prioridadeOptions}
-          placeholder="Selecione..."
-          error={errors.prioridade?.message}
-          {...register('prioridade')}
-        />
-
         <div>
-          <p className="mb-2 block text-sm font-medium text-fg">Responsáveis</p>
-          {usuarios.length === 0 ? (
-            <p className="text-sm text-fg-muted">Nenhum responsável disponível.</p>
-          ) : (
-            <div className="space-y-2">
-              {usuarios.map((u) => (
-                <label
-                  key={u.id}
-                  className="flex cursor-pointer items-center gap-2 pointer-coarse:min-h-11"
-                >
-                  <input
-                    type="checkbox"
-                    value={u.id}
-                    className="h-4 w-4 rounded border-line-strong"
-                    {...register('responsavelIds')}
-                  />
-                  <span className="text-sm text-fg">{u.nome}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          {errors.responsavelIds && (
-            <p className="mt-1 text-sm text-danger-fg">{errors.responsavelIds.message}</p>
-          )}
+          <p className="mb-2 block text-sm font-medium text-fg">Prioridade</p>
+          <ControleSegmentado
+            rotulo="Prioridade"
+            opcoes={OPCOES_DE_PRIORIDADE}
+            valor={prioridade ?? ''}
+            onChange={(valor) =>
+              setValue('prioridade', valor as PrioridadeSolicitacao, {
+                shouldValidate: true,
+              })
+            }
+            className="flex-wrap"
+          />
+          {errors.prioridade ? (
+            <p className="mt-1 text-sm text-danger-fg">Escolha a prioridade.</p>
+          ) : null}
         </div>
+
+        <SeletorMultiplo
+          rotulo="Responsáveis"
+          escolhidas={escolhidos}
+          opcoes={candidatos.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+          onChange={escolherResponsaveis}
+          onBuscar={buscar}
+          carregando={carregando}
+          textoSemResultado="Nenhum responsável disponível."
+          erro={
+            falhou
+              ? 'Não foi possível buscar os responsáveis. Tente de novo.'
+              : errors.responsavelIds?.message
+          }
+        />
 
         <div>
           <p className="mb-2 block text-sm font-medium text-fg">

@@ -17,16 +17,16 @@
 
 ## Fase 2 — Quadro e triagem (RF-13 a RF-22)
 
-- [ ] T008 Teste e `lib/iniciaisDosResponsaveis.ts`
-- [ ] T009 Teste e alteração de `KanbanCard.tsx`: card clicável, modelo e máquina, responsáveis, prazo; avançar fora do link
-- [ ] T010 Teste e alteração de `filtrosDaColuna.ts`: encerradas por `concluidaEm`
-- [ ] T011 Teste e alteração de `KanbanBoard.tsx`: controle de colunas no celular com rótulo curto e contagem
-- [ ] T012 Teste e `lib/prazosDaPrioridade.ts`
-- [ ] T013 Teste e `shared/components/SeletorMultiplo/SeletorMultiplo.tsx`
-- [ ] T014 Teste e `api/responsaveisDisponiveisApi.ts` + `useResponsaveisDisponiveis` (busca no servidor)
-- [ ] T015 Teste e alteração de `TriagemModal.tsx` e `AlterarResponsaveisModal.tsx`
-- [ ] T016 Teste e alteração de `acoesSolicitacao.ts` (troca de responsáveis só depois da triagem)
-- [ ] T017 E2E do quadro e da triagem; `make validate` verde
+- [x] T008 Teste e `lib/iniciaisDosResponsaveis.ts`
+- [x] T009 Teste e alteração de `KanbanCard.tsx`: card clicável, modelo e máquina, responsáveis, prazo; avançar fora do link
+- [x] T010 Teste e alteração de `filtrosDaColuna.ts`: encerradas por `concluidaEm`
+- [x] T011 Teste e alteração de `KanbanBoard.tsx`: controle de colunas no celular com rótulo curto e contagem
+- [x] T012 Teste e `lib/prazosDaPrioridade.ts`
+- [x] T013 Teste e `shared/components/SeletorMultiplo/SeletorMultiplo.tsx`
+- [x] T014 Teste e `api/responsaveisDisponiveisApi.ts` + `useResponsaveisDisponiveis` (busca no servidor)
+- [x] T015 Teste e alteração de `TriagemModal.tsx` e `AlterarResponsaveisModal.tsx`
+- [x] T016 Teste e alteração de `acoesSolicitacao.ts` (troca de responsáveis só depois da triagem)
+- [x] T017 E2E do quadro e da triagem; `make validate` verde
 
 ## Fase 3 — Tipos de modelo, busca e PDFs (RF-23 a RF-33)
 

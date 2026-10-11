@@ -258,6 +258,8 @@ describe('useColunaDoQuadro', () => {
       status: 'CONCLUIDA',
       page: 0,
       size: 20,
+      sort: 'concluidaEm',
+      dir: 'desc',
       tipoData: 'CONCLUSAO',
       dataInicio: TRINTA_DIAS_ATRAS,
     });

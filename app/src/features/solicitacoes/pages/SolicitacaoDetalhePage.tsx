@@ -43,7 +43,6 @@ import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
-import { useResponsaveisDisponiveis } from '@/features/admin/usuarios/hooks/useResponsaveisDisponiveis';
 
 type AoFalhar = (mensagem: string | null) => void;
 type ErrosDaEdicao = { titulo?: string; descricao?: string };
@@ -362,7 +361,6 @@ type PropsDasInformacoes = {
 
 function InformacoesDaSolicitacao({ solicitacao, edicao, atividades }: PropsDasInformacoes) {
   const { data: modelo } = useModelo(solicitacao.modeloId);
-  const { responsaveis } = useResponsaveisDisponiveis();
   if (edicao.isEditing)
     return <EdicaoDaSolicitacaoForm solicitacao={solicitacao} edicao={edicao} />;
   return (
@@ -370,7 +368,7 @@ function InformacoesDaSolicitacao({ solicitacao, edicao, atividades }: PropsDasI
       solicitacao={solicitacao}
       modelo={modelo}
       atividades={atividades}
-      usuarios={responsaveis}
+      usuarios={[]}
     />
   );
 }

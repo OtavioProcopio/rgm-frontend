@@ -12,6 +12,8 @@ import { KanbanCard } from './KanbanCard';
 export type ColumnConfig = {
   status: StatusSolicitacao;
   label: string;
+  /** Rótulo curto do controle de colunas no celular. */
+  rotuloCurto: string;
   /** Papel de cor do ponto que acompanha o nome da etapa. */
   pontoClass: string;
 };

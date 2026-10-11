@@ -173,3 +173,23 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect } from '@playwright/test';
+
+const ROTULO_DA_PRIORIDADE_NA_TRIAGEM = {
+  URGENTE: /Urgente · 4 h/,
+  ALTA: /Alta · 24 h/,
+  MEDIA: /Média · 3 dias/,
+  BAIXA: /Baixa · 7 dias/,
+} as const;
+
+/** Na triagem: escolhe a prioridade e o primeiro responsável que a busca oferece. */
+export async function escolherPrioridadeEPrimeiroResponsavel(
+  page: import('@playwright/test').Page,
+  prioridade: keyof typeof ROTULO_DA_PRIORIDADE_NA_TRIAGEM,
+) {
+  await page.getByRole('radio', { name: ROTULO_DA_PRIORIDADE_NA_TRIAGEM[prioridade] }).click();
+  await page
+    .getByRole('list', { name: 'Resultados de Responsáveis' })
+    .getByRole('button')
+    .first()
+    .click();
+}

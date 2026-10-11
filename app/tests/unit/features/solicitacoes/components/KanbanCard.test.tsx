@@ -67,35 +67,6 @@ describe('KanbanCard', () => {
     expect(within(container).getByText('Reparo')).toBeDefined();
   });
 
-  it('renders descricao when present', () => {
-    const { container } = render(
-      <KanbanCard
-        solicitacao={baseSolicitacao}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    expect(within(container).getByText('Trocar vedações')).toBeDefined();
-  });
-
-  it('renders the formatted creation date', () => {
-    const criadaEm = new Date('2026-03-15T12:00:00Z').toISOString();
-    const { container } = render(
-      <KanbanCard
-        solicitacao={{ ...baseSolicitacao, criadaEm }}
-        isDraggable={false}
-        canAdvance={false}
-        onDragStart={vi.fn()}
-        onAdvance={vi.fn()}
-      />,
-    );
-    const time = container.querySelector('time')!;
-    expect(time).toBeDefined();
-    expect(time.getAttribute('dateTime')).toBe(criadaEm);
-  });
-
   it('shows age badge for old cards', () => {
     const old = new Date(Date.now() - 10 * 86_400_000).toISOString();
     const { container } = render(
@@ -228,15 +199,15 @@ describe('KanbanCard', () => {
     expect(within(container).queryByText(/prazo|Atrasada|Vence/)).toBeNull();
   });
 
-  it('deve apontar o link para o detalhe da solicitação', () => {
+  it('deve apontar o título para o detalhe da solicitação quando o card é exibido', () => {
     const { container } = render(card({ id: 'abc' }));
 
-    const link = within(container).getByRole('link', { name: /Ver solicitação/ });
+    const link = within(container).getByRole('link', { name: 'Manutenção da bomba' });
 
     expect(link.getAttribute('href')).toBe('/app/solicitacoes/abc');
   });
 
-  it('deve navegar para o detalhe sem recarregar quando o link é clicado', () => {
+  it('deve navegar para o detalhe sem recarregar quando o título é clicado', () => {
     function Local() {
       return <p>local: {useLocation().pathname}</p>;
     }
@@ -249,7 +220,7 @@ describe('KanbanCard', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(within(container).getByRole('link', { name: /Ver solicitação/ }));
+    fireEvent.click(within(container).getByRole('link', { name: 'Manutenção da bomba' }));
 
     expect(within(container).getByText('local: /app/solicitacoes/abc')).toBeDefined();
   });
@@ -449,4 +420,165 @@ describe('KanbanCard — relação do operador', () => {
       expect(within(container).queryByText(/por você|a você/)).toBeNull();
     },
   );
+});
+
+describe('KanbanCard — modelo, responsáveis e clique', () => {
+  it('deve mostrar código, versão e máquina do modelo quando a listagem os informa', () => {
+    // Arrange
+    const extra = { modeloCodigo: 'MOD-9', modeloMaquina: 'FBOX', modeloVersao: 2 };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('MOD-9 v2 · FBOX')).toBeDefined();
+  });
+
+  it('deve mostrar os dados informados na abertura quando a criação ainda não tem modelo', () => {
+    // Arrange
+    const extra = { tipo: 'CRIACAO', modeloId: null, modeloCodigo: 'COD-1', modeloMaquina: 'VICK' };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('COD-1 · VICK')).toBeDefined();
+  });
+
+  it('deve mostrar as iniciais dos responsáveis com o nome por extenso na dica', () => {
+    // Arrange
+    const extra = {
+      responsavelIds: ['a', 'b'],
+      responsaveis: [
+        { id: 'a', nome: 'Maria da Silva' },
+        { id: 'b', nome: 'João Pereira' },
+      ],
+    };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('MS')).toBeDefined();
+    expect(within(container).getByText('JP')).toBeDefined();
+    expect(
+      within(container).getByLabelText('Responsáveis: Maria da Silva, João Pereira'),
+    ).toBeDefined();
+  });
+
+  it('deve dizer "Sem responsável" quando ninguém foi atribuído', () => {
+    // Arrange
+    const extra = { responsavelIds: [], responsaveis: [] };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('Sem responsável')).toBeDefined();
+  });
+
+  it('deve não navegar quando o botão de avançar é clicado', () => {
+    // Arrange
+    const onAdvance = vi.fn();
+    function Local() {
+      return <p>local: {useLocation().pathname}</p>;
+    }
+    const { container } = renderSemRoteador(
+      <MemoryRouter initialEntries={['/app/solicitacoes']}>
+        <Routes>
+          <Route
+            path="/app/solicitacoes"
+            element={
+              <KanbanCard
+                solicitacao={{ ...baseSolicitacao, id: 'abc' }}
+                isDraggable={false}
+                canAdvance
+                onDragStart={vi.fn()}
+                onAdvance={onAdvance}
+              />
+            }
+          />
+          <Route path="/app/solicitacoes/:id" element={<Local />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    // Act
+    fireEvent.click(within(container).getByRole('button', { name: 'Triar' }));
+
+    // Assert
+    expect(onAdvance).toHaveBeenCalledTimes(1);
+    expect(within(container).queryByText(/^local:/)).toBeNull();
+  });
+
+  it('deve não mostrar a descrição nem a data completa quando o card é exibido', () => {
+    // Arrange
+    const extra = { descricao: 'Trocar vedações da bomba principal' };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).queryByText('Trocar vedações da bomba principal')).toBeNull();
+    expect(container.querySelector('time')).toBeNull();
+  });
+
+  it('deve avisar o quadro e permitir mover quando o card arrastável começa a ser arrastado', () => {
+    // Arrange
+    const onDragStart = vi.fn();
+    const { container } = render(
+      <KanbanCard
+        solicitacao={baseSolicitacao}
+        isDraggable
+        canAdvance={false}
+        onDragStart={onDragStart}
+        onAdvance={vi.fn()}
+      />,
+    );
+    const dataTransfer = { effectAllowed: 'none' };
+
+    // Act
+    fireEvent.dragStart(container.querySelector('[draggable="true"]')!, { dataTransfer });
+
+    // Assert
+    expect(onDragStart).toHaveBeenCalledWith(baseSolicitacao);
+    expect(dataTransfer.effectAllowed).toBe('move');
+  });
+
+  it('deve contar os responsáveis que não couberam nas iniciais quando são mais de três', () => {
+    // Arrange
+    const nomes = ['Ana Lima', 'Beto Souza', 'Caio Rocha', 'Dora Alves'];
+    const extra = {
+      responsavelIds: nomes.map((_, i) => String(i)),
+      responsaveis: nomes.map((nome, i) => ({ id: String(i), nome })),
+    };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('+1')).toBeDefined();
+  });
+
+  it('deve dizer só a quantidade quando a API não informou os nomes dos responsáveis', () => {
+    // Arrange
+    const extra = { responsavelIds: ['a', 'b'], responsaveis: null };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByLabelText('2 responsáveis')).toBeDefined();
+  });
+
+  it('deve mostrar só a máquina quando o modelo não tem código informado', () => {
+    // Arrange
+    const extra = { modeloCodigo: null, modeloMaquina: 'VICK' };
+
+    // Act
+    const { container } = render(card(extra));
+
+    // Assert
+    expect(within(container).getByText('VICK')).toBeDefined();
+  });
 });
