@@ -8,7 +8,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/shared/components/Table/Table';
-import { rotuloDoTipoDeModelo } from '@/shared/lib/rotulos';
+import { nomeDoTipoDeModelo } from '@/shared/lib/rotulos';
 
 import { ModeloActionsMenu } from './ModeloActionsMenu';
 import { ModeloFotoCapa } from './ModeloFotoCapa';
@@ -19,7 +19,7 @@ function TipoModeloBadge({ tipo }: { tipo: Modelo['tipo'] }) {
   if (!tipo) {
     return <span className="text-fg-muted">—</span>;
   }
-  return <Badge variant="neutral">{rotuloDoTipoDeModelo[tipo]}</Badge>;
+  return <Badge variant="neutral">{nomeDoTipoDeModelo(tipo)}</Badge>;
 }
 
 type ModelosTableProps = {

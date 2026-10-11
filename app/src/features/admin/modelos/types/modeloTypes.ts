@@ -1,5 +1,5 @@
-export type TipoModelo =
-  'PLACA_ALUMINIO' | 'MADEIRA_E_3D' | 'ALUMINIO_E_3D' | 'RESINA' | 'COQUILHA_ACO';
+/** Nome de um tipo do catálogo (`GET /api/tipos-modelo`); os cinco de origem mantêm o identificador. */
+export type TipoModelo = string;
 
 /** O rótulo de cada tipo tem uma fonte só; este nome continua valendo para quem já o importa. */
 export { rotuloDoTipoDeModelo as TIPO_MODELO_LABELS } from '@/shared/lib/rotulos';

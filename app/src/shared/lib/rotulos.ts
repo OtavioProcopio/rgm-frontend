@@ -1,4 +1,3 @@
-import type { TipoModelo } from '@/features/admin/modelos/types/modeloTypes';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import type {
   PrioridadeSolicitacao,
@@ -36,7 +35,8 @@ export const rotuloDoPerfil: Record<PerfilUsuario, string> = {
   EXTERNO: 'Externo',
 };
 
-export const rotuloDoTipoDeModelo: Record<TipoModelo, string> = {
+/** Nomes amigáveis dos cinco tipos de origem; os tipos cadastrados depois usam o próprio nome. */
+export const rotuloDoTipoDeModelo: Record<string, string> = {
   PLACA_ALUMINIO: 'Placa Alumínio',
   MADEIRA_E_3D: 'Madeira e 3D',
   ALUMINIO_E_3D: 'Alumínio e 3D',
@@ -51,3 +51,8 @@ export const rotuloDoTipoDeAtividade: Record<TipoAtividadeSolicitacao, string> =
   COMENTARIO: 'Comentário',
   EVIDENCIA_ADICIONADA: 'Evidência anexada',
 };
+
+/** Nome amigável do tipo de modelo; cai no próprio nome quando o tipo foi cadastrado depois. */
+export function nomeDoTipoDeModelo(tipo: string): string {
+  return rotuloDoTipoDeModelo[tipo] ?? tipo;
+}

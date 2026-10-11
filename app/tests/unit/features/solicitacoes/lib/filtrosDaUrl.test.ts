@@ -213,4 +213,26 @@ describe('lerFiltrosDaUrl', () => {
       temFiltroDoPainel: true,
     });
   });
+
+  it('deve ler a busca quando o parâmetro q tem 2 ou mais caracteres', () => {
+    // Arrange
+    const params = new URLSearchParams('q=correia');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: { q: 'correia' }, temFiltroDoPainel: false });
+  });
+
+  it('deve ignorar a busca quando o parâmetro q tem 1 caractere', () => {
+    // Arrange
+    const params = new URLSearchParams('q=a');
+
+    // Act
+    const resultado = lerFiltrosDaUrl(params);
+
+    // Assert
+    expect(resultado).toEqual({ filtros: {}, temFiltroDoPainel: false });
+  });
 });

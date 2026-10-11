@@ -34,6 +34,17 @@ vi.mock('@/features/admin/modelos/hooks/useMaquinas', () => ({
   }),
 }));
 
+vi.mock('@/features/admin/modelos/hooks/useTiposModelo', () => ({
+  useTiposModelo: vi.fn().mockReturnValue({
+    data: [
+      { id: 't1', nome: 'RESINA', ativo: true, criadoEm: '', atualizadoEm: '' },
+      { id: 't2', nome: 'Aço inox', ativo: true, criadoEm: '', atualizadoEm: '' },
+      { id: 't3', nome: 'MADEIRA_E_3D', ativo: false, criadoEm: '', atualizadoEm: '' },
+    ],
+    isLoading: false,
+  }),
+}));
+
 afterEach(cleanup);
 
 describe('ModeloForm', () => {
@@ -118,5 +129,31 @@ describe('ModeloForm — limite de texto', () => {
 
     // Assert
     expect(campo.maxLength).toBe(esperado);
+  });
+
+  it('deve listar os tipos ativos do catálogo, inclusive um tipo novo, quando o formulário abre', () => {
+    // Arrange
+    const { container } = render(<ModeloForm mode="create" onSubmit={vi.fn()} />);
+
+    // Act
+    const opcoes = Array.from(
+      (within(container).getByLabelText('Tipo do Modelo') as HTMLSelectElement).options,
+    ).map((o) => o.textContent);
+
+    // Assert
+    expect(opcoes).toEqual(['Não definido', 'Resina', 'Aço inox']);
+  });
+
+  it('deve manter o tipo desativado do modelo selecionado quando o formulário de edição abre', () => {
+    // Arrange
+    const modelo = { ...baseMockModelo, tipo: 'MADEIRA_E_3D' };
+
+    // Act
+    const { container } = render(<ModeloForm mode="edit" modelo={modelo} onSubmit={vi.fn()} />);
+    const select = within(container).getByLabelText('Tipo do Modelo') as HTMLSelectElement;
+
+    // Assert
+    expect(select.value).toBe('MADEIRA_E_3D');
+    expect(select.selectedOptions[0].textContent).toBe('Madeira e 3D (inativo)');
   });
 });

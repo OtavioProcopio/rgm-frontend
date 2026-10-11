@@ -4,6 +4,7 @@ import {
   rotuloDoTipoDeSolicitacao,
 } from '@/shared/lib/rotulos';
 
+import { termoDeBusca } from './buscaTextual';
 import type {
   PrioridadeSolicitacao,
   SolicitacoesFilters,
@@ -12,7 +13,10 @@ import type {
 } from '../types/solicitacaoTypes';
 
 export type FiltrosDaUrl = Partial<
-  Pick<SolicitacoesFilters, 'status' | 'tipo' | 'prioridade' | 'atrasada' | 'emAberto' | 'maquina'>
+  Pick<
+    SolicitacoesFilters,
+    'status' | 'tipo' | 'prioridade' | 'atrasada' | 'emAberto' | 'maquina' | 'q'
+  >
 >;
 
 const STATUS_VALIDOS = Object.keys(rotuloDoStatus) as StatusSolicitacao[];
@@ -44,8 +48,9 @@ export function lerFiltrosDaUrl(params: URLSearchParams): {
     emAberto: verdadeiroExato(params.get('emAberto')),
   };
   const maquina = params.get('maquina') || undefined;
+  const q = termoDeBusca(params.get('q'));
   const filtros = Object.fromEntries(
-    Object.entries({ ...painel, maquina }).filter(([, valor]) => valor !== undefined),
+    Object.entries({ ...painel, maquina, q }).filter(([, valor]) => valor !== undefined),
   ) as FiltrosDaUrl;
   const temFiltroDoPainel = Object.values(painel).some((valor) => valor !== undefined);
   return { filtros, temFiltroDoPainel };

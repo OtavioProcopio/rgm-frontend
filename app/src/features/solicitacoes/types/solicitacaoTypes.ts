@@ -78,6 +78,8 @@ export type SolicitacoesFilters = {
   /** Ordenação da API; o backend antigo a ignora e mantém a ordem de sempre. */
   sort?: 'criadaEm' | 'prazoLimite' | 'prioridade' | 'concluidaEm';
   dir?: 'asc' | 'desc';
+  /** Busca textual (título, descrição e código do modelo), de 2 a 100 caracteres. */
+  q?: string;
 };
 
 export type AbrirSolicitacaoRequest = {

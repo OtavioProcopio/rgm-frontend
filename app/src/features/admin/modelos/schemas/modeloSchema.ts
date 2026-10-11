@@ -2,13 +2,8 @@ import { z } from 'zod';
 
 import { LIMITES, mensagemDeLimite } from '@/shared/lib/limites';
 
-const tipoModeloSchema = z.enum([
-  'PLACA_ALUMINIO',
-  'MADEIRA_E_3D',
-  'ALUMINIO_E_3D',
-  'RESINA',
-  'COQUILHA_ACO',
-]);
+/** O tipo vem do catálogo; a API recusa o que não estiver nele ou estiver inativo. */
+const tipoModeloSchema = z.string().min(1).max(LIMITES.tipoModeloNome);
 
 export const criarModeloSchema = z.object({
   codigo: z
