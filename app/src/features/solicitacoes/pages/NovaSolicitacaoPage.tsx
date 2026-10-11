@@ -6,34 +6,40 @@ import { Camera, X } from 'lucide-react';
 
 import { useAuth } from '@/app/providers/authContext';
 import { useMaquinaOptions } from '@/features/admin/modelos/hooks/useMaquinaOptions';
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
 import { Button } from '@/shared/components/Button/Button';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { Input } from '@/shared/components/Input/Input';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Select } from '@/shared/components/Select/Select';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
-import { Combobox } from '@/shared/components/Combobox/Combobox';
-import { evidenciasApi } from '@/features/evidencias/api/evidenciasApi';
+import { SeletorDeModelo } from '@/features/solicitacoes/components/SeletorDeModelo';
+import { AvisoFotoNaoEnviada } from '@/features/evidencias/components/AvisoFotoNaoEnviada';
+import { useAnexoComAviso } from '@/features/evidencias/hooks/useAnexoComAviso';
+import {
+  nomesDosTipos,
+  TAMANHO_MAXIMO_MB,
+  TIPOS_DE_IMAGEM,
+  validarArquivo,
+} from '@/shared/lib/arquivoPermitido';
 import { canAbrirSolicitacaoCriacao } from '@/shared/lib/permissions';
+import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
 import { useAbrirSolicitacao } from '../hooks/useAbrirSolicitacao';
-import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { acaoFeitaSemFoto, getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
 import {
   abrirSolicitacaoSchema,
   type AbrirSolicitacaoFormData,
 } from '../schemas/solicitacaoSchema';
+import type { TipoSolicitacao } from '../types/solicitacaoTypes';
 
-const BASE_TIPO_OPTIONS = [
-  { value: 'REPARO', label: 'Reparo' },
-  { value: 'INSPECAO', label: 'Inspeção' },
-  { value: 'REENGENHARIA', label: 'Reengenharia' },
-];
+const TIPOS_BASE: TipoSolicitacao[] = ['REPARO', 'INSPECAO', 'REENGENHARIA'];
+const TIPOS_COM_CRIACAO: TipoSolicitacao[] = [...TIPOS_BASE, 'CRIACAO'];
 
-const CRIACAO_TIPO_OPTION = { value: 'CRIACAO', label: 'Criação de modelo' };
-
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+/** Opções do campo Tipo, com o texto da fonte única de rótulos. */
+function opcoesDeTipo(tipos: TipoSolicitacao[]): { value: TipoSolicitacao; label: string }[] {
+  return tipos.map((tipo) => ({ value: tipo, label: rotuloDoTipoDeSolicitacao[tipo] }));
+}
 
 export function NovaSolicitacaoPage() {
   const navigate = useNavigate();
@@ -44,15 +50,16 @@ export function NovaSolicitacaoPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const podeAbrirCriacao = canAbrirSolicitacaoCriacao(user?.perfil);
-  const tipoOptions = podeAbrirCriacao
-    ? [...BASE_TIPO_OPTIONS, CRIACAO_TIPO_OPTION]
-    : BASE_TIPO_OPTIONS;
+  const tipoOptions = opcoesDeTipo(podeAbrirCriacao ? TIPOS_COM_CRIACAO : TIPOS_BASE);
 
   // Foto Evidência State
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const anexo = useAnexoComAviso();
+  /** Preenchido quando a solicitação foi aberta e a foto não foi enviada. */
+  const [abertaSemFotoId, setAbertaSemFotoId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form setup
@@ -75,19 +82,6 @@ export function NovaSolicitacaoPage() {
   const tipoSelecionado = watch('tipo');
   const isCriacao = tipoSelecionado === 'CRIACAO';
 
-  // Busca TODOS os modelos ativos (limite alto para abranger centenas)
-  const { data: modelosPage, isLoading: isLoadingModelos } = useModelos({
-    page: 0,
-    size: 1000,
-    ativo: true,
-  });
-
-  const modeloOptions = modelosPage?.content.map((m) => ({
-    value: m.id,
-    label: `${m.codigo} - ${m.descricao}`,
-    subLabel: m.maquina,
-  })) ?? [];
-
   const { options: maquinaOptions, isLoading: isLoadingMaquinas } = useMaquinaOptions();
 
   // Manipulação de Foto
@@ -95,17 +89,9 @@ export function NovaSolicitacaoPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPhotoError(null);
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setPhotoError('Apenas imagens nos formatos JPG, PNG ou WEBP são permitidas.');
-      return;
-    }
-
-    if (file.size > MAX_SIZE_BYTES) {
-      setPhotoError('A imagem deve ter no máximo 10 MB.');
-      return;
-    }
+    const erro = validarArquivo(file, TIPOS_DE_IMAGEM);
+    setPhotoError(erro);
+    if (erro) return;
 
     setPhoto(file);
     const reader = new FileReader();
@@ -147,13 +133,12 @@ export function NovaSolicitacaoPage() {
             },
       );
 
-      // 2. Upload da foto se houver
+      // 2. Upload da foto se houver. Se falhar, a solicitação já existe: fica na tela com o aviso.
       if (photo) {
-        try {
-          await evidenciasApi.anexar(created.id, photo, { tipo: 'ABERTURA' });
-        } catch (uploadErr) {
-          console.error('Erro ao fazer upload da evidência:', uploadErr);
-          // Permite continuar, a solicitação já foi aberta
+        const enviada = await anexo.anexar(created.id, photo, { tipo: 'ABERTURA' });
+        if (!enviada) {
+          setAbertaSemFotoId(created.id);
+          return;
         }
       }
 
@@ -166,6 +151,24 @@ export function NovaSolicitacaoPage() {
   }
 
   const isPending = abrirSolicitacao.isPending || isUploading;
+
+  if (abertaSemFotoId && anexo.estado) {
+    return (
+      <section>
+        <PageHeader title="Solicitação aberta" description="A solicitação foi registrada." />
+        <div className="max-w-lg">
+          <AvisoFotoNaoEnviada
+            mensagem={acaoFeitaSemFoto.ABRIR}
+            estado={anexo.estado}
+            enviando={anexo.enviando}
+            rotuloSair="Ir para a solicitação"
+            onTentarNovamente={() => void anexo.tentarNovamente()}
+            onSair={() => navigate(`/app/solicitacoes/${abertaSemFotoId}`)}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -186,17 +189,19 @@ export function NovaSolicitacaoPage() {
           placeholder="Descreva brevemente o problema"
           error={errors.titulo?.message}
           disabled={isPending}
+          maxLength={LIMITES.solicitacaoTitulo}
           {...register('titulo')}
         />
-        
+
         <Textarea
           label="Descrição"
           placeholder="Detalhe o problema encontrado..."
           error={errors.descricao?.message}
           disabled={isPending}
+          maxLength={LIMITES.textoLongo}
           {...register('descricao')}
         />
-        
+
         <Select
           label="Tipo"
           options={tipoOptions}
@@ -205,18 +210,19 @@ export function NovaSolicitacaoPage() {
           disabled={isPending}
           {...register('tipo')}
         />
-        
+
         {isCriacao ? (
-          <div className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              O modelo ainda não existe — ele será criado automaticamente quando esta
-              solicitação for concluída, com os dados abaixo.
+          <div className="space-y-5 rounded-md border border-line bg-surface-muted p-4">
+            <p className="text-xs text-fg-muted">
+              O modelo ainda não existe — ele será criado automaticamente quando esta solicitação
+              for concluída, com os dados abaixo.
             </p>
             <Input
               label="Código do modelo"
               placeholder="Ex.: MOD-042"
               error={errors.modeloCodigo?.message}
               disabled={isPending}
+              maxLength={LIMITES.modeloPretendidoCodigo}
               {...register('modeloCodigo')}
             />
             <Select
@@ -232,6 +238,7 @@ export function NovaSolicitacaoPage() {
               placeholder="Detalhes adicionais sobre o modelo pretendido..."
               error={errors.modeloObservacoes?.message}
               disabled={isPending}
+              maxLength={LIMITES.textoLongo}
               {...register('modeloObservacoes')}
             />
           </div>
@@ -240,10 +247,8 @@ export function NovaSolicitacaoPage() {
             control={control}
             name="modeloId"
             render={({ field }) => (
-              <Combobox
+              <SeletorDeModelo
                 label="Modelo"
-                placeholder={isLoadingModelos ? 'Carregando modelos...' : 'Selecione ou digite para filtrar o modelo...'}
-                options={modeloOptions}
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.modeloId?.message}
@@ -254,14 +259,13 @@ export function NovaSolicitacaoPage() {
 
         {/* Anexar Foto (Evidência Inicial) */}
         <div className="space-y-2">
-          <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">
-            Foto do problema (Opcional)
-          </span>
-          
+          <span className="block text-sm font-medium text-fg">Foto do problema (Opcional)</span>
+
           <input
             ref={fileInputRef}
             type="file"
-            accept={ACCEPTED_IMAGE_TYPES.join(',')}
+            aria-label="Foto do problema"
+            accept={TIPOS_DE_IMAGEM.join(',')}
             onChange={handlePhotoChange}
             disabled={isPending}
             className="hidden"
@@ -272,22 +276,22 @@ export function NovaSolicitacaoPage() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isPending}
-              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-350 bg-slate-50/50 py-6 px-4 text-center hover:bg-slate-50 transition-colors focus:outline-none dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900 cursor-pointer"
+              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line-strong bg-surface py-6 px-4 text-center hover:bg-surface-muted transition-colors focus:outline-none cursor-pointer"
             >
-              <div className="rounded-full bg-slate-100 p-2 text-slate-500 dark:bg-slate-850 dark:text-slate-400">
+              <div className="rounded-full bg-surface-muted p-2 text-fg-muted">
                 <Camera size={20} />
               </div>
-              <span className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <span className="mt-2 text-sm font-medium text-fg-muted">
                 Clique para selecionar uma foto
               </span>
-              <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Formatos suportados: JPG, PNG ou WEBP até 10 MB
+              <span className="mt-1 text-xs text-fg-muted">
+                Formatos suportados: {nomesDosTipos(TIPOS_DE_IMAGEM)} até {TAMANHO_MAXIMO_MB} MB
               </span>
             </button>
           ) : (
-            <div className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
+            <div className="relative rounded-lg border border-line bg-surface-muted p-2">
               <div className="flex items-center gap-3">
-                <div className="h-16 w-16 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
+                <div className="h-16 w-16 overflow-hidden rounded bg-surface">
                   <img
                     src={photoPreview}
                     alt="Preview do problema"
@@ -295,10 +299,8 @@ export function NovaSolicitacaoPage() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                    {photo?.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-medium text-fg truncate">{photo?.name}</p>
+                  <p className="text-xs text-fg-muted">
                     {(photo!.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
                 </div>
@@ -306,7 +308,7 @@ export function NovaSolicitacaoPage() {
                   type="button"
                   onClick={handleRemovePhoto}
                   disabled={isPending}
-                  className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-850 dark:hover:text-slate-350"
+                  className="rounded-full p-1.5 text-fg-muted hover:bg-surface hover:text-fg"
                   title="Remover foto"
                 >
                   <X size={16} />
@@ -315,7 +317,7 @@ export function NovaSolicitacaoPage() {
             </div>
           )}
 
-          {photoError && <p className="text-sm text-red-600 dark:text-red-400">{photoError}</p>}
+          {photoError && <p className="text-sm text-danger-fg">{photoError}</p>}
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -327,10 +329,7 @@ export function NovaSolicitacaoPage() {
           >
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending}
-          >
+          <Button type="submit" disabled={isPending}>
             {isPending ? 'Enviando...' : 'Abrir solicitação'}
           </Button>
         </div>

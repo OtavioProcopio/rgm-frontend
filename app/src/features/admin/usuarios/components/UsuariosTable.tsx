@@ -1,3 +1,13 @@
+import { Card } from '@/shared/components/Card/Card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/shared/components/Table/Table';
+
 import { UsuarioActionsMenu } from './UsuarioActionsMenu';
 import { UsuarioPerfilBadge } from './UsuarioPerfilBadge';
 import { UsuarioStatusBadge } from './UsuarioStatusBadge';
@@ -22,22 +32,17 @@ export function UsuariosTable({
     <>
       <div className="grid gap-3 lg:hidden">
         {usuarios.map((usuario) => (
-          <article
-            key={usuario.id}
-            className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
-          >
+          <Card as="article" key={usuario.id} className="rounded-md p-4 shadow-none">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-semibold text-slate-950 dark:text-white">{usuario.nome}</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {usuario.email ?? 'Não possui login'}
-                </p>
+                <h2 className="font-semibold text-fg">{usuario.nome}</h2>
+                <p className="mt-1 text-sm text-fg-muted">{usuario.email ?? 'Não possui login'}</p>
               </div>
               <UsuarioStatusBadge ativo={usuario.ativo} />
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex min-h-6 flex-wrap gap-2">
               <UsuarioPerfilBadge perfil={usuario.perfil} />
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-fg-muted">
                 Criado em {formatDate(usuario.criadoEm)}
               </span>
             </div>
@@ -50,54 +55,46 @@ export function UsuariosTable({
                 onExcluir={onExcluir}
               />
             </div>
-          </article>
+          </Card>
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-md border border-slate-200 dark:border-slate-700 lg:block">
-        <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
-          <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-            <tr>
-              <th className="px-4 py-3">Nome</th>
-              <th className="px-4 py-3">E-mail</th>
-              <th className="px-4 py-3">Perfil</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Criado em</th>
-              <th className="px-4 py-3">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-            {usuarios.map((usuario) => (
-              <tr key={usuario.id}>
-                <td className="px-4 py-3 font-medium text-slate-950 dark:text-white">
-                  {usuario.nome}
-                </td>
-                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                  {usuario.email ?? 'Não possui login'}
-                </td>
-                <td className="px-4 py-3">
-                  <UsuarioPerfilBadge perfil={usuario.perfil} />
-                </td>
-                <td className="px-4 py-3">
-                  <UsuarioStatusBadge ativo={usuario.ativo} />
-                </td>
-                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                  {formatDate(usuario.criadoEm)}
-                </td>
-                <td className="px-4 py-3">
-                  <UsuarioActionsMenu
-                    usuario={usuario}
-                    isMutating={isMutating}
-                    onAtivar={onAtivar}
-                    onDesativar={onDesativar}
-                    onExcluir={onExcluir}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table className="hidden lg:block">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Nome</TableHeaderCell>
+            <TableHeaderCell>E-mail</TableHeaderCell>
+            <TableHeaderCell>Perfil</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
+            <TableHeaderCell>Criado em</TableHeaderCell>
+            <TableHeaderCell>Ações</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {usuarios.map((usuario) => (
+            <TableRow key={usuario.id}>
+              <TableCell className="font-medium text-fg">{usuario.nome}</TableCell>
+              <TableCell className="text-fg-muted">{usuario.email ?? 'Não possui login'}</TableCell>
+              <TableCell>
+                <UsuarioPerfilBadge perfil={usuario.perfil} />
+              </TableCell>
+              <TableCell>
+                <UsuarioStatusBadge ativo={usuario.ativo} />
+              </TableCell>
+              <TableCell className="text-fg-muted">{formatDate(usuario.criadoEm)}</TableCell>
+              <TableCell>
+                <UsuarioActionsMenu
+                  usuario={usuario}
+                  isMutating={isMutating}
+                  onAtivar={onAtivar}
+                  onDesativar={onDesativar}
+                  onExcluir={onExcluir}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </>
   );
 }

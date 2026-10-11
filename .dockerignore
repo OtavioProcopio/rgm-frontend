@@ -7,7 +7,7 @@
 app/node_modules/
 app/dist/
 # E2E & test output (not needed in prod image)
-app/e2e/
+app/tests/e2e/
 app/cypress/
 app/playwright-report/
 app/test-results/

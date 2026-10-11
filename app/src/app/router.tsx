@@ -15,6 +15,9 @@ import { NovoModeloPage } from '@/features/admin/modelos/pages/NovoModeloPage';
 import { EditarMaquinaPage } from '@/features/admin/maquinas/pages/EditarMaquinaPage';
 import { MaquinasPage } from '@/features/admin/maquinas/pages/MaquinasPage';
 import { NovaMaquinaPage } from '@/features/admin/maquinas/pages/NovaMaquinaPage';
+import { EditarTipoModeloPage } from '@/features/admin/tiposModelo/pages/EditarTipoModeloPage';
+import { NovoTipoModeloPage } from '@/features/admin/tiposModelo/pages/NovoTipoModeloPage';
+import { TiposModeloPage } from '@/features/admin/tiposModelo/pages/TiposModeloPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { EditarUsuarioPage } from '@/features/admin/usuarios/pages/EditarUsuarioPage';
 import { NovoUsuarioPage } from '@/features/admin/usuarios/pages/NovoUsuarioPage';
@@ -121,6 +124,18 @@ export const router = createBrowserRouter([
                       {
                         path: 'maquinas/:id/editar',
                         element: <EditarMaquinaPage />,
+                      },
+                      {
+                        path: 'tipos-modelo',
+                        element: <TiposModeloPage />,
+                      },
+                      {
+                        path: 'tipos-modelo/novo',
+                        element: <NovoTipoModeloPage />,
+                      },
+                      {
+                        path: 'tipos-modelo/:id/editar',
+                        element: <EditarTipoModeloPage />,
                       },
                     ],
                   },

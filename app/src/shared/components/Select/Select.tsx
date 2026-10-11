@@ -12,6 +12,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options: SelectOption[];
   placeholder?: string;
   error?: string;
+  limpavel?: boolean;
 };
 
 export function Select({
@@ -19,6 +20,7 @@ export function Select({
   error,
   id,
   label,
+  limpavel = false,
   options,
   placeholder,
   ...props
@@ -28,26 +30,22 @@ export function Select({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={selectId}
-        className="block text-sm font-medium text-slate-800 dark:text-slate-100"
-      >
+      <label htmlFor={selectId} className="block text-sm font-medium text-fg">
         {label}
       </label>
       <select
         id={selectId}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${selectId}-erro` : undefined}
         className={cn(
-          'h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-950 outline-none transition-colors focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10',
-          'dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400 dark:focus:ring-sky-400/10',
-          error &&
-            'border-red-500 focus:border-red-500 focus:ring-red-500/10 dark:border-red-400 dark:focus:border-red-400',
+          'h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/40',
+          error && 'border-danger focus:border-danger focus:ring-danger/40',
           className,
         )}
         {...props}
       >
         {placeholder ? (
-          <option value="" disabled>
+          <option value="" disabled={!limpavel}>
             {placeholder}
           </option>
         ) : null}
@@ -57,7 +55,11 @@ export function Select({
           </option>
         ))}
       </select>
-      {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
+      {error ? (
+        <p id={`${selectId}-erro`} className="text-sm text-danger-fg">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

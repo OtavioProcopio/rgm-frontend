@@ -3,12 +3,14 @@ import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { LIMITES } from '@/shared/lib/limites';
 
 import { comentarioSchema, type ComentarioFormData } from '../schemas/solicitacaoSchema';
 
 type Props = {
   isPending?: boolean;
-  onSubmit: (data: ComentarioFormData) => void;
+  /** Devolve `false` quando o envio falhou: o texto digitado fica para nova tentativa. */
+  onSubmit: (data: ComentarioFormData) => unknown;
 };
 
 export function ComentarioForm({ isPending, onSubmit }: Props) {
@@ -21,9 +23,9 @@ export function ComentarioForm({ isPending, onSubmit }: Props) {
     resolver: zodResolver(comentarioSchema),
   });
 
-  function handleFormSubmit(data: ComentarioFormData) {
-    onSubmit(data);
-    reset();
+  async function handleFormSubmit(data: ComentarioFormData) {
+    const enviado = await onSubmit(data);
+    if (enviado !== false) reset();
   }
 
   return (
@@ -32,6 +34,7 @@ export function ComentarioForm({ isPending, onSubmit }: Props) {
         label="Novo comentário"
         placeholder="Escreva um comentário..."
         error={errors.comentario?.message}
+        maxLength={LIMITES.textoLongo}
         {...register('comentario')}
       />
       <Button type="submit" disabled={isPending}>

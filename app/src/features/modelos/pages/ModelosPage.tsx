@@ -22,17 +22,14 @@ export function ModelosPage() {
     maquina?: string;
     descricao?: string;
   }>({ page: 0, size: PAGE_SIZE });
-  const { data, error, isLoading } = useModelos(filters);
+  const { data, error, isLoading, refetch } = useModelos(filters);
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
     filters.maquina,
   );
 
   return (
     <section>
-      <PageHeader
-        title="Modelos"
-        description="Visualize os modelos de máquinas disponíveis."
-      />
+      <PageHeader title="Modelos" description="Visualize os modelos de máquinas disponíveis." />
 
       <ModelosFilters
         codigo={filters.codigo}
@@ -52,10 +49,14 @@ export function ModelosPage() {
         <ErrorState
           title="Não foi possível carregar modelos."
           description="Verifique a conexão e tente novamente."
+          onRetry={() => void refetch()}
         />
       ) : null}
       {data && data.content.length === 0 ? (
-        <EmptyState title="Nenhum modelo encontrado" description="Nenhum modelo cadastrado ainda." />
+        <EmptyState
+          title="Nenhum modelo encontrado"
+          description="Nenhum modelo cadastrado ainda."
+        />
       ) : null}
 
       {data && data.content.length > 0 ? (

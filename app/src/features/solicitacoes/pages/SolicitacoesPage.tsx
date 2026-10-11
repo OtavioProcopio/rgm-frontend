@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { Button } from '@/shared/components/Button/Button';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Input } from '@/shared/components/Input/Input';
-import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { PageHeader, type AcaoDoMenu } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 import { cn } from '@/shared/lib/cn';
 import { canOperateSolicitacoes } from '@/shared/lib/permissions';
 
@@ -16,48 +18,179 @@ import { solicitacoesApi } from '../api/solicitacoesApi';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { SolicitacaoCard } from '../components/SolicitacaoCard';
 import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
-import { useSolicitacaoEvents } from '../hooks/useSolicitacaoEvents';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
+import { lerFiltrosDaUrl } from '../lib/filtrosDaUrl';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { temFiltroAtivo } from '../lib/temFiltroAtivo';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 const PAGE_SIZE = 20;
 type View = 'lista' | 'kanban';
 
+type EstadoInicial = { view: View; filters: SolicitacoesFilters };
+
+/** Visão e filtros com que a página abre, lidos da URL uma única vez. */
+function useEstadoInicialDaUrl(): EstadoInicial {
+  const [searchParams] = useSearchParams();
+  const [inicial] = useState<EstadoInicial>(() => {
+    const { filtros, temFiltroDoPainel } = lerFiltrosDaUrl(searchParams);
+    return {
+      view: temFiltroDoPainel || filtros.maquina || filtros.q ? 'lista' : 'kanban',
+      filters: { page: 0, size: PAGE_SIZE, ...filtros },
+    };
+  });
+  return inicial;
+}
+
+type AlternadorProps = { view: View; onChange: (view: View) => void };
+
+function AlternadorDeVisao({ view, onChange }: AlternadorProps) {
+  const classe = (ativa: boolean, canto: string) =>
+    cn(
+      `${canto} px-3 py-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11`,
+      ativa ? 'bg-accent text-on-accent' : 'text-fg-muted hover:bg-surface-muted',
+    );
+  return (
+    <div className="flex rounded-md border border-line bg-surface">
+      <button
+        type="button"
+        onClick={() => onChange('kanban')}
+        className={classe(view === 'kanban', 'rounded-l-md')}
+      >
+        Kanban
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('lista')}
+        className={classe(view === 'lista', 'rounded-r-md')}
+      >
+        Lista
+      </button>
+    </div>
+  );
+}
+
+type FiltrosProps = {
+  filters: SolicitacoesFilters;
+  setFilters: React.Dispatch<React.SetStateAction<SolicitacoesFilters>>;
+};
+
+/** Período de criação do quadro: as duas datas. */
+function PeriodoDoQuadro({ filters, setFilters }: FiltrosProps) {
+  const alterar =
+    (campo: 'criadaEmInicio' | 'criadaEmFim', hora: string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setFilters((f) => ({
+        ...f,
+        [campo]: e.target.value ? `${e.target.value}T${hora}Z` : undefined,
+      }));
+  return (
+    <div className="mb-3 flex flex-wrap gap-4">
+      <div className="w-full sm:w-44">
+        <Input
+          type="date"
+          label="Criada a partir de"
+          value={filters.criadaEmInicio ? filters.criadaEmInicio.split('T')[0] : ''}
+          onChange={alterar('criadaEmInicio', '00:00:00')}
+        />
+      </div>
+      <div className="w-full sm:w-44">
+        <Input
+          type="date"
+          label="Criada até"
+          value={filters.criadaEmFim ? filters.criadaEmFim.split('T')[0] : ''}
+          onChange={alterar('criadaEmFim', '23:59:59')}
+        />
+      </div>
+    </div>
+  );
+}
+
+function VisaoKanban({ filters, setFilters }: FiltrosProps) {
+  return (
+    <>
+      <PeriodoDoQuadro filters={filters} setFilters={setFilters} />
+      <KanbanBoard
+        modeloId={filters.modeloId}
+        dataInicio={filters.criadaEmInicio}
+        dataFim={filters.criadaEmFim}
+        onLimparFiltro={() =>
+          setFilters((f) => ({
+            ...f,
+            modeloId: undefined,
+            criadaEmInicio: undefined,
+            criadaEmFim: undefined,
+          }))
+        }
+      />
+    </>
+  );
+}
+
+function VisaoLista({ filters, setFilters }: FiltrosProps) {
+  const { data, error, isLoading, refetch } = useSolicitacoes(filters, { enabled: true });
+  return (
+    <>
+      <SolicitacaoFilters filters={filters} onChange={setFilters} />
+
+      {isLoading ? <LoadingState title="Carregando solicitações..." /> : null}
+      {error ? (
+        <ErrorState
+          title="Não foi possível carregar solicitações."
+          description={getSolicitacaoErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : null}
+      {data && data.content.length === 0 ? (
+        <EmptyState
+          title="Nenhuma solicitação encontrada"
+          description={
+            temFiltroAtivo(filters)
+              ? 'Nenhuma solicitação com os filtros aplicados.'
+              : 'Nenhuma solicitação cadastrada ainda.'
+          }
+        />
+      ) : null}
+
+      {data && data.content.length > 0 ? (
+        <>
+          <div className="space-y-3">
+            {data.content.map((s) => (
+              <SolicitacaoCard key={s.id} solicitacao={s} />
+            ))}
+          </div>
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            totalElements={data.totalElements}
+            itemLabel="solicitação(ões)"
+            onPrev={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
+            onNext={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
+          />
+        </>
+      ) : null}
+    </>
+  );
+}
+
 export function SolicitacoesPage() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const maquinaFromUrl = searchParams.get('maquina') || undefined;
-  const [view, setView] = useState<View>(maquinaFromUrl ? 'lista' : 'kanban');
-  const [filters, setFilters] = useState<SolicitacoesFilters>({
-    page: 0,
-    size: PAGE_SIZE,
-    maquina: maquinaFromUrl,
-  });
-  const { data, error, isLoading } = useSolicitacoes(filters, { enabled: view === 'lista' });
-
-  useSolicitacaoEvents();
-  const [isExporting, setIsExporting] = useState(false);
+  const inicial = useEstadoInicialDaUrl();
+  const [view, setView] = useState<View>(inicial.view);
+  const [filters, setFilters] = useState<SolicitacoesFilters>(inicial.filters);
 
   const canCreate = canOperateSolicitacoes(user?.perfil);
-
-  async function handleExportar() {
-    setIsExporting(true);
-    try {
-      const blob = await solicitacoesApi.exportar(filters);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `relatorio_solicitacoes_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar relatório:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
+  const buscarPdf = (): Promise<Blob> => solicitacoesApi.exportar(filters);
+  const nomeDoPdf = (): string => `relatorio_solicitacoes_${Date.now()}.pdf`;
+  const { exportar, exportando, erro } = useExportarPdf({
+    buscar: buscarPdf,
+    nomeDoArquivo: nomeDoPdf,
+  });
+  const acaoExportar: AcaoDoMenu = {
+    rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
+    onSelect: exportar,
+    desabilitada: exportando,
+  };
 
   return (
     <section>
@@ -66,125 +199,26 @@ export function SolicitacoesPage() {
         description="Gerencie as solicitações de manutenção."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-              <button
-                type="button"
-                onClick={() => setView('kanban')}
-                className={cn(
-                  'rounded-l-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  view === 'kanban'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',
-                )}
-              >
-                Kanban
-              </button>
-              <button
-                type="button"
-                onClick={() => setView('lista')}
-                className={cn(
-                  'rounded-r-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  view === 'lista'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700',
-                )}
-              >
-                Lista
-              </button>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isExporting}
-              onClick={handleExportar}
-            >
-              {isExporting ? 'Exportando...' : 'Exportar PDF'}
-            </Button>
+            <AlternadorDeVisao view={view} onChange={setView} />
             {canCreate ? (
               <Link to="/app/solicitacoes/nova">
                 <Button>Nova solicitação</Button>
               </Link>
-            ) : null}
+            ) : (
+              <ExportarPdfButton buscar={buscarPdf} nomeDoArquivo={nomeDoPdf} />
+            )}
           </div>
         }
+        maisAcoes={canCreate ? [acaoExportar] : undefined}
       />
+      {canCreate && erro ? (
+        <ErrorState title="Exportação não concluída" description={erro} />
+      ) : null}
 
       {view === 'kanban' ? (
-        <>
-          <div className="mb-3 flex flex-wrap gap-4">
-            <div className="w-full sm:w-44">
-              <Input
-                type="date"
-                label="Criada a partir de"
-                value={filters.criadaEmInicio ? filters.criadaEmInicio.split('T')[0] : ''}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    criadaEmInicio: e.target.value ? `${e.target.value}T00:00:00Z` : undefined,
-                  }))
-                }
-              />
-            </div>
-            <div className="w-full sm:w-44">
-              <Input
-                type="date"
-                label="Criada até"
-                value={filters.criadaEmFim ? filters.criadaEmFim.split('T')[0] : ''}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    criadaEmFim: e.target.value ? `${e.target.value}T23:59:59Z` : undefined,
-                  }))
-                }
-              />
-            </div>
-          </div>
-          <KanbanBoard
-            modeloId={filters.modeloId}
-            dataInicio={filters.criadaEmInicio}
-            dataFim={filters.criadaEmFim}
-          />
-        </>
+        <VisaoKanban filters={filters} setFilters={setFilters} />
       ) : (
-        <>
-          <SolicitacaoFilters filters={filters} onChange={setFilters} />
-
-          {isLoading ? <LoadingState title="Carregando solicitações..." /> : null}
-          {error ? (
-            <ErrorState
-              title="Não foi possível carregar solicitações."
-              description={getSolicitacaoErrorMessage(error)}
-            />
-          ) : null}
-          {data && data.content.length === 0 ? (
-            <EmptyState
-              title="Nenhuma solicitação encontrada"
-              description={
-                filters.status || filters.modeloId
-                  ? 'Nenhuma solicitação com os filtros aplicados.'
-                  : 'Nenhuma solicitação cadastrada ainda.'
-              }
-            />
-          ) : null}
-
-          {data && data.content.length > 0 ? (
-            <>
-              <div className="space-y-3">
-                {data.content.map((s) => (
-                  <SolicitacaoCard key={s.id} solicitacao={s} />
-                ))}
-              </div>
-              <Pagination
-                page={data.page}
-                totalPages={data.totalPages}
-                totalElements={data.totalElements}
-                itemLabel="solicitação(ões)"
-                onPrev={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
-                onNext={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
-              />
-            </>
-          ) : null}
-        </>
+        <VisaoLista filters={filters} setFilters={setFilters} />
       )}
     </section>
   );

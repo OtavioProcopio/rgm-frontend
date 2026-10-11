@@ -1,17 +1,8 @@
-export type TipoModelo =
-  | 'PLACA_ALUMINIO'
-  | 'MADEIRA_E_3D'
-  | 'ALUMINIO_E_3D'
-  | 'RESINA'
-  | 'COQUILHA_ACO';
+/** Nome de um tipo do catálogo (`GET /api/tipos-modelo`); os cinco de origem mantêm o identificador. */
+export type TipoModelo = string;
 
-export const TIPO_MODELO_LABELS: Record<TipoModelo, string> = {
-  PLACA_ALUMINIO: 'Placa Alumínio',
-  MADEIRA_E_3D: 'Madeira e 3D',
-  ALUMINIO_E_3D: 'Alumínio e 3D',
-  RESINA: 'Resina',
-  COQUILHA_ACO: 'Coquilha em Aço',
-};
+/** O rótulo de cada tipo tem uma fonte só; este nome continua valendo para quem já o importa. */
+export { rotuloDoTipoDeModelo as TIPO_MODELO_LABELS } from '@/shared/lib/rotulos';
 
 export type Modelo = {
   id: string;
@@ -49,6 +40,25 @@ export type ModelosFilters = {
   descricao?: string;
 };
 
+/** Contagens do cadastro de modelos, calculadas pela API. */
+export type ResumoDeModelos = {
+  total: number;
+  ativos: number;
+  inativos: number;
+  comPendenciaAberta: number;
+  porMaquina: Array<{ maquina: string; quantidade: number }>;
+};
+
+/** Resumo das solicitações de um modelo, calculado pela API. */
+export type ResumoDasSolicitacoesDoModelo = {
+  total: number;
+  emAberto: number;
+  concluidas: number;
+  canceladas: number;
+  tempoMedioResolucaoSegundos: number | null;
+  intervaloMedioSegundos: number | null;
+};
+
 export type CriarModeloRequest = {
   codigo: string;
   descricao: string;
@@ -64,4 +74,3 @@ export type EditarModeloRequest = {
   maquina: string;
   tipo?: TipoModelo;
 };
-

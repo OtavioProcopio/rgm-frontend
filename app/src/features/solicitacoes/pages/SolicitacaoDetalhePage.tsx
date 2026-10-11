@@ -1,548 +1,528 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { ArrowLeft } from 'lucide-react';
+import { Link, useParams } from 'react-router';
 
 import { useAuth } from '@/app/providers/authContext';
 import { Button } from '@/shared/components/Button/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { useVoltar } from '@/shared/hooks/useVoltar';
+import { isoValido, tempoRelativo } from '@/shared/lib/data';
 import { canManageSolicitacoes } from '@/shared/lib/permissions';
 
-import { AlterarResponsaveisModal } from '../components/AlterarResponsaveisModal';
 import { ComentarioForm } from '../components/ComentarioForm';
-import { DevolucaoModal } from '../components/DevolucaoModal';
-import { EncerramentoModal } from '../components/EncerramentoModal';
-import { EnviarValidacaoModal } from '../components/EnviarValidacaoModal';
-import { SolicitacaoPrioridadeBadge } from '../components/SolicitacaoPrioridadeBadge';
-import { SolicitacaoStatusBadge } from '../components/SolicitacaoStatusBadge';
+import { SolicitacaoResumo } from '../components/SolicitacaoResumo';
 import { SolicitacaoTimeline } from '../components/SolicitacaoTimeline';
-import { TriagemModal } from '../components/TriagemModal';
-import { useAlterarResponsaveis } from '../hooks/useAlterarResponsaveis';
+import { useAcoesDoCabecalho, type AcoesDoCabecalho } from '../hooks/useAcoesDoCabecalho';
 import { useAtividades } from '../hooks/useAtividades';
-import { useCancelarSolicitacao } from '../hooks/useCancelarSolicitacao';
-import { useDevolverSolicitacao } from '../hooks/useDevolverSolicitacao';
-import { useEncerrarSolicitacao } from '../hooks/useEncerrarSolicitacao';
-import { useEnviarParaValidacao } from '../hooks/useEnviarParaValidacao';
 import { useRegistrarComentario } from '../hooks/useRegistrarComentario';
 import { useSolicitacao } from '../hooks/useSolicitacao';
-import { useTriarSolicitacao } from '../hooks/useTriarSolicitacao';
 import { useEditarSolicitacao } from '../hooks/useEditarSolicitacao';
-import { getSolicitacaoErrorMessage, tipoLabel } from '../lib/solicitacaoMessages';
-import type {
-  DevolverSolicitacaoRequest,
-  EncerrarSolicitacaoRequest,
-  TriarSolicitacaoRequest,
-} from '../types/solicitacaoTypes';
+import {
+  getMensagemDoDetalhe,
+  getSolicitacaoErrorMessage,
+  sucessoDaAcao,
+} from '../lib/solicitacaoMessages';
+import {
+  editarSolicitacaoSchema,
+  type EditarSolicitacaoFormData,
+} from '../schemas/solicitacaoSchema';
+import type { AtividadeSolicitacao, Solicitacao } from '../types/solicitacaoTypes';
 import { EvidenciaList } from '@/features/evidencias/components/EvidenciaList';
 import { EvidenciaUploader } from '@/features/evidencias/components/EvidenciaUploader';
 import { useDeleteEvidencia } from '@/features/evidencias/hooks/useDeleteEvidencia';
 import { useEvidencias } from '@/features/evidencias/hooks/useEvidencias';
 import { useUploadEvidencia } from '@/features/evidencias/hooks/useUploadEvidencia';
-import { usuariosApi } from '@/features/admin/usuarios/api/usuariosApi';
-import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/shared/components/Input/Input';
+import { Textarea } from '@/shared/components/Textarea/Textarea';
+import { useToast } from '@/shared/components/Toast/toastContext';
+import { LIMITES } from '@/shared/lib/limites';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
+import type { PerfilUsuario } from '@/features/auth/types/authTypes';
 import { useModelo } from '@/features/admin/modelos/hooks/useModelo';
 
-type ActiveModal = 'triagem' | 'encerramento' | 'devolucao' | 'responsaveis' | 'enviarValidacao' | null;
+type AoFalhar = (mensagem: string | null) => void;
+type ErrosDaEdicao = { titulo?: string; descricao?: string };
 
 export function SolicitacaoDetalhePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: profile } = usePerfil();
-  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  // States para Edição (tipo é imutável após a abertura — não é editável)
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitulo, setEditTitulo] = useState('');
-  const [editDescricao, setEditDescricao] = useState('');
-
-  const { data: solicitacao, isLoading, error } = useSolicitacao(id!);
-  const { data: atividades = [], isLoading: isLoadingAtividades } = useAtividades(id!);
-  const { data: evidencias = [], isLoading: isLoadingEvidencias } = useEvidencias(id!);
-  const { data: modelo } = useModelo(solicitacao?.modeloId);
-
-  const triar = useTriarSolicitacao(id!);
-  const enviarValidacao = useEnviarParaValidacao(id!);
-  const encerrar = useEncerrarSolicitacao(id!);
-  const cancelar = useCancelarSolicitacao(id!);
-  const devolver = useDevolverSolicitacao(id!);
-  const comentar = useRegistrarComentario(id!);
-  const uploadEvidencia = useUploadEvidencia(id!);
-  const editar = useEditarSolicitacao(id!);
-  const alterarResponsaveis = useAlterarResponsaveis(id!);
-  const deleteEvidencia = useDeleteEvidencia(id!);
-
-  const canManage = canManageSolicitacoes(user?.perfil);
-  const isResponsavel = !!(profile?.id && solicitacao?.responsavelIds?.includes(profile.id));
-  const canEnviarValidacao = canManage || (user?.perfil === 'OPERADOR' && isResponsavel);
-  const canOperadorCancelar =
-    user?.perfil === 'OPERADOR' &&
-    solicitacao?.status === 'A_FAZER' &&
-    solicitacao?.abertaPorUsuarioId === profile?.id &&
-    (solicitacao?.responsavelIds?.length ?? 0) === 0;
-
-  const { data: usuariosPage } = useQuery({
-    queryKey: ['admin', 'usuarios', 'triagem'],
-    queryFn: () => usuariosApi.listar({ page: 0, size: 100, ativo: true }),
-    enabled: canManageSolicitacoes(user?.perfil),
-    staleTime: 5 * 60 * 1000,
-  });
-  const responsaveisOpcoes = (usuariosPage?.content ?? []).filter(
-    (u) => u.perfil === 'OPERADOR' || u.perfil === 'GESTOR',
-  );
-
-  async function handleTriar(data: TriarSolicitacaoRequest, foto: File | null, nota: string) {
-    setActionError(null);
-    try {
-      await triar.mutateAsync(data);
-      if (foto) {
-        try {
-          await uploadEvidencia.mutateAsync({
-            file: foto,
-            tipo: 'INSTRUCAO_SERVICO',
-            descricao: nota || undefined,
-          });
-        } catch (uploadErr) {
-          console.error('Erro ao anexar evidência de triagem:', uploadErr);
-        }
-      }
-      setActiveModal(null);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleEnviarValidacao(data: { comentario: string }) {
-    setActionError(null);
-    try {
-      await enviarValidacao.mutateAsync(data.comentario);
-      setActiveModal(null);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleEncerrar(data: EncerrarSolicitacaoRequest, foto: File | null) {
-    setActionError(null);
-    try {
-      if (data.concluir) {
-        await encerrar.mutateAsync(data);
-        if (foto) {
-          try {
-            await uploadEvidencia.mutateAsync({
-              file: foto,
-              tipo: 'CONCLUSAO',
-              descricao: data.comentario,
-            });
-          } catch (uploadErr) {
-            console.error('Erro ao anexar evidência de conclusão:', uploadErr);
-          }
-        }
-      } else {
-        await cancelar.mutateAsync({ motivo: data.comentario });
-      }
-      setActiveModal(null);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleDevolver(data: DevolverSolicitacaoRequest, foto: File | null) {
-    setActionError(null);
-    try {
-      await devolver.mutateAsync(data);
-      if (foto) {
-        try {
-          await uploadEvidencia.mutateAsync({
-            file: foto,
-            tipo: 'DEVOLUCAO',
-            descricao: data.motivo,
-          });
-        } catch (uploadErr) {
-          console.error('Erro ao anexar evidência de devolução:', uploadErr);
-        }
-      }
-      setActiveModal(null);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleComentario(data: { comentario: string }) {
-    setActionError(null);
-    try {
-      await comentar.mutateAsync(data);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleAlterarResponsaveis(responsavelIds: string[]) {
-    setActionError(null);
-    try {
-      await alterarResponsaveis.mutateAsync({ responsavelIds });
-      setActiveModal(null);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleDeleteEvidencia(evidenciaId: string) {
-    setActionError(null);
-    try {
-      await deleteEvidencia.mutateAsync(evidenciaId);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  async function handleUpload(file: File) {
-    setActionError(null);
-    try {
-      await uploadEvidencia.mutateAsync({ file });
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
-
-  const isTerminal = solicitacao ? (solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA') : false;
-
-  const canEdit =
-    solicitacao &&
-    !isTerminal &&
-    (user?.perfil === 'ADMINISTRADOR' ||
-      user?.perfil === 'GESTOR' ||
-      (user?.perfil === 'OPERADOR' && solicitacao.abertaPorUsuarioId === profile?.id));
-
-  // OPERADOR pode anexar evidências se é o responsável pela solicitação ou quem a abriu
-  const canAnexarEvidencia =
-    !isTerminal &&
-    (canManage ||
-      (user?.perfil === 'OPERADOR' && (isResponsavel || solicitacao?.abertaPorUsuarioId === profile?.id)));
-
-  async function handleSaveEdit() {
-    if (!editTitulo.trim() || !editDescricao.trim()) {
-      setActionError('Título e descrição são obrigatórios.');
-      return;
-    }
-    setActionError(null);
-    try {
-      await editar.mutateAsync({
-        titulo: editTitulo.trim(),
-        descricao: editDescricao.trim(),
-      });
-      setIsEditing(false);
-    } catch (err) {
-      setActionError(getSolicitacaoErrorMessage(err));
-    }
-  }
+  const { data: solicitacao, isLoading, error, refetch } = useSolicitacao(id!);
 
   if (isLoading) return <LoadingState title="Carregando solicitação..." />;
   if (error || !solicitacao) {
     return (
       <ErrorState
         title="Não foi possível carregar a solicitação."
-        description={getSolicitacaoErrorMessage(error)}
+        description={getMensagemDoDetalhe(error)}
+        onRetry={() => void refetch()}
+        action={<VoltarAoQuadro />}
       />
     );
   }
+  return <DetalheDaSolicitacao solicitacao={solicitacao} />;
+}
 
-  const criadaEm = new Date(solicitacao.criadaEm).toLocaleString('pt-BR');
+function VoltarAoQuadro() {
+  return (
+    <Link to="/app/solicitacoes">
+      <Button variant="secondary">Voltar ao quadro</Button>
+    </Link>
+  );
+}
+
+type EstadoDoDetalhe = ReturnType<typeof useEstadoDoDetalhe>;
+
+function useEstadoDoDetalhe(solicitacao: Solicitacao) {
+  const [actionError, setActionError] = useState<string | null>(null);
+  const { data: atividades = [], isLoading: carregandoAtividades } = useAtividades(solicitacao.id);
+  const permissoes = usePermissoesDaSolicitacao(solicitacao);
+  const edicao = useEdicaoDaSolicitacao(solicitacao, setActionError);
+  const editar = permissoes.canEdit && !edicao.isEditing ? { aoAcionar: edicao.iniciar } : null;
+  const acoes = useAcoesDoCabecalho(solicitacao, editar);
+  return {
+    actionError,
+    setActionError,
+    atividades,
+    carregandoAtividades,
+    permissoes,
+    edicao,
+    acoes,
+  };
+}
+
+function EvidenciasEHistorico({ id, estado }: { id: string; estado: EstadoDoDetalhe }) {
+  const { setActionError, atividades, carregandoAtividades, permissoes } = estado;
+  return (
+    <>
+      <EvidenciasDaSolicitacao
+        id={id}
+        podeAnexar={permissoes.canAnexarEvidencia}
+        aoFalhar={setActionError}
+      />
+      <HistoricoDaSolicitacao
+        id={id}
+        atividades={atividades}
+        carregando={carregandoAtividades}
+        encerrada={permissoes.isTerminal}
+      />
+    </>
+  );
+}
+
+function DetalheDaSolicitacao({ solicitacao }: { solicitacao: Solicitacao }) {
+  const estado = useEstadoDoDetalhe(solicitacao);
+  const { actionError, atividades, edicao, acoes } = estado;
 
   return (
     <section className="space-y-6">
-      <PageHeader
-        title={isEditing ? 'Editar solicitação' : solicitacao.titulo}
-        description={isEditing ? 'Atualize o título e a descrição da solicitação.' : `Aberta em ${criadaEm}`}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  disabled={editar.isPending}
-                >
-                  {editar.isPending ? 'Salvando...' : 'Salvar'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancelar
-                </Button>
-              </>
-            ) : (
-              <>
-                {canEdit && (
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setEditTitulo(solicitacao.titulo);
-                      setEditDescricao(solicitacao.descricao);
-                      setIsEditing(true);
-                    }}
-                  >
-                    Editar
-                  </Button>
-                )}
-                <Button type="button" variant="secondary" onClick={() => navigate('/app/solicitacoes')}>
-                  Voltar
-                </Button>
-              </>
-            )}
-          </div>
-        }
-      />
-
-      {actionError ? <ErrorState title="Operação não concluída" description={actionError} /> : null}
-
-      {/* Info */}
-      {isEditing ? (
-        <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-          <Input
-            label="Título"
-            value={editTitulo}
-            onChange={(e) => setEditTitulo(e.target.value)}
-            disabled={editar.isPending}
-            required
-          />
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Tipo
-            </label>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {tipoLabel[solicitacao.tipo]}{' '}
-              <span className="text-xs">(não pode ser alterado após a abertura)</span>
-            </p>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Descrição
-            </label>
-            <textarea
-              className="flex min-h-[100px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
-              value={editDescricao}
-              onChange={(e) => setEditDescricao(e.target.value)}
-              disabled={editar.isPending}
-              required
-              rows={4}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Status
-            </p>
-            <div className="mt-1">
-              <SolicitacaoStatusBadge status={solicitacao.status} />
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Prioridade
-            </p>
-            <div className="mt-1">
-              <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
-              {!solicitacao.prioridade && (
-                <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Tipo
-            </p>
-            <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
-              {tipoLabel[solicitacao.tipo]}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Descrição
-            </p>
-            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">{solicitacao.descricao}</p>
-          </div>
-          {modelo ? (
-            <div className="col-span-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Modelo (rastreabilidade)
-              </p>
-              <Link
-                to={`/app/modelos/${modelo.id}`}
-                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
-              >
-                {modelo.codigo} — {modelo.descricao}
-              </Link>
-            </div>
-          ) : solicitacao.tipo === 'CRIACAO' ? (
-            <div className="col-span-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Modelo pretendido
-              </p>
-              <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
-                {solicitacao.modeloCodigo} — {solicitacao.modeloMaquina}
-              </p>
-              {solicitacao.modeloObservacoes ? (
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  {solicitacao.modeloObservacoes}
-                </p>
-              ) : null}
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                O modelo será criado ao concluir esta solicitação.
-              </p>
-            </div>
-          ) : null}
-          {solicitacao.comentarioFinal ? (
-            <div className="col-span-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Comentário final
-              </p>
-              <p className="mt-1 text-sm text-slate-800 dark:text-slate-200">
-                {solicitacao.comentarioFinal}
-              </p>
-            </div>
-          ) : null}
-        </div>
-      )}
-
-      {/* Ações */}
-      {!isTerminal && (canManage || canEnviarValidacao || canOperadorCancelar) ? (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Ações</h2>
-          <div className="flex flex-wrap gap-2">
-            {canManage && solicitacao.status === 'A_FAZER' ? (
-              <Button type="button" onClick={() => setActiveModal('triagem')}>
-                Triar
-              </Button>
-            ) : null}
-            {canManage && solicitacao.status !== 'A_FAZER' ? (
-              <Button type="button" variant="secondary" onClick={() => setActiveModal('responsaveis')}>
-                Alterar responsáveis
-              </Button>
-            ) : null}
-            {canEnviarValidacao && solicitacao.status === 'EM_ANDAMENTO' ? (
-              <Button
-                type="button"
-                disabled={enviarValidacao.isPending}
-                onClick={() => setActiveModal('enviarValidacao')}
-              >
-                Enviar para validação
-              </Button>
-            ) : null}
-            {canManage && solicitacao.status === 'EM_VALIDACAO' ? (
-              <Button type="button" onClick={() => setActiveModal('devolucao')}>
-                Devolver
-              </Button>
-            ) : null}
-            {canManage &&
-            (solicitacao.status === 'A_FAZER' ||
-              solicitacao.status === 'EM_ANDAMENTO' ||
-              solicitacao.status === 'EM_VALIDACAO') ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setActiveModal('encerramento')}
-              >
-                {solicitacao.status === 'EM_VALIDACAO' ? 'Encerrar' : 'Cancelar'}
-              </Button>
-            ) : null}
-            {canOperadorCancelar ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setActiveModal('encerramento')}
-              >
-                Cancelar
-              </Button>
-            ) : null}
-          </div>
-
-          {activeModal === 'triagem' ? (
-            <TriagemModal
-              isPending={triar.isPending}
-              usuarios={responsaveisOpcoes}
-              onCancel={() => setActiveModal(null)}
-              onConfirm={handleTriar}
-            />
-          ) : null}
-          {activeModal === 'encerramento' ? (
-            <EncerramentoModal
-              isPending={encerrar.isPending}
-              podeConcluir={solicitacao.status === 'EM_VALIDACAO'}
-              onCancel={() => setActiveModal(null)}
-              onConfirm={handleEncerrar}
-            />
-          ) : null}
-          {activeModal === 'devolucao' ? (
-            <DevolucaoModal
-              isPending={devolver.isPending}
-              onCancel={() => setActiveModal(null)}
-              onConfirm={handleDevolver}
-            />
-          ) : null}
-          {activeModal === 'responsaveis' ? (
-            <AlterarResponsaveisModal
-              responsaveisAtuais={solicitacao.responsavelIds}
-              usuarios={responsaveisOpcoes}
-              isPending={alterarResponsaveis.isPending}
-              onCancel={() => setActiveModal(null)}
-              onConfirm={handleAlterarResponsaveis}
-            />
-          ) : null}
-          {activeModal === 'enviarValidacao' ? (
-            <EnviarValidacaoModal
-              solicitacaoId={id!}
-              isPending={enviarValidacao.isPending}
-              evidenciaObrigatoria={solicitacao.tipo !== 'CRIACAO'}
-              onCancel={() => setActiveModal(null)}
-              onConfirm={handleEnviarValidacao}
-            />
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* Evidências */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Evidências
-        </h2>
-        {canAnexarEvidencia ? (
-          <div className="mb-4">
-            <EvidenciaUploader isPending={uploadEvidencia.isPending} onUpload={handleUpload} />
-          </div>
-        ) : null}
-        <EvidenciaList
-          evidencias={evidencias}
-          isLoading={isLoadingEvidencias}
-          onDelete={canAnexarEvidencia ? handleDeleteEvidencia : undefined}
-          isDeleting={deleteEvidencia.isPending}
-        />
-      </div>
-
-      {/* Histórico */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Histórico de atividades
-        </h2>
-        <SolicitacaoTimeline atividades={atividades} isLoading={isLoadingAtividades} />
-      </div>
-
-      {/* Comentário */}
-      {!isTerminal ? (
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Adicionar comentário
-          </h2>
-          <ComentarioForm isPending={comentar.isPending} onSubmit={handleComentario} />
-        </div>
-      ) : null}
+      <BotaoVoltar />
+      <CabecalhoDaSolicitacao solicitacao={solicitacao} edicao={edicao} acoes={acoes} />
+      {acoes.dialogo}
+      <ErroDeAcao mensagem={actionError} />
+      <InformacoesDaSolicitacao solicitacao={solicitacao} edicao={edicao} atividades={atividades} />
+      <DescarteDaEdicao edicao={edicao} />
+      <EvidenciasEHistorico id={solicitacao.id} estado={estado} />
     </section>
+  );
+}
+
+// ── Permissões ───────────────────────────────────────────────
+
+type ContextoDePermissao = {
+  perfil: PerfilUsuario | undefined;
+  terminal: boolean;
+  abriu: boolean;
+  responsavel: boolean;
+};
+
+function podeEditar({ perfil, terminal, abriu }: ContextoDePermissao): boolean {
+  if (terminal) return false;
+  return perfil === 'ADMINISTRADOR' || perfil === 'GESTOR' || (perfil === 'OPERADOR' && abriu);
+}
+
+// OPERADOR pode anexar evidências se é o responsável pela solicitação ou quem a abriu
+function podeAnexar({ perfil, terminal, abriu, responsavel }: ContextoDePermissao): boolean {
+  if (terminal) return false;
+  return canManageSolicitacoes(perfil) || (perfil === 'OPERADOR' && (responsavel || abriu));
+}
+
+function usePermissoesDaSolicitacao(solicitacao: Solicitacao) {
+  const { user } = useAuth();
+  const { data: profile } = usePerfil();
+  const contexto: ContextoDePermissao = {
+    perfil: user?.perfil,
+    terminal: solicitacao.status === 'CONCLUIDA' || solicitacao.status === 'CANCELADA',
+    abriu: solicitacao.abertaPorUsuarioId === profile?.id,
+    responsavel: !!(profile?.id && solicitacao.responsavelIds?.includes(profile.id)),
+  };
+  return {
+    isTerminal: contexto.terminal,
+    canEdit: podeEditar(contexto),
+    canAnexarEvidencia: podeAnexar(contexto),
+  };
+}
+
+// ── Erros de ação ────────────────────────────────────────────
+
+/** Executa a ação; o erro vai para `aoFalhar` e não some sozinho, o sucesso vai para `aoConcluir`. */
+async function executarComErro(
+  aoFalhar: AoFalhar,
+  acao: () => Promise<unknown>,
+  aoConcluir?: () => void,
+): Promise<boolean> {
+  aoFalhar(null);
+  try {
+    await acao();
+  } catch (err) {
+    aoFalhar(getSolicitacaoErrorMessage(err));
+    return false;
+  }
+  aoConcluir?.();
+  return true;
+}
+
+function ErroDeAcao({ mensagem }: { mensagem: string | null }) {
+  if (!mensagem) return null;
+  return <ErrorState title="Operação não concluída" description={mensagem} />;
+}
+
+// ── Edição (tipo é imutável após a abertura — não é editável) ─
+
+function useCamposDaEdicao(solicitacao: Solicitacao) {
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const alterada = titulo !== solicitacao.titulo || descricao !== solicitacao.descricao;
+  function carregar() {
+    setTitulo(solicitacao.titulo);
+    setDescricao(solicitacao.descricao);
+  }
+  return { titulo, setTitulo, descricao, setDescricao, alterada, carregar };
+}
+
+function useEstadoDaEdicao() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [erros, setErros] = useState<ErrosDaEdicao>({});
+  const [confirmandoDescarte, setConfirmandoDescarte] = useState(false);
+  return { isEditing, setIsEditing, erros, setErros, confirmandoDescarte, setConfirmandoDescarte };
+}
+
+function useFluxoDaEdicao(campos: ReturnType<typeof useCamposDaEdicao>) {
+  const estado = useEstadoDaEdicao();
+  const { setIsEditing, setErros, setConfirmandoDescarte } = estado;
+  function iniciar() {
+    campos.carregar();
+    setIsEditing(true);
+  }
+  function fechar() {
+    setConfirmandoDescarte(false);
+    setErros({});
+    setIsEditing(false);
+  }
+  const cancelar = () => (campos.alterada ? setConfirmandoDescarte(true) : fechar());
+  const continuarEditando = () => setConfirmandoDescarte(false);
+  return { ...estado, iniciar, fechar, cancelar, continuarEditando };
+}
+
+type FluxoDaEdicao = ReturnType<typeof useFluxoDaEdicao>;
+
+function usePersistirEdicao(id: string, fluxo: FluxoDaEdicao, aoFalhar: AoFalhar) {
+  const editar = useEditarSolicitacao(id);
+  const { avisar } = useToast();
+  async function persistir(dados: EditarSolicitacaoFormData): Promise<void> {
+    fluxo.setErros({});
+    await executarComErro(
+      aoFalhar,
+      async () => {
+        await editar.mutateAsync(dados);
+        fluxo.setIsEditing(false);
+      },
+      () => avisar(sucessoDaAcao.EDITAR),
+    );
+  }
+  return { persistir, isPending: editar.isPending };
+}
+
+function errosDaValidacao(erros: Record<string, string[] | undefined>): ErrosDaEdicao {
+  return { titulo: erros.titulo?.[0], descricao: erros.descricao?.[0] };
+}
+
+function useSalvarEdicao(
+  id: string,
+  campos: ReturnType<typeof useCamposDaEdicao>,
+  fluxo: FluxoDaEdicao,
+  aoFalhar: AoFalhar,
+) {
+  const { persistir, isPending } = usePersistirEdicao(id, fluxo, aoFalhar);
+  async function salvar(): Promise<void> {
+    const { titulo, descricao } = campos;
+    const validacao = editarSolicitacaoSchema.safeParse({ titulo, descricao });
+    if (validacao.success) return persistir(validacao.data);
+    fluxo.setErros(errosDaValidacao(validacao.error.flatten().fieldErrors));
+  }
+  return { salvar, isPending };
+}
+
+function useEdicaoDaSolicitacao(solicitacao: Solicitacao, aoFalhar: AoFalhar) {
+  const campos = useCamposDaEdicao(solicitacao);
+  const fluxo = useFluxoDaEdicao(campos);
+  const { salvar, isPending } = useSalvarEdicao(solicitacao.id, campos, fluxo, aoFalhar);
+  return { campos, ...fluxo, salvar, isPending };
+}
+
+type EdicaoDaSolicitacao = ReturnType<typeof useEdicaoDaSolicitacao>;
+
+// ── Cabeçalho ────────────────────────────────────────────────
+
+function BotaoVoltar() {
+  const voltar = useVoltar('/app/solicitacoes');
+  return (
+    <button
+      type="button"
+      onClick={voltar}
+      className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline pointer-coarse:min-h-11"
+    >
+      <ArrowLeft aria-hidden="true" size={16} />
+      Voltar
+    </button>
+  );
+}
+
+type PropsDoCabecalho = {
+  solicitacao: Solicitacao;
+  edicao: EdicaoDaSolicitacao;
+  acoes: AcoesDoCabecalho;
+};
+
+function descricaoDaAbertura(criadaEm: string, agora: number): string | undefined {
+  return isoValido(criadaEm) ? `Aberta ${tempoRelativo(criadaEm, agora)}` : undefined;
+}
+
+function CabecalhoDaSolicitacao({ solicitacao, edicao, acoes }: PropsDoCabecalho) {
+  const [agora] = useState(() => Date.now());
+  const editando = edicao.isEditing;
+  return (
+    <PageHeader
+      title={editando ? 'Editar solicitação' : solicitacao.titulo}
+      description={
+        editando
+          ? 'Atualize o título e a descrição da solicitação.'
+          : descricaoDaAbertura(solicitacao.criadaEm, agora)
+      }
+      maisAcoes={editando ? undefined : acoes.maisAcoes}
+      actions={<AcoesDoCabecalhoDaSolicitacao edicao={edicao} principal={acoes.principal} />}
+    />
+  );
+}
+
+type PropsDasAcoes = { edicao: EdicaoDaSolicitacao; principal: AcoesDoCabecalho['principal'] };
+
+function AcoesDoCabecalhoDaSolicitacao({ edicao, principal }: PropsDasAcoes) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {edicao.isEditing ? (
+        <AcoesDaEdicao edicao={edicao} />
+      ) : principal ? (
+        <Button variant={principal.variante} onClick={principal.aoAcionar}>
+          {principal.rotulo}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function AcoesDaEdicao({ edicao }: { edicao: EdicaoDaSolicitacao }) {
+  return (
+    <>
+      <Button type="button" onClick={edicao.salvar} disabled={edicao.isPending}>
+        {edicao.isPending ? 'Salvando...' : 'Salvar'}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={edicao.cancelar}
+        disabled={edicao.isPending}
+      >
+        Cancelar
+      </Button>
+    </>
+  );
+}
+
+// ── Informações (edição ou resumo) ───────────────────────────
+
+type PropsDasInformacoes = {
+  solicitacao: Solicitacao;
+  edicao: EdicaoDaSolicitacao;
+  atividades: AtividadeSolicitacao[];
+};
+
+function InformacoesDaSolicitacao({ solicitacao, edicao, atividades }: PropsDasInformacoes) {
+  const { data: modelo } = useModelo(solicitacao.modeloId);
+  if (edicao.isEditing)
+    return <EdicaoDaSolicitacaoForm solicitacao={solicitacao} edicao={edicao} />;
+  return (
+    <SolicitacaoResumo
+      solicitacao={solicitacao}
+      modelo={modelo}
+      atividades={atividades}
+      usuarios={[]}
+    />
+  );
+}
+
+type PropsDaEdicao = { solicitacao: Solicitacao; edicao: EdicaoDaSolicitacao };
+
+function EdicaoDaSolicitacaoForm({ solicitacao, edicao }: PropsDaEdicao) {
+  return (
+    <div className="space-y-4 rounded-md border border-line bg-surface-muted p-4">
+      <CampoDeTitulo edicao={edicao} />
+      <TipoImutavel tipo={solicitacao.tipo} />
+      <CampoDeDescricao edicao={edicao} />
+    </div>
+  );
+}
+
+function CampoDeTitulo({ edicao }: { edicao: EdicaoDaSolicitacao }) {
+  return (
+    <Input
+      label="Título"
+      value={edicao.campos.titulo}
+      onChange={(e) => edicao.campos.setTitulo(e.target.value)}
+      error={edicao.erros.titulo}
+      maxLength={LIMITES.solicitacaoTitulo}
+      disabled={edicao.isPending}
+      required
+    />
+  );
+}
+
+function TipoImutavel({ tipo }: { tipo: Solicitacao['tipo'] }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-fg">Tipo</label>
+      <p className="text-sm text-fg-muted">
+        {rotuloDoTipoDeSolicitacao[tipo]}{' '}
+        <span className="text-xs">(não pode ser alterado após a abertura)</span>
+      </p>
+    </div>
+  );
+}
+
+function CampoDeDescricao({ edicao }: { edicao: EdicaoDaSolicitacao }) {
+  return (
+    <Textarea
+      label="Descrição"
+      value={edicao.campos.descricao}
+      onChange={(e) => edicao.campos.setDescricao(e.target.value)}
+      error={edicao.erros.descricao}
+      maxLength={LIMITES.textoLongo}
+      disabled={edicao.isPending}
+      required
+      rows={4}
+    />
+  );
+}
+
+function DescarteDaEdicao({ edicao }: { edicao: EdicaoDaSolicitacao }) {
+  if (!edicao.confirmandoDescarte) return null;
+  return (
+    <ConfirmDialog
+      title="Descartar alterações?"
+      message="O título e a descrição voltam a ser o que estava salvo."
+      cancelLabel="Continuar editando"
+      confirmLabel="Descartar"
+      variant="warning"
+      onCancel={edicao.continuarEditando}
+      onConfirm={edicao.fechar}
+    />
+  );
+}
+
+// ── Evidências ───────────────────────────────────────────────
+
+function useAcoesDeEvidencia(id: string, aoFalhar: AoFalhar) {
+  const { data: evidencias = [], isLoading } = useEvidencias(id);
+  const upload = useUploadEvidencia(id);
+  const remocao = useDeleteEvidencia(id);
+  const { avisar } = useToast();
+  // O erro do envio fica junto do botão que o enviou; o da exclusão segue o da página.
+  const [erroDoEnvio, setErroDoEnvio] = useState<string | null>(null);
+  const enviar = (file: File) =>
+    executarComErro(
+      setErroDoEnvio,
+      () => upload.mutateAsync({ file }),
+      () => avisar(sucessoDaAcao.ANEXAR),
+    );
+  const excluir = (evidenciaId: string) =>
+    executarComErro(aoFalhar, () => remocao.mutateAsync(evidenciaId));
+  return {
+    evidencias,
+    isLoading,
+    erroDoEnvio,
+    enviar,
+    excluir,
+    enviando: upload.isPending,
+    excluindo: remocao.isPending,
+  };
+}
+
+type PropsDasEvidencias = { id: string; podeAnexar: boolean; aoFalhar: AoFalhar };
+
+function EvidenciasDaSolicitacao({ id, podeAnexar, aoFalhar }: PropsDasEvidencias) {
+  const acoes = useAcoesDeEvidencia(id, aoFalhar);
+  return (
+    <div>
+      <h2 className="mb-3 text-sm font-semibold text-fg-muted">Evidências</h2>
+      {podeAnexar ? (
+        <div className="mb-4 space-y-3">
+          <ErroDeAcao mensagem={acoes.erroDoEnvio} />
+          <EvidenciaUploader isPending={acoes.enviando} onUpload={acoes.enviar} />
+        </div>
+      ) : null}
+      <EvidenciaList
+        evidencias={acoes.evidencias}
+        isLoading={acoes.isLoading}
+        onDelete={podeAnexar ? acoes.excluir : undefined}
+        isDeleting={acoes.excluindo}
+      />
+    </div>
+  );
+}
+
+// ── Histórico, com o comentário no topo ──────────────────────
+
+type PropsDoHistorico = {
+  id: string;
+  atividades: AtividadeSolicitacao[];
+  carregando: boolean;
+  encerrada: boolean;
+};
+
+function HistoricoDaSolicitacao(props: PropsDoHistorico) {
+  const { id, atividades, carregando, encerrada } = props;
+  const comentar = useRegistrarComentario(id);
+  const { avisar } = useToast();
+  // O erro fica junto do formulário, com o texto digitado preservado para nova tentativa.
+  const [erro, setErro] = useState<string | null>(null);
+  const enviar = (data: { comentario: string }) =>
+    executarComErro(
+      setErro,
+      () => comentar.mutateAsync(data),
+      () => avisar(sucessoDaAcao.COMENTAR),
+    );
+  const formulario = encerrada ? undefined : (
+    <div className="space-y-3">
+      <ErroDeAcao mensagem={erro} />
+      <ComentarioForm isPending={comentar.isPending} onSubmit={enviar} />
+    </div>
+  );
+  return (
+    <div>
+      <h2 className="mb-3 text-sm font-semibold text-fg-muted">Histórico de atividades</h2>
+      <SolicitacaoTimeline atividades={atividades} isLoading={carregando} formulario={formulario} />
+    </div>
   );
 }

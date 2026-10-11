@@ -1,0 +1,400 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { useState } from 'react';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { Dialog } from '@/shared/components/Dialog/Dialog';
+
+afterEach(() => {
+  cleanup();
+  document.body.style.overflow = '';
+});
+
+function renderDialog(onClose = vi.fn()) {
+  render(
+    <Dialog titulo="Triar: Trocar correia" onClose={onClose}>
+      <button type="button">Primeiro</button>
+      <button type="button">Último</button>
+    </Dialog>,
+  );
+  return onClose;
+}
+
+/** Página com um botão que abre o diálogo, para provar o que acontece ao fechar. */
+function PaginaComDialog() {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setAberto(true)}>
+        Abrir
+      </button>
+      {aberto ? (
+        <Dialog titulo="Triar: Trocar correia" onClose={() => setAberto(false)}>
+          <button type="button">Dentro</button>
+        </Dialog>
+      ) : null}
+    </>
+  );
+}
+
+const APARENCIAS = ['painel', 'imersivo'] as const;
+const classes = (elemento: Element) => elemento.className.split(' ');
+
+/** Página com um botão que abre o diálogo na aparência pedida. */
+function PaginaComAparencia({ aparencia }: { aparencia: (typeof APARENCIAS)[number] }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setAberto(true)}>
+        Abrir
+      </button>
+      {aberto ? (
+        <Dialog titulo="Foto do modelo" aparencia={aparencia} onClose={() => setAberto(false)}>
+          <button type="button">Primeiro</button>
+          <button type="button">Último</button>
+        </Dialog>
+      ) : null}
+    </>
+  );
+}
+
+describe('Dialog com aparência', () => {
+  it('deve usar o fundo de sobreposição de foto quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog').parentElement!)).toContain('bg-scrim');
+  });
+
+  it('deve ocupar a tela quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).toEqual(
+      expect.arrayContaining(['h-dvh', 'w-full']),
+    );
+  });
+
+  it('deve não limitar a largura quando a aparência é imersivo', () => {
+    // Act
+    render(
+      <Dialog titulo="Foto do modelo" aparencia="imersivo" onClose={vi.fn()}>
+        <p>Foto</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).not.toContain('sm:max-w-md');
+  });
+
+  it('deve ser o painel de largura limitada quando a aparência não é informada', () => {
+    // Act
+    render(
+      <Dialog titulo="Triar" onClose={vi.fn()}>
+        <p>Formulário</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog'))).toContain('sm:max-w-md');
+  });
+
+  it('deve não usar o fundo de sobreposição de foto quando a aparência não é informada', () => {
+    // Act
+    render(
+      <Dialog titulo="Triar" onClose={vi.fn()}>
+        <p>Formulário</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(classes(screen.getByRole('dialog').parentElement!)).not.toContain('bg-scrim');
+  });
+
+  it.each(APARENCIAS)(
+    'deve levar o foco ao primeiro controle quando Tab é apertado no último e a aparência é %s',
+    async (aparencia) => {
+      // Arrange
+      render(<PaginaComAparencia aparencia={aparencia} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+      screen.getByRole('button', { name: 'Último' }).focus();
+
+      // Act
+      await userEvent.tab();
+
+      // Assert
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+    },
+  );
+
+  it.each(APARENCIAS)('deve fechar quando Esc é apertado e a aparência é %s', async (aparencia) => {
+    // Arrange
+    render(<PaginaComAparencia aparencia={aparencia} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it.each(APARENCIAS)(
+    'deve devolver o foco a quem abriu quando fecha e a aparência é %s',
+    async (aparencia) => {
+      // Arrange
+      render(<PaginaComAparencia aparencia={aparencia} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+      // Act
+      await userEvent.keyboard('{Escape}');
+
+      // Assert
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir' }));
+    },
+  );
+});
+
+describe('Dialog', () => {
+  it('deve ser anunciado como diálogo modal com o nome informado', () => {
+    // Act
+    renderDialog();
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: 'Triar: Trocar correia' });
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('deve levar o foco ao primeiro controle quando abre', () => {
+    // Act
+    renderDialog();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+  });
+
+  it('deve levar o foco ao próprio diálogo quando não há controle dentro dele', () => {
+    // Act
+    render(
+      <Dialog titulo="Aviso" onClose={vi.fn()}>
+        <p>Sem controles</p>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('dialog', { name: 'Aviso' }));
+  });
+
+  it('deve levar o foco ao primeiro controle quando Tab é apertado no último', async () => {
+    // Arrange
+    renderDialog();
+    screen.getByRole('button', { name: 'Último' }).focus();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+  });
+
+  it('deve levar o foco ao último controle quando Shift+Tab é apertado no primeiro', async () => {
+    // Arrange
+    renderDialog();
+
+    // Act
+    await userEvent.tab({ shift: true });
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Último' }));
+  });
+
+  it('deve levar o foco ao último controle quando Shift+Tab é apertado com o foco no próprio diálogo', async () => {
+    // Arrange
+    renderDialog();
+    screen.getByRole('dialog').focus();
+
+    // Act
+    await userEvent.tab({ shift: true });
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Último' }));
+  });
+
+  it('deve seguir para o controle seguinte quando Tab é apertado antes do último', async () => {
+    // Arrange
+    renderDialog();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Último' }));
+  });
+
+  it('deve manter o foco no diálogo quando Tab é apertado e não há controle dentro dele', async () => {
+    // Arrange
+    render(
+      <Dialog titulo="Aviso" onClose={vi.fn()}>
+        <p>Sem controles</p>
+      </Dialog>,
+    );
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('dialog', { name: 'Aviso' }));
+  });
+
+  it('deve pedir para fechar quando Esc é apertado', async () => {
+    // Arrange
+    const onClose = renderDialog();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('deve pedir para fechar quando o clique é fora do diálogo', async () => {
+    // Arrange
+    const onClose = renderDialog();
+    const fundo = screen.getByRole('dialog').parentElement!;
+
+    // Act
+    await userEvent.click(fundo);
+
+    // Assert
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('deve continuar aberto quando o clique é dentro do diálogo', async () => {
+    // Arrange
+    const onClose = renderDialog();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Último' }));
+
+    // Assert
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve devolver o foco ao controle que abriu quando fecha', async () => {
+    // Arrange
+    render(<PaginaComDialog />);
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir' }));
+  });
+
+  it('deve travar a rolagem da página enquanto está aberto', async () => {
+    // Arrange
+    render(<PaginaComDialog />);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+    // Assert
+    expect(document.body.style.overflow).toBe('hidden');
+  });
+
+  it('deve restaurar a rolagem da página quando fecha', async () => {
+    // Arrange
+    document.body.style.overflow = 'auto';
+    render(<PaginaComDialog />);
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(document.body.style.overflow).toBe('auto');
+  });
+
+  it('deve continuar aberto quando Esc é apertado com o diálogo bloqueado', async () => {
+    // Arrange
+    const onClose = vi.fn();
+    render(
+      <Dialog titulo="Triar: Trocar correia" onClose={onClose} bloqueado>
+        <button type="button">Primeiro</button>
+      </Dialog>,
+    );
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+
+    // Assert
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve continuar aberto quando o clique é fora com o diálogo bloqueado', async () => {
+    // Arrange
+    const onClose = vi.fn();
+    render(
+      <Dialog titulo="Triar: Trocar correia" onClose={onClose} bloqueado>
+        <button type="button">Primeiro</button>
+      </Dialog>,
+    );
+    const fundo = screen.getByRole('dialog').parentElement!;
+
+    // Act
+    await userEvent.click(fundo);
+
+    // Assert
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deve levar o foco ao primeiro controle visível quando o primeiro está em elemento oculto', () => {
+    // Act
+    render(
+      <Dialog titulo="Descartar" onClose={vi.fn()}>
+        <div hidden>
+          <button type="button">Oculto</button>
+        </div>
+        <button type="button">Visível</button>
+      </Dialog>,
+    );
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Visível' }));
+  });
+
+  it('deve pular o controle em elemento oculto quando Tab é apertado no último visível', async () => {
+    // Arrange
+    render(
+      <Dialog titulo="Descartar" onClose={vi.fn()}>
+        <button type="button">Primeiro</button>
+        <button type="button">Último</button>
+        <div hidden>
+          <button type="button">Oculto</button>
+        </div>
+      </Dialog>,
+    );
+    screen.getByRole('button', { name: 'Último' }).focus();
+
+    // Act
+    await userEvent.tab();
+
+    // Assert
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Primeiro' }));
+  });
+});

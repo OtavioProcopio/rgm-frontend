@@ -812,7 +812,7 @@ Testar comportamento observável.
 ### 19.1 E2E (Playwright)
 
 Além dos testes unitários (Vitest, rodam sempre em container/CI), o
-repositório mantém uma suíte E2E real em `app/e2e/*.spec.ts`
+repositório mantém uma suíte E2E real em `app/tests/e2e/*.spec.ts`
 (`@playwright/test` — não Cypress; o serviço `cypress` do
 `docker-compose.dev.yml` é scaffolding legado, nunca usado). A suíte simula
 o fluxo de trabalho completo no navegador (login, abrir/triar/validar/
@@ -832,7 +832,7 @@ cd app && BASE_URL=http://localhost:5173 API_URL=http://localhost:8080/api \
   npx playwright test --reporter=list
 ```
 
-`e2e/fixtures.ts` fornece login programático via `localStorage`
+`tests/e2e/fixtures.ts` fornece login programático via `localStorage`
 (`loginAdmin`/`loginAs`) e helpers de API (`apiPost`/`apiPatch`/`apiGet`/
 `apiCriarUsuario`) para preparar estado sem depender da UI em cada teste.
 

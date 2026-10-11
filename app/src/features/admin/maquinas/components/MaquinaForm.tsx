@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 
 import { Button } from '@/shared/components/Button/Button';
 import { Input } from '@/shared/components/Input/Input';
+import { LIMITES } from '@/shared/lib/limites';
 
 import { maquinaSchema, type MaquinaFormData } from '../schemas/maquinaSchema';
 
@@ -35,6 +36,7 @@ export function MaquinaForm({
         placeholder="Ex: FBOX, Fast Loop, Vick"
         error={errors.nome?.message}
         disabled={isSubmitting}
+        maxLength={LIMITES.maquinaNome}
         {...register('nome')}
       />
       <Button type="submit" disabled={isSubmitting}>

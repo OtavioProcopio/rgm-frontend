@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
+import { useToast } from '@/shared/components/Toast/toastContext';
 
 import { UsuarioForm } from '../components/UsuarioForm';
 import { useCriarUsuario } from '../hooks/useCriarUsuario';
@@ -12,6 +13,7 @@ import type { CriarUsuarioRequest } from '../types/usuarioTypes';
 export function NovoUsuarioPage() {
   const navigate = useNavigate();
   const criarUsuario = useCriarUsuario();
+  const { avisar } = useToast();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(data: CriarUsuarioRequest) {
@@ -20,6 +22,7 @@ export function NovoUsuarioPage() {
     try {
       await criarUsuario.mutateAsync(data);
       navigate('/app/admin/usuarios');
+      avisar('Usuário criado');
     } catch (error) {
       setErrorMessage(getUsuarioErrorMessage(error));
     }

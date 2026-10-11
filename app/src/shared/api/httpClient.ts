@@ -130,7 +130,11 @@ async function request<T>(
   }
 
   // 403 sem token = sessão expirada ou ausente (não confundir com 403 por perfil)
-  if (response.status === 403 && !authToken.getAccessToken() && !shouldSkipRefresh(path, skipAuthRefresh)) {
+  if (
+    response.status === 403 &&
+    !authToken.getAccessToken() &&
+    !shouldSkipRefresh(path, skipAuthRefresh)
+  ) {
     authToken.clearSession();
     redirectToLogin();
   }

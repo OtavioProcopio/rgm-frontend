@@ -1,79 +1,70 @@
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Package, XCircle } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CheckCircle2,
+  Package,
+  XCircle,
+} from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useModelos } from '@/features/admin/modelos/hooks/useModelos';
+import { useResumoDeModelos } from '@/features/admin/modelos/hooks/useResumoDeModelos';
 import { useAuth } from '@/app/providers/authContext';
-import { Button } from '@/shared/components/Button/Button';
+import { ExportarPdfButton } from '@/shared/components/ExportarPdfButton/ExportarPdfButton';
 import { EmptyState } from '@/shared/components/EmptyState/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { Card } from '@/shared/components/Card/Card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/shared/components/Table/Table';
 import { canManageModelos } from '@/shared/lib/permissions';
 
 import { solicitacoesApi } from '../api/solicitacoesApi';
 import { useMetricasPorModelo } from '../hooks/useMetricasPorModelo';
 import { formatDuracao } from '../lib/solicitacaoMessages';
 import type { DirecaoOrdenacao, OrdenacaoMetricaModelo } from '../types/solicitacaoTypes';
-import { KPICard } from './DashboardKpiCard';
+import { KPICard } from '../components/DashboardKpiCard';
 
 const RANKING_PAGE_SIZE = 10;
+const SEGUNDOS_POR_MINUTO = 60;
+
+/** Sem informação (nulo ou menos de 1 minuto) vira "—", nunca "0 s". */
+function duracaoOuTraco(segundos: number | null | undefined): string {
+  if (segundos == null || segundos < SEGUNDOS_POR_MINUTO) {
+    return '—';
+  }
+  return formatDuracao(segundos);
+}
 
 export function ModelosTab() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const listaModelosPath = canManageModelos(user?.perfil) ? '/app/admin/modelos' : '/app/modelos';
 
-  // Contagens exatas via totalElements da paginacao — nao via .length de um array
-  // limitado a 100 itens (bug do dashboard "dados irreais": ativos/inativos/pendencias/
-  // maquina ficavam incorretos assim que o total de modelos passava de 100).
-  const { data: totalData, isLoading: loadingTotal, isError: errorTotal } = useModelos({
-    page: 0,
-    size: 1,
-  });
-  const totalElements = totalData?.totalElements ?? 0;
-  const { data: ativosData, isLoading: loadingAtivos } = useModelos({
-    page: 0,
-    size: 1,
-    ativo: true,
-  });
-  const { data: inativosData, isLoading: loadingInativos } = useModelos({
-    page: 0,
-    size: 1,
-    ativo: false,
-  });
-  // Lista completa (tamanho = total real, nao um limite arbitrario) so para derivar
-  // pendencias e a distribuicao por maquina, que nao tem endpoint agregado dedicado.
-  const { data: fullData, isLoading: loadingFull, isError: errorFull } = useModelos({
-    page: 0,
-    size: Math.max(totalElements, 1),
-  });
+  const { data: resumo, isLoading, isError, refetch } = useResumoDeModelos();
 
   function irParaSolicitacoesDaMaquina(maquina: string) {
     navigate(`/app/solicitacoes?maquina=${encodeURIComponent(maquina)}`);
   }
 
-  const stats = useMemo(() => {
-    const modelos = fullData?.content ?? [];
-    const comPendencia = modelos.filter((m) => m.temPendenciaAberta).length;
-
-    const porMaquina: Record<string, number> = {};
-    for (const m of modelos) {
-      porMaquina[m.maquina] = (porMaquina[m.maquina] ?? 0) + 1;
-    }
-    const maquinasOrdenadas = Object.entries(porMaquina).sort((a, b) => b[1] - a[1]);
-
-    return {
-      total: totalElements,
-      ativos: ativosData?.totalElements ?? 0,
-      inativos: inativosData?.totalElements ?? 0,
-      comPendencia,
-      maquinasOrdenadas,
-    };
-  }, [fullData, totalElements, ativosData, inativosData]);
-
-  const isLoading = loadingTotal || loadingAtivos || loadingInativos || loadingFull;
-  const isError = errorTotal || errorFull;
+  const stats = {
+    total: resumo?.total ?? 0,
+    ativos: resumo?.ativos ?? 0,
+    inativos: resumo?.inativos ?? 0,
+    comPendencia: resumo?.comPendenciaAberta ?? 0,
+    maquinasOrdenadas: [...(resumo?.porMaquina ?? [])]
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .map(({ maquina, quantidade }) => [maquina, quantidade] as const),
+  };
 
   if (isLoading) return <LoadingState title="Carregando estatísticas de modelos..." />;
   if (isError) {
@@ -81,6 +72,7 @@ export function ModelosTab() {
       <ErrorState
         title="Não foi possível carregar os modelos"
         description="Verifique sua conexão com o servidor."
+        onRetry={() => void refetch()}
       />
     );
   }
@@ -119,54 +111,42 @@ export function ModelosTab() {
         />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Modelos por máquina
-        </h2>
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-fg-muted">Modelos por máquina</h2>
         {stats.maquinasOrdenadas.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum modelo cadastrado.</p>
+          <p className="text-sm text-fg-muted">Nenhum modelo cadastrado.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">
-                    Máquina
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
-                    Modelos
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {stats.maquinasOrdenadas.map(([maquina, count]) => (
-                  <tr
-                    key={maquina}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Ver solicitações da máquina ${maquina}`}
-                    onClick={() => irParaSolicitacoesDaMaquina(maquina)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        irParaSolicitacoesDaMaquina(maquina);
-                      }
-                    }}
-                    className="cursor-pointer bg-white transition-colors hover:bg-sky-50 dark:bg-slate-800/50 dark:hover:bg-sky-950/20"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
-                      {maquina}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {count}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg">
+            <TableHead className="[&_th]:py-3.5">
+              <TableRow>
+                <TableHeaderCell>Máquina</TableHeaderCell>
+                <TableHeaderCell className="text-right">Modelos</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {stats.maquinasOrdenadas.map(([maquina, count]) => (
+                <TableRow
+                  key={maquina}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ver solicitações da máquina ${maquina}`}
+                  onClick={() => irParaSolicitacoesDaMaquina(maquina)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      irParaSolicitacoesDaMaquina(maquina);
+                    }
+                  }}
+                  className="cursor-pointer transition-colors hover:bg-surface-muted"
+                >
+                  <TableCell className="font-medium text-fg-muted">{maquina}</TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">{count}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
 
       <RankingModelos />
     </div>
@@ -177,8 +157,7 @@ function RankingModelos() {
   const [sort, setSort] = useState<OrdenacaoMetricaModelo>('TEMPO_RESOLUCAO');
   const [dir, setDir] = useState<DirecaoOrdenacao>('desc');
   const [page, setPage] = useState(0);
-  const [isExporting, setIsExporting] = useState(false);
-  const { data, isLoading, isError } = useMetricasPorModelo({
+  const { data, isLoading, isError, refetch } = useMetricasPorModelo({
     sort,
     dir,
     page,
@@ -195,33 +174,14 @@ function RankingModelos() {
     setPage(0);
   }
 
-  async function handleExportarPdf() {
-    setIsExporting(true);
-    try {
-      const blob = await solicitacoesApi.exportarMetricasPorModeloPdf({ sort, dir });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `ranking-modelos-por-tempo-${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar ranking:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
-
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <Card className="p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Ranking de modelos por tempo
-        </h2>
-        <Button type="button" variant="secondary" disabled={isExporting} onClick={handleExportarPdf}>
-          {isExporting ? 'Exportando...' : 'Exportar PDF'}
-        </Button>
+        <h2 className="text-sm font-semibold text-fg-muted">Ranking de modelos por tempo</h2>
+        <ExportarPdfButton
+          buscar={() => solicitacoesApi.exportarMetricasPorModeloPdf({ sort, dir })}
+          nomeDoArquivo={() => `ranking-modelos-por-tempo-${Date.now()}.pdf`}
+        />
       </div>
 
       {isLoading ? <LoadingState title="Carregando ranking..." /> : null}
@@ -229,6 +189,7 @@ function RankingModelos() {
         <ErrorState
           title="Não foi possível carregar o ranking"
           description="Verifique sua conexão com o servidor."
+          onRetry={() => void refetch()}
         />
       ) : null}
       {data && data.content.length === 0 ? (
@@ -240,44 +201,38 @@ function RankingModelos() {
 
       {data && data.content.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">
-                    Código
-                  </th>
-                  <SortableHeader
-                    label="Tempo médio de resolução"
-                    active={sort === 'TEMPO_RESOLUCAO'}
-                    dir={dir}
-                    onClick={() => handleSort('TEMPO_RESOLUCAO')}
-                  />
-                  <SortableHeader
-                    label="Intervalo médio entre solicitações"
-                    active={sort === 'INTERVALO'}
-                    dir={dir}
-                    onClick={() => handleSort('INTERVALO')}
-                  />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {data.content.map((m) => (
-                  <tr key={m.modeloId} className="bg-white dark:bg-slate-800/50">
-                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
-                      {m.codigo}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {formatDuracao(m.tempoMedioResolucaoSegundos)}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
-                      {m.intervaloMedioSegundos != null ? formatDuracao(m.intervaloMedioSegundos) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg">
+            <TableHead className="[&_th]:py-3.5">
+              <TableRow>
+                <TableHeaderCell>Código</TableHeaderCell>
+                <SortableHeader
+                  label="Tempo médio de resolução"
+                  active={sort === 'TEMPO_RESOLUCAO'}
+                  dir={dir}
+                  onClick={() => handleSort('TEMPO_RESOLUCAO')}
+                />
+                <SortableHeader
+                  label="Intervalo médio entre solicitações"
+                  active={sort === 'INTERVALO'}
+                  dir={dir}
+                  onClick={() => handleSort('INTERVALO')}
+                />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.content.map((m) => (
+                <TableRow key={m.modeloId}>
+                  <TableCell className="font-medium text-fg-muted">{m.codigo}</TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">
+                    {duracaoOuTraco(m.tempoMedioResolucaoSegundos)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-fg-muted">
+                    {duracaoOuTraco(m.intervaloMedioSegundos)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           <Pagination
             page={data.page}
             totalPages={data.totalPages}
@@ -288,7 +243,7 @@ function RankingModelos() {
           />
         </>
       ) : null}
-    </div>
+    </Card>
   );
 }
 
@@ -305,15 +260,15 @@ function SortableHeader({
 }) {
   const Icon = active ? (dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
-    <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
+    <TableHeaderCell className="text-right">
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white"
+        className="inline-flex items-center gap-1 uppercase hover:text-fg"
       >
         {label}
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
-    </th>
+    </TableHeaderCell>
   );
 }

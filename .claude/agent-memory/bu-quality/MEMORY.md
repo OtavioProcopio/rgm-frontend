@@ -1,0 +1,1 @@
+- [Gate de validação do rgm-frontend](project_gate_validacao.md) — o que make validate roda de fato e como medir cobertura por arquivo

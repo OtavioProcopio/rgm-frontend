@@ -12,9 +12,11 @@ import type {
   EncerrarSolicitacaoRequest,
   EnviarParaValidacaoRequest,
   HistoricoMetricas,
+  IndicadoresDeGestao,
   MetricaPorModelo,
   MetricasPorModeloFilters,
   MetricasResponse,
+  PainelPorPeriodo,
   Solicitacao,
   SolicitacoesFilters,
   TriarSolicitacaoRequest,
@@ -56,13 +58,20 @@ export const solicitacoesApi = {
   alterarResponsaveis: (id: string, payload: AlterarResponsaveisRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/responsaveis`, payload),
 
-  obterMetricas: () =>
-    httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
+  obterMetricas: () => httpClient.get<MetricasResponse>('/solicitacoes/metricas'),
 
   obterHistoricoMetricas: (dias: number, modeloId?: string) =>
     httpClient.get<HistoricoMetricas>('/solicitacoes/metricas/historico', {
       params: { dias, modeloId },
     }),
+
+  obterPainel: (dias: number, modeloId?: string) =>
+    httpClient.get<PainelPorPeriodo>('/solicitacoes/metricas/painel', {
+      params: { dias, ...(modeloId ? { modeloId } : {}) },
+    }),
+
+  obterIndicadoresDeGestao: (dias: number) =>
+    httpClient.get<IndicadoresDeGestao>('/solicitacoes/metricas/gestao', { params: { dias } }),
 
   exportar: (filters: SolicitacoesFilters) =>
     httpClient.get<Blob>('/solicitacoes/relatorio', { params: filters }),
@@ -75,4 +84,3 @@ export const solicitacoesApi = {
   exportarMetricasPorModeloPdf: (filters: Omit<MetricasPorModeloFilters, 'page' | 'size'>) =>
     httpClient.get<Blob>('/solicitacoes/metricas/por-modelo/pdf', { params: filters }),
 };
-

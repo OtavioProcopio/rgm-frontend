@@ -1,8 +1,16 @@
 import { useState } from 'react';
-import { ArrowRightCircle, ExternalLink, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
+import { Link } from 'react-router';
+import { ArrowRightCircle, Eye, PackagePlus, Settings2, Wrench } from 'lucide-react';
 
+import { Badge, type BadgeVariant } from '@/shared/components/Badge/Badge';
+import { Card } from '@/shared/components/Card/Card';
 import { cn } from '@/shared/lib/cn';
+import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 
+import { acaoDoMovimento, proximoStatus, rotuloDaAcao } from '../lib/acoesSolicitacao';
+import { responsaveisDoCard } from '../lib/iniciaisDosResponsaveis';
+import { idadeEmDias, situacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
+import { ROTULO_DA_RELACAO, type RelacaoDoOperador } from '../lib/relacaoDoOperador';
 import type { Solicitacao, TipoSolicitacao } from '../types/solicitacaoTypes';
 import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 
@@ -10,101 +18,52 @@ type Props = {
   solicitacao: Solicitacao;
   isDraggable: boolean;
   canAdvance: boolean;
+  /** Relação do operador com a solicitação; ausente para quem vê todas. */
+  relacao?: RelacaoDoOperador | null;
   onDragStart: (s: Solicitacao) => void;
   onAdvance: (s: Solicitacao) => void;
 };
 
-const TIPO_CONFIG: Record<
-  TipoSolicitacao,
-  { label: string; cls: string; Icon: React.ElementType }
-> = {
-  REPARO: {
-    label: 'Reparo',
-    cls: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    Icon: Wrench,
-  },
-  INSPECAO: {
-    label: 'Inspeção',
-    cls: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-    Icon: Eye,
-  },
-  REENGENHARIA: {
-    label: 'Reengenharia',
-    cls: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-    Icon: Settings2,
-  },
-  CRIACAO: {
-    label: 'Criação de modelo',
-    cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    Icon: PackagePlus,
-  },
+const ICONE_DO_TIPO: Record<TipoSolicitacao, React.ElementType> = {
+  REPARO: Wrench,
+  INSPECAO: Eye,
+  REENGENHARIA: Settings2,
+  CRIACAO: PackagePlus,
 };
 
 const PRIORITY_BORDER: Record<string, string> = {
-  URGENTE: 'border-l-red-500',
-  ALTA: 'border-l-orange-400',
-  MEDIA: 'border-l-sky-400',
-  BAIXA: 'border-l-slate-300 dark:border-l-slate-600',
+  URGENTE: 'border-l-danger',
+  ALTA: 'border-l-warning',
+  MEDIA: 'border-l-info',
+  BAIXA: 'border-l-line-strong',
 };
 
-const SLA_HOURS: Record<string, number> = {
-  URGENTE: 4,
-  ALTA: 24,
-  MEDIA: 72,
-  BAIXA: 168,
+const VARIACAO_DO_PRAZO: Record<TomDoPrazo, BadgeVariant> = {
+  atraso: 'danger',
+  atencao: 'warning',
+  neutro: 'neutral',
+  ok: 'success',
 };
 
-function SlaBadge({
-  atualizadaEm,
-  prioridade,
-}: {
-  atualizadaEm: string;
-  prioridade: string | null;
-}) {
-  const [now] = useState(() => Date.now());
-  if (!prioridade) return null;
-  const slaHours = SLA_HOURS[prioridade];
-  if (!slaHours) return null;
-  const hoursElapsed = (now - new Date(atualizadaEm).getTime()) / 3_600_000;
-  const pct = Math.min(hoursElapsed / slaHours, 1);
-  if (pct < 0.5) return null;
-  const isOver = pct >= 1;
-  const isNear = pct >= 0.75;
+function PrazoBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: number }) {
+  const situacao = situacaoDoPrazo(solicitacao, agora);
+  if (!situacao) return null;
   return (
-    <span
-      className={cn(
-        'shrink-0 rounded px-1 py-0.5 text-xs font-semibold tabular-nums',
-        isOver
-          ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-          : isNear
-            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
-      )}
-      title={
-        isOver
-          ? `SLA excedido (meta: ${slaHours}h)`
-          : `${Math.round(pct * 100)}% do SLA (meta: ${slaHours}h)`
-      }
+    <Badge
+      variant={VARIACAO_DO_PRAZO[situacao.tom]}
+      className="shrink-0 whitespace-nowrap rounded px-1.5 font-semibold tabular-nums"
     >
-      {isOver ? '⚠ SLA' : `${Math.round(pct * 100)}%`}
-    </span>
+      {situacao.rotulo}
+    </Badge>
   );
 }
 
-function AgeBadge({ criadaEm }: { criadaEm: string }) {
-  const [now] = useState(() => Date.now());
-  const days = Math.floor((now - new Date(criadaEm).getTime()) / 86_400_000);
-  if (days === 0) return null;
+function AgeBadge({ solicitacao, agora }: { solicitacao: Solicitacao; agora: number }) {
+  const days = idadeEmDias(solicitacao, agora);
+  if (!days) return null;
   return (
     <span
-      className={cn(
-        'shrink-0 text-xs font-semibold tabular-nums',
-        days > 7
-          ? 'text-red-600 dark:text-red-400'
-          : days > 3
-            ? 'text-amber-600 dark:text-amber-400'
-            : 'text-slate-400 dark:text-slate-500',
-      )}
+      className="shrink-0 text-xs font-semibold tabular-nums text-fg-muted"
       title={`Aberta há ${days} dias`}
     >
       {days}d
@@ -112,104 +71,154 @@ function AgeBadge({ criadaEm }: { criadaEm: string }) {
   );
 }
 
-export function KanbanCard({ solicitacao, isDraggable, canAdvance, onDragStart, onAdvance }: Props) {
-  const tipo = TIPO_CONFIG[solicitacao.tipo];
-  const { Icon } = tipo;
-  const criadaEmFormatada = new Date(solicitacao.criadaEm).toLocaleDateString('pt-BR');
+/** Área de toque de 44 px em tela de toque; no computador o card continua denso. */
+const CONTROLE_DO_CARD =
+  'inline-flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors pointer-coarse:min-h-11 pointer-coarse:min-w-11';
+
+/** Nome da ação que avançar o card representa, para o botão dizer o que faz. */
+function rotuloDeAvancar(solicitacao: Solicitacao): string {
+  const proximo = proximoStatus(solicitacao.status);
+  const acao = proximo ? acaoDoMovimento(solicitacao.status, proximo) : null;
+  return acao ? rotuloDaAcao(acao) : 'Avançar para a próxima etapa';
+}
+
+/** Código e máquina do modelo, ou o que foi informado na abertura de uma criação sem modelo. */
+function identificacaoDoModelo(solicitacao: Solicitacao): string | null {
+  const codigo = solicitacao.modeloCodigo;
+  const maquina = solicitacao.modeloMaquina;
+  if (!codigo && !maquina) return null;
+  const versao = solicitacao.modeloVersao ? ` v${solicitacao.modeloVersao}` : '';
+  return [codigo ? `${codigo}${versao}` : null, maquina].filter(Boolean).join(' · ');
+}
+
+function Responsaveis({ solicitacao }: { solicitacao: Solicitacao }) {
+  const { iniciais, restantes, nomes } = responsaveisDoCard(solicitacao);
+  if (iniciais.length === 0 && restantes === 0) {
+    return <span className="text-xs text-fg-muted">Sem responsável</span>;
+  }
+  return (
+    <span
+      className="flex items-center -space-x-1"
+      title={nomes || undefined}
+      aria-label={nomes ? `Responsáveis: ${nomes}` : `${restantes} responsáveis`}
+    >
+      {iniciais.map((iniciais, indice) => (
+        <span
+          key={`${iniciais}-${indice}`}
+          aria-hidden="true"
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-surface bg-info-soft text-[10px] font-semibold text-info-fg"
+        >
+          {iniciais}
+        </span>
+      ))}
+      {restantes > 0 ? (
+        <span
+          aria-hidden="true"
+          className="flex h-6 min-w-6 items-center justify-center rounded-full border border-surface bg-surface-muted px-1 text-[10px] font-semibold text-fg-muted"
+        >
+          +{restantes}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+export function KanbanCard({
+  solicitacao,
+  isDraggable,
+  canAdvance,
+  relacao,
+  onDragStart,
+  onAdvance,
+}: Props) {
+  const Icon = ICONE_DO_TIPO[solicitacao.tipo];
+  const [agora] = useState(() => Date.now());
+  const avancar = rotuloDeAvancar(solicitacao);
+  const modelo = identificacaoDoModelo(solicitacao);
   const borderClass = solicitacao.prioridade
     ? PRIORITY_BORDER[solicitacao.prioridade]
-    : 'border-l-slate-200 dark:border-l-slate-700';
+    : 'border-l-line-strong';
 
   return (
-    <div
+    <Card
       draggable={isDraggable}
-      onDragStart={isDraggable ? (e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        onDragStart(solicitacao);
-      } : undefined}
+      onDragStart={
+        isDraggable
+          ? (e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              onDragStart(solicitacao);
+            }
+          : undefined
+      }
       className={cn(
-        'group rounded-lg border border-slate-200 border-l-4 bg-white shadow-sm',
+        'group relative rounded-lg border-l-4',
         'transition-all hover:shadow-md active:opacity-50',
         isDraggable && 'lg:cursor-grab lg:active:cursor-grabbing',
-        'dark:border-slate-700 dark:bg-slate-800',
         borderClass,
       )}
     >
       <div className="p-3">
-        {/* Tipo + age */}
-        <div className="flex items-center justify-between gap-2">
-          <span
-            className={cn(
-              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium',
-              tipo.cls,
-            )}
+        {/* Tipo (ícone com rótulo curto) + idade */}
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <Badge
+            variant="neutral"
+            icon={<Icon size={10} aria-hidden="true" />}
+            className="rounded px-1.5"
           >
-            <Icon size={10} />
-            {tipo.label}
-          </span>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <time
-              dateTime={solicitacao.criadaEm}
-              title={`Aberta em ${criadaEmFormatada}`}
-              className="text-xs text-slate-400 dark:text-slate-500"
-            >
-              {criadaEmFormatada}
-            </time>
-            <AgeBadge criadaEm={solicitacao.criadaEm} />
-          </div>
+            {rotuloDoTipoDeSolicitacao[solicitacao.tipo]}
+          </Badge>
+          <AgeBadge solicitacao={solicitacao} agora={agora} />
         </div>
 
-        {/* Título */}
-        <p className="mt-2 text-sm font-semibold leading-snug text-slate-900 line-clamp-2 dark:text-white">
-          {solicitacao.titulo}
+        {relacao ? (
+          <p className="mt-2 text-xs font-medium text-fg-muted">{ROTULO_DA_RELACAO[relacao]}</p>
+        ) : null}
+
+        {/* Título: o link se estende pelo card inteiro */}
+        <p className="mt-2 text-sm font-semibold leading-snug text-fg line-clamp-2">
+          <Link
+            to={`/app/solicitacoes/${solicitacao.id}`}
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent"
+          >
+            {solicitacao.titulo}
+          </Link>
         </p>
 
-        {/* Descrição */}
-        {solicitacao.descricao && (
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            {solicitacao.descricao}
-          </p>
-        )}
+        {/* Modelo e máquina */}
+        {modelo ? <p className="mt-1 truncate text-xs text-fg-muted">{modelo}</p> : null}
 
-        {/* Rodapé: prioridade + SLA + link */}
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
+        {/* Rodapé: prioridade, prazo, responsáveis e avançar */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {solicitacao.prioridade ? (
               <SolicitacaoPrioridadeBadge prioridade={solicitacao.prioridade} />
             ) : (
-              <span className="text-xs text-slate-300 dark:text-slate-600">Sem prioridade</span>
+              <span className="text-xs text-fg-muted">Sem prioridade</span>
             )}
-            <SlaBadge
-              atualizadaEm={solicitacao.atualizadaEm}
-              prioridade={solicitacao.prioridade}
-            />
+            <PrazoBadge solicitacao={solicitacao} agora={agora} />
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <Responsaveis solicitacao={solicitacao} />
             {canAdvance ? (
               <button
                 type="button"
-                title="Avançar para a próxima etapa"
-                aria-label="Avançar para a próxima etapa"
+                title={avancar}
+                aria-label={avancar}
                 onClick={(e) => {
                   e.stopPropagation();
                   onAdvance(solicitacao);
                 }}
-                className="flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className={cn(
+                  CONTROLE_DO_CARD,
+                  'relative z-10 bg-surface-muted text-accent hover:brightness-95',
+                )}
               >
-                <ArrowRightCircle size={12} />
+                <ArrowRightCircle size={14} aria-hidden />
               </button>
             ) : null}
-            <a
-              href={`/app/solicitacoes/${solicitacao.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-sky-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:bg-slate-700 dark:text-sky-400 dark:hover:bg-sky-900/30"
-            >
-              Ver
-              <ExternalLink size={10} />
-            </a>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

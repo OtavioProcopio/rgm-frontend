@@ -7,6 +7,7 @@ import { ErrorState } from '@/shared/components/ErrorState/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState/LoadingState';
 import { PageHeader } from '@/shared/components/PageHeader/PageHeader';
 import { Pagination } from '@/shared/components/Pagination/Pagination';
+import { useExportarPdf } from '@/shared/hooks/useExportarPdf';
 
 import { modelosApi } from '../api/modelosApi';
 import { ModelosFilters } from '../components/ModelosFilters';
@@ -20,34 +21,24 @@ const PAGE_SIZE = 20;
 
 export function ModelosPage() {
   const [filters, setFilters] = useState<ModelosFiltersType>({ page: 0, size: PAGE_SIZE });
-  const { data, error, isLoading } = useModelos(filters);
+  const { data, error, isLoading, refetch } = useModelos(filters);
   const { options: maquinaOptions, isLoading: maquinasLoading } = useMaquinaOptions(
     filters.maquina,
   );
-  const [isExporting, setIsExporting] = useState(false);
-
-  async function handleExportar() {
-    setIsExporting(true);
-    try {
-      const blob = await modelosApi.exportarLista({
+  const {
+    exportar,
+    exportando,
+    erro: erroDeExportacao,
+  } = useExportarPdf({
+    buscar: () =>
+      modelosApi.exportarLista({
         ativo: filters.ativo,
         codigo: filters.codigo,
         maquina: filters.maquina,
         descricao: filters.descricao,
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `relatorio_modelos_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Erro ao exportar relatório:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  }
+      }),
+    nomeDoArquivo: () => `relatorio_modelos_${Date.now()}.pdf`,
+  });
 
   return (
     <section>
@@ -55,16 +46,21 @@ export function ModelosPage() {
         title="Modelos"
         description="Gerencie modelos vinculados às máquinas."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" disabled={isExporting} onClick={handleExportar}>
-              {isExporting ? 'Exportando...' : 'Exportar PDF'}
-            </Button>
-            <Link to="/app/admin/modelos/novo">
-              <Button>Novo modelo</Button>
-            </Link>
-          </div>
+          <Link to="/app/admin/modelos/novo">
+            <Button>Novo modelo</Button>
+          </Link>
         }
+        maisAcoes={[
+          {
+            rotulo: exportando ? 'Exportando...' : 'Exportar PDF',
+            onSelect: exportar,
+            desabilitada: exportando,
+          },
+        ]}
       />
+      {erroDeExportacao ? (
+        <ErrorState title="Exportação não concluída" description={erroDeExportacao} />
+      ) : null}
       <ModelosFilters
         codigo={filters.codigo}
         maquina={filters.maquina}
@@ -74,7 +70,9 @@ export function ModelosPage() {
         maquinaOptionsLoading={maquinasLoading}
         onCodigoChange={(codigo) => setFilters((current) => ({ ...current, codigo, page: 0 }))}
         onMaquinaChange={(maquina) => setFilters((current) => ({ ...current, maquina, page: 0 }))}
-        onDescricaoChange={(descricao) => setFilters((current) => ({ ...current, descricao, page: 0 }))}
+        onDescricaoChange={(descricao) =>
+          setFilters((current) => ({ ...current, descricao, page: 0 }))
+        }
         onAtivoChange={(ativo) => setFilters((current) => ({ ...current, ativo, page: 0 }))}
       />
       {isLoading ? <LoadingState title="Carregando modelos..." /> : null}
@@ -82,6 +80,7 @@ export function ModelosPage() {
         <ErrorState
           title="Não foi possível carregar modelos."
           description={getModeloErrorMessage(error)}
+          onRetry={() => void refetch()}
         />
       ) : null}
       {data && data.content.length === 0 ? (

@@ -12,6 +12,7 @@ export function useAlterarResponsaveis(solicitacaoId: string) {
       solicitacoesApi.alterarResponsaveis(solicitacaoId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: solicitacoesKeys.detail(solicitacaoId) });
+      queryClient.invalidateQueries({ queryKey: solicitacoesKeys.lists() });
     },
   });
 }
