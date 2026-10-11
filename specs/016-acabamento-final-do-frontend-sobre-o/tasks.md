@@ -7,13 +7,13 @@
 
 ## Fase 1 — Limpeza e formatação (RF-34 a RF-37)
 
-- [ ] T001 Formatar: `npx prettier --write` nos 57 arquivos de `--list-different`, em um commit só de formatação
-- [ ] T002 Remover `SRC/App.tsx`, `SRC/shared/types/api.ts` e a dependência `@testing-library/jest-dom`
-- [ ] T003 Remover `useLogin.ts` e o teste (conferir o fluxo de login com a busca de uso e o e2e)
-- [ ] T004 Remover `canViewModelos` e `rotuloDoTipoDeEvidencia` com seus testes; mover `contraste.ts` para `TST/support/`; remover os 3 aliases do `Makefile`
-- [ ] T005 Nomes de teste sem condição (6 arquivos da #151) renomeados
-- [ ] T006 Extrair `temFiltroAtivo` e `semNada` para `lib/` com teste; mover `KPICard` para `components/`
-- [ ] T007 `make validate` verde (lint, tipos, cobertura, build)
+- [x] T001 Formatar: `npx prettier --write` nos 57 arquivos de `--list-different`, em um commit só de formatação
+- [x] T002 Remover `SRC/App.tsx`, `SRC/shared/types/api.ts` e a dependência `@testing-library/jest-dom`
+- [x] T003 Remover `useLogin.ts` e o teste (conferir o fluxo de login com a busca de uso e o e2e)
+- [x] T004 Remover `canViewModelos` e `rotuloDoTipoDeEvidencia` com seus testes; mover `contraste.ts` para `TST/support/`; remover os 3 aliases do `Makefile`
+- [x] T005 Nomes de teste sem condição (6 arquivos da #151) renomeados
+- [x] T006 Extrair `temFiltroAtivo` e `semNada` para `lib/` com teste; mover `KPICard` para `components/`
+- [x] T007 `make validate` verde (lint, tipos, cobertura, build)
 
 ## Fase 2 — Quadro e triagem (RF-13 a RF-22)
 

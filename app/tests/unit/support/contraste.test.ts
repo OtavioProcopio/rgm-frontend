@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { contraste, luminancia } from '@/shared/lib/contraste';
+import { contraste, luminancia } from '../../support/contraste';
 
 describe('luminancia', () => {
   it('deve ser 0 quando a cor é preta', () => {

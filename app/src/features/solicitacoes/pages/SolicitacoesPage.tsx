@@ -21,17 +21,11 @@ import { SolicitacaoFilters } from '../components/SolicitacaoFilters';
 import { useSolicitacoes } from '../hooks/useSolicitacoes';
 import { lerFiltrosDaUrl } from '../lib/filtrosDaUrl';
 import { getSolicitacaoErrorMessage } from '../lib/solicitacaoMessages';
+import { temFiltroAtivo } from '../lib/temFiltroAtivo';
 import type { SolicitacoesFilters } from '../types/solicitacaoTypes';
 
 const PAGE_SIZE = 20;
 type View = 'lista' | 'kanban';
-
-/** Há filtro ativo quando qualquer campo, além da paginação, tem valor. */
-function temFiltroAtivo(filters: SolicitacoesFilters): boolean {
-  return Object.entries(filters).some(
-    ([campo, valor]) => campo !== 'page' && campo !== 'size' && valor !== undefined && valor !== '',
-  );
-}
 
 type EstadoInicial = { view: View; filters: SolicitacoesFilters };
 

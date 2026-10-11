@@ -1,6 +1,5 @@
 import type { TipoModelo } from '@/features/admin/modelos/types/modeloTypes';
 import type { PerfilUsuario } from '@/features/auth/types/authTypes';
-import type { TipoEvidencia } from '@/features/evidencias/types/evidenciaTypes';
 import type {
   PrioridadeSolicitacao,
   StatusSolicitacao,
@@ -43,15 +42,6 @@ export const rotuloDoTipoDeModelo: Record<TipoModelo, string> = {
   ALUMINIO_E_3D: 'Alumínio e 3D',
   RESINA: 'Resina',
   COQUILHA_ACO: 'Coquilha em Aço',
-};
-
-export const rotuloDoTipoDeEvidencia: Record<TipoEvidencia, string> = {
-  GERAL: 'Geral',
-  ABERTURA: 'Abertura',
-  INSTRUCAO_SERVICO: 'Instrução de serviço',
-  SERVICO_REALIZADO: 'Serviço realizado',
-  CONCLUSAO: 'Conclusão',
-  DEVOLUCAO: 'Devolução',
 };
 
 export const rotuloDoTipoDeAtividade: Record<TipoAtividadeSolicitacao, string> = {

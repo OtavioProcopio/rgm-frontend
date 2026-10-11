@@ -8,7 +8,6 @@ import { createQueryWrapper } from '@tests/support/queryWrapper';
 
 import { perfilApi } from '@/features/auth/api/perfilApi';
 import { useAlterarSenha } from '@/features/auth/hooks/useAlterarSenha';
-import { useLogin } from '@/features/auth/hooks/useLogin';
 import { usePerfil } from '@/features/auth/hooks/usePerfil';
 import { ApiError } from '@/shared/api/apiError';
 
@@ -35,14 +34,6 @@ vi.mock('@/app/providers/authContext', () => ({
 }));
 
 afterEach(() => vi.clearAllMocks());
-
-describe('useLogin', () => {
-  it('exposes mutateAsync', () => {
-    const { QueryWrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useLogin(), { wrapper: QueryWrapper });
-    expect(typeof result.current.mutateAsync).toBe('function');
-  });
-});
 
 describe('usePerfil', () => {
   it('fetches perfil data', async () => {

@@ -91,7 +91,7 @@ describe('ordenarPorAtraso', () => {
     expect(ids(ordenada)).toEqual(['p', 'q']);
   });
 
-  it('deve devolver um novo array sem mutar a entrada', () => {
+  it('deve devolver um novo array sem mutar a entrada quando ordena a fila', () => {
     // Arrange
     const entrada = [comPrazo('b', AGORA), comPrazo('a', AGORA - DIA)];
 
@@ -236,7 +236,7 @@ describe('itensDaFila', () => {
     expect(item.href).toBe('/app/solicitacoes/abc');
   });
 
-  it('deve usar o rótulo do status como etapa', () => {
+  it('deve usar o rótulo do status como etapa quando monta a linha', () => {
     // Arrange
     const entrada = [comPrazo('a', AGORA, { status: 'EM_VALIDACAO' })];
 

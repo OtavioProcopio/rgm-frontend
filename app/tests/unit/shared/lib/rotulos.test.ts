@@ -5,7 +5,6 @@ import {
   rotuloDoPerfil,
   rotuloDoStatus,
   rotuloDoTipoDeAtividade,
-  rotuloDoTipoDeEvidencia,
   rotuloDoTipoDeModelo,
   rotuloDoTipoDeSolicitacao,
 } from '@/shared/lib/rotulos';
@@ -136,34 +135,6 @@ describe('rotuloDoTipoDeModelo', () => {
   });
 });
 
-describe('rotuloDoTipoDeEvidencia', () => {
-  it.each([
-    ['GERAL', 'Geral'],
-    ['ABERTURA', 'Abertura'],
-    ['INSTRUCAO_SERVICO', 'Instrução de serviço'],
-    ['SERVICO_REALIZADO', 'Serviço realizado'],
-    ['CONCLUSAO', 'Conclusão'],
-    ['DEVOLUCAO', 'Devolução'],
-  ] as const)(
-    'deve dar a "%s" o rótulo "%s" quando o valor é um tipo de evidência',
-    (valor, esperado) => {
-      // Act
-      const rotulo = rotuloDoTipoDeEvidencia[valor];
-
-      // Assert
-      expect(rotulo).toBe(esperado);
-    },
-  );
-
-  it('deve ter seis rótulos quando todos os tipos de evidência são contados', () => {
-    // Act
-    const valores = Object.keys(rotuloDoTipoDeEvidencia);
-
-    // Assert
-    expect(valores).toHaveLength(6);
-  });
-});
-
 describe('rotuloDoTipoDeAtividade', () => {
   it.each([
     ['ABERTURA', 'Solicitação aberta'],
@@ -198,7 +169,6 @@ describe('rótulos dos sete conjuntos', () => {
     ['prioridade', rotuloDaPrioridade],
     ['perfil', rotuloDoPerfil],
     ['tipo de modelo', rotuloDoTipoDeModelo],
-    ['tipo de evidência', rotuloDoTipoDeEvidencia],
     ['tipo de atividade', rotuloDoTipoDeAtividade],
   ])('deve não ter rótulo vazio quando o conjunto é %s', (_conjunto, rotulos) => {
     // Act

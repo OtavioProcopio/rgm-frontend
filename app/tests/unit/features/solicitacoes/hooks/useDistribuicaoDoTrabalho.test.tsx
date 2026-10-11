@@ -268,7 +268,7 @@ describe('useDistribuicaoDoTrabalho', () => {
     expect(listar).toHaveBeenCalledTimes(4);
   });
 
-  it('deve indicar carregamento enquanto as consultas estão pendentes', () => {
+  it('deve indicar carregamento quando as consultas estão pendentes', () => {
     // Arrange
     listar.mockImplementation(() => new Promise<PageResponse<Solicitacao>>(() => undefined));
 
@@ -279,7 +279,7 @@ describe('useDistribuicaoDoTrabalho', () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  it('deve deixar partes indefinidas enquanto as consultas estão pendentes', () => {
+  it('deve deixar partes indefinidas quando as consultas estão pendentes', () => {
     // Arrange
     listar.mockImplementation(() => new Promise<PageResponse<Solicitacao>>(() => undefined));
 
