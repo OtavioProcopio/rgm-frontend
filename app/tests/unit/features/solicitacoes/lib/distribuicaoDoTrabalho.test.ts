@@ -5,7 +5,7 @@ import {
   VISOES,
   caminhoDasAtrasadas,
   caminhoDoFiltro,
-  partesPorConsulta,
+  partesPorMetricas,
   partesPorStatus,
   visaoPorId,
 } from '@/features/solicitacoes/lib/distribuicaoDoTrabalho';
@@ -85,9 +85,9 @@ describe('VISOES', () => {
     expect(valores).toEqual(esperado);
   });
 
-  it('deve ter as quatro prioridades da mais à menos urgente quando a visão é prioridade', () => {
+  it('deve ter as quatro prioridades da mais à menos urgente e depois sem prioridade quando a visão é prioridade', () => {
     // Arrange
-    const esperado = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA'];
+    const esperado = ['URGENTE', 'ALTA', 'MEDIA', 'BAIXA', 'SEM_PRIORIDADE'];
 
     // Act
     const valores = visaoPorId('prioridade').partes.map((parte) => parte.valor);
@@ -99,7 +99,7 @@ describe('VISOES', () => {
   it.each([
     ['status', rotuloDoStatus],
     ['tipo', rotuloDoTipoDeSolicitacao],
-    ['prioridade', rotuloDaPrioridade],
+    ['prioridade', { ...rotuloDaPrioridade, SEM_PRIORIDADE: 'Sem prioridade' }],
   ] as const)(
     'deve tirar o rótulo de cada parte da visão %s da tabela de rótulos',
     (id, tabela) => {
@@ -179,6 +179,8 @@ const METRICAS_POR_STATUS: MetricasResponse = {
   solicitacoesPendentes: 5,
   solicitacoesConcluidas: 30,
   tempoMedioResolucaoSegundos: 100,
+  emAbertoPorTipo: { REPARO: 0, INSPECAO: 0, REENGENHARIA: 0, CRIACAO: 0 },
+  emAbertoPorPrioridade: { URGENTE: 0, ALTA: 0, MEDIA: 0, BAIXA: 0, SEM_PRIORIDADE: 0 },
   solicitacoesPorStatus: {
     A_FAZER: 5,
     EM_ANDAMENTO: 0,
@@ -216,43 +218,68 @@ describe('partesPorStatus', () => {
   });
 });
 
-describe('partesPorConsulta', () => {
-  const PARTES = [
-    { valor: 'REPARO', rotulo: 'Reparo' },
-    { valor: 'INSPECAO', rotulo: 'Inspeção' },
-  ];
+describe('partesPorMetricas', () => {
+  const METRICAS: MetricasResponse = {
+    ...METRICAS_POR_STATUS,
+    emAbertoPorTipo: { REPARO: 4, INSPECAO: 0, REENGENHARIA: 2, CRIACAO: 1 },
+    emAbertoPorPrioridade: { URGENTE: 3, ALTA: 0, MEDIA: 2, BAIXA: 1, SEM_PRIORIDADE: 1 },
+  };
 
-  it('deve juntar cada parte à sua quantidade quando todos os totais chegaram', () => {
+  it('deve contar as abertas por tipo quando as métricas chegaram', () => {
     // Arrange
-    const totais = [4, 0];
+    const esperado = [4, 0, 2, 1];
 
     // Act
-    const partes = partesPorConsulta(PARTES, totais);
+    const partes = partesPorMetricas('tipo', METRICAS);
 
     // Assert
-    expect(partes).toEqual([
-      { valor: 'REPARO', rotulo: 'Reparo', quantidade: 4 },
-      { valor: 'INSPECAO', rotulo: 'Inspeção', quantidade: 0 },
-    ]);
+    expect(partes?.map((parte) => parte.quantidade)).toEqual(esperado);
   });
 
-  it('deve devolver indefinido quando falta o total de uma parte', () => {
+  it('deve incluir "Sem prioridade" na visão de prioridade quando as métricas chegaram', () => {
     // Arrange
-    const totais = [4, undefined];
+    const esperado = { valor: 'SEM_PRIORIDADE', rotulo: 'Sem prioridade', quantidade: 1 };
 
     // Act
-    const partes = partesPorConsulta(PARTES, totais);
+    const partes = partesPorMetricas('prioridade', METRICAS);
 
     // Assert
-    expect(partes).toBeUndefined();
+    expect(partes?.at(-1)).toEqual(esperado);
   });
 
-  it('deve devolver indefinido quando nenhum total chegou', () => {
+  it('deve somar o mesmo total das abertas em tipo e em prioridade quando as métricas batem', () => {
     // Arrange
-    const totais: Array<number | undefined> = [];
+    const soma = (partes: { quantidade: number }[] | undefined): number =>
+      (partes ?? []).reduce((total, parte) => total + parte.quantidade, 0);
 
     // Act
-    const partes = partesPorConsulta(PARTES, totais);
+    const porTipo = soma(partesPorMetricas('tipo', METRICAS));
+    const porPrioridade = soma(partesPorMetricas('prioridade', METRICAS));
+
+    // Assert
+    expect(porTipo).toBe(porPrioridade);
+  });
+
+  it('deve contar zero quando a resposta não traz uma das partes', () => {
+    // Arrange
+    const metricas = {
+      ...METRICAS,
+      emAbertoPorTipo: { REPARO: 4 },
+    } as unknown as MetricasResponse;
+
+    // Act
+    const partes = partesPorMetricas('tipo', metricas);
+
+    // Assert
+    expect(partes?.map((parte) => parte.quantidade)).toEqual([4, 0, 0, 0]);
+  });
+
+  it('deve devolver indefinido quando as métricas ainda não chegaram', () => {
+    // Arrange
+    const metricas = undefined;
+
+    // Act
+    const partes = partesPorMetricas('tipo', metricas);
 
     // Assert
     expect(partes).toBeUndefined();

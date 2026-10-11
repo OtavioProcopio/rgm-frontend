@@ -56,6 +56,8 @@ function metricasCom(abertas: number): MetricasResponse {
     solicitacoesPendentes: 0,
     solicitacoesConcluidas: 0,
     tempoMedioResolucaoSegundos: 0,
+    emAbertoPorTipo: { REPARO: 0, INSPECAO: 0, REENGENHARIA: 0, CRIACAO: 0 },
+    emAbertoPorPrioridade: { URGENTE: 0, ALTA: 0, MEDIA: 0, BAIXA: 0, SEM_PRIORIDADE: 0 },
   };
 }
 

@@ -91,7 +91,7 @@ test.describe('Lista filtrada vinda do painel', () => {
 });
 
 test.describe('Dashboard sobre o painel por período', () => {
-  test('abre os indicadores com no máximo três requisições de dados', async ({
+  test('abre os indicadores com no máximo quatro requisições de dados', async ({
     page,
     loginAdmin,
   }) => {
@@ -108,7 +108,7 @@ test.describe('Dashboard sobre o painel por período', () => {
     await expect(page.getByRole('region', { name: 'Tendência' })).toBeVisible();
     await page.waitForLoadState('networkidle');
 
-    expect(requisicoes.length).toBeLessThanOrEqual(3);
+    expect(requisicoes.length).toBeLessThanOrEqual(4);
   });
 
   test('mostra os indicadores do painel por período quando o backend o oferece', async ({
@@ -158,5 +158,62 @@ test.describe('Dashboard sobre o painel por período', () => {
         .getByRole('region', { name: 'Indicadores' })
         .getByRole('button', { name: 'Tentar novamente' }),
     ).toBeVisible();
+  });
+});
+
+test.describe('Dashboard de gestão', () => {
+  test('mostra os blocos de gestão do período e muda de período', async ({ page, loginAdmin }) => {
+    const gestao30 = page.waitForResponse(
+      (r) => r.url().includes('/solicitacoes/metricas/gestao') && r.url().includes('dias=30'),
+    );
+    await loginAdmin('/app/dashboard');
+
+    expect((await gestao30).status()).toBe(200);
+    for (const nome of [
+      'Prazo cumprido',
+      'Tempo de resolução',
+      'Idade das abertas',
+      'Onde o tempo se perde',
+      'Por máquina',
+      'Modelos reincidentes',
+      'Carga por responsável',
+    ]) {
+      await expect(page.getByRole('region', { name: nome })).toBeVisible();
+    }
+
+    const gestao7 = page.waitForResponse(
+      (r) => r.url().includes('/solicitacoes/metricas/gestao') && r.url().includes('dias=7'),
+    );
+    await page.getByRole('radio', { name: '7 dias' }).click();
+    expect((await gestao7).status()).toBe(200);
+  });
+
+  test('leva a faixa de idade à lista de abertas filtrada', async ({ page, loginAdmin }) => {
+    await loginAdmin('/app/dashboard');
+
+    await page
+      .getByRole('region', { name: 'Idade das abertas' })
+      .getByRole('link', { name: /Mais de 3 dias/ })
+      .click();
+
+    await expect(page).toHaveURL(/\/app\/solicitacoes\?emAberto=true&criadaEmFim=/);
+    await expect(page.getByRole('button', { name: 'Remover filtro Em aberto' })).toBeVisible();
+  });
+
+  test('mostra o erro com Tentar novamente quando os indicadores de gestão falham', async ({
+    page,
+    loginAdmin,
+  }) => {
+    await page.route('**/solicitacoes/metricas/gestao**', (rota) =>
+      rota.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+    );
+
+    await loginAdmin('/app/dashboard');
+
+    await expect(
+      page.getByText('Não foi possível carregar os indicadores de gestão'),
+    ).toBeVisible();
+    // Os outros blocos do dashboard continuam de pé.
+    await expect(page.getByRole('region', { name: 'Tendência' })).toBeVisible();
   });
 });

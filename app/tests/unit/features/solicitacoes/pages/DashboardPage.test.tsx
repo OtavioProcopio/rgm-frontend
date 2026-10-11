@@ -55,6 +55,8 @@ const METRICAS: MetricasResponse = {
   solicitacoesPendentes: 11,
   solicitacoesConcluidas: 100,
   tempoMedioResolucaoSegundos: 86400,
+  emAbertoPorTipo: { REPARO: 0, INSPECAO: 0, REENGENHARIA: 0, CRIACAO: 0 },
+  emAbertoPorPrioridade: { URGENTE: 0, ALTA: 0, MEDIA: 0, BAIXA: 0, SEM_PRIORIDADE: 0 },
 };
 
 const HISTORICO: HistoricoMetricas = {
