@@ -161,25 +161,25 @@ describe('TriagemModal — cores por papel e limite de texto', () => {
     );
   });
 
-  it('deve limitar a observação da foto ao tamanho que a API grava quando uma foto é anexada', async () => {
+  it('deve mostrar o campo de descrição do que fazer mesmo sem foto, limitado ao tamanho que a API grava', () => {
     // Arrange
-    const foto = new File(['x'], 'servico.png', { type: 'image/png' });
     montar();
 
     // Act
-    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), foto);
-    const campo = (await screen.findByLabelText(/observação/i)) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(
+      /descrição do que precisa ser feito/i,
+    ) as HTMLTextAreaElement;
 
     // Assert
     expect(campo.maxLength).toBe(LIMITES.textoLongo);
   });
 
-  it('deve guardar a observação digitada quando uma foto foi anexada', async () => {
+  it('deve guardar a descrição digitada', async () => {
     // Arrange
-    const foto = new File(['x'], 'servico.png', { type: 'image/png' });
     montar();
-    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), foto);
-    const campo = (await screen.findByLabelText(/observação/i)) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(
+      /descrição do que precisa ser feito/i,
+    ) as HTMLTextAreaElement;
 
     // Act
     await userEvent.type(campo, 'usar gabarito');

@@ -13,6 +13,7 @@ import { TriarAction } from '@/features/solicitacoes/actions/TriarAction';
 
 const triar = vi.fn();
 const anexar = vi.fn();
+const comentar = vi.fn();
 const foto = new File(['x'], 'instrucao.png', { type: 'image/png' });
 const dados = { prioridade: 'ALTA', responsavelIds: ['op'] };
 
@@ -21,6 +22,9 @@ vi.mock('@/features/solicitacoes/hooks/useTriarSolicitacao', () => ({
 }));
 vi.mock('@/features/evidencias/api/evidenciasApi', () => ({
   evidenciasApi: { anexar: (...args: unknown[]) => anexar(...args) },
+}));
+vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
+  solicitacoesApi: { comentar: (...args: unknown[]) => comentar(...args) },
 }));
 vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
   TriagemModal: ({
@@ -33,6 +37,9 @@ vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
     <form aria-label="Triagem">
       <button type="button" onClick={() => onConfirm(dados, null, '')}>
         Confirmar
+      </button>
+      <button type="button" onClick={() => onConfirm(dados, null, 'usar gabarito')}>
+        Confirmar com descrição
       </button>
       <button type="button" onClick={() => onConfirm(dados, foto, 'usar gabarito')}>
         Confirmar com foto
@@ -64,6 +71,20 @@ afterEach(() => {
 });
 
 describe('TriarAction', () => {
+  it('deve registrar a descrição como comentário quando a triagem não tem foto', async () => {
+    // Arrange
+    triar.mockResolvedValue(undefined);
+    comentar.mockResolvedValue(undefined);
+    const { onClose } = montar();
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com descrição' }));
+
+    // Assert
+    expect(comentar).toHaveBeenCalledWith('s1', { comentario: 'usar gabarito' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('deve triar e fechar quando a triagem é confirmada', async () => {
     // Arrange
     triar.mockResolvedValue(undefined);
