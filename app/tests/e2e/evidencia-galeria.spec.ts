@@ -54,7 +54,7 @@ test.describe('Evidência vira foto de galeria automaticamente', () => {
     await apiPatch(
       request,
       `/solicitacoes/${sol.id}/triar`,
-      { prioridade: 'MEDIA', responsavelIds: [operador.id] },
+      { prioridade: 'MEDIA', responsavelIds: [operador.id], descricao: 'Executar o serviço' },
       token,
     );
 

@@ -192,4 +192,7 @@ export async function escolherPrioridadeEPrimeiroResponsavel(
     .getByRole('button')
     .first()
     .click();
+  await page
+    .getByLabel('Descrição do que precisa ser feito')
+    .fill('Executar o serviço conforme a instrução');
 }

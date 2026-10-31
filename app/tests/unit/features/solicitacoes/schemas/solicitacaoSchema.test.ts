@@ -78,14 +78,25 @@ describe('solicitacaoSchema', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+        descricao: 'Trocar o gabarito',
       });
       expect(result.success).toBe(true);
+    });
+
+    it('rejects a blank description of what to do', () => {
+      const result = triarSolicitacaoSchema.safeParse({
+        prioridade: 'ALTA',
+        responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+        descricao: '   ',
+      });
+      expect(result.success).toBe(false);
     });
 
     it('rejects empty responsibles array', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'MEDIA',
         responsavelIds: [],
+        descricao: 'Trocar o gabarito',
       });
       expect(result.success).toBe(false);
     });

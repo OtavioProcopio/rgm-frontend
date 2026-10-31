@@ -105,6 +105,10 @@ describe('TriagemModal — envio', () => {
     const { onConfirm } = montar();
     await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
     await userEvent.click(screen.getByRole('button', { name: 'João' }));
+    await userEvent.type(
+      screen.getByLabelText(/descrição do que precisa ser feito/i),
+      'usar gabarito',
+    );
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
@@ -114,6 +118,7 @@ describe('TriagemModal — envio', () => {
     expect(onConfirm.mock.calls[0][0]).toEqual({
       prioridade: 'ALTA',
       responsavelIds: ['11111111-1111-4111-8111-111111111111'],
+      descricao: 'usar gabarito',
     });
   });
 
@@ -127,6 +132,7 @@ describe('TriagemModal — envio', () => {
     // Assert
     expect(await screen.findByText('Escolha a prioridade.')).toBeDefined();
     expect(screen.getByText('Selecione ao menos um responsável')).toBeDefined();
+    expect(screen.getByText('Descreva o que precisa ser feito')).toBeDefined();
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
@@ -161,7 +167,7 @@ describe('TriagemModal — cores por papel e limite de texto', () => {
     );
   });
 
-  it('deve mostrar o campo de descrição do que fazer mesmo sem foto, limitado ao tamanho que a API grava', () => {
+  it('deve mostrar o campo obrigatório de descrição do que fazer mesmo sem foto, limitado ao tamanho que a API grava', () => {
     // Arrange
     montar();
 
