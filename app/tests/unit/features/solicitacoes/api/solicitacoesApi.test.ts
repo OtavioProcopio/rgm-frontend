@@ -165,7 +165,8 @@ describe('solicitacoesApi — escritas', () => {
     {
       nome: 'triar',
       rota: 'triar',
-      chamar: () => solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [] }),
+      chamar: () =>
+        solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [], descricao: 'D' }),
     },
     {
       nome: 'enviarParaValidacao',

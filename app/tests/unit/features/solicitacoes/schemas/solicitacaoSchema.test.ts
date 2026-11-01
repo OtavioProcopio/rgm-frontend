@@ -92,6 +92,38 @@ describe('solicitacaoSchema', () => {
       expect(result.success).toBe(false);
     });
 
+    it('rejects a missing description of what to do', () => {
+      const result = triarSolicitacaoSchema.safeParse({
+        prioridade: 'ALTA',
+        responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects a description above the text limit and accepts exactly the limit', () => {
+      const base = {
+        prioridade: 'ALTA',
+        responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+      };
+      expect(
+        triarSolicitacaoSchema.safeParse({ ...base, descricao: 'x'.repeat(LIMITES.textoLongo + 1) })
+          .success,
+      ).toBe(false);
+      expect(
+        triarSolicitacaoSchema.safeParse({ ...base, descricao: 'x'.repeat(LIMITES.textoLongo) })
+          .success,
+      ).toBe(true);
+    });
+
+    it('trims the description before handing it over', () => {
+      const result = triarSolicitacaoSchema.safeParse({
+        prioridade: 'ALTA',
+        responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+        descricao: '  Trocar o gabarito  ',
+      });
+      expect(result.success && result.data.descricao).toBe('Trocar o gabarito');
+    });
+
     it('rejects empty responsibles array', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'MEDIA',

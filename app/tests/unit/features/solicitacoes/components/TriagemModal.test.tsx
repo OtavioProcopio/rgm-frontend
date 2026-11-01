@@ -122,6 +122,39 @@ describe('TriagemModal — envio', () => {
     });
   });
 
+  it('deve exigir a descrição quando só ela está faltando', async () => {
+    // Arrange
+    const { onConfirm } = montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    expect(await screen.findByText('Descreva o que precisa ser feito')).toBeDefined();
+    expect(screen.queryByText('Escolha a prioridade.')).toBeNull();
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('deve entregar a descrição sem os espaços das pontas quando o formulário é válido', async () => {
+    // Arrange
+    const { onConfirm } = montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+    await userEvent.type(
+      screen.getByLabelText(/descrição do que precisa ser feito/i),
+      '  Trocar o gabarito  ',
+    );
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+    expect(onConfirm.mock.calls[0][0].descricao).toBe('Trocar o gabarito');
+  });
+
   it('deve exigir a prioridade e um responsável quando nada foi escolhido', async () => {
     // Arrange
     const { onConfirm } = montar();
