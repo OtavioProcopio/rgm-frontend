@@ -40,6 +40,11 @@ export const abrirSolicitacaoSchema = z
 export const triarSolicitacaoSchema = z.object({
   prioridade: z.enum(['BAIXA', 'MEDIA', 'ALTA', 'URGENTE']),
   responsavelIds: z.array(z.string().uuid()).min(1, 'Selecione ao menos um responsável'),
+  descricao: z
+    .string()
+    .trim()
+    .min(1, 'Descreva o que precisa ser feito')
+    .max(LIMITES.textoLongo, mensagemDeLimite(LIMITES.textoLongo)),
 });
 
 export const encerrarSolicitacaoSchema = z.object({
