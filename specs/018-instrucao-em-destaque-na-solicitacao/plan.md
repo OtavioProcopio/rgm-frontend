@@ -19,6 +19,16 @@
 | Tempo real | Nenhum código novo: o detalhe já ouve os eventos de solicitação e atualiza o cache; o evento "triada" já traz a resposta completa, que passa a ter `instrucao` | Nova assinatura | RNF-01; confirmado por teste |
 | Cartão e listagem | Sem alteração | Mostrar a instrução | RF-10 |
 | Contrato | `Solicitacao.instrucao: string \| null`; `TriarSolicitacaoRequest.instrucao: string`; `docs/swagger.json` atualizado | Campo opcional ausente | O backend sempre envia o campo, nulo quando não houver |
+| Validação compartilhada | Um só validador `instrucaoDoTrabalho` (`trim`, mínimo 1, máximo `LIMITES.textoLongo`, mensagem "Descreva o que precisa ser feito") usado por `triarSolicitacaoSchema` e por `editarInstrucaoSchema` | Duplicar a regra | Triar e corrigir não podem divergir (RF-05, RF-12) |
+| Ação de editar | `EDITAR_INSTRUCAO` entra em `ACOES_SOLICITACAO`; `EditarInstrucaoAction` entra em `COMPONENTE_DA_ACAO` e abre pelo `DialogoDaAcao` que o quadro e o detalhe já usam | Diálogo próprio | O diálogo já prende foco, fecha com Esc, devolve o foco, bloqueia durante o envio e pergunta antes de descartar (RF-14, RNF-04) |
+| Fora de "Mais ações" | `BOTOES` (cabeçalho) e `acaoDoMovimento` (quadro) não ganham a ação; só o bloco a abre | Entrada no menu | RF-19; o botão fica junto do texto que edita |
+| Quem pode | `acoesPermitidas` da API quando informada; sem ela (eventos e listagens), `regraLocal` inclui `EDITAR_INSTRUCAO` para gestor e administrador com `EM_ANDAMENTO` | Só a regra local | Eventos chegam sem `acoesPermitidas` (ver `mesclarSolicitacaoDoEvento`); a API manda quando informa, a regra local nunca concede o que ela recusa (P9) |
+| Envio da edição | `solicitacoesApi.editarInstrucao(id, { instrucao })` (`PATCH /solicitacoes/{id}/instrucao`) e `useEditarInstrucao`; no sucesso, o detalhe em cache recebe a resposta mesclada (mantendo `acoesPermitidas` e responsáveis, que a resposta não traz), as listas e o histórico são invalidados | Refazer a consulta do detalhe | RNF-01: sem GET extra do detalhe |
+| Botão "Salvar" | Desabilitado enquanto o texto aparado é igual ao atual; função pura `instrucaoMudou(atual, digitado)` em `lib/` | Comparar no JSX | Regra testável (P10) |
+| Aviso de sucesso | `sucessoDaAcao.EDITAR_INSTRUCAO` = "Instrução atualizada", como as demais ações | Texto no componente | Segue `solicitacaoMessages` |
+| Tempo real | O evento `solicitacao` já atualiza o detalhe; o backend também publica `solicitacao_atividade`, que já recarrega o histórico (`useSolicitacaoEvents`). Nenhum código novo de assinatura | Assinar tipo novo | RF-17, RNF-01 |
+| Tipo de atividade novo | `INSTRUCAO_ALTERADA` entra em `TipoAtividadeSolicitacao`, em `PESO_POR_TIPO` (`destaque`), em `TIPO_CONFIG` (ícone de lápis) e no rótulo; título "Instrução alterada" e detalhe "Antes: …" | Reaproveitar `COMENTARIO` | RF-16 |
+| Tipo desconhecido | `TIPO_CONFIG` e `PESO_POR_TIPO` passam a ter um item de reserva (`DESCONHECIDO`) usado quando a chave não existe; título "Atividade registrada" | Deixar quebrar | RF-18; é o que impede o backend novo de derrubar um front desatualizado |
 
 ## Arquivos a criar ou alterar
 
@@ -31,7 +41,17 @@
 | presenter | `SRC/features/solicitacoes/components/SolicitacaoResumo.tsx` (renderiza o bloco antes da grade) | alterar | `TST/unit/features/solicitacoes/components/SolicitacaoResumo.test.tsx` |
 | presenter | `SRC/features/solicitacoes/components/TriagemModal.tsx` (rótulo, `instrucao`) | alterar | `TST/unit/features/solicitacoes/components/TriagemModal.test.tsx` |
 | presenter | `SRC/features/solicitacoes/actions/TriarAction.tsx` | alterar (se o tipo mudar) | `TST/unit/features/solicitacoes/actions/TriarAction.test.tsx` |
-| presenter | `SRC/features/solicitacoes/pages/SolicitacaoDetalhePage.tsx` (nenhuma mudança esperada) | conferir | `TST/unit/features/solicitacoes/pages/SolicitacaoDetalhePage.test.tsx` (evento "triada") |
+| presenter | `SRC/features/solicitacoes/pages/SolicitacaoDetalhePage.tsx` (passa ao resumo se pode editar e abre a ação) | alterar | `TST/unit/features/solicitacoes/pages/SolicitacaoDetalhePage.test.tsx` (evento "triada" e "instrucao_editada") |
+| domain | `SRC/features/solicitacoes/lib/acoesSolicitacao.ts` (`EDITAR_INSTRUCAO`, `regraLocal`, rótulo) | alterar | `TST/unit/features/solicitacoes/lib/acoesSolicitacao.test.ts` |
+| domain | `SRC/features/solicitacoes/lib/instrucaoMudou.ts` | criar | `TST/unit/features/solicitacoes/lib/instrucaoMudou.test.ts` |
+| domain | `SRC/features/solicitacoes/lib/solicitacaoMessages.ts` (`sucessoDaAcao.EDITAR_INSTRUCAO`) | alterar | `TST/unit/features/solicitacoes/lib/solicitacaoMessages.test.ts` |
+| domain | `SRC/features/solicitacoes/schemas/solicitacaoSchema.ts` (`instrucaoDoTrabalho`, `editarInstrucaoSchema`) | alterar | `TST/unit/features/solicitacoes/schemas/solicitacaoSchema.test.ts` |
+| clients | `SRC/features/solicitacoes/api/solicitacoesApi.ts` (`editarInstrucao`) | alterar | `TST/unit/features/solicitacoes/api/solicitacoesApi.test.ts` |
+| hook | `SRC/features/solicitacoes/hooks/useEditarInstrucao.ts` | criar | `TST/unit/features/solicitacoes/hooks/useEditarInstrucao.test.tsx` |
+| presenter | `SRC/features/solicitacoes/actions/EditarInstrucaoAction.tsx`, `AcaoSolicitacaoAtiva.tsx` | criar/alterar | `TST/unit/features/solicitacoes/actions/EditarInstrucaoAction.test.tsx`, `AcaoSolicitacaoAtiva.test.tsx` |
+| presenter | `SRC/features/solicitacoes/components/InstrucaoDaSolicitacao.tsx` (botão "Editar") | alterar | `InstrucaoDaSolicitacao.test.tsx` |
+| domain | `SRC/features/solicitacoes/types/solicitacaoTypes.ts` (`INSTRUCAO_ALTERADA`), `lib/historicoDaSolicitacao.ts`, `lib/solicitacaoLabels` (rótulo do tipo) | alterar | `TST/unit/features/solicitacoes/lib/historicoDaSolicitacao.test.ts` |
+| presenter | `SRC/features/solicitacoes/components/SolicitacaoTimeline.tsx` (ícone, reserva para tipo desconhecido) | alterar | `TST/unit/features/solicitacoes/components/SolicitacaoTimeline.test.tsx` |
 | test | `TST/support/solicitacaoFixture.ts` (`instrucao: null` por padrão) | alterar | — |
 | e2e | `TST/e2e/fixtures.ts` (rótulo novo), `kanban.spec.ts` (instrução aparece no detalhe depois de triar) | alterar | roteiros e2e |
 | docs | `docs/swagger.json`, `openspec/README.md` (linha) | alterar | — |
@@ -40,7 +60,9 @@
 
 - **UI → hook:** `onConfirm(data, foto)` com `data = { prioridade, responsavelIds, instrucao }`.
 - **Hook → API:** `PATCH /api/solicitacoes/{id}/triar` com os três campos.
-- **API → UI:** `Solicitacao.instrucao` no detalhe e nos eventos; ignorado pelo cartão.
+- **UI → hook:** `EditarInstrucaoAction` envia `{ instrucao }` por `useEditarInstrucao`.
+- **Hook → API:** `PATCH /api/solicitacoes/{id}/instrucao`; 200 com a solicitação; 400, 403, 409.
+- **API → UI:** `Solicitacao.instrucao` no detalhe e nos eventos; `acoesPermitidas` com `EDITAR_INSTRUCAO`; atividade `INSTRUCAO_ALTERADA` com o texto anterior em `detalhe`; ignorado pelo cartão.
 - **Compatibilidade:** ver "Ordem de publicação" na spec.
 
 ## Dependências externas
@@ -59,6 +81,9 @@ Nenhum.
 | E2E não roda neste ambiente | certa nesta rodada | `make e2e` antes do merge; registrado na convergência |
 | Texto longo sem espaço estoura o layout | média | `break-words`; teste com palavra de 200 caracteres e verificação de largura no e2e em 320 px |
 | Aviso de triada antiga aparece em cancelada que nunca foi triada | baixa | A tabela de `instrucaoParaExibir` exclui `A_FAZER` e `CANCELADA`; teste por status |
+| Botão "Editar" aparece para quem a API recusaria | baixa | Vale `acoesPermitidas` da API; a regra local só vale sem ela; se a API recusar, o erro aparece no diálogo (RF-15) |
+| Conflito de edição some com o texto digitado | média | O diálogo não fecha em erro e mantém o texto (RF-15); teste |
+| Backend novo derruba front antigo no histórico (tipo desconhecido) | alta se publicado sem esta spec | RF-18 e a ordem de publicação |
 
 ## Conformidade com a constituição
 
