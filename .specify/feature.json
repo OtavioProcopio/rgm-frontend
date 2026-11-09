@@ -1,4 +1,4 @@
 {
-  "active": "specs/017-descricao-obrigatoria-na-triagem",
-  "title": "Descrição do que fazer, obrigatória na triagem (spec 017, par da spec 014 do backend), base main"
+  "active": "specs/018-instrucao-em-destaque-na-solicitacao",
+  "title": "Instrução em destaque na solicitação (spec 018, par da spec 015 do backend), base develop"
 }
