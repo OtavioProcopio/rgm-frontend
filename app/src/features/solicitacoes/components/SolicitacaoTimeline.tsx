@@ -1,4 +1,4 @@
-import { ArrowRight, MessageSquare, Paperclip, Plus, User } from 'lucide-react';
+import { ArrowRight, Circle, MessageSquare, Paperclip, Pencil, Plus, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { LinhaDoTempo } from '@/shared/components/LinhaDoTempo/LinhaDoTempo';
@@ -31,10 +31,20 @@ const TIPO_CONFIG: Record<
     dotClass: 'bg-surface-muted',
     Icon: Paperclip,
   },
+  INSTRUCAO_ALTERADA: { iconClass: 'text-info-fg', dotClass: 'bg-info-soft', Icon: Pencil },
+};
+
+/** Marcador neutro de um tipo que o front não conhece. */
+const CONFIG_DE_RESERVA = {
+  iconClass: 'text-fg-muted',
+  dotClass: 'bg-surface-muted',
+  Icon: Circle,
 };
 
 function Marcador({ tipo }: { tipo: TipoAtividadeSolicitacao }) {
-  const { Icon, dotClass, iconClass } = TIPO_CONFIG[tipo];
+  const configuracoes: Partial<Record<string, (typeof TIPO_CONFIG)[TipoAtividadeSolicitacao]>> =
+    TIPO_CONFIG;
+  const { Icon, dotClass, iconClass } = configuracoes[tipo] ?? CONFIG_DE_RESERVA;
   return (
     <div className={cn('flex size-6 shrink-0 items-center justify-center rounded-full', dotClass)}>
       <Icon size={12} className={iconClass} />

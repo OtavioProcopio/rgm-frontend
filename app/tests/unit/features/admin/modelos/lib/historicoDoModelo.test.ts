@@ -29,6 +29,7 @@ function criarSolicitacao(sobrescrita: Partial<Solicitacao> = {}): Solicitacao {
     modeloId: 'mod-1',
     abertaPorUsuarioId: 'u-1',
     comentarioFinal: null,
+    instrucao: null,
     criadaEm: '2026-01-02T10:00:00Z',
     atualizadaEm: '2026-01-02T10:00:00Z',
     concluidaEm: null,

@@ -27,6 +27,7 @@ const solicitacao = {
   modeloId: 'm1',
   abertaPorUsuarioId: 'u1',
   comentarioFinal: null,
+  instrucao: null,
   concluidaEm: null,
   canceladaEm: null,
   responsavelIds: [],
@@ -79,5 +80,24 @@ describe('SolicitacaoCard', () => {
       </MemoryRouter>,
     );
     expect(within(container).queryByText('ALTA')).toBeNull();
+  });
+
+  it('não deve mostrar a instrução, só a descrição da abertura, quando a solicitação tem as duas', () => {
+    // Act
+    const { container } = render(
+      <MemoryRouter>
+        <SolicitacaoCard
+          solicitacao={{
+            ...solicitacao,
+            status: 'EM_ANDAMENTO',
+            instrucao: 'Instrução secreta do gestor',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    // Assert
+    expect(within(container).getByText('Trocar vedações')).toBeDefined();
+    expect(container.textContent).not.toContain('Instrução secreta do gestor');
   });
 });

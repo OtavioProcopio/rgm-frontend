@@ -68,7 +68,7 @@ decisão, fica com o peso de um comentário; uma correção do gestor não chega
 | RF-08 | Se a triagem falha (conflito porque outra pessoa triou antes, ou erro de rede), o texto digitado continua no formulário e o erro aparece junto da ação, como nas demais ações | obrigatório |
 | RF-09 | A foto da triagem continua opcional e sem texto próprio | obrigatório |
 | RF-10 | O cartão do quadro e a listagem não mudam | obrigatório |
-| RF-11 | Quando a API oferece a ação `EDITAR_INSTRUCAO`, o bloco mostra o botão "Editar" no seu cabeçalho; sem a ação (operador, outro status, antes da triagem) o botão não existe | obrigatório |
+| RF-11 | Quando a API oferece a ação `EDITAR_INSTRUCAO`, o bloco mostra o botão "Editar" no seu cabeçalho; sem a ação (operador, outro status, antes da triagem) o botão não existe. Em solicitação em andamento sem instrução (triada antes do campo) a mesma ação aparece como "Adicionar instrução", ao lado do aviso de RF-03 | obrigatório |
 | RF-12 | "Editar" abre um diálogo com o campo "O que precisa ser feito" já preenchido com a instrução atual, com as mesmas regras do formulário de triagem (obrigatório, até 2000 caracteres, contador, aparado) | obrigatório |
 | RF-13 | "Salvar" só fica ativo quando o texto aparado difere do atual; salvar fecha o diálogo, atualiza o bloco e avisa "Instrução atualizada" | obrigatório |
 | RF-14 | Cancelar o diálogo com texto alterado pede confirmação do descarte, como nas demais ações; sem alteração, fecha direto | obrigatório |
@@ -177,6 +177,13 @@ Funcionalidade: Instrução em destaque na solicitação
     Dado uma solicitação em andamento com instrução e a API oferecendo EDITAR_INSTRUCAO
     Quando abro o detalhe como gestor
     Então vejo o botão "Editar" no cabeçalho do bloco "O que precisa ser feito"
+
+  Cenário: Adicionar instrução a uma triada antes do campo
+    Dado uma solicitação em andamento sem instrução e a API oferecendo EDITAR_INSTRUCAO
+    Quando abro o detalhe como gestor
+    Então vejo o aviso de que não há instrução registrada
+    E vejo o botão "Adicionar instrução"
+    E o diálogo abre vazio, com "Salvar" desabilitado até eu escrever
 
   Cenário: Operador não vê o botão
     Dado a mesma solicitação aberta pelo operador responsável

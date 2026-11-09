@@ -122,7 +122,12 @@ function DetalheDaSolicitacao({ solicitacao }: { solicitacao: Solicitacao }) {
       <CabecalhoDaSolicitacao solicitacao={solicitacao} edicao={edicao} acoes={acoes} />
       {acoes.dialogo}
       <ErroDeAcao mensagem={actionError} />
-      <InformacoesDaSolicitacao solicitacao={solicitacao} edicao={edicao} atividades={atividades} />
+      <InformacoesDaSolicitacao
+        solicitacao={solicitacao}
+        edicao={edicao}
+        atividades={atividades}
+        aoEditarInstrucao={acoes.editarInstrucao}
+      />
       <DescarteDaEdicao edicao={edicao} />
       <EvidenciasEHistorico id={solicitacao.id} estado={estado} />
     </section>
@@ -357,9 +362,15 @@ type PropsDasInformacoes = {
   solicitacao: Solicitacao;
   edicao: EdicaoDaSolicitacao;
   atividades: AtividadeSolicitacao[];
+  aoEditarInstrucao: (() => void) | null;
 };
 
-function InformacoesDaSolicitacao({ solicitacao, edicao, atividades }: PropsDasInformacoes) {
+function InformacoesDaSolicitacao({
+  solicitacao,
+  edicao,
+  atividades,
+  aoEditarInstrucao,
+}: PropsDasInformacoes) {
   const { data: modelo } = useModelo(solicitacao.modeloId);
   if (edicao.isEditing)
     return <EdicaoDaSolicitacaoForm solicitacao={solicitacao} edicao={edicao} />;
@@ -369,6 +380,7 @@ function InformacoesDaSolicitacao({ solicitacao, edicao, atividades }: PropsDasI
       modelo={modelo}
       atividades={atividades}
       usuarios={[]}
+      aoEditarInstrucao={aoEditarInstrucao}
     />
   );
 }

@@ -47,6 +47,7 @@ describe('historicoDaSolicitacao', () => {
     'MUDANCA_STATUS',
     'COMENTARIO',
     'EVIDENCIA_ADICIONADA',
+    'INSTRUCAO_ALTERADA',
   ])('deve usar o rótulo do dicionário como título quando o tipo é %s', (tipo) => {
     // Arrange
     const entrada = [atividade({ tipo })];
@@ -243,5 +244,59 @@ describe('iniciaisDe', () => {
 
     // Assert
     expect(resultado).toBe('?');
+  });
+});
+
+describe('historicoDaSolicitacao — instrução', () => {
+  it('deve mostrar a correção em destaque, com o texto anterior no detalhe', () => {
+    // Arrange
+    const correcao = atividade({
+      tipo: 'INSTRUCAO_ALTERADA',
+      comentario: 'Trocar o gabarito\nConferir o furo',
+    });
+
+    // Act
+    const [item] = historicoDaSolicitacao([correcao]);
+
+    // Assert
+    expect(item.titulo).toBe('Instrução alterada');
+    expect(item.detalhe).toBe('Antes: Trocar o gabarito\nConferir o furo');
+    expect(item.peso).toBe('destaque');
+    expect(item.autor.nome).toBe('Ana Souza');
+  });
+
+  it('não deve inventar texto anterior quando a solicitação não tinha instrução', () => {
+    // Act
+    const [item] = historicoDaSolicitacao([
+      atividade({ tipo: 'INSTRUCAO_ALTERADA', comentario: null }),
+    ]);
+
+    // Assert
+    expect(item.titulo).toBe('Instrução alterada');
+    expect(item.detalhe).toBeNull();
+  });
+
+  it('deve manter o detalhe puro nos demais tipos', () => {
+    // Act
+    const [item] = historicoDaSolicitacao([atividade({ tipo: 'COMENTARIO', comentario: 'Feito' })]);
+
+    // Assert
+    expect(item.detalhe).toBe('Feito');
+  });
+
+  it('deve mostrar "Atividade registrada", em tom discreto, para um tipo que o front não conhece', () => {
+    // Arrange
+    const desconhecida = atividade({
+      tipo: 'TIPO_DO_FUTURO' as TipoAtividadeSolicitacao,
+      comentario: 'texto',
+    });
+
+    // Act
+    const [item] = historicoDaSolicitacao([desconhecida]);
+
+    // Assert
+    expect(item.titulo).toBe('Atividade registrada');
+    expect(item.peso).toBe('discreto');
+    expect(item.detalhe).toBe('texto');
   });
 });

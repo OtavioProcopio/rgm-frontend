@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { criarSolicitacao } from '@tests/support/solicitacaoFixture';
 
@@ -127,7 +128,8 @@ describe('SolicitacaoResumo — cores por papel', () => {
     const { container } = montar(solicitacao);
 
     // Assert
-    expect(classes(container.firstElementChild!)).toContain('border-line');
+    const grade = container.querySelector('.grid')!;
+    expect(classes(grade)).toContain('border-line');
   });
 
   it('deve usar o texto secundário quando mostra o nome de um campo', () => {
@@ -388,5 +390,64 @@ describe('SolicitacaoResumo', () => {
     // Assert
     expect(screen.queryByText('Modelo (rastreabilidade)')).toBeNull();
     expect(screen.queryByText('Modelo pretendido')).toBeNull();
+  });
+});
+
+describe('SolicitacaoResumo — instrução', () => {
+  it('deve mostrar o bloco da instrução antes dos dados da solicitação quando ela existe', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({
+      status: 'EM_ANDAMENTO',
+      instrucao: 'Trocar o gabarito',
+    });
+
+    // Act
+    const { container } = montar(solicitacao);
+
+    // Assert
+    const regiao = screen.getByRole('region', { name: 'O que precisa ser feito' });
+    const grade = container.querySelector('.grid')!;
+    expect(regiao.compareDocumentPosition(grade) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(regiao.textContent).toContain('Trocar o gabarito');
+  });
+
+  it('deve manter a descrição da abertura como "Descrição" e a instrução separada', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({
+      status: 'EM_ANDAMENTO',
+      descricao: 'Correia gasta',
+      instrucao: 'Trocar o gabarito',
+    });
+
+    // Act
+    montar(solicitacao);
+
+    // Assert
+    expect(screen.getByText('Descrição')).toBeDefined();
+    expect(screen.getByText('Correia gasta')).toBeDefined();
+    expect(screen.queryAllByText('Trocar o gabarito')).toHaveLength(1);
+  });
+
+  it('deve repassar a correção ao bloco quando ela é permitida', async () => {
+    // Arrange
+    const aoEditarInstrucao = vi.fn();
+    montar(criarSolicitacao({ status: 'EM_ANDAMENTO', instrucao: 'Texto' }), false, {
+      aoEditarInstrucao,
+    });
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Editar o que precisa ser feito' }));
+
+    // Assert
+    expect(aoEditarInstrucao).toHaveBeenCalledTimes(1);
+  });
+
+  it('não deve acrescentar nada ao resumo de uma solicitação ainda a fazer', () => {
+    // Act
+    montar(criarSolicitacao({ status: 'A_FAZER' }));
+
+    // Assert
+    expect(screen.queryByRole('region', { name: 'O que precisa ser feito' })).toBeNull();
+    expect(screen.queryByText(/Sem instrução registrada/)).toBeNull();
   });
 });

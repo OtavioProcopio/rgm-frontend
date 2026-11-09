@@ -420,3 +420,44 @@ describe('SolicitacaoTimeline — formulário, carregando e vazio', () => {
     expect(within(container).getByText('Nenhuma atividade registrada.')).toBeDefined();
   });
 });
+
+describe('SolicitacaoTimeline — instrução', () => {
+  it('deve mostrar a correção com o autor e o texto anterior', () => {
+    // Arrange
+    const correcao = umaAtividade({
+      id: 'c1',
+      tipo: 'INSTRUCAO_ALTERADA',
+      autorNome: 'Gestor Lima',
+      comentario: 'Trocar o gabarito',
+    });
+
+    // Act
+    const { container } = renderizar([correcao]);
+
+    // Assert
+    const historico = within(container);
+    expect(historico.getByText('Instrução alterada')).toBeDefined();
+    expect(historico.getByText('Antes: Trocar o gabarito')).toBeDefined();
+    expect(historico.getByText(/Gestor Lima/)).toBeDefined();
+  });
+
+  it('deve mostrar um tipo desconhecido como "Atividade registrada" sem quebrar o resto da linha do tempo', () => {
+    // Arrange
+    const atividades = [
+      umaAtividade({ id: 'ok', tipo: 'COMENTARIO', comentario: 'Segue o serviço' }),
+      umaAtividade({
+        id: 'novo',
+        tipo: 'TIPO_DO_FUTURO' as TipoAtividadeSolicitacao,
+        criadaEm: iso(5000),
+      }),
+    ];
+
+    // Act
+    const { container } = renderizar(atividades);
+
+    // Assert
+    const historico = within(container);
+    expect(historico.getByText('Atividade registrada')).toBeDefined();
+    expect(historico.getByText('Segue o serviço')).toBeDefined();
+  });
+});

@@ -39,6 +39,9 @@ vi.mock('@/features/solicitacoes/actions/EncerrarAction', () => ({
 vi.mock('@/features/solicitacoes/actions/CancelarAction', () => ({
   CancelarAction: dubleDe('Cancelar'),
 }));
+vi.mock('@/features/solicitacoes/actions/EditarInstrucaoAction', () => ({
+  EditarInstrucaoAction: dubleDe('Editar instrução'),
+}));
 
 afterEach(cleanup);
 
@@ -50,6 +53,7 @@ describe('AcaoSolicitacaoAtiva', () => {
     ['DEVOLVER', 'Devolver de s1'],
     ['ENCERRAR', 'Encerrar de s1'],
     ['CANCELAR', 'Cancelar de s1'],
+    ['EDITAR_INSTRUCAO', 'Editar instrução de s1'],
   ] as const)('deve abrir o formulário da ação quando a ação é %s', (acao, esperado) => {
     // Act
     render(

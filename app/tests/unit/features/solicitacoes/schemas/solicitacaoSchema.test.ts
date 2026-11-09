@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   abrirSolicitacaoSchema,
   triarSolicitacaoSchema,
+  editarInstrucaoSchema,
   encerrarSolicitacaoSchema,
   devolverSolicitacaoSchema,
   comentarioSchema,
@@ -78,21 +79,21 @@ describe('solicitacaoSchema', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
-        descricao: 'Trocar o gabarito',
+        instrucao: 'Trocar o gabarito',
       });
       expect(result.success).toBe(true);
     });
 
-    it('rejects a blank description of what to do', () => {
+    it('rejects a blank instruction', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
-        descricao: '   ',
+        instrucao: '   ',
       });
       expect(result.success).toBe(false);
     });
 
-    it('rejects a missing description of what to do', () => {
+    it('rejects a missing instruction', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
@@ -100,37 +101,77 @@ describe('solicitacaoSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('rejects a description above the text limit and accepts exactly the limit', () => {
+    it('rejects an instruction above the text limit and accepts exactly the limit', () => {
       const base = {
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
       };
       expect(
-        triarSolicitacaoSchema.safeParse({ ...base, descricao: 'x'.repeat(LIMITES.textoLongo + 1) })
+        triarSolicitacaoSchema.safeParse({ ...base, instrucao: 'x'.repeat(LIMITES.textoLongo + 1) })
           .success,
       ).toBe(false);
       expect(
-        triarSolicitacaoSchema.safeParse({ ...base, descricao: 'x'.repeat(LIMITES.textoLongo) })
+        triarSolicitacaoSchema.safeParse({ ...base, instrucao: 'x'.repeat(LIMITES.textoLongo) })
           .success,
       ).toBe(true);
     });
 
-    it('trims the description before handing it over', () => {
+    it('trims the instruction before handing it over', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'ALTA',
         responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
-        descricao: '  Trocar o gabarito  ',
+        instrucao: '  Trocar o gabarito  ',
       });
-      expect(result.success && result.data.descricao).toBe('Trocar o gabarito');
+      expect(result.success && result.data.instrucao).toBe('Trocar o gabarito');
     });
 
     it('rejects empty responsibles array', () => {
       const result = triarSolicitacaoSchema.safeParse({
         prioridade: 'MEDIA',
         responsavelIds: [],
-        descricao: 'Trocar o gabarito',
+        instrucao: 'Trocar o gabarito',
       });
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('editarInstrucaoSchema', () => {
+    it('accepts a new instruction', () => {
+      expect(editarInstrucaoSchema.safeParse({ instrucao: 'Trocar o gabarito' }).success).toBe(
+        true,
+      );
+    });
+
+    it.each(['', '   ', '\n\t'])('rejects the blank instruction %j', (instrucao) => {
+      const result = editarInstrucaoSchema.safeParse({ instrucao });
+      expect(result.success).toBe(false);
+      expect(!result.success && result.error.issues[0].message).toBe(
+        'Descreva o que precisa ser feito',
+      );
+    });
+
+    it('rejects a missing instruction', () => {
+      expect(editarInstrucaoSchema.safeParse({}).success).toBe(false);
+    });
+
+    it('accepts exactly the limit and rejects one more character', () => {
+      expect(
+        editarInstrucaoSchema.safeParse({ instrucao: 'x'.repeat(LIMITES.textoLongo) }).success,
+      ).toBe(true);
+      expect(
+        editarInstrucaoSchema.safeParse({ instrucao: 'x'.repeat(LIMITES.textoLongo + 1) }).success,
+      ).toBe(false);
+    });
+
+    it('trims the instruction and applies the same rule as the triage', () => {
+      const editada = editarInstrucaoSchema.safeParse({ instrucao: '  Trocar o gabarito  ' });
+      const triada = triarSolicitacaoSchema.safeParse({
+        prioridade: 'ALTA',
+        responsavelIds: ['123e4567-e89b-12d3-a456-426614174000'],
+        instrucao: '  Trocar o gabarito  ',
+      });
+      expect(editada.success && editada.data.instrucao).toBe('Trocar o gabarito');
+      expect(triada.success && triada.data.instrucao).toBe('Trocar o gabarito');
     });
   });
 

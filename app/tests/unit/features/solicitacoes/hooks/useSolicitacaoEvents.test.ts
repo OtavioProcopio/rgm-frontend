@@ -219,6 +219,49 @@ describe('useSolicitacaoEvents — eventos recebidos', () => {
     ]);
   });
 
+  it('deve mostrar no detalhe aberto a instrução corrigida, sem recarregar, e pedir o histórico de novo quando outro usuário a corrige', () => {
+    // Arrange
+    const { conexao, queryClient, invalidar } = conectar();
+    queryClient.setQueryData(
+      solicitacoesKeys.detail('s1'),
+      criarSolicitacao({
+        status: 'EM_ANDAMENTO',
+        instrucao: 'Trocar o gabarito',
+        responsavelIds: ['op'],
+        acoesPermitidas: ['EDITAR_INSTRUCAO'],
+      }),
+    );
+
+    // Act
+    conexao.emit('solicitacao', {
+      tipo: 'instrucao_editada',
+      solicitacao: criarSolicitacao({
+        status: 'EM_ANDAMENTO',
+        instrucao: 'Trocar o gabarito e o pino',
+      }),
+    });
+
+    // Assert
+    const atualizado = queryClient.getQueryData<Solicitacao>(solicitacoesKeys.detail('s1'));
+    expect(atualizado).toMatchObject({
+      instrucao: 'Trocar o gabarito e o pino',
+      responsavelIds: ['op'],
+      acoesPermitidas: null,
+    });
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.detail('s1') });
+  });
+
+  it('deve atualizar o histórico quando o aviso de atividade é de instrução corrigida', () => {
+    // Arrange
+    const { conexao, invalidar } = conectar();
+
+    // Act
+    conexao.emit('solicitacao_atividade', { tipo: 'instrucao_editada', solicitacaoId: 's1' });
+
+    // Assert
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: solicitacoesKeys.atividades('s1') });
+  });
+
   it('deve contar a mudança da solicitação quando um evento dela chega', () => {
     // Arrange
     const { conexao, queryClient } = conectar();

@@ -143,3 +143,53 @@ describe('mesclarSolicitacaoDoEvento', () => {
     expect(mesclada.responsavelIds).toEqual([]);
   });
 });
+
+describe('mesclarSolicitacaoDoEvento — instrução', () => {
+  const emAndamento = criarSolicitacao({
+    status: 'EM_ANDAMENTO',
+    prioridade: 'ALTA',
+    instrucao: 'Trocar o gabarito',
+    responsavelIds: ['op'],
+    acoesPermitidas: ['ENVIAR_VALIDACAO', 'EDITAR_INSTRUCAO'],
+  });
+
+  it('deve trazer a instrução nova, manter os responsáveis e descartar as ações quando outro usuário a corrige', () => {
+    // Arrange
+    const corrigida = criarSolicitacao({
+      status: 'EM_ANDAMENTO',
+      prioridade: 'ALTA',
+      instrucao: 'Trocar o gabarito e o pino',
+      atualizadaEm: '2026-01-02T00:00:00Z',
+      responsavelIds: [],
+    });
+
+    // Act
+    const mesclada = mesclarSolicitacaoDoEvento(emAndamento, {
+      tipo: 'instrucao_editada',
+      solicitacao: corrigida,
+    });
+
+    // Assert
+    expect(mesclada.instrucao).toBe('Trocar o gabarito e o pino');
+    expect(mesclada.atualizadaEm).toBe('2026-01-02T00:00:00Z');
+    expect(mesclada.responsavelIds).toEqual(['op']);
+    expect(mesclada.acoesPermitidas).toBeNull();
+  });
+
+  it('deve trazer a instrução escrita na triagem quando o evento é de triagem', () => {
+    // Arrange
+    const aFazer = criarSolicitacao({ status: 'A_FAZER', instrucao: null });
+    const triada = criarSolicitacao({
+      status: 'EM_ANDAMENTO',
+      prioridade: 'MEDIA',
+      instrucao: 'Montar o novo gabarito',
+    });
+
+    // Act
+    const mesclada = mesclarSolicitacaoDoEvento(aFazer, { tipo: 'triada', solicitacao: triada });
+
+    // Assert
+    expect(mesclada.status).toBe('EM_ANDAMENTO');
+    expect(mesclada.instrucao).toBe('Montar o novo gabarito');
+  });
+});

@@ -42,7 +42,7 @@ export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
     resolver: zodResolver(triarSolicitacaoSchema),
     defaultValues: {
       responsavelIds: [],
-      descricao: '',
+      instrucao: '',
     },
   });
 
@@ -102,11 +102,11 @@ export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
         />
 
         <Textarea
-          label="Descrição do que precisa ser feito"
+          label="O que precisa ser feito"
           placeholder="Detalhe o que o responsável deve realizar..."
           maxLength={LIMITES.textoLongo}
-          error={errors.descricao?.message}
-          {...register('descricao')}
+          error={errors.instrucao?.message}
+          {...register('instrucao')}
         />
 
         <div>

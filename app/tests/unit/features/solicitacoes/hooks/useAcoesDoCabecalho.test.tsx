@@ -438,3 +438,73 @@ describe('useAcoesDoCabecalho', () => {
     expect(result.current.principal).toBeNull();
   });
 });
+
+describe('useAcoesDoCabecalho — correção da instrução', () => {
+  it('deve expor a correção e não pô-la no menu quando a API a permite', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir('ENVIAR_VALIDACAO', 'CANCELAR', 'EDITAR_INSTRUCAO');
+
+    // Act
+    const { result } = montar(solicitacao, { aoAcionar: vi.fn() });
+
+    // Assert
+    expect(result.current.editarInstrucao).toBeTypeOf('function');
+    expect(rotulosDoMenu(result.current.maisAcoes)).toEqual(['Editar', 'Cancelar']);
+    expect(result.current.principal?.rotulo).toBe('Enviar para validação');
+  });
+
+  it('não deve expor a correção quando a API não a permite', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir('ENVIAR_VALIDACAO');
+
+    // Act
+    const { result } = montar(solicitacao);
+
+    // Assert
+    expect(result.current.editarInstrucao).toBeNull();
+  });
+
+  it('não deve mudar a ação principal só porque a correção existe', () => {
+    // Arrange: uma única ação do cabeçalho continua sendo a principal
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir('ENVIAR_VALIDACAO', 'EDITAR_INSTRUCAO');
+
+    // Act
+    const { result } = montar(solicitacao);
+
+    // Assert
+    expect(result.current.principal?.rotulo).toBe('Enviar para validação');
+    expect(result.current.maisAcoes).toEqual([]);
+  });
+
+  it('deve abrir o diálogo da correção quando a correção é acionada', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir('ENVIAR_VALIDACAO', 'EDITAR_INSTRUCAO');
+    const { result } = montar(solicitacao);
+
+    // Act
+    act(() => result.current.editarInstrucao!());
+
+    // Assert
+    const dialogo = result.current.dialogo as ReactElement<{ acao: AcaoSolicitacao }>;
+    expect(dialogo.type).toBe(DialogoDaAcao);
+    expect(dialogo.props.acao).toBe('EDITAR_INSTRUCAO');
+  });
+
+  it('deve oferecer só a correção, sem principal nem menu, quando é a única ação', () => {
+    // Arrange
+    const solicitacao = criarSolicitacao({ status: 'EM_ANDAMENTO' });
+    permitir('EDITAR_INSTRUCAO');
+
+    // Act
+    const { result } = montar(solicitacao);
+
+    // Assert
+    expect(result.current.principal).toBeNull();
+    expect(result.current.maisAcoes).toEqual([]);
+    expect(result.current.editarInstrucao).toBeTypeOf('function');
+  });
+});

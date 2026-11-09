@@ -166,7 +166,7 @@ describe('solicitacoesApi — escritas', () => {
       nome: 'triar',
       rota: 'triar',
       chamar: () =>
-        solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [], descricao: 'D' }),
+        solicitacoesApi.triar('s1', { prioridade: 'ALTA', responsavelIds: [], instrucao: 'D' }),
     },
     {
       nome: 'enviarParaValidacao',
@@ -204,4 +204,27 @@ describe('solicitacoesApi — escritas', () => {
       expect(patch.mock.calls[0][0]).toBe(`/solicitacoes/s1/${rota}`);
     },
   );
+});
+
+describe('solicitacoesApi.editarInstrucao', () => {
+  it('deve corrigir a instrução por PATCH na rota própria quando editarInstrucao é chamada', async () => {
+    // Act
+    await solicitacoesApi.editarInstrucao('s1', { instrucao: 'Trocar o gabarito' });
+
+    // Assert
+    expect(patch).toHaveBeenCalledExactlyOnceWith('/solicitacoes/s1/instrucao', {
+      instrucao: 'Trocar o gabarito',
+    });
+  });
+
+  it('deve devolver a solicitação que a API respondeu', async () => {
+    // Arrange
+    patch.mockResolvedValue({ id: 's1', instrucao: 'Nova' });
+
+    // Act
+    const resposta = await solicitacoesApi.editarInstrucao('s1', { instrucao: 'Nova' });
+
+    // Assert
+    expect(resposta).toEqual({ id: 's1', instrucao: 'Nova' });
+  });
 });

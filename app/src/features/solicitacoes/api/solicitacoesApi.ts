@@ -8,6 +8,7 @@ import type {
   CancelarSolicitacaoRequest,
   ComentarioRequest,
   DevolverSolicitacaoRequest,
+  EditarInstrucaoRequest,
   EditarSolicitacaoRequest,
   EncerrarSolicitacaoRequest,
   EnviarParaValidacaoRequest,
@@ -33,6 +34,9 @@ export const solicitacoesApi = {
 
   editar: (id: string, payload: EditarSolicitacaoRequest) =>
     httpClient.put<Solicitacao>(`/solicitacoes/${id}`, payload),
+
+  editarInstrucao: (id: string, payload: EditarInstrucaoRequest) =>
+    httpClient.patch<Solicitacao>(`/solicitacoes/${id}/instrucao`, payload),
 
   triar: (id: string, payload: TriarSolicitacaoRequest) =>
     httpClient.patch<Solicitacao>(`/solicitacoes/${id}/triar`, payload),

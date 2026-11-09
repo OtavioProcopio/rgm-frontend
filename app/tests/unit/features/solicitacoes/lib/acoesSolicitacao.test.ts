@@ -8,6 +8,7 @@ import {
   proximoStatus,
   rotuloDaAcao,
   separarAcoes,
+  acoesDoCabecalho,
   type AcaoSolicitacao,
   type AtorSolicitacao,
 } from '@/features/solicitacoes/lib/acoesSolicitacao';
@@ -70,7 +71,7 @@ describe('acoesPermitidas', () => {
 
   it.each([
     ['A_FAZER', ['CANCELAR', 'TRIAR']],
-    ['EM_ANDAMENTO', ['ALTERAR_RESPONSAVEIS', 'CANCELAR', 'ENVIAR_VALIDACAO']],
+    ['EM_ANDAMENTO', ['ALTERAR_RESPONSAVEIS', 'CANCELAR', 'EDITAR_INSTRUCAO', 'ENVIAR_VALIDACAO']],
     ['EM_VALIDACAO', ['ALTERAR_RESPONSAVEIS', 'CANCELAR', 'DEVOLVER', 'ENCERRAR']],
     ['CONCLUIDA', []],
     ['CANCELADA', []],
@@ -371,5 +372,71 @@ describe('rotuloDaAcao', () => {
 
     // Assert
     expect(rotulo).toBe(esperado);
+  });
+});
+
+describe('EDITAR_INSTRUCAO', () => {
+  it('deve valer o que a API informou quando ela oferece a ação', () => {
+    // Arrange
+    const informada = solicitacao('EM_ANDAMENTO', { acoesPermitidas: ['EDITAR_INSTRUCAO'] });
+
+    // Act
+    const acoes = acoesPermitidas(informada, operador);
+
+    // Assert
+    expect(ordenadas(acoes)).toEqual(['EDITAR_INSTRUCAO']);
+  });
+
+  it('deve valer o que a API informou quando ela não oferece, mesmo para o gestor', () => {
+    // Arrange
+    const informada = solicitacao('EM_ANDAMENTO', { acoesPermitidas: ['CANCELAR'] });
+
+    // Act
+    const acoes = acoesPermitidas(informada, gestor);
+
+    // Assert
+    expect(acoes.has('EDITAR_INSTRUCAO')).toBe(false);
+  });
+
+  it.each<StatusSolicitacao>(['A_FAZER', 'EM_VALIDACAO', 'CONCLUIDA', 'CANCELADA'])(
+    'não deve oferecer à regra local fora de andamento: %s',
+    (status) => {
+      // Arrange
+      const naoInformada = solicitacao(status, { acoesPermitidas: null });
+
+      // Act + Assert
+      expect(acoesPermitidas(naoInformada, gestor).has('EDITAR_INSTRUCAO')).toBe(false);
+      expect(acoesPermitidas(naoInformada, administrador).has('EDITAR_INSTRUCAO')).toBe(false);
+    },
+  );
+
+  it.each([operador, externo])(
+    'não deve oferecer à regra local ao perfil %o, nem ao responsável',
+    (ator) => {
+      // Arrange
+      const atribuida = solicitacao('EM_ANDAMENTO', {
+        acoesPermitidas: null,
+        responsavelIds: [ator.id!],
+        abertaPorUsuarioId: ator.id!,
+      });
+
+      // Act + Assert
+      expect(acoesPermitidas(atribuida, ator).has('EDITAR_INSTRUCAO')).toBe(false);
+    },
+  );
+
+  it('deve ter nome próprio e não ser botão do cabeçalho nem movimento do quadro', () => {
+    // Arrange
+    const todas = new Set<AcaoSolicitacao>(['ENVIAR_VALIDACAO', 'EDITAR_INSTRUCAO']);
+
+    // Act + Assert
+    expect(rotuloDaAcao('EDITAR_INSTRUCAO')).toBe('Editar o que precisa ser feito');
+    expect(botoesDeAcao(todas).map((b) => b.acao)).toEqual(['ENVIAR_VALIDACAO']);
+    expect([...acoesDoCabecalho(todas)]).toEqual(['ENVIAR_VALIDACAO']);
+    for (const de of ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO'] as const) {
+      for (const para of ['A_FAZER', 'EM_ANDAMENTO', 'EM_VALIDACAO', 'CONCLUIDA'] as const) {
+        expect(acaoDoMovimento(de, para)).not.toBe('EDITAR_INSTRUCAO');
+      }
+    }
   });
 });

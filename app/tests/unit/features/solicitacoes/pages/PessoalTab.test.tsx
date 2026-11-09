@@ -35,6 +35,7 @@ const solicitacao = (over: Partial<Solicitacao>): Solicitacao => ({
   modeloId: 'm1',
   abertaPorUsuarioId: 'u1',
   comentarioFinal: null,
+  instrucao: null,
   criadaEm: '2026-01-01T00:00:00Z',
   atualizadaEm: '2026-01-01T00:00:00Z',
   concluidaEm: null,
