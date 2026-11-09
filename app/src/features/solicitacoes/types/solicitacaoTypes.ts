@@ -103,6 +103,7 @@ export type EditarSolicitacaoRequest = {
 export type TriarSolicitacaoRequest = {
   prioridade: PrioridadeSolicitacao;
   responsavelIds: string[];
+  descricao: string;
 };
 
 export type EnviarParaValidacaoRequest = {

@@ -23,18 +23,18 @@ import type { PrioridadeSolicitacao } from '../types/solicitacaoTypes';
 type Props = {
   isPending?: boolean;
   onCancel: () => void;
-  onConfirm: (data: TriarSolicitacaoFormData, foto: File | null, nota: string) => void;
+  onConfirm: (data: TriarSolicitacaoFormData, foto: File | null) => void;
 };
 
 const OPCOES_DE_PRIORIDADE = opcoesDePrioridadeComPrazo();
 
 export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
   const [foto, setFoto] = useState<File | null>(null);
-  const [nota, setNota] = useState('');
   const { buscar, candidatos, carregando, falhou } = useBuscaDeResponsaveis();
   const [escolhidos, setEscolhidos] = useState<OpcaoDoSeletor[]>([]);
   const {
     handleSubmit,
+    register,
     setValue,
     watch,
     formState: { errors },
@@ -42,6 +42,7 @@ export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
     resolver: zodResolver(triarSolicitacaoSchema),
     defaultValues: {
       responsavelIds: [],
+      descricao: '',
     },
   });
 
@@ -57,7 +58,7 @@ export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
   }
 
   function onSubmit(data: TriarSolicitacaoFormData) {
-    onConfirm(data, foto, nota);
+    onConfirm(data, foto);
   }
 
   return (
@@ -100,23 +101,20 @@ export function TriagemModal({ isPending, onCancel, onConfirm }: Props) {
           }
         />
 
+        <Textarea
+          label="Descrição do que precisa ser feito"
+          placeholder="Detalhe o que o responsável deve realizar..."
+          maxLength={LIMITES.textoLongo}
+          error={errors.descricao?.message}
+          {...register('descricao')}
+        />
+
         <div>
           <p className="mb-2 block text-sm font-medium text-fg">
             Foto do que precisa ser feito (opcional)
           </p>
           <EvidenciaUploader onUpload={setFoto} />
           {foto ? <p className="mt-1 text-xs text-fg-muted">Anexado: {foto.name}</p> : null}
-          {foto ? (
-            <div className="mt-2">
-              <Textarea
-                label="Observação (opcional)"
-                placeholder="Detalhe o que precisa ser feito..."
-                maxLength={LIMITES.textoLongo}
-                value={nota}
-                onChange={(e) => setNota(e.target.value)}
-              />
-            </div>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-2">

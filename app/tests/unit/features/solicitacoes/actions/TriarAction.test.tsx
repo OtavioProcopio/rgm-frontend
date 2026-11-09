@@ -14,7 +14,7 @@ import { TriarAction } from '@/features/solicitacoes/actions/TriarAction';
 const triar = vi.fn();
 const anexar = vi.fn();
 const foto = new File(['x'], 'instrucao.png', { type: 'image/png' });
-const dados = { prioridade: 'ALTA', responsavelIds: ['op'] };
+const dados = { prioridade: 'ALTA', responsavelIds: ['op'], descricao: 'usar gabarito' };
 
 vi.mock('@/features/solicitacoes/hooks/useTriarSolicitacao', () => ({
   useTriarSolicitacao: () => ({ mutateAsync: triar, isPending: false }),
@@ -28,16 +28,16 @@ vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
     onConfirm,
   }: {
     onCancel: () => void;
-    onConfirm: (data: unknown, foto: File | null, nota: string) => void;
+    onConfirm: (data: unknown, foto: File | null) => void;
   }) => (
     <form aria-label="Triagem">
-      <button type="button" onClick={() => onConfirm(dados, null, '')}>
+      <button type="button" onClick={() => onConfirm(dados, null)}>
         Confirmar
       </button>
-      <button type="button" onClick={() => onConfirm(dados, foto, 'usar gabarito')}>
+      <button type="button" onClick={() => onConfirm(dados, foto)}>
         Confirmar com foto
       </button>
-      <button type="button" onClick={() => onConfirm(dados, foto, '')}>
+      <button type="button" onClick={() => onConfirm(dados, foto)}>
         Confirmar com foto sem nota
       </button>
       <button type="button" onClick={onCancel}>
@@ -78,7 +78,7 @@ describe('TriarAction', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('deve anexar a foto como instrução de serviço quando a triagem tem foto e nota', async () => {
+  it('deve anexar a foto como instrução de serviço quando a triagem tem foto', async () => {
     // Arrange
     triar.mockResolvedValue(undefined);
     anexar.mockResolvedValue(undefined);
@@ -90,7 +90,6 @@ describe('TriarAction', () => {
     // Assert
     expect(anexar).toHaveBeenCalledWith('s1', foto, {
       tipo: 'INSTRUCAO_SERVICO',
-      descricao: 'usar gabarito',
     });
   });
 

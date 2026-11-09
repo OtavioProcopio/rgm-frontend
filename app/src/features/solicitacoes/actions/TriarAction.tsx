@@ -18,14 +18,13 @@ export function TriarAction({ solicitacao, onClose, onCancelar }: AcaoProps) {
       <TriagemModal
         isPending={triar.isPending}
         onCancel={onCancelar}
-        onConfirm={(data, foto, nota) =>
+        onConfirm={(data, foto) =>
           executar(
             () => triar.mutateAsync(data),
             {
               file: foto,
               tipo: 'INSTRUCAO_SERVICO',
               feito: acaoFeitaSemFoto.TRIAR,
-              descricao: nota || undefined,
             },
             sucessoDaAcao.TRIAR,
           )

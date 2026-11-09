@@ -1,10 +1,6 @@
 import { formatarDuracao } from '@/shared/lib/duracao';
 
-import {
-  ROTULO_DA_ETAPA,
-  textoDoGargalo,
-  type ChaveDaEtapa,
-} from '../../lib/gargaloDasEtapas';
+import { ROTULO_DA_ETAPA, textoDoGargalo, type ChaveDaEtapa } from '../../lib/gargaloDasEtapas';
 import { formatarPercentual } from '../../lib/leituraDoPrazo';
 import type { IndicadoresDeGestao } from '../../types/solicitacaoTypes';
 import { Bloco } from './Bloco';

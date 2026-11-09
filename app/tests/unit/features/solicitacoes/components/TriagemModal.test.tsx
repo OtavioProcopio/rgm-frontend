@@ -105,6 +105,10 @@ describe('TriagemModal — envio', () => {
     const { onConfirm } = montar();
     await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
     await userEvent.click(screen.getByRole('button', { name: 'João' }));
+    await userEvent.type(
+      screen.getByLabelText(/descrição do que precisa ser feito/i),
+      'usar gabarito',
+    );
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
@@ -114,7 +118,41 @@ describe('TriagemModal — envio', () => {
     expect(onConfirm.mock.calls[0][0]).toEqual({
       prioridade: 'ALTA',
       responsavelIds: ['11111111-1111-4111-8111-111111111111'],
+      descricao: 'usar gabarito',
     });
+  });
+
+  it('deve exigir a descrição quando só ela está faltando', async () => {
+    // Arrange
+    const { onConfirm } = montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    expect(await screen.findByText('Descreva o que precisa ser feito')).toBeDefined();
+    expect(screen.queryByText('Escolha a prioridade.')).toBeNull();
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('deve entregar a descrição sem os espaços das pontas quando o formulário é válido', async () => {
+    // Arrange
+    const { onConfirm } = montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+    await userEvent.type(
+      screen.getByLabelText(/descrição do que precisa ser feito/i),
+      '  Trocar o gabarito  ',
+    );
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+    expect(onConfirm.mock.calls[0][0].descricao).toBe('Trocar o gabarito');
   });
 
   it('deve exigir a prioridade e um responsável quando nada foi escolhido', async () => {
@@ -127,6 +165,7 @@ describe('TriagemModal — envio', () => {
     // Assert
     expect(await screen.findByText('Escolha a prioridade.')).toBeDefined();
     expect(screen.getByText('Selecione ao menos um responsável')).toBeDefined();
+    expect(screen.getByText('Descreva o que precisa ser feito')).toBeDefined();
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
@@ -161,25 +200,25 @@ describe('TriagemModal — cores por papel e limite de texto', () => {
     );
   });
 
-  it('deve limitar a observação da foto ao tamanho que a API grava quando uma foto é anexada', async () => {
+  it('deve mostrar o campo obrigatório de descrição do que fazer mesmo sem foto, limitado ao tamanho que a API grava', () => {
     // Arrange
-    const foto = new File(['x'], 'servico.png', { type: 'image/png' });
     montar();
 
     // Act
-    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), foto);
-    const campo = (await screen.findByLabelText(/observação/i)) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(
+      /descrição do que precisa ser feito/i,
+    ) as HTMLTextAreaElement;
 
     // Assert
     expect(campo.maxLength).toBe(LIMITES.textoLongo);
   });
 
-  it('deve guardar a observação digitada quando uma foto foi anexada', async () => {
+  it('deve guardar a descrição digitada', async () => {
     // Arrange
-    const foto = new File(['x'], 'servico.png', { type: 'image/png' });
     montar();
-    await userEvent.upload(screen.getByLabelText('Arquivo de evidência'), foto);
-    const campo = (await screen.findByLabelText(/observação/i)) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(
+      /descrição do que precisa ser feito/i,
+    ) as HTMLTextAreaElement;
 
     // Act
     await userEvent.type(campo, 'usar gabarito');

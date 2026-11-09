@@ -1,4 +1,4 @@
 {
-  "active": "specs/016-acabamento-final-do-frontend-sobre-o",
-  "title": "Acabamento final do frontend sobre o backend v1.6: indicadores de gestão, quadro e card, triagem com busca, tipos de modelo, busca e PDFs fiéis à tela, limpeza (spec 016: #150, #142, #129, #132, #156, #151)"
+  "active": "specs/017-descricao-obrigatoria-na-triagem",
+  "title": "Descrição do que fazer, obrigatória na triagem (spec 017, par da spec 014 do backend), base main"
 }
