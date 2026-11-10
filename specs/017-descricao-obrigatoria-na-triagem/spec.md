@@ -1,5 +1,7 @@
 # Especificação — Descrição do que fazer, obrigatória na triagem
 
+> **Substituída em parte pela spec 018 (2026-11-09):** o campo passou a se chamar "O que precisa ser feito", é enviado como `instrucao` e ganhou bloco no detalhe e correção em andamento. Vale a 018.
+
 > Descreve **o quê** e **por quê**. Não descreve como implementar: sem nome de biblioteca,
 > sem esquema de banco, sem assinatura de função.
 
