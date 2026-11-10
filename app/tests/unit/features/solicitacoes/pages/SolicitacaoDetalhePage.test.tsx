@@ -24,6 +24,7 @@ import { LIMITES } from '@/shared/lib/limites';
 vi.mock('@/features/solicitacoes/api/solicitacoesApi', () => ({
   solicitacoesApi: {
     alterarResponsaveis: vi.fn().mockResolvedValue({}),
+    editarInstrucao: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -160,6 +161,7 @@ const mockSolicitacao = {
   modeloId: 'm1',
   abertaPorUsuarioId: 'u1',
   comentarioFinal: null,
+  instrucao: null,
   criadaEm: '2024-01-01T00:00:00Z',
   atualizadaEm: '2024-01-01T00:00:00Z',
   concluidaEm: null,
@@ -1167,5 +1169,92 @@ describe('SolicitacaoDetalhePage — acesso negado', () => {
     // Assert
     const link = tela.getByRole('link', { name: 'Voltar ao quadro' });
     expect(link.getAttribute('href')).toBe('/app/solicitacoes');
+  });
+});
+
+describe('SolicitacaoDetalhePage — instrução', () => {
+  const emAndamento = {
+    ...mockSolicitacao,
+    status: 'EM_ANDAMENTO' as const,
+    instrucao: 'Trocar o gabarito',
+    responsavelIds: ['u-op'],
+    acoesPermitidas: ['ENVIAR_VALIDACAO', 'CANCELAR', 'EDITAR_INSTRUCAO'],
+  };
+
+  async function abrir(solicitacao: Record<string, unknown>) {
+    const { useSolicitacao } = await import('@/features/solicitacoes/hooks/useSolicitacao');
+    vi.mocked(useSolicitacao).mockReturnValue({
+      data: solicitacao,
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useSolicitacao>);
+    const { AppWrapper } = createAppWrapper({ initialEntries: ['/solicitacoes/s1'] });
+    return render(<SolicitacaoDetalhePage />, { wrapper: AppWrapper });
+  }
+
+  it('deve mostrar o bloco "O que precisa ser feito" antes dos dados da solicitação', async () => {
+    // Act
+    await abrir(emAndamento);
+
+    // Assert
+    const regiao = screen.getByRole('region', { name: 'O que precisa ser feito' });
+    expect(regiao.textContent).toContain('Trocar o gabarito');
+    expect(screen.getByText('Descrição')).toBeDefined();
+  });
+
+  it('deve abrir o diálogo de correção, com o texto atual, quando "Editar" é acionado', async () => {
+    // Arrange
+    await abrir(emAndamento);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Editar o que precisa ser feito' }));
+
+    // Assert
+    const dialogo = screen.getByRole('dialog', { name: /Editar o que precisa ser feito/ });
+    const campo = within(dialogo).getByLabelText(
+      /^o que precisa ser feito/i,
+    ) as HTMLTextAreaElement;
+    expect(campo.value).toBe('Trocar o gabarito');
+  });
+
+  it('não deve oferecer "Editar" quando a API não permite a correção', async () => {
+    // Arrange
+    await abrir({ ...emAndamento, acoesPermitidas: ['ENVIAR_VALIDACAO'] });
+
+    // Assert
+    expect(screen.getByRole('region', { name: 'O que precisa ser feito' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Editar o que precisa ser feito' })).toBeNull();
+  });
+
+  it('não deve pôr a correção no menu "Mais ações"', async () => {
+    // Arrange
+    await abrir(emAndamento);
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: /mais ações/i }));
+
+    // Assert
+    expect(screen.getAllByRole('menuitem').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('menuitem', { name: /instrução|o que precisa/i })).toBeNull();
+  });
+
+  it('deve oferecer "Adicionar instrução" para a triada antes do campo existir', async () => {
+    // Arrange
+    await abrir({ ...emAndamento, instrucao: null });
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar instrução' }));
+
+    // Assert
+    expect(screen.getByRole('dialog', { name: /Editar o que precisa ser feito/ })).toBeDefined();
+  });
+
+  it('não deve mostrar bloco nem aviso quando a solicitação ainda está a fazer', async () => {
+    // Act
+    await abrir(mockSolicitacao);
+
+    // Assert
+    expect(screen.queryByRole('region', { name: 'O que precisa ser feito' })).toBeNull();
+    expect(screen.queryByText(/Sem instrução registrada/)).toBeNull();
   });
 });

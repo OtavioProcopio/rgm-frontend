@@ -165,4 +165,38 @@ describe('Textarea', () => {
       expect(onChange).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('deve contar a partir do valor inicial quando o campo abre já preenchido', () => {
+    // Act
+    const { container } = render(
+      <Textarea label="Instrução" maxLength={100} defaultValue={'x'.repeat(95)} />,
+    );
+
+    // Assert
+    expect(within(container).getByText('Restam 5 caracteres')).toBeDefined();
+  });
+
+  it('não deve mostrar contador quando o valor inicial está longe do limite', () => {
+    // Act
+    const { container } = render(
+      <Textarea label="Instrução" maxLength={100} defaultValue="curto" />,
+    );
+
+    // Assert
+    expect(container.textContent).not.toContain('caracteres');
+  });
+
+  it('deve seguir a digitação a partir do valor inicial', () => {
+    // Arrange
+    const { container } = render(
+      <Textarea label="Instrução" maxLength={100} defaultValue={'x'.repeat(88)} />,
+    );
+    const campo = container.querySelector('textarea')!;
+
+    // Act
+    fireEvent.change(campo, { target: { value: 'x'.repeat(97) } });
+
+    // Assert
+    expect(within(container).getByText('Restam 3 caracteres')).toBeDefined();
+  });
 });

@@ -14,7 +14,7 @@ import { TriarAction } from '@/features/solicitacoes/actions/TriarAction';
 const triar = vi.fn();
 const anexar = vi.fn();
 const foto = new File(['x'], 'instrucao.png', { type: 'image/png' });
-const dados = { prioridade: 'ALTA', responsavelIds: ['op'], descricao: 'usar gabarito' };
+const dados = { prioridade: 'ALTA', responsavelIds: ['op'], instrucao: 'usar gabarito' };
 
 vi.mock('@/features/solicitacoes/hooks/useTriarSolicitacao', () => ({
   useTriarSolicitacao: () => ({ mutateAsync: triar, isPending: false }),
@@ -36,9 +36,6 @@ vi.mock('@/features/solicitacoes/components/TriagemModal', () => ({
       </button>
       <button type="button" onClick={() => onConfirm(dados, foto)}>
         Confirmar com foto
-      </button>
-      <button type="button" onClick={() => onConfirm(dados, foto)}>
-        Confirmar com foto sem nota
       </button>
       <button type="button" onClick={onCancel}>
         Fechar
@@ -88,25 +85,11 @@ describe('TriarAction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto' }));
 
     // Assert
+    expect(triar).toHaveBeenCalledWith(dados);
     expect(anexar).toHaveBeenCalledWith('s1', foto, {
       tipo: 'INSTRUCAO_SERVICO',
     });
-  });
-
-  it('deve anexar a foto sem descrição quando a nota está vazia', async () => {
-    // Arrange
-    triar.mockResolvedValue(undefined);
-    anexar.mockResolvedValue(undefined);
-    montar();
-
-    // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar com foto sem nota' }));
-
-    // Assert
-    expect(anexar).toHaveBeenCalledWith('s1', foto, {
-      tipo: 'INSTRUCAO_SERVICO',
-      descricao: undefined,
-    });
+    expect(Object.keys(anexar.mock.calls[0][2])).toEqual(['tipo']);
   });
 
   it('deve mostrar o erro no formulário sem fechá-lo quando a API recusa a triagem', async () => {

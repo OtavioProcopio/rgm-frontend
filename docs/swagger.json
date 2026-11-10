@@ -1316,6 +1316,60 @@
           }
         }
       }
+    },
+    "/api/solicitacoes/{id}/instrucao": {
+      "patch": {
+        "tags": [
+          "solicitacao-controller"
+        ],
+        "operationId": "editarInstrucao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarInstrucaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitacaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Instrução ausente, vazia ou acima de 2000 caracteres"
+          },
+          "403": {
+            "description": "Perfil sem permissão"
+          },
+          "404": {
+            "description": "Solicitação não encontrada"
+          },
+          "409": {
+            "description": "Fora de EM_ANDAMENTO ou correção simultânea"
+          }
+        },
+        "summary": "Corrige a instrução de uma solicitação em andamento (gestor e administrador)"
+      }
     }
   },
   "components": {
@@ -1365,6 +1419,11 @@
           },
           "comentarioFinal": {
             "type": "string"
+          },
+          "instrucao": {
+            "type": "string",
+            "nullable": true,
+            "description": "O que precisa ser feito: gravado na triagem e corrigido em andamento. Nulo em A_FAZER e nas solicitações triadas antes do campo."
           },
           "criadaEm": {
             "type": "string",
@@ -1692,7 +1751,7 @@
             },
             "minItems": 1
           },
-          "descricao": {
+          "instrucao": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2000
@@ -1700,7 +1759,7 @@
         },
         "required": [
           "prioridade",
-          "descricao"
+          "instrucao"
         ]
       },
       "EncerrarSolicitacaoRequest": {
@@ -1934,6 +1993,19 @@
         },
         "required": [
           "recursoId"
+        ]
+      },
+      "EditarInstrucaoRequest": {
+        "type": "object",
+        "properties": {
+          "instrucao": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "instrucao"
         ]
       }
     }

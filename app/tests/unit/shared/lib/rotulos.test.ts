@@ -143,6 +143,7 @@ describe('rotuloDoTipoDeAtividade', () => {
     ['MUDANCA_STATUS', 'Status alterado'],
     ['COMENTARIO', 'Comentário'],
     ['EVIDENCIA_ADICIONADA', 'Evidência anexada'],
+    ['INSTRUCAO_ALTERADA', 'Instrução alterada'],
   ] as const)(
     'deve dar a "%s" o rótulo "%s" quando o valor é um tipo de atividade',
     (valor, esperado) => {
@@ -154,12 +155,12 @@ describe('rotuloDoTipoDeAtividade', () => {
     },
   );
 
-  it('deve ter cinco rótulos quando todos os tipos de atividade são contados', () => {
+  it('deve ter seis rótulos quando todos os tipos de atividade são contados', () => {
     // Act
     const valores = Object.keys(rotuloDoTipoDeAtividade);
 
     // Assert
-    expect(valores).toHaveLength(5);
+    expect(valores).toHaveLength(6);
   });
 });
 

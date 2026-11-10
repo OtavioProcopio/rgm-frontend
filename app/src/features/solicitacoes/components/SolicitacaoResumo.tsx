@@ -9,6 +9,7 @@ import { rotuloDoTipoDeSolicitacao } from '@/shared/lib/rotulos';
 import { nomeDeQuemAbriu, nomesDosResponsaveis } from '../lib/nomesDosUsuarios';
 import { prazoDoResumo, type SituacaoDoPrazo, type TomDoPrazo } from '../lib/prazoSolicitacao';
 import type { AtividadeSolicitacao, Solicitacao } from '../types/solicitacaoTypes';
+import { InstrucaoDaSolicitacao } from './InstrucaoDaSolicitacao';
 import { SolicitacaoPrioridadeBadge } from './SolicitacaoPrioridadeBadge';
 import { SolicitacaoStatusBadge } from './SolicitacaoStatusBadge';
 
@@ -18,6 +19,8 @@ type Props = {
   atividades?: AtividadeSolicitacao[];
   usuarios?: { id: string; nome: string }[];
   agoraMs?: number;
+  /** Presente só quando a API permite corrigir a instrução; abre a correção. */
+  aoEditarInstrucao?: (() => void) | null;
 };
 
 const NOME_DO_CAMPO = 'text-xs font-medium uppercase tracking-wide text-fg-muted';
@@ -168,22 +171,32 @@ function CampoComentarioFinal({ comentario }: { comentario: string | null | unde
 }
 
 /** Dados da solicitação exibidos no topo do detalhe. */
-export function SolicitacaoResumo({ solicitacao, modelo, atividades, usuarios, agoraMs }: Props) {
+export function SolicitacaoResumo({
+  solicitacao,
+  modelo,
+  atividades,
+  usuarios,
+  agoraMs,
+  aoEditarInstrucao,
+}: Props) {
   const [montadaEm] = useState<number>(() => Date.now());
   const agora: number = agoraMs ?? montadaEm;
   const responsaveis = nomesDosResponsaveis(solicitacao, usuarios ?? []);
   const abertaPor = nomeDeQuemAbriu(solicitacao, atividades ?? [], usuarios ?? []);
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-line bg-surface-muted p-4">
-      <CampoPrazo prazo={prazoDoResumo(solicitacao, agora)} />
-      <Campo nome="Responsáveis">{responsaveis ?? '—'}</Campo>
-      <CampoAbertura nome={abertaPor} criadaEm={solicitacao.criadaEm} agoraMs={agora} />
-      <CampoStatus status={solicitacao.status} />
-      <CampoPrioridade prioridade={solicitacao.prioridade} />
-      <CampoTipo tipo={solicitacao.tipo} />
-      <CampoDescricao descricao={solicitacao.descricao} />
-      <CampoModelo solicitacao={solicitacao} modelo={modelo} />
-      <CampoComentarioFinal comentario={solicitacao.comentarioFinal} />
+    <div className="space-y-3">
+      <InstrucaoDaSolicitacao solicitacao={solicitacao} aoEditar={aoEditarInstrucao} />
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-line bg-surface-muted p-4">
+        <CampoPrazo prazo={prazoDoResumo(solicitacao, agora)} />
+        <Campo nome="Responsáveis">{responsaveis ?? '—'}</Campo>
+        <CampoAbertura nome={abertaPor} criadaEm={solicitacao.criadaEm} agoraMs={agora} />
+        <CampoStatus status={solicitacao.status} />
+        <CampoPrioridade prioridade={solicitacao.prioridade} />
+        <CampoTipo tipo={solicitacao.tipo} />
+        <CampoDescricao descricao={solicitacao.descricao} />
+        <CampoModelo solicitacao={solicitacao} modelo={modelo} />
+        <CampoComentarioFinal comentario={solicitacao.comentarioFinal} />
+      </div>
     </div>
   );
 }

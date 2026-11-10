@@ -105,10 +105,7 @@ describe('TriagemModal — envio', () => {
     const { onConfirm } = montar();
     await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
     await userEvent.click(screen.getByRole('button', { name: 'João' }));
-    await userEvent.type(
-      screen.getByLabelText(/descrição do que precisa ser feito/i),
-      'usar gabarito',
-    );
+    await userEvent.type(screen.getByLabelText(/^o que precisa ser feito/i), 'usar gabarito');
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
@@ -118,11 +115,11 @@ describe('TriagemModal — envio', () => {
     expect(onConfirm.mock.calls[0][0]).toEqual({
       prioridade: 'ALTA',
       responsavelIds: ['11111111-1111-4111-8111-111111111111'],
-      descricao: 'usar gabarito',
+      instrucao: 'usar gabarito',
     });
   });
 
-  it('deve exigir a descrição quando só ela está faltando', async () => {
+  it('deve exigir a instrução quando só ela está faltando', async () => {
     // Arrange
     const { onConfirm } = montar();
     await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
@@ -137,13 +134,43 @@ describe('TriagemModal — envio', () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  it('deve entregar a descrição sem os espaços das pontas quando o formulário é válido', async () => {
+  it('deve focar o campo e mostrar o erro quando só a instrução falta', async () => {
+    // Arrange
+    montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    const campo = screen.getByLabelText(/^o que precisa ser feito/i);
+    await waitFor(() => expect(document.activeElement).toBe(campo));
+    expect(campo.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('deve recusar a instrução só com espaços e quebras de linha', async () => {
+    // Arrange
+    const { onConfirm } = montar();
+    await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'João' }));
+    await userEvent.type(screen.getByLabelText(/^o que precisa ser feito/i), '   {enter}  ');
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar triagem' }));
+
+    // Assert
+    expect(await screen.findByText('Descreva o que precisa ser feito')).toBeDefined();
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('deve entregar a instrução sem os espaços das pontas quando o formulário é válido', async () => {
     // Arrange
     const { onConfirm } = montar();
     await userEvent.click(screen.getByRole('radio', { name: /Alta · 24 h/ }));
     await userEvent.click(screen.getByRole('button', { name: 'João' }));
     await userEvent.type(
-      screen.getByLabelText(/descrição do que precisa ser feito/i),
+      screen.getByLabelText(/^o que precisa ser feito/i),
       '  Trocar o gabarito  ',
     );
 
@@ -152,7 +179,7 @@ describe('TriagemModal — envio', () => {
 
     // Assert
     await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
-    expect(onConfirm.mock.calls[0][0].descricao).toBe('Trocar o gabarito');
+    expect(onConfirm.mock.calls[0][0].instrucao).toBe('Trocar o gabarito');
   });
 
   it('deve exigir a prioridade e um responsável quando nada foi escolhido', async () => {
@@ -200,25 +227,21 @@ describe('TriagemModal — cores por papel e limite de texto', () => {
     );
   });
 
-  it('deve mostrar o campo obrigatório de descrição do que fazer mesmo sem foto, limitado ao tamanho que a API grava', () => {
+  it('deve mostrar o campo obrigatório "O que precisa ser feito" mesmo sem foto, limitado ao tamanho que a API grava', () => {
     // Arrange
     montar();
 
     // Act
-    const campo = screen.getByLabelText(
-      /descrição do que precisa ser feito/i,
-    ) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(/^o que precisa ser feito/i) as HTMLTextAreaElement;
 
     // Assert
     expect(campo.maxLength).toBe(LIMITES.textoLongo);
   });
 
-  it('deve guardar a descrição digitada', async () => {
+  it('deve guardar a instrução digitada', async () => {
     // Arrange
     montar();
-    const campo = screen.getByLabelText(
-      /descrição do que precisa ser feito/i,
-    ) as HTMLTextAreaElement;
+    const campo = screen.getByLabelText(/^o que precisa ser feito/i) as HTMLTextAreaElement;
 
     // Act
     await userEvent.type(campo, 'usar gabarito');

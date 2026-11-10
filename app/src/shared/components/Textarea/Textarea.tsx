@@ -20,8 +20,10 @@ export function Textarea({
 }: TextareaProps) {
   const generatedId = useId();
   const textareaId = id ?? generatedId;
-  // Campo não controlado: o tamanho é acompanhado pela digitação.
-  const [tamanhoDigitado, setTamanhoDigitado] = useState(0);
+  // Campo não controlado: o tamanho é acompanhado pela digitação, a partir do valor inicial.
+  const [tamanhoDigitado, setTamanhoDigitado] = useState(() =>
+    typeof props.defaultValue === 'string' ? props.defaultValue.length : 0,
+  );
   const tamanho = typeof value === 'string' ? value.length : tamanhoDigitado;
   const restantes = maxLength === undefined ? null : caracteresRestantes(tamanho, maxLength);
   const descricoes = [

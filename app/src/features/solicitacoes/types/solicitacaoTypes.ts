@@ -3,7 +3,12 @@ export type StatusSolicitacao =
 export type PrioridadeSolicitacao = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
 export type TipoSolicitacao = 'REPARO' | 'INSPECAO' | 'REENGENHARIA' | 'CRIACAO';
 export type TipoAtividadeSolicitacao =
-  'ABERTURA' | 'ATRIBUICAO' | 'MUDANCA_STATUS' | 'COMENTARIO' | 'EVIDENCIA_ADICIONADA';
+  | 'ABERTURA'
+  | 'ATRIBUICAO'
+  | 'MUDANCA_STATUS'
+  | 'COMENTARIO'
+  | 'EVIDENCIA_ADICIONADA'
+  | 'INSTRUCAO_ALTERADA';
 
 export type Solicitacao = {
   id: string;
@@ -25,6 +30,11 @@ export type Solicitacao = {
   modeloObservacoes?: string | null;
   abertaPorUsuarioId: string;
   comentarioFinal: string | null;
+  /**
+   * O que precisa ser feito, escrito na triagem e corrigível em andamento. Nulo em A_FAZER e nas
+   * solicitações triadas antes de o campo existir.
+   */
+  instrucao: string | null;
   criadaEm: string;
   atualizadaEm: string;
   concluidaEm: string | null;
@@ -103,8 +113,10 @@ export type EditarSolicitacaoRequest = {
 export type TriarSolicitacaoRequest = {
   prioridade: PrioridadeSolicitacao;
   responsavelIds: string[];
-  descricao: string;
+  instrucao: string;
 };
+
+export type EditarInstrucaoRequest = { instrucao: string };
 
 export type EnviarParaValidacaoRequest = {
   comentario: string;

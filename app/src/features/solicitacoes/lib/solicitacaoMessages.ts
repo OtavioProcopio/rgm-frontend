@@ -45,6 +45,7 @@ export const sucessoDaAcao = {
   COMENTAR: 'Comentário registrado',
   ANEXAR: 'Evidência anexada',
   EDITAR: 'Solicitação atualizada',
+  EDITAR_INSTRUCAO: 'Instrução atualizada',
 } as const;
 
 /** Erro do formulário quando a foto vai antes da ação e o envio falha: nada foi feito. */

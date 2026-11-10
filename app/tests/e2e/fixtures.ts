@@ -193,6 +193,6 @@ export async function escolherPrioridadeEPrimeiroResponsavel(
     .first()
     .click();
   await page
-    .getByLabel('Descrição do que precisa ser feito')
+    .getByLabel('O que precisa ser feito', { exact: true })
     .fill('Executar o serviço conforme a instrução');
 }

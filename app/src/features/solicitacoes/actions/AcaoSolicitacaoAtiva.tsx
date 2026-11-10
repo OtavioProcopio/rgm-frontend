@@ -2,6 +2,7 @@ import type { AcaoSolicitacao } from '../lib/acoesSolicitacao';
 import type { AcaoProps } from '../types/acaoProps';
 import { CancelarAction } from './CancelarAction';
 import { DevolverAction } from './DevolverAction';
+import { EditarInstrucaoAction } from './EditarInstrucaoAction';
 import { EncerrarAction } from './EncerrarAction';
 import { EnviarValidacaoAction } from './EnviarValidacaoAction';
 import { ResponsaveisAction } from './ResponsaveisAction';
@@ -14,6 +15,7 @@ const COMPONENTE_DA_ACAO: Record<AcaoSolicitacao, (props: AcaoProps) => React.JS
   DEVOLVER: DevolverAction,
   ENCERRAR: EncerrarAction,
   CANCELAR: CancelarAction,
+  EDITAR_INSTRUCAO: EditarInstrucaoAction,
 };
 
 type Props = AcaoProps & { acao: AcaoSolicitacao };

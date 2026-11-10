@@ -50,7 +50,11 @@ export const rotuloDoTipoDeAtividade: Record<TipoAtividadeSolicitacao, string> =
   MUDANCA_STATUS: 'Status alterado',
   COMENTARIO: 'Comentário',
   EVIDENCIA_ADICIONADA: 'Evidência anexada',
+  INSTRUCAO_ALTERADA: 'Instrução alterada',
 };
+
+/** Título de um tipo de atividade que o front ainda não conhece, vindo de um backend mais novo. */
+export const ROTULO_DE_ATIVIDADE_DESCONHECIDA = 'Atividade registrada';
 
 /** Nome amigável do tipo de modelo; cai no próprio nome quando o tipo foi cadastrado depois. */
 export function nomeDoTipoDeModelo(tipo: string): string {

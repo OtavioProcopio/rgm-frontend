@@ -25,6 +25,7 @@ const baseSolicitacao = {
   modeloId: 'm1',
   abertaPorUsuarioId: 'u1',
   comentarioFinal: null,
+  instrucao: null,
   concluidaEm: null,
   canceladaEm: null,
   responsavelIds: [],
@@ -580,5 +581,15 @@ describe('KanbanCard — modelo, responsáveis e clique', () => {
 
     // Assert
     expect(within(container).getByText('VICK')).toBeDefined();
+  });
+
+  it('não deve mostrar a instrução no cartão do quadro', () => {
+    // Act
+    const { container } = render(
+      card({ status: 'EM_ANDAMENTO', instrucao: 'Instrução secreta do gestor' }),
+    );
+
+    // Assert
+    expect(container.textContent).not.toContain('Instrução secreta do gestor');
   });
 });

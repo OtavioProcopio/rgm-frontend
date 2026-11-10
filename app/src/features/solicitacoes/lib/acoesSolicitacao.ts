@@ -9,6 +9,7 @@ export const ACOES_SOLICITACAO = [
   'DEVOLVER',
   'ENCERRAR',
   'CANCELAR',
+  'EDITAR_INSTRUCAO',
 ] as const;
 
 export type AcaoSolicitacao = (typeof ACOES_SOLICITACAO)[number];
@@ -63,6 +64,7 @@ function regraLocal(solicitacao: SolicitacaoAvaliada, ator: AtorSolicitacao): Se
   if (status === 'EM_ANDAMENTO' && (gerencia || (operador && responsavel))) {
     acoes.add('ENVIAR_VALIDACAO');
   }
+  if (status === 'EM_ANDAMENTO' && gerencia) acoes.add('EDITAR_INSTRUCAO');
   if (operadorPodeCancelar(solicitacao, ator)) acoes.add('CANCELAR');
   return acoes;
 }
@@ -142,7 +144,17 @@ export function separarAcoes(
   return { principal, outras: ordenadas.filter((acao) => acao !== principal) };
 }
 
+/** Ações que não são botões do cabeçalho: abrem de dentro do conteúdo a que pertencem. */
+const ROTULO_DAS_ACOES_CONTEXTUAIS: Partial<Record<AcaoSolicitacao, string>> = {
+  EDITAR_INSTRUCAO: 'Editar o que precisa ser feito',
+};
+
 /** Nome da ação para a tela: rótulo de botão e nome do diálogo. */
 export function rotuloDaAcao(acao: AcaoSolicitacao): string {
-  return BOTOES.find((botao) => botao.acao === acao)!.rotulo;
+  return ROTULO_DAS_ACOES_CONTEXTUAIS[acao] ?? BOTOES.find((botao) => botao.acao === acao)!.rotulo;
+}
+
+/** Ações que o cabeçalho oferece: tudo o que é permitido, menos o que abre dentro do conteúdo. */
+export function acoesDoCabecalho(acoes: ReadonlySet<AcaoSolicitacao>): Set<AcaoSolicitacao> {
+  return new Set([...acoes].filter((acao) => !(acao in ROTULO_DAS_ACOES_CONTEXTUAIS)));
 }

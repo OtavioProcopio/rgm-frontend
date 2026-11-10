@@ -57,7 +57,7 @@ test.describe('Fluxo Kanban — Solicitações', () => {
     await apiPatch(
       request,
       `/solicitacoes/${id}/triar`,
-      { prioridade: 'MEDIA', responsavelIds: [responsavelId], descricao: 'Executar o serviço' },
+      { prioridade: 'MEDIA', responsavelIds: [responsavelId], instrucao: 'Executar o serviço' },
       token,
     );
   }

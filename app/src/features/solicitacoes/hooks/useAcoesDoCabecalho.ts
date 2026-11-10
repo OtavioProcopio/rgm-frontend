@@ -4,6 +4,7 @@ import type { AcaoDoMenu } from '@/shared/components/PageHeader/PageHeader';
 
 import { DialogoDaAcao } from '../actions/DialogoDaAcao';
 import {
+  acoesDoCabecalho,
   PRINCIPAL_POR_STATUS,
   rotuloDaAcao,
   separarAcoes,
@@ -22,6 +23,8 @@ export type AcoesDoCabecalho = {
   principal: AcaoPrincipal | null;
   maisAcoes: AcaoDoMenu[];
   dialogo: ReactNode;
+  /** Abre a correção da instrução; nulo quando a API não permite. Não é item do cabeçalho. */
+  editarInstrucao: (() => void) | null;
 };
 
 type Editar = { aoAcionar: () => void };
@@ -87,8 +90,16 @@ export function useAcoesDoCabecalho(
 ): AcoesDoCabecalho {
   const acoesDe = useAcoesPermitidas();
   const [acaoAberta, setAcaoAberta] = useState<AcaoSolicitacao | null>(null);
-  const conjunto = acoesDe(solicitacao);
-  const { principal, maisAcoes } = montarAcoes(solicitacao, conjunto, setAcaoAberta, editar);
+  const permitidas = acoesDe(solicitacao);
+  const { principal, maisAcoes } = montarAcoes(
+    solicitacao,
+    acoesDoCabecalho(permitidas),
+    setAcaoAberta,
+    editar,
+  );
+  const editarInstrucao = permitidas.has('EDITAR_INSTRUCAO')
+    ? () => setAcaoAberta('EDITAR_INSTRUCAO')
+    : null;
   const dialogo = acaoAberta
     ? createElement(DialogoDaAcao, {
         acao: acaoAberta,
@@ -96,5 +107,5 @@ export function useAcoesDoCabecalho(
         onClose: () => setAcaoAberta(null),
       })
     : null;
-  return { principal, maisAcoes, dialogo };
+  return { principal, maisAcoes, dialogo, editarInstrucao };
 }

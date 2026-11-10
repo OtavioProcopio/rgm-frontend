@@ -39,6 +39,7 @@ const solicitacao = {
   modeloId: 'm1',
   abertaPorUsuarioId: 'u1',
   comentarioFinal: null,
+  instrucao: null,
   concluidaEm: null,
   canceladaEm: null,
   responsavelIds: [],

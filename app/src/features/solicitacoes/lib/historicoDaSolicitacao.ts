@@ -4,7 +4,7 @@ import type {
   TipoAtividadeSolicitacao,
 } from '@/features/solicitacoes/types/solicitacaoTypes';
 import { isoValido } from '@/shared/lib/data';
-import { rotuloDoTipoDeAtividade } from '@/shared/lib/rotulos';
+import { ROTULO_DE_ATIVIDADE_DESCONHECIDA, rotuloDoTipoDeAtividade } from '@/shared/lib/rotulos';
 
 export type PesoDoItem = 'destaque' | 'discreto';
 
@@ -23,6 +23,7 @@ const PESO_POR_TIPO: Record<TipoAtividadeSolicitacao, PesoDoItem> = {
   ABERTURA: 'destaque',
   COMENTARIO: 'destaque',
   EVIDENCIA_ADICIONADA: 'destaque',
+  INSTRUCAO_ALTERADA: 'destaque',
   ATRIBUICAO: 'discreto',
   MUDANCA_STATUS: 'discreto',
 };
@@ -43,15 +44,29 @@ function mudancaDeStatusDe(atividade: AtividadeSolicitacao): ItemDoHistorico['mu
   return { de: deStatus, para: paraStatus };
 }
 
+/** Na correção da instrução, o texto da atividade é o que estava escrito antes. */
+function detalheDe(atividade: AtividadeSolicitacao): string | null {
+  if (atividade.comentario === null || atividade.comentario === undefined) return null;
+  return atividade.tipo === 'INSTRUCAO_ALTERADA'
+    ? `Antes: ${atividade.comentario}`
+    : atividade.comentario;
+}
+
+/**
+ * Um tipo que o backend criou depois deste front não derruba a linha do tempo: aparece como
+ * "Atividade registrada", em tom discreto.
+ */
 function itemDe(atividade: AtividadeSolicitacao): ItemDoHistorico {
+  const rotulos: Partial<Record<string, string>> = rotuloDoTipoDeAtividade;
+  const pesos: Partial<Record<string, PesoDoItem>> = PESO_POR_TIPO;
   return {
     id: atividade.id,
     em: atividade.criadaEm,
     tipo: atividade.tipo,
-    titulo: rotuloDoTipoDeAtividade[atividade.tipo],
-    detalhe: atividade.comentario ?? null,
+    titulo: rotulos[atividade.tipo] ?? ROTULO_DE_ATIVIDADE_DESCONHECIDA,
+    detalhe: detalheDe(atividade),
     autor: { nome: atividade.autorNome, iniciais: iniciaisDe(atividade.autorNome) },
-    peso: PESO_POR_TIPO[atividade.tipo],
+    peso: pesos[atividade.tipo] ?? 'discreto',
     mudancaDeStatus: mudancaDeStatusDe(atividade),
   };
 }

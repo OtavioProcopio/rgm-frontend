@@ -37,15 +37,20 @@ export const abrirSolicitacaoSchema = z
     }
   });
 
+/** O que precisa ser feito: a mesma regra ao triar e ao corrigir depois. */
+const instrucaoDoTrabalho = z
+  .string()
+  .trim()
+  .min(1, 'Descreva o que precisa ser feito')
+  .max(LIMITES.textoLongo, mensagemDeLimite(LIMITES.textoLongo));
+
 export const triarSolicitacaoSchema = z.object({
   prioridade: z.enum(['BAIXA', 'MEDIA', 'ALTA', 'URGENTE']),
   responsavelIds: z.array(z.string().uuid()).min(1, 'Selecione ao menos um responsável'),
-  descricao: z
-    .string()
-    .trim()
-    .min(1, 'Descreva o que precisa ser feito')
-    .max(LIMITES.textoLongo, mensagemDeLimite(LIMITES.textoLongo)),
+  instrucao: instrucaoDoTrabalho,
 });
+
+export const editarInstrucaoSchema = z.object({ instrucao: instrucaoDoTrabalho });
 
 export const encerrarSolicitacaoSchema = z.object({
   concluir: z.boolean(),
@@ -83,6 +88,7 @@ export const editarSolicitacaoSchema = z.object({
 
 export type AbrirSolicitacaoFormData = z.infer<typeof abrirSolicitacaoSchema>;
 export type TriarSolicitacaoFormData = z.infer<typeof triarSolicitacaoSchema>;
+export type EditarInstrucaoFormData = z.infer<typeof editarInstrucaoSchema>;
 export type EncerrarSolicitacaoFormData = z.infer<typeof encerrarSolicitacaoSchema>;
 export type DevolverSolicitacaoFormData = z.infer<typeof devolverSolicitacaoSchema>;
 export type ComentarioFormData = z.infer<typeof comentarioSchema>;
