@@ -1,4 +1,4 @@
 {
-  "active": "specs/018-instrucao-em-destaque-na-solicitacao",
-  "title": "Instrução em destaque na solicitação (spec 018, par da spec 015 do backend), base develop"
+  "active": "specs/019-catalogo-de-modelos-com-destaque",
+  "title": "Catálogo de modelos com destaque, filtros por botão (tipo e máquina), busca única, blocos e fotos navegáveis (spec 019, par da spec 016 do backend), base develop"
 }
