@@ -557,6 +557,51 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquinaExata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "ordem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CODIGO",
+                "CRIACAO"
+              ]
+            }
           }
         ],
         "responses": {
@@ -1370,6 +1415,144 @@
         },
         "summary": "Corrige a instrução de uma solicitação em andamento (gestor e administrador)"
       }
+    },
+    "/api/modelos/contagens": {
+      "get": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "contagens",
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquinaExata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "ativo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContagensDeModelosResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modelos/{id}/posicao": {
+      "get": {
+        "tags": [
+          "modelo-controller"
+        ],
+        "operationId": "posicao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maquinaExata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "ativo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PosicaoDoModeloResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2007,6 +2190,60 @@
         "required": [
           "instrucao"
         ]
+      },
+      "ContagensDeModelosResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "porTipo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tipo": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          },
+          "porMaquina": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "maquina": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      },
+      "PosicaoDoModeloResponse": {
+        "type": "object",
+        "properties": {
+          "posicao": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "A partir de 1; nula se o modelo está fora do filtro"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       }
     }
   }
