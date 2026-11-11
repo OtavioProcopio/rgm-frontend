@@ -8,10 +8,11 @@
 
 ## Completude
 
-- [ ] Todo requisito funcional (RF-01 a RF-23) tem ao menos um critério de aceite em DADO/QUANDO/ENTÃO [LACUNA: RF-06 (ordem) e RF-12 (pré-carga dos vizinhos) não têm cenário próprio; são provados por teste de hook]
+- [ ] Todo requisito funcional (RF-01 a RF-26) tem ao menos um critério de aceite em DADO/QUANDO/ENTÃO [LACUNA: RF-06 (ordem) e RF-12 (pré-carga dos vizinhos) não têm cenário próprio; são provados por teste de hook]
 - [ ] Todo requisito não funcional (RNF-01 a RNF-07) tem critério mensurável, com número e unidade
 - [ ] O que está fora de escopo está escrito (editar fotos, PDF, comparar, ordenação, administração)
 - [ ] A ordem de publicação com o backend está dita, sem reserva (Princípio 9)
+- [ ] O que o usuário vê num link para modelo fora do filtro, inativo ou inexistente está dito (RF-20)
 - [ ] O que o usuário vê enquanto a galeria carrega e quando ela falha está dito (RF-12, RF-21)
 - [ ] O que acontece com um modelo que sai do filtro enquanto está em destaque (por exemplo, é desativado por outra pessoa) está dito [LACUNA: a spec não diz; o plano deixa o destaque como está até o próximo filtro]
 

@@ -34,7 +34,7 @@ conferir um modelo, e a foto, que é o que mais identifica uma peça, fica peque
 - Editar, trocar a capa ou excluir foto na tela do catálogo (continua na ficha).
 - Exportar PDF, comparar modelos lado a lado, favoritos ou ordenação além do código.
 - Mudar a tela de administração de modelos e a ficha do modelo.
-- Funcionar sem os parâmetros novos do backend (ver "Ordem de publicação").
+- Funcionar sem os parâmetros e as rotas novas do backend (ver "Ordem de publicação").
 
 ## Personas e cenários de uso
 
@@ -76,16 +76,19 @@ conferir um modelo, e a foto, que é o que mais identifica uma peça, fica peque
 | RF-16 | A lista carrega **por blocos de 20**; ao final há "Carregar mais" com quantos faltam, e acima dela "mostrando X de Y" | obrigatório |
 | RF-17 | "Próximo" no último modelo carregado carrega o bloco seguinte sozinho e avança para o primeiro dele | obrigatório |
 | RF-18 | Os filtros, a busca, "Mostrar inativos" e o modelo em destaque ficam no endereço da página; um link copiado reabre igual; escolher um botão de filtro cria uma entrada no histórico do navegador, e a busca e a troca de modelo não | obrigatório |
-| RF-19 | Se o modelo do endereço não está no primeiro bloco, a tela carrega os blocos seguintes até achá-lo (no máximo 5 blocos); se não achar, o primeiro do filtro vira o destaque e o endereço é corrigido | obrigatório |
+| RF-19 | **Todo modelo tem link direto**: `modelo=<id>` no endereço sempre é respeitado. Se o modelo está no filtro, a lista abre no bloco que o contém, ele vira o destaque, o contador diz a posição certa ("n de total") e "Anterior" e "Próximo" funcionam nos dois sentidos, carregando os blocos vizinhos quando preciso | obrigatório |
+| RF-20 | Se o modelo do link existe mas **não atende aos filtros do endereço**, os filtros voltam a "Todos/Todas" (e "Mostrar inativos" liga se o modelo é inativo), o modelo vira o destaque e a tela avisa "Este modelo não estava no filtro escolhido; mostrando todos os modelos"; se o modelo **não existe**, a tela avisa "Modelo não encontrado" e o primeiro do filtro vira o destaque, com o endereço corrigido | obrigatório |
+| RF-21 | O destaque tem "Copiar link", que copia o endereço com os filtros e o modelo e confirma "Link copiado"; se o navegador bloquear a cópia, mostra o endereço num campo já selecionado | obrigatório |
+| RF-22 | Cada item da lista é um link de verdade para o modelo (mesmo endereço, com os filtros atuais): clicar o põe em destaque sem recarregar, e abrir em nova aba ou copiar o link pelo menu do navegador funciona | obrigatório |
 
 ### Estados e responsividade
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-20 | Carregando mostra esqueletos no destaque e na lista; falha da lista mostra a mensagem com "Tentar novamente"; resultado vazio mostra "Nenhum modelo neste filtro" com "Limpar filtros" | obrigatório |
-| RF-21 | Se as contagens falharem, os botões aparecem sem número e continuam usáveis; se as fotos extras falharem, o destaque mantém a capa e avisa "Não foi possível carregar as outras fotos" com "Tentar novamente" | obrigatório |
-| RF-22 | Em tela estreita (até 800 px) a tela vira uma coluna: filtros, destaque e lista, nessa ordem, sem rolagem horizontal; todo alvo de toque tem pelo menos 44 px | obrigatório |
-| RF-23 | A tela de administração de modelos, a ficha do modelo e a rota `/app/modelos/:id` continuam como estão | obrigatório |
+| RF-23 | Carregando mostra esqueletos no destaque e na lista; falha da lista mostra a mensagem com "Tentar novamente"; resultado vazio mostra "Nenhum modelo neste filtro" com "Limpar filtros" | obrigatório |
+| RF-24 | Se as contagens falharem, os botões aparecem sem número e continuam usáveis; se as fotos extras falharem, o destaque mantém a capa e avisa "Não foi possível carregar as outras fotos" com "Tentar novamente" | obrigatório |
+| RF-25 | Em tela estreita (até 800 px) a tela vira uma coluna: filtros, destaque e lista, nessa ordem, sem rolagem horizontal; todo alvo de toque tem pelo menos 44 px | obrigatório |
+| RF-26 | A tela de administração de modelos, a ficha do modelo e a rota `/app/modelos/:id` continuam como estão | obrigatório |
 
 ## Requisitos não funcionais
 
@@ -102,7 +105,7 @@ conferir um modelo, e a foto, que é o que mais identifica uma peça, fica peque
 ## Ordem de publicação (Princípio 9)
 
 Este front depende, no backend, dos parâmetros `tipo`, `q`, `maquinaExata` e `ordem` da listagem
-de modelos e da rota `GET /api/modelos/contagens` (spec 016). Os dois são publicados **com o
+de modelos e das rotas `GET /api/modelos/contagens` e `GET /api/modelos/{id}/posicao` (spec 016). Os dois são publicados **com o
 backend primeiro**. Esta spec **não** traz comportamento de reserva: contra um backend anterior
 os filtros de tipo, a busca única e as contagens não funcionam.
 
@@ -210,15 +213,44 @@ Funcionalidade: Catálogo de modelos com destaque
     Quando copio o endereço e o abro em outra aba
     Então vejo os mesmos filtros e o mesmo modelo em destaque
 
-  Cenário: Modelo do endereço fora do primeiro bloco
-    Dado um endereço com o 35º modelo do filtro
+  Cenário: Link direto para qualquer modelo
+    Dado um endereço com o 135º modelo de um filtro de 300
     Quando abro a tela
-    Então os blocos são carregados até ele e ele aparece em destaque
+    Então a lista abre no bloco que contém esse modelo
+    E ele aparece em destaque, "135 de 300"
+    E "Anterior" e "Próximo" funcionam, carregando os blocos vizinhos quando preciso
 
-  Cenário: Modelo do endereço inexistente
-    Dado um endereço com um modelo que não está no filtro
+  Cenário: Link para modelo fora do filtro do endereço
+    Dado um endereço com a máquina "FBOX" e um modelo da "LINHA 3"
     Quando abro a tela
-    Então o primeiro do filtro vira o destaque e o endereço é corrigido
+    Então os filtros voltam a "Todos" e "Todas"
+    E o modelo aparece em destaque
+    E vejo "Este modelo não estava no filtro escolhido; mostrando todos os modelos"
+
+  Cenário: Link para modelo inativo
+    Dado um endereço com um modelo inativo e "Mostrar inativos" desligado
+    Quando abro a tela
+    Então "Mostrar inativos" liga e o modelo aparece em destaque
+
+  Cenário: Link para modelo que não existe
+    Dado um endereço com um id que não existe
+    Quando abro a tela
+    Então vejo "Modelo não encontrado"
+    E o primeiro do filtro vira o destaque, com o endereço corrigido
+
+  Cenário: Copiar link
+    Quando clico em "Copiar link" no destaque
+    Então o endereço com os filtros e o modelo vai para a área de transferência
+    E vejo "Link copiado"
+
+  Cenário: Copiar link bloqueado
+    Dado que o navegador bloqueia a cópia
+    Quando clico em "Copiar link"
+    Então vejo o endereço num campo já selecionado
+
+  Cenário: Itens da lista são links
+    Quando abro um item da lista em nova aba
+    Então a nova aba abre o catálogo com esse modelo em destaque e os mesmos filtros
 
   Cenário: Histórico do navegador
     Quando escolho um botão de filtro e depois uso "Voltar" do navegador
@@ -266,8 +298,10 @@ Funcionalidade: Catálogo de modelos com destaque
 | Categoria = tipo de modelo? | Sim; a máquina é o segundo grupo de botões | 2026-11-11 |
 | "Mostrar inativos" começa desmarcado? | Sim (decisão a confirmar): hoje a grade mostra inativos; o catálogo de operação passa a esconder, com a opção de mostrar | 2026-11-11 |
 | Ordem? | Por código | 2026-11-11 |
+| Link para qualquer modelo? | Sim: o backend diz a posição do modelo no filtro (spec 016), e a lista abre no bloco certo | 2026-11-11 |
 
 ## Métricas de sucesso
 
 - Chegar ao modelo certo em até 3 cliques ou uma busca de 2 a 3 letras, sem mudar de página.
 - 0 requisições para trocar de foto; 1 requisição de lista por bloco e 1 de contagens por filtro.
+- Qualquer modelo abre por link direto, no bloco certo, com 1 requisição de posição.

@@ -16,7 +16,11 @@
 | Busca | `useDebounce` (já existe) com 300 ms e `q` só com 2 ou mais caracteres | Filtrar no cliente | RF-04; a busca é no servidor, sem acento |
 | Posição no catálogo | Função pura `posicaoNoCatalogo(modelos, total, codigoOuId)` devolve índice, anterior, próximo e se precisa de outro bloco | Lógica no componente | Regra testável fora de `pages/` (Princípio 10) |
 | Navegação ao fim do bloco | `Próximo` no último carregado chama `fetchNextPage` e, quando chega, seleciona o primeiro novo | Desabilitar até o usuário carregar mais | RF-17 |
-| Modelo do endereço | Se não está carregado, `fetchNextPage` em laço até achar ou até 5 blocos; senão o primeiro do filtro e `replace` do endereço | Buscar por id e mostrar fora da lista | RF-19; mantém "n de total" coerente |
+| Link para qualquer modelo | `usePosicaoDoModelo(id, filtros)` (`GET /modelos/{id}/posicao`) diz a posição; a página inicial da lista infinita é `(posicao − 1) / 20` (`initialPageParam`), e `getPreviousPageParam` + `fetchPreviousPage` carregam os blocos de trás; "n de total" = `posicao` | Carregar blocos em laço até achar; mostrar fora da lista | RF-19: alcança qualquer modelo com 1 requisição e mantém o contador coerente |
+| Modelo fora do filtro do link | Posição nula → `filtrosDoCatalogo` zera tipo, máquina e busca (liga `inativos` se o modelo é inativo, lido de `GET /modelos/{id}`) e avisa | Mostrar o modelo sem lista | RF-20 |
+| Modelo inexistente | 404 de `GET /modelos/{id}` → aviso "Modelo não encontrado" e o endereço é corrigido com `replace` | Página de erro | RF-20 |
+| Copiar link | `navigator.clipboard.writeText` com o endereço atual; se faltar o recurso ou for recusado (contexto sem HTTPS), mostra um campo `readonly` com o endereço selecionado | Só a API de cópia | RF-21; o recurso exige contexto seguro |
+| Itens da lista | `<a href>` com o endereço do modelo e os filtros atuais; o clique é interceptado para navegar sem recarregar (respeitando Ctrl, Cmd e botão do meio) | `<button>` | RF-22: link de verdade, abre em nova aba |
 | Fotos | O destaque usa `fotoCapaUrl` da lista; `useGaleriaModelo(id)` (já existe) carrega as demais; `prefetchQuery` da galeria dos vizinhos | Carregar a galeria de todos | RF-12, RNF-01 |
 | Transição de foto | Duas camadas de imagem com `opacity`, em CSS (`transition`), desligada por `motion-reduce:`; a imagem nova só entra depois de carregada (`decode()`) | Biblioteca de carrossel | RF-09; RNF-04 |
 | Miniaturas | Faixa com `role="group"`, botões de imagem, `aria-current` na atual e roving tabindex (setas movem o foco e a foto) | `tablist` | RF-10 |
@@ -37,6 +41,7 @@
 | hook | `SRC/features/modelos/hooks/useCatalogoDeModelos.ts` (infinita) | criar | `TST/unit/features/modelos/hooks/useCatalogoDeModelos.test.tsx` |
 | hook | `SRC/features/modelos/hooks/useContagensDeModelos.ts` | criar | `TST/unit/features/modelos/hooks/useContagensDeModelos.test.tsx` |
 | hook | `SRC/features/modelos/hooks/useFiltrosDoCatalogo.ts` (URL) | criar | `TST/unit/features/modelos/hooks/useFiltrosDoCatalogo.test.tsx` |
+| hook | `SRC/features/modelos/hooks/usePosicaoDoModelo.ts` | criar | `TST/unit/features/modelos/hooks/usePosicaoDoModelo.test.tsx` |
 | hook | `SRC/features/modelos/hooks/usePrefetchGaleria.ts` | criar | `TST/unit/features/modelos/hooks/usePrefetchGaleria.test.tsx` |
 | presenter | `SRC/features/modelos/components/FiltrosDoCatalogo.tsx`, `BotaoDeFiltro.tsx` | criar | `TST/unit/features/modelos/components/FiltrosDoCatalogo.test.tsx` |
 | presenter | `SRC/features/modelos/components/DestaqueDoModelo.tsx` | criar | `TST/unit/features/modelos/components/DestaqueDoModelo.test.tsx` |
@@ -50,7 +55,7 @@
 ## Contrato entre camadas
 
 - **URL → filtros:** `?tipo=&maquina=&q=&inativos=1&modelo=<id>`; valores inválidos são descartados.
-- **Filtros → API:** `GET /modelos?tipo=&maquina=&maquinaExata=true&q=&ativo=true&ordem=CODIGO&page=&size=20` e `GET /modelos/contagens` com os mesmos filtros.
+- **Filtros → API:** `GET /modelos?tipo=&maquina=&maquinaExata=true&q=&ativo=true&ordem=CODIGO&page=&size=20`, `GET /modelos/contagens` e `GET /modelos/{id}/posicao` com os mesmos filtros.
 - **Lista → destaque:** o destaque recebe um `Modelo` da lista; a galeria é carregada por `useGaleriaModelo(modelo.id)`.
 - **Compatibilidade:** ver "Ordem de publicação" na spec.
 
@@ -71,6 +76,8 @@ Nenhum.
 | Muitas miniaturas na faixa | baixa | Rolagem horizontal da faixa; carregamento preguiçoso |
 | Teclado ←/→ conflita com leitor de tela ou campos | baixa | Ouvinte ignora campos e a faixa; teste de foco |
 | Endereço com `modelo` de outro filtro gera loop de correção | baixa | Correção uma vez, com `replace`; teste |
+| A posição do servidor muda enquanto a pessoa navega (alguém cadastra ou desativa modelo) | média | O contador usa o total mais recente e a posição é recalculada ao recarregar; a lista nunca duplica um modelo (chave por id) |
+| Cópia do link não funciona fora de HTTPS | média | Campo selecionado de reserva (RF-21) |
 | Testes de transição frágeis (tempo) | média | A troca é por estado e classe; testes afirmam o estado final e a classe de movimento reduzido, não o tempo |
 
 ## Conformidade com a constituição
