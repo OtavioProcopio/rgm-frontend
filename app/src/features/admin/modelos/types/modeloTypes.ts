@@ -38,7 +38,25 @@ export type ModelosFilters = {
   codigo?: string;
   maquina?: string;
   descricao?: string;
+  /** Catálogo: tipo exato do modelo. */
+  tipo?: string;
+  /** Catálogo: busca única por código ou descrição (sem acento), a partir de 2 caracteres. */
+  q?: string;
+  /** Catálogo: com `true`, `maquina` compara por igualdade em vez de "contém". */
+  maquinaExata?: boolean;
+  /** Catálogo: `CODIGO` ordena por código (versão maior primeiro); o padrão é por criação. */
+  ordem?: 'CRIACAO' | 'CODIGO';
 };
+
+/** Quantos modelos cada tipo e cada máquina traria com os outros filtros (só os maiores que 0). */
+export type ContagensDeModelos = {
+  total: number;
+  porTipo: { tipo: string; total: number }[];
+  porMaquina: { maquina: string; total: number }[];
+};
+
+/** Posição (a partir de 1) do modelo na lista do filtro; nula se ele está fora do filtro. */
+export type PosicaoDoModelo = { posicao: number | null; total: number };
 
 /** Contagens do cadastro de modelos, calculadas pela API. */
 export type ResumoDeModelos = {

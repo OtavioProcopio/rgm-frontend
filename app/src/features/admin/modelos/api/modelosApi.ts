@@ -7,6 +7,8 @@ import type {
   EventoModelo,
   Modelo,
   ModelosFilters,
+  ContagensDeModelos,
+  PosicaoDoModelo,
   ResumoDasSolicitacoesDoModelo,
   ResumoDeModelos,
 } from '../types/modeloTypes';
@@ -15,6 +17,12 @@ export const modelosApi = {
   listar: (filters: ModelosFilters) =>
     httpClient.get<PageResponse<Modelo>>('/modelos', { params: filters }),
   buscarPorId: (id: string) => httpClient.get<Modelo>(`/modelos/${id}`),
+  contagens: (filters: Omit<ModelosFilters, 'page' | 'size' | 'ordem'>) =>
+    httpClient.get<ContagensDeModelos>('/modelos/contagens', { params: filters }),
+  posicao: (id: string, filters: Omit<ModelosFilters, 'page' | 'size' | 'ordem'>) =>
+    httpClient.get<PosicaoDoModelo>(`/modelos/${id}/posicao`, {
+      params: { ...filters, ordem: 'CODIGO' },
+    }),
   obterResumo: () => httpClient.get<ResumoDeModelos>('/modelos/resumo'),
   obterResumoDasSolicitacoes: (id: string) =>
     httpClient.get<ResumoDasSolicitacoesDoModelo>(`/modelos/${id}/solicitacoes/resumo`),
